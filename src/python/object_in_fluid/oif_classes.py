@@ -570,6 +570,83 @@ class Mesh(object):
                     i += 1
         return 0
 
+    def min_edge_length(self):
+        min_length = large_number
+        i = 0
+        for edge in self.edges:
+            i = i + 1
+            l = edge.length()
+            if (l < min_length):
+                min_length = l
+        if (i == 0):
+            raise Exception("Mesh, min_edge_length: No edges. Quitting.")
+        return min_length
+
+    def max_edge_length(self):
+        max_length = - large_number
+        i = 0
+        for edge in self.edges:
+            i = i + 1
+            l = edge.length()
+            if (l > max_length):
+                max_length = l
+        if (i == 0):
+            raise Exception("Mesh, max_edge_length: No edges. Quitting.")
+        return max_length
+        
+    def gen_new_mesh(self,filename):
+        output_file = open(filename, "w")        
+        #orig = self.get_origin()
+        c0 = 0.207161
+        c1 = 2.002558
+        c2 = -1.122762
+        r0 = 3.91
+        for p in self.points:
+            pos = p.get_pos()
+            w = (pos[0]*pos[0] + pos[2]*pos[2])/(1.0*r0*r0)
+            if (w > 1):
+                w = 1.0
+            new_z = 0.5*r0*np.sqrt(1 - w)*(c0 + c1*w + c2*w*w)
+            if (pos[1] < 0):
+                new_z = - 1.0*new_z
+            output_file.write(str(pos[0]) + " " + str(new_z) + " " + str(pos[2]) + "\n")
+        output_file.close()
+        return 1
+        
+    def aver_edge_length(self):
+        edge_aver = 0.0;
+        i = 0
+        for edge in self.edges:
+            i = i + 1
+            edge_aver = edge_aver + edge.length()
+        if (i == 0):
+            raise Exception("Mesh, aver_edge_length: No edges. Quitting.")
+        edge_aver = edge_aver / (1.0 * i)
+        return edge_aver
+
+
+    def stdev_edge_length(self):
+        edge_aver = self.aver_edge_length();
+        stdev = 0
+        i = 0
+        for edge in self.edges:
+            stdev = stdev + (edge_aver - edge.length())*(edge_aver - edge.length())
+            i = i + 1
+        if (i == 0):
+            raise Exception("Mesh, stdev_edge_length: No edges. Quitting.")
+        stdev = stdev / (1.0*(i - 1))
+        stdev = np.sqrt(stdev)
+        return stdev
+
+    def print_analysis(self):
+        print("\t n_nodes: " + str(self.get_n_nodes()))
+        print("\t n_triangles: " + str(self.get_n_triangles()))
+        print("\t n_edges: " + str(self.get_n_edges()))
+        print("\t aver_edge_length: " + str(self.aver_edge_length()))
+        print("\t min_edge_length: " + str(self.min_edge_length()))
+        print("\t max_edge_length: " + str(self.max_edge_length()))
+        print("\t stdev_edge_length: " + str(self.stdev_edge_length()))
+        
     def surface(self):
         surface = 0.0
         for triangle in self.triangles:
@@ -816,6 +893,21 @@ class OifCell(object):
 
     def surface(self):
         return self.mesh.surface()
+
+    def print_mesh_analysis(self):
+        return self.mesh.print_analysis()
+
+    def min_edge_length(self):
+        return self.mesh.min_edge_length()
+
+    def max_edge_length(self):
+        return self.mesh.max_edge_length()
+
+    def aver_edge_length(self):
+        return self.mesh.aver_edge_length()
+
+    def stdev_edge_length(self):
+        return self.mesh.stdev_edge_length()
 
     def volume(self):
         return self.mesh.volume()
