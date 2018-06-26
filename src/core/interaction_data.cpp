@@ -40,7 +40,6 @@
 #include "initialize.hpp"
 #include "interaction_data.hpp"
 #include "lj.hpp"
-#include "ljangle.hpp"
 #include "ljcos.hpp"
 #include "ljcos2.hpp"
 #include "ljgen.hpp"
@@ -152,6 +151,7 @@ std::string ia_params_get_state() {
   std::stringstream out;
   boost::archive::binary_oarchive oa(out);
   oa << ia_params;
+  oa << max_seen_particle_type;
   return out.str();
 }
 
@@ -162,6 +162,9 @@ void ia_params_set_state(std::string const &state) {
   boost::archive::binary_iarchive ia(ss);
   ia_params.clear();
   ia >> ia_params;
+  ia >> max_seen_particle_type;
+  mpi_bcast_max_seen_particle_type(max_seen_particle_type);
+  mpi_bcast_all_ia_params();
 }
 
 static void recalc_maximal_cutoff_bonded() {
@@ -344,11 +347,6 @@ static void recalc_maximal_cutoff_nonbonded() {
         max_cut_current = (data->LJGEN_cut + data->LJGEN_offset);
 #endif
 
-#ifdef LJ_ANGLE
-      if (max_cut_current < (data->LJANGLE_cut))
-        max_cut_current = (data->LJANGLE_cut);
-#endif
-
 #ifdef SMOOTH_STEP
       if (max_cut_current < data->SmSt_cut)
         max_cut_current = data->SmSt_cut;
@@ -514,8 +512,8 @@ void make_bond_type_exist(int type) {
     return;
   }
   /* else allocate new memory */
-  bonded_ia_params = (Bonded_ia_parameters *)Utils::realloc(
-      bonded_ia_params, ns * sizeof(Bonded_ia_parameters));
+  bonded_ia_params = static_cast<Bonded_ia_parameters *>(Utils::realloc(
+      bonded_ia_params, ns * sizeof(Bonded_ia_parameters)));
   /* set bond types not used as undefined */
   for (i = n_bonded_ia; i < ns; i++)
     bonded_ia_params[i].type = BONDED_IA_NONE;
