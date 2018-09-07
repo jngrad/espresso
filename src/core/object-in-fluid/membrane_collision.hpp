@@ -36,6 +36,7 @@
 #include "nonbonded_interactions/nonbonded_interaction_data.hpp"
 #include "particle_data.hpp"
 #include "random.hpp"
+#include "object-in-fluid/out_direction.hpp"
 
 int membrane_collision_set_params(int part_type_a, int part_type_b, double a,
                                   double n, double cut, double offset);
@@ -44,6 +45,52 @@ int membrane_collision_set_params(int part_type_a, int part_type_b, double a,
 // particles at interatomic separation r */
 inline double sigmoid_force_r(double a, double n, double r) {
   return (a / (1 + exp(n * r)));
+}
+
+/** Update surface normal of a particle belonging to an elastic membrane.
+ *  @param p1 particle for which to calculate surface normal
+ */
+inline void update_surface_normal(Particle *p1) {
+  Bonded_ia_parameters *iaparams;
+  if (p1->bl.n <= 0) {
+    return;
+  }
+  int type_num = p1->bl.e[0];
+  iaparams = &bonded_ia_params[type_num];
+  int type = iaparams->type;
+  int n_partners = iaparams->num;
+  if (n_partners < 3) {
+    // runtimeErrorMsg() << "particle only has " << n_partners << " partners.";
+    return;
+  }
+  Particle *p2 = local_particles[p1->bl.e[1]];
+  if (!p2) {
+    runtimeErrorMsg() << "bond broken between particles " << p1->p.identity;
+    return;
+  }
+  Particle *p3 = local_particles[p1->bl.e[2]];
+  if (!p3) {
+    runtimeErrorMsg()
+        << "bond broken between particles " << p1->p.identity << ", "
+        << p1->bl.e[1] << " and " << p1->bl.e[2]
+        << " (particles are not stored on the same node)";
+    return;
+  }
+  Particle *p4 = local_particles[p1->bl.e[3]];
+  if (!p4) {
+    runtimeErrorMsg()
+        << "bond broken between particles " << p1->p.identity << ", "
+        << p1->bl.e[1] << ", " << p1->bl.e[2] << " and "
+        << p1->bl.e[3] << " (particles not stored on the same node)";
+    return;
+  }
+  /* calculate surface normal */
+  int bond_broken = calc_out_direction(p1, p2, p3, p4, iaparams);
+  if (bond_broken) {
+    runtimeErrorMsg() << "bond broken between particles "
+                      << p1->p.identity << ", " << p2->p.identity << ", "
+                      << p3->p.identity << " and " << p4->p.identity;
+  }
 }
 
 /** Calculate membrane-collision force between particle p1 and p2 */
@@ -80,6 +127,9 @@ inline void add_membrane_collision_pair_force(const Particle *p1,
     // negative
 
     if (r_off > 0.0) {
+      // update normals
+      update_surface_normal((Particle*) p1);
+      update_surface_normal((Particle*) p2);
 
       out1 = p1->p.out_direction;
       out2 = p2->p.out_direction;
