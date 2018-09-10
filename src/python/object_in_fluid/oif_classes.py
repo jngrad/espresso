@@ -897,7 +897,7 @@ class OifCell(object):
     """
 
     def __init__(self, cell_type=None, origin=None, particle_type=None,
-                 particle_mass=1.0, rotate=None):
+                 particle_mass=1.0, rotate=None, exclusion_neighbours = True):
         if (cell_type is None) or (not isinstance(cell_type, OifCellType)):
             raise Exception(
                 "OifCell: No cellType provided or wrong type. Quitting.")
@@ -911,6 +911,8 @@ class OifCell(object):
             raise Exception("OifCell: particle mass must be float.")
         if (rotate is not None) and not ((len(rotate) == 3) and isinstance(rotate[0], float) and isinstance(rotate[1], float) and isinstance(rotate[2], float)):
             raise TypeError("Rotate must be list of three floats.")
+        if not isinstance(exclusion_neighbours, bool):
+            raise Exception("OifCell: exclusion_neighbours must be bool.")
 
         self.cell_type = cell_type
         self.cell_type.system.max_oif_objects = self.cell_type.system.max_oif_objects + 1
@@ -961,6 +963,10 @@ class OifCell(object):
                         p.id].A.part_id,
                      self.mesh.neighbors[p.id].B.part_id, self.mesh.neighbors[p.id].C.part_id))
 
+        if exclusion_neighbours is True:
+            for edge in self.mesh.edges:
+                self.cell_type.system.part[edge.A.part_id].add_exclusion(edge.B.part_id)
+    
     def get_origin(self):
         center = np.array([0.0, 0.0, 0.0])
         for p in self.mesh.points:
@@ -1000,10 +1006,10 @@ class OifCell(object):
         y_max = -large_number
         z_min = large_number
         z_max = -large_number
-        for p in self.mesh.points:
+        for p in  self.mesh.points:
             coords = p.get_pos()
             if coords[0] < x_min:
-                x_min = coords[0]
+               x_min = coords[0]
             if coords[0] > x_max:
                 x_max = coords[0]
             if coords[1] < y_min:
@@ -1015,6 +1021,35 @@ class OifCell(object):
             if coords[2] > z_max:
                 z_max = coords[2]
         return [x_min, x_max, y_min, y_max, z_min, z_max]
+
+    def point_bound(self):
+        x_min = large_number
+        x_max = -large_number
+        y_min = large_number
+        y_max = -large_number
+        z_min = large_number
+        z_max = -large_number
+        for p in  self.mesh.points:
+            coords = p.get_pos()
+            if coords[0] < x_min:
+                x_min = coords[0]
+                x_min_point = p
+            if coords[0] > x_max:
+                x_max = coords[0]
+                x_max_point = p
+            if coords[1] < y_min:
+                y_min = coords[1]
+                y_min_point = p
+            if coords[1] > y_max:
+                y_max = coords[1]
+                y_max_point = p
+            if coords[2] < z_min:
+                z_min = coords[2]
+                z_min_point = p
+            if coords[2] > z_max:
+                z_max = coords[2]
+                z_max_point = p
+        return [x_min_point, x_max_point, y_min_point, y_max_point, z_min_point, z_max_point]
 
     def surface(self):
         return self.mesh.surface()
