@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define MASS
 #define EXCLUSIONS
-#define MOLFORCES
 
 #define COLLISION_DETECTION
 #define LANGEVIN_PER_PARTICLE
@@ -67,5 +66,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define OVERLAPPED
 
 #define BOND_ANGLE
-#define BOND_ANGLEDIST
-#define BOND_ANGLEDIST_HARMONIC

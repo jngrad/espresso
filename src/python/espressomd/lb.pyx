@@ -312,12 +312,12 @@ IF LB_GPU:
             cdef int length
             length = positions.shape[0]
             velocities = np.empty_like(positions)
-            lb_lbfluid_get_interpolated_velocity_at_positions( < double * >np.PyArray_GETPTR2(positions, 0, 0), < double * >np.PyArray_GETPTR2(velocities, 0, 0), length)
+            lb_lbfluid_get_interpolated_velocity_at_positions(< double * >np.PyArray_GETPTR2(positions, 0, 0), < double * >np.PyArray_GETPTR2(velocities, 0, 0), length)
             return velocities
 
 IF LB or LB_GPU:
     cdef class LBFluidRoutines(object):
-        cdef int node[3]
+        cdef Vector3i node
 
         def __init__(self, key):
             utils.check_type_or_throw_except(
@@ -325,6 +325,8 @@ IF LB or LB_GPU:
             self.node[0] = key[0]
             self.node[1] = key[1]
             self.node[2] = key[2]
+            if not lb_lbnode_is_index_valid(self.node):
+                raise ValueError("LB node index out of bounds")
 
         property velocity:
             def __get__(self):

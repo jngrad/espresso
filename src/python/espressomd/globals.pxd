@@ -62,6 +62,7 @@ cdef extern from "domain_decomposition.hpp":
     ctypedef struct  DomainDecomposition:
         int cell_grid[3]
         double cell_size[3]
+        bool fully_connected[3]
 
     extern DomainDecomposition dd
     extern int max_num_cells
@@ -73,7 +74,7 @@ cdef extern from "domain_decomposition.hpp":
 cdef extern from "particle_data.hpp":
     extern int n_part
 
-cdef extern from "interaction_data.hpp":
+cdef extern from "nonbonded_interactions/nonbonded_interaction_data.hpp":
     double dpd_gamma
     double dpd_r_cut
     extern double max_cut
@@ -98,13 +99,13 @@ cdef extern from "dpd.hpp":
 
 
 IF LB:
-    cdef extern from "lb.hpp":
+    cdef extern from "grid_based_algorithms/lb.hpp":
         ctypedef struct LB_Parameters:
             double tau
         extern LB_Parameters lbpar
 
 IF LB_GPU:
-    cdef extern from "lbgpu.hpp":
+    cdef extern from "grid_based_algorithms/lbgpu.hpp":
         ctypedef struct LB_parameters_gpu:
             double tau
         extern LB_parameters_gpu lbpar_gpu

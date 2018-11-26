@@ -20,7 +20,7 @@
 */
 #ifndef _CELLS_H
 #define _CELLS_H
-/** \file cells.hpp
+/** \file
     This file contains everything related to the cell structure / cell
     system.
 
@@ -152,30 +152,19 @@ struct CellStructure {
   GhostCommunicator update_ghost_pos_comm;
   /** Communicator to collect ghost forces. */
   GhostCommunicator collect_ghost_force_comm;
-#ifdef LB
-  /** Communicator for particle data used by lattice Boltzmann */
-  GhostCommunicator ghost_lbcoupling_comm;
-#endif
-#ifdef ENGINE
-  // Communicator for particle data used by ENGINE feature
-  GhostCommunicator ghost_swimming_comm;
-#endif
-#ifdef VIRTUAL_SITES_INERTIALESS_TRACERS
-  GhostCommunicator vs_inertialess_tracers_ghost_force_comm;
-#endif
 
   /** Cell system dependent function to find the right node for a
       particle at position pos.
       \param  pos Position of a particle.
       \return number of the node where to put the particle.
   */
-  int (*position_to_node)(double pos[3]);
+  int (*position_to_node)(const Vector3d &pos);
   /** Cell system dependent function to find the right cell for a
       particle at position pos.
       \param  pos Position of a particle.
       \return pointer to cell  where to put the particle.
   */
-  Cell *(*position_to_cell)(const double pos[3]);
+  Cell *(*position_to_cell)(const Vector3d &pos);
 };
 
 /*@}*/
@@ -306,9 +295,6 @@ void announce_resort_particles();
 
 /* Checks if a particle resorting is required. */
 void check_resort_particles();
-
-/* Do a strict particle sorting, including order in the cells. */
-void local_sort_particles();
 
 /*@}*/
 
