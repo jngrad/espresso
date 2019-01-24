@@ -848,7 +848,7 @@ class OifCellType(object):  # analogous to oif_template
         self.kv = kv
         self.kvisc = kvisc
         self.normal = normal
-        if (ks != 0.0) or (kslin != 0.0) or (kb != 0.0) or (kal != 0.0):
+        if (ks != 0.0) or (kslin != 0.0) or (kb != 0.0) or (kal != 0.0) or (kvisc != 0.0):
             for angle in self.mesh.angles:
                 r0 = vec_distance(angle.B.get_pos(), angle.C.get_pos())
                 phi = angle_btw_triangles(
