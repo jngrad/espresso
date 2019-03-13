@@ -661,14 +661,13 @@ class Mesh(object):
             raise Exception("Mesh, min_edge_length: No edges. Quitting.")
         return min_length
 
-    def total_fluid_force(self,lbfluid):
+    def total_fluid_force(self,lbfluid,friction):
         total_force = np.array([0.0, 0.0, 0.0])
-        fric = lbfluid._params["fric"]
         for p in self.points:
             vel_point = p.get_vel()
             pos_point = p.get_pos()
             vel_fluid = lbfluid.get_interpolated_velocity(pos_point)
-            total_force += - fric*(vel_point - vel_fluid)      
+            total_force += - friction*(vel_point - vel_fluid)      
         return total_force
 
     def max_edge_length(self):
@@ -1060,8 +1059,8 @@ class OifCell(object):
     def min_edge_length(self):
         return self.mesh.min_edge_length()
 
-    def total_fluid_force(self,lbfluid):
-        return self.mesh.total_fluid_force(lbfluid)
+    def total_fluid_force(self,lbfluid,friction):
+        return self.mesh.total_fluid_force(lbfluid,friction)
 
     def max_edge_length(self):
         return self.mesh.max_edge_length()
