@@ -28,8 +28,17 @@
 #include "bonded_interactions/bonded_interaction_data.hpp"
 #include "grid.hpp"
 #include "particle_data.hpp"
-#include <utils/Vector.hpp>
 #include <utils/math/triangle_functions.hpp>
+
+// for testing purpose only....
+inline int cimo_vector_product(double &res0, double &res1, double &res2, double a0, double a1, double a2, double b0, double b1, double b2) {
+    res0 = a1 * b2 - a2 * b1;
+    res1 = a2 * b0 - a0 * b2;
+    res2 = a0 * b1 - a1 * b0;
+    return 1;
+}
+
+
 
 // set parameters for local forces
 int oif_local_forces_set_params(int bond_type, double r0, double ks,
@@ -156,12 +165,92 @@ inline int calc_oif_local(Particle *p2, Particle *p1, Particle *p3,
                                        // consistent with Krueger and Fedosov
     auto const fac = iaparams->p.oif_local_forces.kb * aa;
 
+    double testoldforce[3],testoldforce2[3],testoldforce3[3],testoldforce4[3];
+
     for (int i = 0; i < 3; i++) {
-      force[i] += fac * n1[i];
-      force2[i] -= (0.5 * fac * n1[i] + 0.5 * fac * n2[i]);
-      force3[i] -= (0.5 * fac * n1[i] + 0.5 * fac * n2[i]);
-      force4[i] += fac * n2[i];
+      testoldforce[i] = fac * n1[i];
+      testoldforce2[i] = - (0.5 * fac * n1[i] + 0.5 * fac * n2[i]);
+      testoldforce3[i] = - (0.5 * fac * n1[i] + 0.5 * fac * n2[i]);
+      testoldforce4[i] = fac * n2[i];
     }
+    
+    // testing space:
+    // how fp1 - fp4 correspond to points A,B,C,D from the book, Figure A.1:
+     //    fp1 -> C
+     //    fp2 -> A
+     //    fp3 -> B
+     //    fp4 -> D
+     
+    
+    auto const Nc = Utils::get_n_triangle(fp1, fp2, fp3);    // returns (fp2 - fp1)x(fp3 - fp1), thus Nc = (A - C)x(B - C)  
+    auto const Nd = Utils::get_n_triangle(fp4, fp3, fp2);    // returns (fp3 - fp4)x(fp2 - fp4), thus Nd = (B - D)x(A - D)  
+
+    auto const newphi = Utils::angle_btw_triangles(fp1, fp2, fp3, fp4);
+    auto const newaa = (newphi - iaparams->p.oif_local_forces
+                               .phi0); // no renormalization by phi0, to be
+                                       // consistent with Krueger and Fedosov
+    auto const BminA = fp3 - fp2;
+    auto const newfac = iaparams->p.oif_local_forces.kb * newaa;
+    auto const factorFaNc = (fp2 - fp3) * (fp1 - fp3) / BminA.norm() / Nc.norm2();
+    auto const factorFaNd = (fp2 - fp3) * (fp4 - fp3) / BminA.norm() / Nd.norm2();
+    auto const factorFbNc = (fp2 - fp3) * (fp2 - fp1) / BminA.norm() / Nc.norm2();
+    auto const factorFbNd = (fp2 - fp3) * (fp2 - fp4) / BminA.norm() / Nd.norm2();
+
+//    printf(" check: %lf %lf %lf \n", BminA.norm(), Nc.norm2(), Nd.norm2());
+    double newforce[3],newforce2[3],newforce3[3],newforce4[3];
+    for (int i = 0; i < 3; i++) {
+      newforce[i] = - newfac * BminA.norm()/Nc.norm2() * Nc[i];                // Fc
+      newforce2[i] =  newfac * (factorFaNc * Nc[i] + factorFaNd * Nd[i]);   // Fa
+      newforce3[i] =  newfac * (factorFbNc * Nc[i] + factorFbNd * Nd[i]);   // Fb
+      newforce4[i] = - newfac * BminA.norm()/Nd.norm2() * Nd[i];               // Fc
+    }
+    
+    for (int i = 0; i < 3; i++) {
+      force[i] -= newfac * BminA.norm()/Nc.norm2() * Nc[i];                // Fc
+      force2[i] +=  newfac * (factorFaNc * Nc[i] + factorFaNd * Nd[i]);   // Fa
+      force3[i] +=  newfac * (factorFbNc * Nc[i] + factorFbNd * Nd[i]);   // Fb
+      force4[i] -= newfac * BminA.norm()/Nd.norm2() * Nd[i];               // Fc
+    }
+
+    
+    double ffree[3], newffree[3];
+    for (int i = 0; i < 3; i++) {
+      newffree[i] = newforce[i] + newforce2[i] + newforce3[i] + newforce4[i];
+      ffree[i] = testoldforce[i] + testoldforce2[i] + testoldforce3[i] + testoldforce4[i];
+    }
+//    printf(" force free new: %lf %lf %lf \n", newffree[0], newffree[1], newffree[2]);
+//    printf(" force free old implementation: %lf %lf %lf \n", ffree[0], ffree[1], ffree[2]);
+    //printf(" %lf %lf %lf \n  %lf %lf %lf  \n", force[0],  force[1],  force[2],  newforce[0],  newforce[1],  newforce[2]);     
+    //printf(" %lf %lf %lf \n  %lf %lf %lf  \n", force2[0],  force2[1],  force2[2],  newforce2[0],  newforce2[1],  newforce2[2]);     
+    //printf(" %lf %lf %lf \n  %lf %lf %lf  \n", force3[0],  force3[1],  force3[2],  newforce3[0],  newforce3[1],  newforce3[2]);     
+    //printf(" %lf %lf %lf \n  %lf %lf %lf  \n\n", force4[0],  force4[1],  force4[2],  newforce4[0],  newforce4[1],  newforce4[2]);     
+    
+    auto const tt = 0.25*(fp1 + fp2 + fp3 + fp4); //tt is centroid
+    double torqueC0,torqueC1,torqueC2;
+    cimo_vector_product(torqueC0,torqueC1,torqueC2,(fp1 - tt)[0],(fp1 - tt)[1],(fp1 - tt)[2],newforce[0],newforce[1],newforce[2]);
+    double torqueA0,torqueA1,torqueA2;
+    cimo_vector_product(torqueA0,torqueA1,torqueA2,(fp2 - tt)[0],(fp2 - tt)[1],(fp2 - tt)[2],newforce2[0],newforce2[1],newforce2[2]);
+    double torqueB0,torqueB1,torqueB2;
+    cimo_vector_product(torqueB0,torqueB1,torqueB2,(fp3 - tt)[0],(fp3 - tt)[1],(fp3 - tt)[2],newforce3[0],newforce3[1],newforce3[2]);
+    double torqueD0,torqueD1,torqueD2;
+    cimo_vector_product(torqueD0,torqueD1,torqueD2,(fp4 - tt)[0],(fp4 - tt)[1],(fp4 - tt)[2],newforce4[0],newforce4[1],newforce4[2]);
+    double total_torque0,total_torque1,total_torque2;
+    total_torque0 = torqueA0 + torqueB0 + torqueC0 + torqueD0;
+    total_torque1 = torqueA1 + torqueB1 + torqueC1 + torqueD1;
+    total_torque2 = torqueA2 + torqueB2 + torqueC2 + torqueD2;
+//    printf("    torque free new: %lf %lf %lf\n", total_torque0, total_torque1, total_torque2);
+
+    cimo_vector_product(torqueC0,torqueC1,torqueC2,(fp1 - tt)[0],(fp1 - tt)[1],(fp1 - tt)[2],testoldforce[0],testoldforce[1],testoldforce[2]);
+    cimo_vector_product(torqueA0,torqueA1,torqueA2,(fp2 - tt)[0],(fp2 - tt)[1],(fp2 - tt)[2],testoldforce2[0],testoldforce2[1],testoldforce2[2]);
+    cimo_vector_product(torqueB0,torqueB1,torqueB2,(fp3 - tt)[0],(fp3 - tt)[1],(fp3 - tt)[2],testoldforce3[0],testoldforce3[1],testoldforce3[2]);
+    cimo_vector_product(torqueD0,torqueD1,torqueD2,(fp4 - tt)[0],(fp4 - tt)[1],(fp4 - tt)[2],testoldforce4[0],testoldforce4[1],testoldforce4[2]);
+    total_torque0 = torqueA0 + torqueB0 + torqueC0 + torqueD0;
+    total_torque1 = torqueA1 + torqueB1 + torqueC1 + torqueD1;
+    total_torque2 = torqueA2 + torqueB2 + torqueC2 + torqueD2;
+//    printf("    torque free old implementation (should be non-torque-free): %lf %lf %lf\n\n", total_torque0, total_torque1, total_torque2);
+    
+    
+     
   }
 
   /* local area
