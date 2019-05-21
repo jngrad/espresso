@@ -30,6 +30,12 @@
 #include "particle_data.hpp"
 #include <utils/math/triangle_functions.hpp>
 
+inline int cimo_vector_product(double &res0, double &res1, double &res2, double a0, double a1, double a2, double b0, double b1, double b2) {
+    res0 = a1 * b2 - a2 * b1;
+    res1 = a2 * b0 - a0 * b2;
+    res2 = a0 * b1 - a1 * b0;
+    return 1;
+}
 
 // set parameters for local forces
 int oif_local_forces_set_params(int bond_type, double r0, double ks,
@@ -171,6 +177,87 @@ inline int calc_oif_local(Particle *p2, Particle *p1, Particle *p3,
       force3[i] +=  fac * (factorFbNc * Nc[i] + factorFbNd * Nd[i]);    // Fb
       force4[i] -= fac * BminA.norm()/Nd.norm2() * Nd[i];               // Fc
     }
+    
+    
+    double newforce[3],newforce2[3],newforce3[3],newforce4[3];
+    for (int i = 0; i < 3; i++) {
+      newforce[i] = - fac * BminA.norm()/Nc.norm2() * Nc[i];                // Fc
+      newforce2[i] =  fac * (factorFaNc * Nc[i] + factorFaNd * Nd[i]);   // Fa
+      newforce3[i] =  fac * (factorFbNc * Nc[i] + factorFbNd * Nd[i]);   // Fb
+      newforce4[i] = - fac * BminA.norm()/Nd.norm2() * Nd[i];               // Fc
+    }
+    
+    
+    // comparison with force- and torque-free implementation from Krueger, see book Computational Blood Cell mechanics, appendix A.2
+    auto const nc = Utils::get_n_triangle(fp1, fp2, fp3).normalize();
+    auto const nd = Utils::get_n_triangle(fp4, fp3, fp2).normalize(); 
+    
+    auto const denominator = sqrt(1 - (nc * nd) * (nc * nd));
+    double inv_twiceSABC = 1.0 / Utils::get_n_triangle(fp1, fp2, fp3).norm();
+    double inv_twiceSABD = 1.0 / Utils::get_n_triangle(fp4, fp3, fp2).norm();
+    double scal = nc * nd;
+    auto const nd_min_scal_nc = nd - scal * nc;
+    auto const nc_min_scal_nd = nc - scal * nd;
+    
+    double cross1Fa0,cross1Fa1,cross1Fa2;
+    cimo_vector_product(cross1Fa0,cross1Fa1,cross1Fa2,(fp1 - fp3)[0],(fp1 - fp3)[1],(fp1 - fp3)[2],nd_min_scal_nc[0],nd_min_scal_nc[1],nd_min_scal_nc[2]);
+    double cross2Fa0,cross2Fa1,cross2Fa2;
+    cimo_vector_product(cross2Fa0,cross2Fa1,cross2Fa2,(fp3 - fp4)[0],(fp3 - fp4)[1],(fp3 - fp4)[2],nc_min_scal_nd[0],nc_min_scal_nd[1],nc_min_scal_nd[2]);
+
+    double cross1Fb0,cross1Fb1,cross1Fb2;
+    cimo_vector_product(cross1Fb0,cross1Fb1,cross1Fb2,(fp2 - fp1)[0],(fp2 - fp1)[1],(fp2 - fp1)[2],nd_min_scal_nc[0],nd_min_scal_nc[1],nd_min_scal_nc[2]);
+    double cross2Fb0,cross2Fb1,cross2Fb2;
+    cimo_vector_product(cross2Fb0,cross2Fb1,cross2Fb2,(fp4 - fp2)[0],(fp4 - fp2)[1],(fp4 - fp2)[2],nc_min_scal_nd[0],nc_min_scal_nd[1],nc_min_scal_nd[2]);
+
+    double crossFc0,crossFc1,crossFc2;
+    cimo_vector_product(crossFc0,crossFc1,crossFc2,(fp3 - fp2)[0],(fp3 - fp2)[1],(fp3 - fp2)[2],nd_min_scal_nc[0],nd_min_scal_nc[1],nd_min_scal_nc[2]);
+
+    double crossFd0,crossFd1,crossFd2;
+    cimo_vector_product(crossFd0,crossFd1,crossFd2,(fp2 - fp3)[0],(fp2 - fp3)[1],(fp2 - fp3)[2],nc_min_scal_nd[0],nc_min_scal_nd[1],nc_min_scal_nd[2]);
+
+    // Krueger
+    double FA[3],FB[3],FC[3],FD[3];
+    FA[0] = fac * 1.0 / denominator * (inv_twiceSABC*cross1Fa0 + inv_twiceSABD*cross2Fa0);    
+    FA[1] = fac * 1.0 / denominator * (inv_twiceSABC*cross1Fa1 + inv_twiceSABD*cross2Fa1);    
+    FA[2] = fac * 1.0 / denominator * (inv_twiceSABC*cross1Fa2 + inv_twiceSABD*cross2Fa2);    
+
+    FB[0] = fac * 1.0 / denominator * (inv_twiceSABC*cross1Fb0 + inv_twiceSABD*cross2Fb0);    
+    FB[1] = fac * 1.0 / denominator * (inv_twiceSABC*cross1Fb1 + inv_twiceSABD*cross2Fb1);    
+    FB[2] = fac * 1.0 / denominator * (inv_twiceSABC*cross1Fb2 + inv_twiceSABD*cross2Fb2);    
+
+    FC[0] = fac * 1.0 / denominator * inv_twiceSABC*crossFc0;
+    FC[1] = fac * 1.0 / denominator * inv_twiceSABC*crossFc1;    
+    FC[2] = fac * 1.0 / denominator * inv_twiceSABC*crossFc2;    
+
+    FD[0] = fac * 1.0 / denominator * inv_twiceSABD*crossFd0;
+    FD[1] = fac * 1.0 / denominator * inv_twiceSABD*crossFd1;    
+    FD[2] = fac * 1.0 / denominator * inv_twiceSABD*crossFd2;    
+
+    printf("%lf %lf %lf \n",FA[0] - newforce2[0], FA[1] - newforce2[1], FA[2] - newforce2[2]);
+    printf("%lf %lf %lf \n",FB[0] - newforce3[0], FB[1] - newforce3[1], FB[2] - newforce3[2]);
+    printf("%lf %lf %lf \n",FC[0] - newforce[0], FC[1] - newforce[1], FC[2] - newforce[2]);
+    printf("%lf %lf %lf \n\n",FD[0] - newforce4[0], FD[1] - newforce4[1], FD[2] - newforce4[2]);
+
+    auto const tt = 0.25*(fp1 + fp2 + fp3 + fp4); //tt is centroid
+    double torqueA0,torqueA1,torqueA2;
+    double torqueB0,torqueB1,torqueB2;
+    double torqueC0,torqueC1,torqueC2;
+    double torqueD0,torqueD1,torqueD2;
+    cimo_vector_product(torqueC0,torqueC1,torqueC2,(fp1 - tt)[0],(fp1 - tt)[1],(fp1 - tt)[2],FC[0],FC[1],FC[2]);
+    cimo_vector_product(torqueA0,torqueA1,torqueA2,(fp2 - tt)[0],(fp2 - tt)[1],(fp2 - tt)[2],FA[0],FA[1],FA[2]);
+    cimo_vector_product(torqueB0,torqueB1,torqueB2,(fp3 - tt)[0],(fp3 - tt)[1],(fp3 - tt)[2],FB[0],FB[1],FB[2]);
+    cimo_vector_product(torqueD0,torqueD1,torqueD2,(fp4 - tt)[0],(fp4 - tt)[1],(fp4 - tt)[2],FD[0],FD[1],FD[2]);
+    double total_torque0,total_torque1,total_torque2;
+    total_torque0 = torqueA0 + torqueB0 + torqueC0 + torqueD0;
+    total_torque1 = torqueA1 + torqueB1 + torqueC1 + torqueD1;
+    total_torque2 = torqueA2 + torqueB2 + torqueC2 + torqueD2;
+    printf("    torque free old implementation (should be non-torque-free): %lf %lf %lf\n\n", total_torque0, total_torque1, total_torque2);
+
+
+
+
+
+
   }
 
   /* local area
