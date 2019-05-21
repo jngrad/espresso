@@ -175,7 +175,7 @@ inline int calc_oif_local(Particle *p2, Particle *p1, Particle *p3,
       force[i] -= fac * BminA.norm()/Nc.norm2() * Nc[i];                // Fc
       force2[i] +=  fac * (factorFaNc * Nc[i] + factorFaNd * Nd[i]);    // Fa
       force3[i] +=  fac * (factorFbNc * Nc[i] + factorFbNd * Nd[i]);    // Fb
-      force4[i] -= fac * BminA.norm()/Nd.norm2() * Nd[i];               // Fc
+      force4[i] -= fac * BminA.norm()/Nd.norm2() * Nd[i];               // Fd
     }
     
     
@@ -184,7 +184,7 @@ inline int calc_oif_local(Particle *p2, Particle *p1, Particle *p3,
       newforce[i] = - fac * BminA.norm()/Nc.norm2() * Nc[i];                // Fc
       newforce2[i] =  fac * (factorFaNc * Nc[i] + factorFaNd * Nd[i]);   // Fa
       newforce3[i] =  fac * (factorFbNc * Nc[i] + factorFbNd * Nd[i]);   // Fb
-      newforce4[i] = - fac * BminA.norm()/Nd.norm2() * Nd[i];               // Fc
+      newforce4[i] = - fac * BminA.norm()/Nd.norm2() * Nd[i];               // Fd
     }
     
     
@@ -233,10 +233,22 @@ inline int calc_oif_local(Particle *p2, Particle *p1, Particle *p3,
     FD[1] = fac * 1.0 / denominator * inv_twiceSABD*crossFd1;    
     FD[2] = fac * 1.0 / denominator * inv_twiceSABD*crossFd2;    
 
-    printf("%lf %lf %lf \n",FA[0] - newforce2[0], FA[1] - newforce2[1], FA[2] - newforce2[2]);
-    printf("%lf %lf %lf \n",FB[0] - newforce3[0], FB[1] - newforce3[1], FB[2] - newforce3[2]);
-    printf("%lf %lf %lf \n",FC[0] - newforce[0], FC[1] - newforce[1], FC[2] - newforce[2]);
-    printf("%lf %lf %lf \n\n",FD[0] - newforce4[0], FD[1] - newforce4[1], FD[2] - newforce4[2]);
+    //for (int i = 0; i < 3; i++) {
+      //force[i] += FC[i];                // Fc
+      //force2[i] +=  FA[i];    // Fa
+      //force3[i] +=  FB[i];    // Fb
+      //force4[i] += FD[i];               // Fc
+    //}
+ 
+
+
+
+    printf("%2.10lf %2.10lf %2.10lf \n",FA[0] - newforce2[0], FA[1] - newforce2[1], FA[2] - newforce2[2]);
+    printf("%2.10lf %2.10lf %2.10lf \n",FB[0] - newforce3[0], FB[1] - newforce3[1], FB[2] - newforce3[2]);
+    printf("%2.10lf %2.10lf %2.10lf \n",FC[0] - newforce[0], FC[1] - newforce[1], FC[2] - newforce[2]);
+    printf("%2.10lf %2.10lf %2.10lf \n\n",FD[0] - newforce4[0], FD[1] - newforce4[1], FD[2] - newforce4[2]);
+    printf("%2.10lf %2.10lf %2.10lf %2.10lf %2.10lf %2.10lf \n",FA[0], FA[1], FA[2], newforce2[0],  newforce2[1], newforce2[2]);
+
 
     auto const tt = 0.25*(fp1 + fp2 + fp3 + fp4); //tt is centroid
     double torqueA0,torqueA1,torqueA2;
