@@ -67,10 +67,115 @@ inline int calc_oif_local(Particle *p2, Particle *p1, Particle *p3,
                           double force4[3]) // first-fold-then-the-same approach
 {
 
+    printf("p1->r.p positions:\n");
+    printf("p1 %2.10lf %2.10lf %2.10lf \n",p1->r.p[0], p1->r.p[1], p1->r.p[2]);
+    printf("p2 %2.10lf %2.10lf %2.10lf \n",p2->r.p[0], p2->r.p[1], p2->r.p[2]);
+    printf("p3 %2.10lf %2.10lf %2.10lf \n",p3->r.p[0], p3->r.p[1], p3->r.p[2]);
+    printf("p4 %2.10lf %2.10lf %2.10lf \n",p4->r.p[0], p4->r.p[1], p4->r.p[2]);
+
+  auto const testfp3folded = folded_position(*p3);
+  auto const testfp3un_folded = unfolded_position(*p3);
+  //  printf("fp3 fold vs unfold %2.10lf %2.10lf %2.10lf %2.10lf %2.10lf %2.10lf \n",testfp3folded[0], testfp3folded[1], testfp3folded[2],testfp3un_folded[0], testfp3un_folded[1], testfp3un_folded[2]);
+
+/* takto to bolo originalne */
   auto const fp2 = unfolded_position(*p2);
   auto const fp1 = fp2 + get_mi_vector(p1->r.p, fp2);
   auto const fp3 = fp2 + get_mi_vector(p3->r.p, fp2);
   auto const fp4 = fp2 + get_mi_vector(p4->r.p, fp2);
+
+/* novy pokus */
+  //auto const fp2 = p2->r.p;
+  //auto const fp1 = p1->r.p;
+  //auto const fp3 = p3->r.p;
+  //auto const fp4 = p4->r.p;
+// nefunguje.....
+
+
+/* dalsi pokus - z global forces... */
+        // getting unfolded positions of all particles
+        // first find out which particle out of p1, p2 (possibly p3, p4) is not
+        // a ghost particle. In almost all cases it is p1, however, it might be
+        // other one. we call this particle reference particle.
+   //Utils::Vector3d fp1, fp2, fp3, fp4;
+ 
+   //double AA[3], BB[3], CC[3];
+
+
+
+
+        //if (p1->l.ghost != 1) {
+          //// unfold non-ghost particle using image, because for physical
+          //// particles, the structure p->l.i is correctly set
+          //fp1 = unfolded_position(p1);
+          //// other coordinates are obtained from its relative positions to the
+          //// reference particle
+          //get_mi_vector(AA, p2->r.p, fp1);
+          //get_mi_vector(BB, p3->r.p, fp1);
+          //get_mi_vector(CC, p4->r.p, fp1);
+          //for (int i = 0; i < 3; i++) {
+            //fp2[i] = fp1[i] + AA[i];
+            //fp3[i] = fp1[i] + BB[i];
+            //fp4[i] = fp1[i] + CC[i];
+          //}
+        //} else {
+          //// in case the first particle is a ghost particle
+          //if (p2->l.ghost != 1) {
+            //fp2 = unfolded_position(p2);
+            //get_mi_vector(AA, p1->r.p, fp2);
+            //get_mi_vector(BB, p3->r.p, fp2);
+            //get_mi_vector(CC, p4->r.p, fp2);
+            //for (int i = 0; i < 3; i++) {
+              //fp1[i] = fp2[i] + AA[i];
+              //fp3[i] = fp2[i] + BB[i];
+              //fp4[i] = fp2[i] + CC[i];
+            //}
+          //} else {
+            //// in case the first and the second particle are ghost particles
+            //if (p3->l.ghost != 1) {
+              //fp3 = unfolded_position(p3);
+              //get_mi_vector(AA, p1->r.p, fp3);
+              //get_mi_vector(BB, p2->r.p, fp3);
+              //get_mi_vector(CC, p4->r.p, fp3);
+              //for (int i = 0; i < 3; i++) {
+                //fp1[i] = fp3[i] + AA[i];
+                //fp2[i] = fp3[i] + BB[i];
+                //fp4[i] = fp3[i] + BB[i];
+              //}
+            //} else {
+              //// in case the first, the second and the third particle are ghost particles
+              //if (p4->l.ghost != 1) {
+                //fp4 = unfolded_position(p4);
+                //get_mi_vector(AA, p1->r.p, fp4);
+                //get_mi_vector(BB, p2->r.p, fp4);
+                //get_mi_vector(CC, p3->r.p, fp4);
+                //for (int i = 0; i < 3; i++) {
+                  //fp1[i] = fp4[i] + AA[i];
+                  //fp2[i] = fp4[i] + BB[i];
+                  //fp3[i] = fp4[i] + CC[i];
+                //}
+              //} else {
+                //printf("Something wrong in oif_global_forces.hpp: All particles "
+                       //"in a bond are ghost particles, impossible to unfold the "
+                       //"positions...");
+                //return 0;
+              //}
+            //}
+          //}
+        //}
+          
+///// koniec z global forces
+
+
+
+
+
+
+    printf("fp1 positions:\n");
+    printf("fp1 %2.10lf %2.10lf %2.10lf \n",fp1[0], fp1[1], fp1[2]);
+    printf("fp2 %2.10lf %2.10lf %2.10lf \n",fp2[0], fp2[1], fp2[2]);
+    printf("fp3 %2.10lf %2.10lf %2.10lf \n",fp3[0], fp3[1], fp3[2]);
+    printf("fp4 %2.10lf %2.10lf %2.10lf \n",fp4[0], fp4[1], fp4[2]);
+
 
   for (int i = 0; i < 3; i++) {
     force[i] = 0;
@@ -161,6 +266,13 @@ inline int calc_oif_local(Particle *p2, Particle *p1, Particle *p3,
     auto const Nd = Utils::get_n_triangle(fp4, fp3, fp2);    // returns (fp3 - fp4)x(fp2 - fp4), thus Nd = (B - D)x(A - D)  
 
     auto const phi = Utils::angle_btw_triangles(fp1, fp2, fp3, fp4);
+    printf("phi phi0 %lf %lf ",phi,iaparams->p.oif_local_forces
+                               .phi0);
+    //printf("positions:\n");
+    //printf("fp1 %2.10lf %2.10lf %2.10lf \n",fp1[0], fp1[1], fp1[2]);
+    //printf("fp2 %2.10lf %2.10lf %2.10lf \n",fp2[0], fp2[1], fp2[2]);
+    //printf("fp3 %2.10lf %2.10lf %2.10lf \n",fp3[0], fp3[1], fp3[2]);
+    //printf("fp4 %2.10lf %2.10lf %2.10lf \n",fp4[0], fp4[1], fp4[2]);
     auto const aa = (phi - iaparams->p.oif_local_forces
                                .phi0); // no renormalization by phi0, to be
                                        // consistent with Krueger and Fedosov
@@ -243,11 +355,11 @@ inline int calc_oif_local(Particle *p2, Particle *p1, Particle *p3,
 
 
 
-    printf("%2.10lf %2.10lf %2.10lf \n",FA[0] - newforce2[0], FA[1] - newforce2[1], FA[2] - newforce2[2]);
-    printf("%2.10lf %2.10lf %2.10lf \n",FB[0] - newforce3[0], FB[1] - newforce3[1], FB[2] - newforce3[2]);
-    printf("%2.10lf %2.10lf %2.10lf \n",FC[0] - newforce[0], FC[1] - newforce[1], FC[2] - newforce[2]);
-    printf("%2.10lf %2.10lf %2.10lf \n\n",FD[0] - newforce4[0], FD[1] - newforce4[1], FD[2] - newforce4[2]);
-    printf("%2.10lf %2.10lf %2.10lf %2.10lf %2.10lf %2.10lf \n",FA[0], FA[1], FA[2], newforce2[0],  newforce2[1], newforce2[2]);
+    printf("%2.10lf %2.10lf %2.10lf ",FA[0] - newforce2[0], FA[1] - newforce2[1], FA[2] - newforce2[2]);
+    printf("%2.10lf %2.10lf %2.10lf ",FB[0] - newforce3[0], FB[1] - newforce3[1], FB[2] - newforce3[2]);
+    printf("%2.10lf %2.10lf %2.10lf ",FC[0] - newforce[0], FC[1] - newforce[1], FC[2] - newforce[2]);
+    printf("%2.10lf %2.10lf %2.10lf ",FD[0] - newforce4[0], FD[1] - newforce4[1], FD[2] - newforce4[2]);
+    //printf("%2.10lf %2.10lf %2.10lf %2.10lf %2.10lf %2.10lf \n",FA[0], FA[1], FA[2], newforce2[0],  newforce2[1], newforce2[2]);
 
 
     auto const tt = 0.25*(fp1 + fp2 + fp3 + fp4); //tt is centroid
@@ -263,7 +375,7 @@ inline int calc_oif_local(Particle *p2, Particle *p1, Particle *p3,
     total_torque0 = torqueA0 + torqueB0 + torqueC0 + torqueD0;
     total_torque1 = torqueA1 + torqueB1 + torqueC1 + torqueD1;
     total_torque2 = torqueA2 + torqueB2 + torqueC2 + torqueD2;
-    printf("    torque free old implementation (should be non-torque-free): %lf %lf %lf\n\n", total_torque0, total_torque1, total_torque2);
+    printf(" torque Kr: %lf %lf %lf\n", total_torque0, total_torque1, total_torque2);
 
 
 
