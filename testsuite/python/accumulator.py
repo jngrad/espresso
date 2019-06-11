@@ -38,7 +38,6 @@ class AccumulatorTest(uts.TestCaseSystem):
     """
 
     def setUp(self):
-        np.random.seed(seed=1)
         self.system.box_l = [10.0] * 3
         self.system.cell_system.skin = 0.4
         self.system.time_step = 0.01

@@ -31,7 +31,6 @@ from numpy import random
 
 @utx.skipIfMissingFeatures("VIRTUAL_SITES_RELATIVE")
 class VirtualSites(uts.TestCaseSystem):
-    np.random.seed(1)
 
     def multiply_quaternions(self, a, b):
         return np.array(

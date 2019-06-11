@@ -30,8 +30,6 @@ class ForceCap(uts.TestCaseSystem):
 
     """
 
-    np.random.seed(1)
-
     def calc_f_max(self):
         f = np.power(self.system.part[:].f, 2)
         sqr_sum = (np.sum(f, axis=1))

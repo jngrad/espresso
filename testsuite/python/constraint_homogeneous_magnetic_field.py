@@ -26,8 +26,6 @@ import espressomd
 
 class HomogeneousMagneticFieldTest(uts.TestCaseSystem):
 
-    np.random.seed(1)
-
     def setUp(self):
         self.system.box_l = [3.0, 3.0, 3.0]
         self.system.time_step = 0.01

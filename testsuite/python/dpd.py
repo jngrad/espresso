@@ -31,8 +31,6 @@ class DPDThermostat(uts.TestCaseSystem):
     """Tests the velocity distribution created by the dpd thermostat against
        the single component Maxwell distribution."""
 
-    np.random.seed(1)
-
     def setUp(self):
         self.system.box_l = 3 * [10]
         self.system.time_step = 0.01

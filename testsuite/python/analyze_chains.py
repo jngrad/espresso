@@ -26,7 +26,6 @@ from espressomd import polymer
 
 @utx.skipIfMissingFeatures("LENNARD_JONES")
 class AnalyzeChain(uts.TestCaseSystem):
-    np.random.seed(1)
 
     num_poly = 2
     num_mono = 5

@@ -26,7 +26,6 @@ class AnalyzeITensor(uts.TestCaseSystem):
     """Test the inertia tensor analysis"""
 
     box_l = 50.0
-    np.random.seed(seed=1)
 
     @classmethod
     def setUpClass(cls):

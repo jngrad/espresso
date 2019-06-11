@@ -24,7 +24,6 @@ import numpy as np
 
 
 class ComFixed(uts.TestCaseSystem):
-    np.random.seed(1)
 
     def com(self, s):
         return np.average(s.part[:].pos, axis=0, weights=s.part[:].mass)

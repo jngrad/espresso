@@ -31,8 +31,6 @@ class LangevinThermostat(uts.TestCaseSystem):
     """Tests the velocity distribution created by the Langevin thermostat
        against the single component Maxwell distribution."""
 
-    np.random.seed(1)
-
     @classmethod
     def setUpClass(cls):
         cls.system.cell_system.set_domain_decomposition(use_verlet_lists=True)

@@ -79,7 +79,6 @@ class VirialPressureConsistency(uts.TestCaseSystem):
        Panagiotopoulos. 1996"""
 
     def setUp(self):
-        np.random.seed(seed=1)
         self.system.box_l = 3 * [50.]
         self.system.time_step = 0.01
         self.kT = 0.5

@@ -49,7 +49,6 @@ class ClusterAnalysis(uts.TestCaseSystem):
         cls.es.part.add(id=5, pos=(0.55, 0.5, 0.5))
 
     cs = ClusterStructure()
-    np.random.seed(1)
 
     # Setup check
     handle_errors("")

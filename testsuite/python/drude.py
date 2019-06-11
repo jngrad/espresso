@@ -44,7 +44,6 @@ class Drude(uts.TestCaseSystem):
         system.box_l = 3 * [box_l]
 
         system.seed = system.cell_system.get_state()['n_nodes'] * [12]
-        np.random.seed(12)
 
         # Reference Results, reproduced with LAMMPS
         # Dipole Moments

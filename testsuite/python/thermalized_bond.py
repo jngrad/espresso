@@ -32,8 +32,6 @@ class ThermalizedBond(uts.TestCaseSystem):
        thermalized bond independently against the single component Maxwell
        distribution. Adapted from langevin_thermostat testcase."""
 
-    np.random.seed(1)
-
     @classmethod
     def setUpClass(cls):
         cls.system.box_l = [10.0] * 3

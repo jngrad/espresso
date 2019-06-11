@@ -27,7 +27,6 @@ from espressomd.shapes import Wall
 class PolymerPositions(uts.TestCaseSystem):
     box_l = 15
     seed = 1
-    np.random.seed(1)
 
     def setUp(self):
         self.system.box_l = 3 * [self.box_l]

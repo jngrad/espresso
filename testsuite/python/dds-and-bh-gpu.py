@@ -36,7 +36,6 @@ def stopAll(system):
 @utx.skipIfMissingGPU()
 @utx.skipIfMissingFeatures(["DIPOLAR_BARNES_HUT"])
 class BH_DDS_gpu_multCPU_test(uts.TestCaseSystem):
-    np.random.seed(1)
 
     def vectorsTheSame(self, a, b):
         tol = 5E-2

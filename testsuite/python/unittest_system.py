@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import espressomd  # pylint: disable=import-error
 import unittest
+import numpy as np
 
 
 class CaseSystem(object):
@@ -25,6 +26,7 @@ class CaseSystem(object):
     """
     system = espressomd.System(box_l=3 * [1.])
     system.seed = system.cell_system.get_state()['n_nodes'] * [1234]
+    np.random.seed(1)
 
 
 class TestCaseSystem(unittest.TestCase, CaseSystem):

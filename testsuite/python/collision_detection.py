@@ -31,8 +31,6 @@ class CollisionDetection(uts.TestCaseSystem):
 
     """Tests interface and functionality of the collision detection / dynamic binding"""
 
-    np.random.seed(1)
-
     H = HarmonicBond(k=5000, r_0=0.1)
     H2 = HarmonicBond(k=25000, r_0=0.02)
 

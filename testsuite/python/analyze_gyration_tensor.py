@@ -21,7 +21,6 @@ import numpy as np
 
 
 class AnalyzeGyration(uts.TestCaseSystem):
-    np.random.seed(1)
     cube_len = 4
     type_cube = 0
     type_stick = 1

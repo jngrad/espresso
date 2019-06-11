@@ -44,7 +44,6 @@ class ReactionEnsembleTest(uts.TestCaseSystem):
     pKa = pKa_minus_pH + pH
     Ka = 10**(-pKa)
     box_l = (N0 / c0)**(1.0 / 3.0)
-    np.random.seed(1)
     RE = reaction_ensemble.ConstantpHEnsemble(
         temperature=1.0,
         exclusion_radius=1, seed=1)

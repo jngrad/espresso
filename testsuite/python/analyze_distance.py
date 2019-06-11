@@ -25,7 +25,6 @@ BOX_L = 50.
 
 @utx.skipIfMissingFeatures("LENNARD_JONES")
 class AnalyzeDistance(uts.TestCaseSystem):
-    np.random.seed(1)
 
     def setUp(self):
         self.system.box_l = 3 * [BOX_L]

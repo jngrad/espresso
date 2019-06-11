@@ -33,7 +33,6 @@ class CoulombCloudWall(uts.TestCaseSystem):
 
     """This compares p3m, p3m_gpu, scafacos_p3m and scafacos_p2nfft
        electrostatic forces and energy against stored data."""
-    np.random.seed(1)
 
     forces = {}
     tolerance = 1E-3

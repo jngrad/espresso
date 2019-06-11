@@ -30,7 +30,6 @@ import tests_common
 
 class InteractionsBondedTest(uts.TestCaseSystem):
 
-    np.random.seed(1)
     box_l = 10.
 
     start_pos = np.random.rand(3) * box_l

@@ -42,8 +42,6 @@ class ReactionEnsembleTest(uts.TestCaseSystem):
 
     temperature = 1.0
 
-    np.random.seed(1)
-
     # generate preliminary_energy_run_results here, this should be done in a
     # separate simulation without energy reweighting using the update energy
     # functions

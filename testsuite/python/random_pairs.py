@@ -42,8 +42,6 @@ class RandomPairTest(uts.TestCaseSystem):
         s.min_global_cut = 1.5
         n_part = 500
 
-        np.random.seed(2)
-
         s.part.add(pos=s.box_l * np.random.random((n_part, 3)))
         self.all_pairs = []
 

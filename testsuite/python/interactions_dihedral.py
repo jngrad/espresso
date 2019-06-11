@@ -77,7 +77,6 @@ def dihedral_force(k, n, phase, p1, p2, p3, p4):
 
 
 class InteractionsBondedTest(uts.TestCaseSystem):
-    np.random.seed(1)
 
     start_pos = [5., 5., 5.]
     axis = np.array([1., 0., 0.])

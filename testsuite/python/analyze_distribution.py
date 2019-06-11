@@ -23,7 +23,6 @@ import numpy as np
 
 @utx.skipIfMissingFeatures("LENNARD_JONES")
 class AnalyzeDistributions(uts.TestCaseSystem):
-    np.random.seed(1)
     num_part = 10
 
     @classmethod

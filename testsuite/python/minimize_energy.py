@@ -26,8 +26,6 @@ import espressomd
 @utx.skipIfMissingFeatures("LENNARD_JONES")
 class test_minimize_energy(uts.TestCaseSystem):
 
-    np.random.seed(1)
-
     test_rotation = espressomd.has_features(("ROTATION", "DIPOLES"))
     if test_rotation:
         from espressomd.constraints import HomogeneousMagneticField
