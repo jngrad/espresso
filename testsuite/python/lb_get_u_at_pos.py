@@ -17,22 +17,21 @@
 import sys
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 import numpy.testing
-import espressomd
 from espressomd import lb
 
 
 @utx.skipIfMissingGPU()
-class TestLBGetUAtPos(ut.TestCase):
+class TestLBGetUAtPos(uts.TestCaseSystem):
 
     """
     Check velocities at particle positions are sorted by ``id`` and
     quantitatively correct (only LB GPU).
 
     """
-    @classmethod
-    def setUpClass(self):
+    def setUp(self):
         self.params = {
             'tau': 0.01,
             'agrid': 0.5,
@@ -42,7 +41,6 @@ class TestLBGetUAtPos(ut.TestCase):
             'friction': 2.0,
             'gamma': 1.5
         }
-        self.system = espressomd.System(box_l=[1.0, 1.0, 1.0])
         self.system.box_l = self.params['box_l']
         self.system.cell_system.skin = 0.4
         self.system.time_step = 0.01

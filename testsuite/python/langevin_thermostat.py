@@ -19,27 +19,26 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 import numpy as np
 from espressomd.accumulators import Correlator
 from espressomd.observables import ParticleVelocities, ParticleBodyAngularVelocities
 from tests_common import single_component_maxwell
 
-class LangevinThermostat(ut.TestCase):
+class LangevinThermostat(uts.TestCaseSystem):
 
     """Tests the velocity distribution created by the Langevin thermostat
        against the single component Maxwell distribution."""
 
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    system.cell_system.set_domain_decomposition(use_verlet_lists=True)
-    system.cell_system.skin = 0
-    system.seed = range(system.cell_system.get_state()["n_nodes"])
-    if espressomd.has_features("PARTIAL_PERIODIC"):
-        system.periodicity = [0, 0, 0]
+    np.random.seed(1)
 
     @classmethod
     def setUpClass(cls):
-        np.random.seed(42)
+        cls.system.cell_system.set_domain_decomposition(use_verlet_lists=True)
+        cls.system.cell_system.skin = 0
+        if espressomd.has_features("PARTIAL_PERIODIC"):
+            cls.system.periodicity = [0, 0, 0]
 
     def check_velocity_distribution(self, vel, minmax, n_bins, error_tol, kT):
         """check the recorded particle distributions in velocity against a

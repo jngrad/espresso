@@ -20,9 +20,10 @@ from __future__ import print_function
 import espressomd
 import numpy as np
 import unittest as ut
+import unittest_system as uts
 
 
-class Integrate(ut.TestCase):
+class Integrate(uts.TestCaseSystem):
 
     """
     Tests integration of Newton's equations for a particle with and without
@@ -31,7 +32,8 @@ class Integrate(ut.TestCase):
     """
 
     def test(self):
-        system = espressomd.System(box_l=[10.0, 10.0, 10.0])
+        system = self.system
+        system.box_l = 3 * [10.0]
         system.cell_system.skin = 0
 
         # Newton's 1st law with time step change on the way

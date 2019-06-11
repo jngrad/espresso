@@ -18,13 +18,15 @@
 #
 from __future__ import print_function
 import unittest as ut
-import espressomd
+import unittest_system as uts
 import numpy as np
 
 
-class CellSystem(ut.TestCase):
-    system = espressomd.System(box_l=[5.0, 5.0, 5.0])
-    system.cell_system.skin = 0.0
+class CellSystem(uts.TestCaseSystem):
+
+    def setUp(self):
+        self.system.box_l = 3 * [5.0]
+        self.system.cell_system.skin = 0.0
 
     def test_cell_system(self):
         self.system.cell_system.set_n_square(use_verlet_lists=False)

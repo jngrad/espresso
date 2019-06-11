@@ -19,19 +19,19 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 import numpy as np
 from espressomd.interactions import RigidBond
 
 
 @utx.skipIfMissingFeatures("BOND_CONSTRAINT")
-class RigidBondTest(ut.TestCase):
+class RigidBondTest(uts.TestCaseSystem):
 
     def test(self):
         target_acc = 1E-3
         tol = 1.2 * target_acc
-        s = espressomd.System(box_l=[1.0, 1.0, 1.0])
-        s.seed = s.cell_system.get_state()['n_nodes'] * [1234]
+        s = self.system
         s.box_l = [10, 10, 10]
         s.cell_system.skin = 0.4
         s.time_step = 0.01

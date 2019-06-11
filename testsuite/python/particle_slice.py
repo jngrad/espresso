@@ -17,18 +17,19 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 from espressomd import has_features
 import numpy as np
 
 
-class ParticleSliceTest(ut.TestCase):
+class ParticleSliceTest(uts.TestCaseSystem):
 
     state = [[0, 0, 0], [0, 0, 1]]
-    system = espressomd.System(box_l=[10, 10, 10])
 
     def __init__(self, *args, **kwargs):
         super(ParticleSliceTest, self).__init__(*args, **kwargs)
+        self.system.box_l = 3 * [10]
         self.system.part.clear()
         for i in range(4):
             self.system.part.add(pos=[0, 0, i])

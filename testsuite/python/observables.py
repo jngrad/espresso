@@ -18,6 +18,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 import numpy as np
 from numpy.random import random
@@ -33,13 +34,11 @@ def calc_com_x(system, x):
     return com_x
 
 
-class Observables(ut.TestCase):
+class Observables(uts.TestCaseSystem):
     N_PART = 1000
-    # Handle for espresso system
-    system = espressomd.System(box_l=[10.0, 10.0, 10.0])
-    system.seed = system.cell_system.get_state()['n_nodes'] * [1234]
 
     def setUp(self):
+        self.system.box_l = 3 * [10.0]
         if not self.system.part:
             for i in range(self.N_PART):
                 self.system.part.add(pos=random(3) * 10, v=random(3), id=i)

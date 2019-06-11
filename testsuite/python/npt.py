@@ -19,27 +19,25 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
-import espressomd
-from espressomd import thermostat
 import tests_common
 
 
 @utx.skipIfMissingFeatures(["NPT", "LENNARD_JONES"])
-class NPTintegrator(ut.TestCase):
+class NPTintegrator(uts.TestCaseSystem):
 
     """This compares pressure and compressibility of a LJ system against
        expected values."""
-    S = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    S.seed = S.cell_system.get_state()['n_nodes'] * [1234]
+
     p_ext = 2.0
 
     def setUp(self):
 
         box_l = 5.86326165
-        self.S.box_l = [box_l] * 3
-        self.S.time_step = 0.01
-        self.S.cell_system.skin = 0.25
+        self.system.box_l = [box_l] * 3
+        self.system.time_step = 0.01
+        self.system.cell_system.skin = 0.25
 
         data = np.genfromtxt(tests_common.abspath(
             "data/npt_lj_system.data"))
@@ -48,26 +46,26 @@ class NPTintegrator(ut.TestCase):
         for particle in data:
             pos = particle[:3]
             v = particle[3:]
-            self.S.part.add(pos=pos, v=v)
+            self.system.part.add(pos=pos, v=v)
 
-        self.S.non_bonded_inter[0, 0].lennard_jones.set_params(
+        self.system.non_bonded_inter[0, 0].lennard_jones.set_params(
             epsilon=1, sigma=1, cutoff=1.12246, shift=0.25)
 
-        self.S.thermostat.set_npt(kT=1.0, gamma0=2, gammav=0.004)
-        self.S.integrator.set_isotropic_npt(
+        self.system.thermostat.set_npt(kT=1.0, gamma0=2, gammav=0.004)
+        self.system.integrator.set_isotropic_npt(
             ext_pressure=self.p_ext, piston=0.0001)
 
     def test_npt(self):
-        self.S.integrator.run(800)
+        self.system.integrator.run(800)
         avp = 0
         n = 40000
         skip_p = 8
         ls = np.zeros(n)
         for t in range(n):
-            self.S.integrator.run(2)
+            self.system.integrator.run(2)
             if t % skip_p == 0:
-                avp += self.S.analysis.pressure()['total']
-            ls[t] = self.S.box_l[0]
+                avp += self.system.analysis.pressure()['total']
+            ls[t] = self.system.box_l[0]
 
         avp /= (n / skip_p)
         Vs = np.array(ls)**3

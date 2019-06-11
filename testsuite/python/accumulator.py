@@ -23,13 +23,14 @@ Testmodule for the observable accumulator.
 """
 import sys
 import unittest as ut
+import unittest_system as uts
 import numpy as np
 import espressomd  # pylint: disable=import-error
 import espressomd.observables
 import espressomd.accumulators
 
 
-class AccumulatorTest(ut.TestCase):
+class AccumulatorTest(uts.TestCaseSystem):
 
     """
     Test class for the observable accumulator.
@@ -37,8 +38,8 @@ class AccumulatorTest(ut.TestCase):
     """
 
     def setUp(self):
-        np.random.seed(seed=162)
-        self.system = espressomd.System(box_l=[10.0] * 3)
+        np.random.seed(seed=1)
+        self.system.box_l = [10.0] * 3
         self.system.cell_system.skin = 0.4
         self.system.time_step = 0.01
         self.system.part.add(id=0, pos=[0.0, 0.0, 0.0])

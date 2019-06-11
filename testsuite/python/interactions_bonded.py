@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 
 import espressomd
@@ -27,10 +28,9 @@ import espressomd.electrostatics
 import tests_common
 
 
-class InteractionsBondedTest(ut.TestCase):
-    system = espressomd.System(box_l=[17.0, 9.0, 8.0])
-    np.random.seed(seed=system.seed)
+class InteractionsBondedTest(uts.TestCaseSystem):
 
+    np.random.seed(1)
     box_l = 10.
 
     start_pos = np.random.rand(3) * box_l

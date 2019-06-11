@@ -17,23 +17,23 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import unittest as ut
+import unittest_system as uts
 import espressomd
 import numpy as np
 import espressomd.observables
 
 
-class Observables(ut.TestCase):
+class Observables(uts.TestCaseSystem):
     n_tries = 50
     n_parts = 5
     box_l = 5.
-    system = espressomd.System(box_l=3 * [box_l])
-    system.seed = system.cell_system.get_state()['n_nodes'] * [1234]
-    system.periodicity = [1, 1, 1]
-    system.time_step = 0.01
-    system.cell_system.skin = 0.2 * box_l
 
     @classmethod
     def setUpClass(cls):
+        cls.system.box_l = 3 * [cls.box_l]
+        cls.system.periodicity = [1, 1, 1]
+        cls.system.time_step = 0.01
+        cls.system.cell_system.skin = 0.2 * cls.box_l
         for i in range(cls.n_parts):
             cls.system.part.add(pos=[1 + i, 1 + i, 1 + i], id=i)
 

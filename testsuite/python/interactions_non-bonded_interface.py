@@ -18,13 +18,16 @@
 #
 from __future__ import print_function
 import unittest as ut
+import unittest_system as uts
 
 import espressomd
 import espressomd.interactions
 
 
-class Non_bonded_interactionsTests(ut.TestCase):
-    system = espressomd.System(box_l=[20.0, 20.0, 20.0])
+class Non_bonded_interactionsTests(uts.TestCaseSystem):
+
+    def setUp(self):
+        self.system.box_l = 3 * [20.0]
 
     def intersMatch(self, inType, outType, inParams, outParams):
         """Check, if the interaction type set and gotten back as well as the

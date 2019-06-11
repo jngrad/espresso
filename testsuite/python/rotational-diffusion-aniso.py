@@ -19,18 +19,15 @@ from __future__ import print_function
 import numpy as np
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 import tests_common
 
 
 @utx.skipIfMissingFeatures(["ROTATION", "PARTICLE_ANISOTROPY",
                             "ROTATIONAL_INERTIA", "DIPOLES"])
-class RotDiffAniso(ut.TestCase):
+class RotDiffAniso(uts.TestCaseSystem):
     longMessage = True
-    # Handle for espresso system
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    system.cell_system.skin = 5.0
-    system.seed = range(system.cell_system.get_state()["n_nodes"]) 
 
     # The NVT thermostat parameters
     kT = 0.0
@@ -39,9 +36,10 @@ class RotDiffAniso(ut.TestCase):
     # Particle properties
     J = [0.0, 0.0, 0.0]
 
-    np.random.seed(4)
+    np.random.seed(4) # 4 makes reference numerical results reproducible
 
     def setUp(self):
+        self.system.cell_system.skin = 5.0
         self.system.time = 0.0
         self.system.part.clear()
 

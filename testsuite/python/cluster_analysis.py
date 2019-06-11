@@ -18,6 +18,7 @@
 #
 from __future__ import print_function
 import unittest as ut
+import unittest_system as uts
 import espressomd
 from espressomd.utils import handle_errors
 import numpy as np
@@ -26,24 +27,26 @@ from espressomd.pair_criteria import DistanceCriterion, BondCriterion
 from espressomd.cluster_analysis import ClusterStructure
 
 
-class ClusterAnalysis(ut.TestCase):
+class ClusterAnalysis(uts.TestCaseSystem):
 
     """Tests the cluster analysis"""
 
-    es = espressomd.System(box_l=(1, 1, 1))
+    @classmethod
+    def setUpClass(cls):
+        cls.es = cls.system
 
-    f = FeneBond(k=1, d_r_max=0.05)
-    es.bonded_inter.add(f)
+        f = FeneBond(k=1, d_r_max=0.05)
+        cls.system.bonded_inter.add(f)
 
-    # 1st cluster
-    es.part.add(id=0, pos=(0, 0, 0))
-    es.part.add(id=1, pos=(0.91, 0, 0), bonds=((0, 0),))
-    es.part.add(id=2, pos=(0, 0.2, 0))
-    es.part.add(id=3, pos=(0, 0.1, 0))
+        # 1st cluster
+        cls.es.part.add(id=0, pos=(0, 0, 0))
+        cls.es.part.add(id=1, pos=(0.91, 0, 0), bonds=((0, 0),))
+        cls.es.part.add(id=2, pos=(0, 0.2, 0))
+        cls.es.part.add(id=3, pos=(0, 0.1, 0))
 
-    # 2nd cluster
-    es.part.add(id=4, pos=(0.5, 0.5, 0.5))
-    es.part.add(id=5, pos=(0.55, 0.5, 0.5))
+        # 2nd cluster
+        cls.es.part.add(id=4, pos=(0.5, 0.5, 0.5))
+        cls.es.part.add(id=5, pos=(0.55, 0.5, 0.5))
 
     cs = ClusterStructure()
     np.random.seed(1)

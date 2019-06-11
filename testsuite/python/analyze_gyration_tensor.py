@@ -16,13 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import unittest as ut
+import unittest_system as uts
 import numpy as np
-import espressomd
 
 
-class AnalyzeGyration(ut.TestCase):
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    np.random.seed(1234)
+class AnalyzeGyration(uts.TestCaseSystem):
+    np.random.seed(1)
     cube_len = 4
     type_cube = 0
     type_stick = 1

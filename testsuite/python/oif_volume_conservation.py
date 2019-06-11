@@ -14,15 +14,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import espressomd
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 from tests_common import abspath
 
 
 @utx.skipIfMissingFeatures(["MEMBRANE_COLLISION", "OIF_LOCAL_FORCES",
                             "OIF_GLOBAL_FORCES"])
-class OifVolumeConservation(ut.TestCase):
+class OifVolumeConservation(uts.TestCaseSystem):
 
     """Loads a soft elastic sphere via object_in_fluid, stretches it and checks
        restoration of original volume due to elastic forces."""
@@ -30,7 +30,8 @@ class OifVolumeConservation(ut.TestCase):
     def test(self):
         import object_in_fluid as oif
 
-        system = espressomd.System(box_l=(10, 10, 10))
+        system = self.system
+        system.box_l = (10, 10, 10)
         self.assertEqual(system.max_oif_objects, 0)
         system.time_step = 0.4
         system.cell_system.skin = 0.5

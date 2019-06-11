@@ -16,20 +16,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import unittest as ut
+import unittest_system as uts
 import numpy as np
 import espressomd
 
 
-class AnalyzeITensor(ut.TestCase):
+class AnalyzeITensor(uts.TestCaseSystem):
 
     """Test the inertia tensor analysis"""
 
     box_l = 50.0
-    system = espressomd.System(box_l=[box_l, box_l, box_l])
-    np.random.seed(seed=123)
+    np.random.seed(seed=1)
 
     @classmethod
     def setUpClass(cls):
+        cls.system.box_l = 3 * [cls.box_l]
         cls.system.cell_system.skin = 0.4
         cls.system.time_step = 0.01
         cls.system.thermostat.turn_off()

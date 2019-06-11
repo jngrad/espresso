@@ -17,21 +17,20 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
-import espressomd
 import tests_common
 
 
 @utx.skipIfMissingFeatures(["MASS", "ROTATIONAL_INERTIA"])
-class RotationalInertia(ut.TestCase):
+class RotationalInertia(uts.TestCaseSystem):
     longMessage = True
-    # Handle for espresso system
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    system.cell_system.skin = 0
-    system.seed = system.cell_system.get_state()['n_nodes'] * [1234]
     # Particle's angular momentum: initial and ongoing
     L_0_lab = np.zeros((3))
     L_lab = np.zeros((3))
+
+    def setUp(self):
+        self.system.cell_system.skin = 0
 
     def convert_vec_body_to_space(self, part, vec):
         A = tests_common.rotation_matrix_quat(self.system, part)

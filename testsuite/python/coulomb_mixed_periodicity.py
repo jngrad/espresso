@@ -20,6 +20,7 @@ from __future__ import print_function
 import os
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 import espressomd
 from espressomd import electrostatics, electrostatic_extensions, scafacos
@@ -27,13 +28,10 @@ import tests_common
 
 
 @utx.skipIfMissingFeatures(["ELECTROSTATICS", "PARTIAL_PERIODIC"])
-class CoulombMixedPeriodicity(ut.TestCase):
+class CoulombMixedPeriodicity(uts.TestCaseSystem):
 
     """"Test mixed periodicity electrostatics"""
 
-    S = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    buf_node_grid = S.cell_system.node_grid
-    S.thermostat.turn_off()
     forces = {}
     tolerance_force = 5E-4
     tolerance_energy = 1.8E-3
@@ -41,6 +39,12 @@ class CoulombMixedPeriodicity(ut.TestCase):
 
     # Reference energy from MMM2D
     reference_energy = 216.640984711
+
+    @classmethod
+    def setUpClass(cls):
+        cls.buf_node_grid = cls.system.cell_system.node_grid
+        cls.system.thermostat.turn_off()
+        cls.S = cls.system
 
     def setUp(self):
         self.S.box_l = (10, 10, 10)

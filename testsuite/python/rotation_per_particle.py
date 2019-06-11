@@ -19,22 +19,22 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
-import espressomd
+import unittest_system as uts
 import numpy as np
 from numpy import random
 
 
 @utx.skipIfMissingFeatures("ROTATION")
-class Rotation(ut.TestCase):
-    s = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    s.seed = s.cell_system.get_state()['n_nodes'] * [1234]
-    s.cell_system.skin = 0
-    s.time_step = 0.01
+class Rotation(uts.TestCaseSystem):
+
+    def setUp(self):
+        self.system.cell_system.skin = 0
+        self.system.time_step = 0.01
 
     def test_langevin(self):
         """Applies langevin thermostat and checks that correct axes get
            thermalized"""
-        s = self.s
+        s = self.system
         s.thermostat.set_langevin(gamma=1, kT=1, seed=42)
         for x in 0, 1:
             for y in 0, 1:
@@ -50,17 +50,17 @@ class Rotation(ut.TestCase):
 
     def validate(self, rotate, coord):
         if rotate:
-            #self.assertNotEqual(self.s.part[0].torque_body[coord],0)
-            self.assertNotEqual(self.s.part[0].omega_body[coord], 0)
+            #self.assertNotEqual(self.system.part[0].torque_body[coord],0)
+            self.assertNotEqual(self.system.part[0].omega_body[coord], 0)
         else:
-            #self.assertEqual(self.s.part[0].torque_body[coord],0)
-            self.assertEqual(self.s.part[0].omega_body[coord], 0)
+            #self.assertEqual(self.system.part[0].torque_body[coord],0)
+            self.assertEqual(self.system.part[0].omega_body[coord], 0)
 
     @utx.skipIfMissingFeatures("EXTERNAL_FORCES")
     def test_axes_changes(self):
         """Verifies that rotation axes in body and space frame stay the same
            and other axes don't"""
-        s = self.s
+        s = self.system
         s.part.clear()
         s.part.add(id=0, pos=(0.9, 0.9, 0.9), ext_torque=(1, 1, 1))
         s.thermostat.turn_off()
@@ -90,7 +90,7 @@ class Rotation(ut.TestCase):
                         np.dot(axis, s.part[0].convert_vector_body_to_space(axis)), 0.95)
 
     def test_frame_conversion_and_rotation(self):
-        s = self.s
+        s = self.system
         s.part.clear()
         p = s.part.add(pos=np.random.random(3), rotation=(1, 1, 1))
 

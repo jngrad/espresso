@@ -19,6 +19,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 from espressomd.interactions import HarmonicBond, AngleHarmonic
 import numpy as np
@@ -26,30 +27,33 @@ from random import shuffle
 
 
 @utx.skipIfMissingFeatures("COLLISION_DETECTION")
-class CollisionDetection(ut.TestCase):
+class CollisionDetection(uts.TestCaseSystem):
 
     """Tests interface and functionality of the collision detection / dynamic binding"""
 
-    s = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    s.seed = s.cell_system.get_state()['n_nodes'] * [1234]
-    np.random.seed(seed=s.seed)
-    if espressomd.has_features("VIRTUAL_SITES_RELATIVE"):
-        from espressomd.virtual_sites import VirtualSitesRelative
-        s.virtual_sites = VirtualSitesRelative()
+    np.random.seed(1)
 
     H = HarmonicBond(k=5000, r_0=0.1)
     H2 = HarmonicBond(k=25000, r_0=0.02)
-    s.bonded_inter.add(H)
-    s.bonded_inter.add(H2)
-    s.time_step = 0.001
-    s.cell_system.skin = 0.05
-    s.min_global_cut = 0.112
 
     part_type_to_attach_vs_to = 0
     part_type_vs = 1
     part_type_to_be_glued = 2
     part_type_after_glueing = 3
     other_type = 5
+
+    @classmethod
+    def setUpClass(cls):
+        cls.s = cls.system
+        if espressomd.has_features("VIRTUAL_SITES_RELATIVE"):
+            from espressomd.virtual_sites import VirtualSitesRelative
+            cls.s.virtual_sites = VirtualSitesRelative()
+
+        cls.s.bonded_inter.add(cls.H)
+        cls.s.bonded_inter.add(cls.H2)
+        cls.s.time_step = 0.001
+        cls.s.cell_system.skin = 0.05
+        cls.s.min_global_cut = 0.112
 
     def get_state_set_state_consistency(self):
         state = self.s.collision_detection.get_params()

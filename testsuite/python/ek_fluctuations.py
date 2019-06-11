@@ -18,7 +18,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
-import espressomd
+import unittest_system as uts
 from espressomd import electrokinetics
 import numpy as np
 import math
@@ -31,12 +31,10 @@ import math
 
 @utx.skipIfMissingGPU()
 @utx.skipIfMissingFeatures(["ELECTROKINETICS"])
-class ek_fluctuations(ut.TestCase):
-
-    es = espressomd.System(box_l=[1.0, 1.0, 1.0])
+class ek_fluctuations(uts.TestCaseSystem):
 
     def test(self):
-        system = self.es
+        system = self.system
 
         # Set parameters
         box_x = 16

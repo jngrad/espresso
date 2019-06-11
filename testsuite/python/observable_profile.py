@@ -17,18 +17,13 @@
 import sys
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 import espressomd
 import espressomd.observables
 
 
-class ProfileObservablesTest(ut.TestCase):
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    system.box_l = [10.0, 10.0, 10.0]
-    system.cell_system.skin = 0.1
-    system.time_step = 0.01
-    system.part.add(id=0, pos=[4.0, 4.0, 6.0], v=[0.0, 0.0, 1.0])
-    system.part.add(id=1, pos=[4.0, 4.0, 6.0], v=[0.0, 0.0, 1.0])
+class ProfileObservablesTest(uts.TestCaseSystem):
     flat_index = np.ravel_multi_index((0, 0, 1), (2, 2, 2))
     flat_index_3d = np.ravel_multi_index((0, 0, 1, 2), (2, 2, 2, 3))
     bin_volume = 5.0**3
@@ -42,6 +37,14 @@ class ProfileObservablesTest(ut.TestCase):
               'max_y': 10.0,
               'min_z': 0.0,
               'max_z': 10.0}
+
+    @classmethod
+    def setUpClass(cls):
+        cls.system.box_l = 3 * [10.]
+        cls.system.cell_system.skin = 0.1
+        cls.system.time_step = 0.01
+        cls.system.part.add(id=0, pos=[4.0, 4.0, 6.0], v=[0.0, 0.0, 1.0])
+        cls.system.part.add(id=1, pos=[4.0, 4.0, 6.0], v=[0.0, 0.0, 1.0])
 
     def test_density_profile(self):
         density_profile = espressomd.observables.DensityProfile(**self.kwargs)

@@ -19,10 +19,10 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 import numpy.testing as npt
 
-import espressomd
 from espressomd import electrostatics
 
 
@@ -67,7 +67,7 @@ class pressureViaVolumeScaling(object):
 
 
 @utx.skipIfMissingFeatures(["ELECTROSTATICS", "LENNARD_JONES"])
-class VirialPressureConsistency(ut.TestCase):
+class VirialPressureConsistency(uts.TestCaseSystem):
 
     """Test the consistency of the core implementation of the virial pressure
        with an analytical relation which allows for the calculation of the
@@ -77,13 +77,10 @@ class VirialPressureConsistency(ut.TestCase):
        "Efficient pressure estimation in molecular simulations without
        evaluating the virial"  by Harismiadis, V. I., J. Vorholz, and A. Z.
        Panagiotopoulos. 1996"""
-    # Handle to espresso system
-    system = espressomd.System(box_l=[50, 50, 50])
 
     def setUp(self):
         np.random.seed(seed=1)
-        self.system.seed = range(
-            self.system.cell_system.get_state()["n_nodes"])
+        self.system.box_l = 3 * [50.]
         self.system.time_step = 0.01
         self.kT = 0.5
         self.system.non_bonded_inter[0, 0].lennard_jones.set_params(

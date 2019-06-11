@@ -16,27 +16,27 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 
 import espressomd
 
 
 @utx.skipIfMissingFeatures(["SWIMMER_REACTIONS"])
-class ReactionTest(ut.TestCase):
+class ReactionTest(uts.TestCaseSystem):
 
     def test_reaction(self):
         from espressomd.swimmer_reaction import Reaction
-        system = espressomd.System(box_l=[10.0, 10.0, 10.0])
-        system.seed = system.cell_system.get_state()['n_nodes'] * [1234]
 
-        system.cell_system.skin = 0.1
-        system.time_step = 0.01
+        self.system.box_l = 3 * [10.]
+        self.system.cell_system.skin = 0.1
+        self.system.time_step = 0.01
 
-        system.part.add(pos=0.5 * system.box_l, type=0)
-        reactant = system.part.add(
-            pos=0.5 * system.box_l - [0, 0, 1], type=1, v=[0, 0, 0])
-        product = system.part.add(
-            pos=0.5 * system.box_l + [0, 0, 1], type=2, v=[0, 0, 0])
+        self.system.part.add(pos=0.5 * self.system.box_l, type=0)
+        reactant = self.system.part.add(
+            pos=0.5 * self.system.box_l - [0, 0, 1], type=1, v=[0, 0, 0])
+        product = self.system.part.add(
+            pos=0.5 * self.system.box_l + [0, 0, 1], type=2, v=[0, 0, 0])
 
         # Set up the reaction, rate is infinity to almost surely trigger a
         # reaction
@@ -46,7 +46,7 @@ class ReactionTest(ut.TestCase):
         # Run two reactions and MD
         # This also tests that the particles are not switched back
         # after the first reaction (which should switch the particles)
-        system.integrator.run(2)
+        self.system.integrator.run(2)
 
         # Check that particles have switched type (due to the first reaction)
         # the second reaction may not change the particles back since they are

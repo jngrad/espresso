@@ -20,11 +20,12 @@ import espressomd.lbboundaries
 import espressomd.shapes
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 
 
 @utx.skipIfMissingFeatures(["VIRTUAL_SITES"])
-class LBBoundaryThermoVirtualTest(ut.TestCase):
+class LBBoundaryThermoVirtualTest(uts.TestCaseSystem):
 
     """Test slip velocity of boundaries.
 
@@ -32,10 +33,10 @@ class LBBoundaryThermoVirtualTest(ut.TestCase):
        added and the fluid is checked if it has the same velocity.
     """
 
-    system = espressomd.System(box_l=[10.0, 10.0, 10.0])
-
-    system.time_step = 1.0
-    system.cell_system.skin = 0.1
+    def setUp(self):
+        self.system.box_l = 3 * [10.0]
+        self.system.time_step = 1.0
+        self.system.cell_system.skin = 0.1
 
     def tearDown(self):
         self.system.part.clear()

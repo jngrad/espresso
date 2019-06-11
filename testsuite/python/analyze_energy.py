@@ -17,13 +17,13 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 from espressomd.interactions import HarmonicBond
 
 
 @utx.skipIfMissingFeatures("LENNARD_JONES")
-class AnalyzeEnergy(ut.TestCase):
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
+class AnalyzeEnergy(uts.TestCaseSystem):
 
     harmonic = HarmonicBond(r_0=0.0, k=3)
 

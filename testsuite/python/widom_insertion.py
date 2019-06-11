@@ -21,6 +21,7 @@
 """
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 import espressomd  # pylint: disable=import-error
 from espressomd import reaction_ensemble
@@ -28,7 +29,7 @@ from tests_common import lj_potential
 
 
 @utx.skipIfMissingFeatures(["LENNARD_JONES"])
-class WidomInsertionTest(ut.TestCase):
+class WidomInsertionTest(uts.TestCaseSystem):
 
     """Test the implementation of the widom insertion.
 
@@ -64,18 +65,15 @@ class WidomInsertionTest(ut.TestCase):
     # by the box volume
     target_mu_ex = -TEMPERATURE * \
         np.log((integrateUpToCutOff + integreateRest) / BOX_L**3)
-                                       
-    system = espressomd.System(box_l=np.ones(3) * BOX_L)
-    system.cell_system.set_n_square()
-    system.seed = system.cell_system.get_state()['n_nodes'] * [2]
-    np.random.seed(69)  # make reaction code fully deterministic
-    system.cell_system.skin = 0.4
-    volume = np.prod(system.box_l)  # cuboid box
-    
+
     Widom = reaction_ensemble.WidomInsertion(
         temperature=TEMPERATURE, seed=1)    
 
     def setUp(self):
+        self.system.box_l = np.ones(3) * self.BOX_L
+        self.system.cell_system.set_n_square()
+        self.system.cell_system.skin = 0.4
+        self.volume = np.prod(self.system.box_l)  # cuboid box
         self.system.part.add(id=0, pos=0.5 * self.system.box_l,
                              type=self.TYPE_HA)
 

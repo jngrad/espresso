@@ -19,19 +19,19 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 import numpy as np
 
 
 @utx.skipIfMissingFeatures("TABULATED")
-class TabulatedTest(ut.TestCase):
-    s = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    s.seed = s.cell_system.get_state()['n_nodes'] * [1234]
-    s.box_l = 3 * [10]
-    s.time_step = 0.01
-    s.cell_system.skin = 0.4
+class TabulatedTest(uts.TestCaseSystem):
 
     def setUp(self):
+        self.s = self.system
+        self.s.box_l = 3 * [10]
+        self.s.time_step = 0.01
+        self.s.cell_system.skin = 0.4
         self.force = np.zeros((100,))
         self.energy = np.zeros((100,))
         self.min_ = 1.

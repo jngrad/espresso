@@ -22,10 +22,11 @@ import numpy
 import unittest as ut
 import unittest_decorators as utx
 import tests_common
+import unittest_system as uts
 
 
-class InteractionsNonBondedTest(ut.TestCase):
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
+class InteractionsNonBondedTest(uts.TestCaseSystem):
+
     box_l = 10.
 
     start_pos = numpy.random.rand(3) * box_l

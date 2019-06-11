@@ -18,24 +18,23 @@ from __future__ import division, print_function
 
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 
 import espressomd
 
 
-class HomogeneousMagneticFieldTest(ut.TestCase):
+class HomogeneousMagneticFieldTest(uts.TestCaseSystem):
 
-    S = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    S.seed = S.cell_system.get_state()['n_nodes'] * [1234]
-    np.random.seed(S.seed)
+    np.random.seed(1)
 
     def setUp(self):
-        self.S.box_l = [3.0, 3.0, 3.0]
-        self.S.time_step = 0.01
-        self.S.cell_system.skin = 0.4
+        self.system.box_l = [3.0, 3.0, 3.0]
+        self.system.time_step = 0.01
+        self.system.cell_system.skin = 0.4
 
     def tearDown(self):
-        self.S.constraints.clear()
+        self.system.constraints.clear()
 
     def test_setter_and_getter(self):
         H_field1 = np.array([0.0, 1.0, 0.0])
@@ -58,6 +57,7 @@ class HomogeneousMagneticFieldTest(ut.TestCase):
 
     @utx.skipIfMissingFeatures(["DIPOLES"])
     def test_add_energy_and_forces(self):
+        self.S = self.system
         H_field = [5.0, 3.0, 2.0]
         dip_mom0 = [2.0, 6.0, 1.]
         dip_mom1 = [-1.0, 0.5, -0.2]

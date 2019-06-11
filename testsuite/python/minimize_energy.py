@@ -17,16 +17,16 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 
 import espressomd
 
 
 @utx.skipIfMissingFeatures("LENNARD_JONES")
-class test_minimize_energy(ut.TestCase):
+class test_minimize_energy(uts.TestCaseSystem):
 
-    np.random.seed(42)
-    system = espressomd.System(box_l=[10.0, 10.0, 10.0])
+    np.random.seed(1)
 
     test_rotation = espressomd.has_features(("ROTATION", "DIPOLES"))
     if test_rotation:

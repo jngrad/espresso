@@ -17,6 +17,7 @@
 import numpy as np
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 
 import espressomd
 import espressomd.electrostatics
@@ -26,7 +27,7 @@ from espressomd import drude_helpers
 
 @utx.skipIfMissingFeatures(["P3M", "ELECTROSTATICS", "THOLE",
                             "LANGEVIN_PER_PARTICLE", "MASS"])
-class Drude(ut.TestCase):
+class Drude(uts.TestCaseSystem):
 
     def test(self):
         """
@@ -39,7 +40,8 @@ class Drude(ut.TestCase):
         """
 
         box_l = 50
-        system = espressomd.System(box_l=[box_l, box_l, box_l])
+        system = self.system
+        system.box_l = 3 * [box_l]
 
         system.seed = system.cell_system.get_state()['n_nodes'] * [12]
         np.random.seed(12)

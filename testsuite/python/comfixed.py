@@ -16,13 +16,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import unittest as ut
+import unittest_system as uts
 import espressomd
 import espressomd.analyze
 import espressomd.lb
 import numpy as np
 
 
-class ComFixed(ut.TestCase):
+class ComFixed(uts.TestCaseSystem):
+    np.random.seed(1)
 
     def com(self, s):
         return np.average(s.part[:].pos, axis=0, weights=s.part[:].mass)
@@ -31,10 +33,7 @@ class ComFixed(ut.TestCase):
         dt = 0.01
         skin = 0.4
 
-        s = espressomd.System(box_l=[1.0, 1.0, 1.0])
-        s.seed = s.cell_system.get_state()['n_nodes'] * [1234]
-        np.random.seed(seed=s.seed)
-
+        s = self.system
         s.box_l = [10, 10, 10]
         s.time_step = dt
         s.cell_system.skin = skin

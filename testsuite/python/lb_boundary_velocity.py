@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
+import unittest_system as uts
 import espressomd.lb
 import espressomd.lbboundaries
 import espressomd.shapes
@@ -23,7 +24,7 @@ import unittest_decorators as utx
 
 
 @utx.skipIfMissingFeatures(["LB_BOUNDARIES"])
-class LBBoundaryVelocityTest(ut.TestCase):
+class LBBoundaryVelocityTest(uts.TestCaseSystem):
 
     """Test slip velocity of boundaries.
 
@@ -31,25 +32,23 @@ class LBBoundaryVelocityTest(ut.TestCase):
        added and the fluid is checked if it has the same velocity.
     """
 
-    system = espressomd.System(box_l=[10.0, 10.0, 10.0])
-    system.time_step = .5
-    system.cell_system.skin = 0.1
-
     def test(self):
-        system = self.system
+        self.system.box_l = 3 * [10.0]
+        self.system.time_step = .5
+        self.system.cell_system.skin = 0.1
 
         lb_fluid = espressomd.lb.LBFluid(
             agrid=2.0, dens=.5, visc=3.0, tau=0.5)
-        system.actors.add(lb_fluid)
+        self.system.actors.add(lb_fluid)
 
         v_boundary = [0.03, 0.02, 0.01]
 
         wall_shape = espressomd.shapes.Wall(normal=[1, 2, 3], dist=0.5)
         wall = espressomd.lbboundaries.LBBoundary(
             shape=wall_shape, velocity=v_boundary)
-        system.lbboundaries.add(wall)
+        self.system.lbboundaries.add(wall)
 
-        system.integrator.run(2000)
+        self.system.integrator.run(2000)
 
         v_fluid = lb_fluid[1, 0, 0].velocity
         self.assertAlmostEqual(v_fluid[0], v_boundary[0], places=3)

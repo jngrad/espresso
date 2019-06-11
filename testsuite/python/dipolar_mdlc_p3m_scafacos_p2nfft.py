@@ -28,25 +28,26 @@ import espressomd.magnetostatic_extensions as magnetostatic_extensions
 import numpy as np
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 from tests_common import abspath
 
 
 @utx.skipIfMissingFeatures(["DIPOLES", "FFTW"])
-class Dipolar_p3m_mdlc_p2nfft(ut.TestCase):
+class Dipolar_p3m_mdlc_p2nfft(uts.TestCaseSystem):
     """Tests mdlc (2d)  as well as dipolar p3m and dipolar p2nfft (3d) against
        stored data. Validity of the stored data:
        2d: as long as this test AND the scafacos_dipolar_1d_2d test passes, we are safe.
        3d: as long as the independently written p3m and p2nfft agree, we are safe.
     """
-    s = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    s.seed  = s.cell_system.get_state()['n_nodes'] * [1234]
-    s.time_step = 0.01
-    s.cell_system.skin = .4
-    s.periodicity = [1, 1, 1]
-    s.thermostat.turn_off()
+    @classmethod
+    def setUpClass(cls):
+        cls.system.time_step = 0.01
+        cls.system.cell_system.skin = .4
+        cls.system.periodicity = [1, 1, 1]
+        cls.system.thermostat.turn_off()
 
     def test_mdlc(self):
-        s = self.s
+        s = self.system
         s.part.clear()
         rho = 0.3
 
@@ -94,7 +95,7 @@ class Dipolar_p3m_mdlc_p2nfft(ut.TestCase):
         del s.actors[0]
 
     def test_p3m(self):
-        s = self.s
+        s = self.system
         s.part.clear()
         rho = 0.09
 
@@ -139,7 +140,7 @@ class Dipolar_p3m_mdlc_p2nfft(ut.TestCase):
 
     @utx.skipIfMissingFeatures("SCAFACOS_DIPOLES")
     def test_scafacos_dipoles(self):
-        s = self.s
+        s = self.system
         s.part.clear()
         rho = 0.09
 

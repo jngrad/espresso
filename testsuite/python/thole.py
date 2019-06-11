@@ -17,6 +17,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 import numpy as np
 import espressomd.interactions
@@ -25,7 +26,7 @@ COULOMB_PREFACTOR = 1.3
 
 
 @utx.skipIfMissingFeatures(["THOLE", "EXTERNAL_FORCES", "P3M"])
-class TestThole(ut.TestCase):
+class TestThole(uts.TestCaseSystem):
 
     """
     This testcase takes a large box to minimize periodic effects and tests the
@@ -33,11 +34,11 @@ class TestThole(ut.TestCase):
     """
 
     box_l = 500.0
-    system = espressomd.System(box_l=[box_l] * 3)
 
     def setUp(self):
         from espressomd.electrostatics import P3M
 
+        self.system.box_l = [self.box_l] * 3
         self.system.time_step = 0.01
         self.system.cell_system.skin = 0.4
 

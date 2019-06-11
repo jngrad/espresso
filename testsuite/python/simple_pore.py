@@ -17,6 +17,7 @@
 from __future__ import division, print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 from espressomd.shapes import SimplePore, Cylinder
 
@@ -29,7 +30,7 @@ from espressomd.shapes import SimplePore, Cylinder
 
 
 @utx.skipIfMissingFeatures(["LENNARD_JONES"])
-class SimplePoreConstraint(ut.TestCase):
+class SimplePoreConstraint(uts.TestCaseSystem):
 
     def test_orientation(self):
         pore = SimplePore(axis=[1., 0., 0.], radius=2., smoothing_radius=.1,
@@ -42,8 +43,7 @@ class SimplePoreConstraint(ut.TestCase):
         self.assertLess(d, 0.)
 
     def test_stability(self):
-        s = espressomd.System(box_l=[1.0, 1.0, 1.0])
-        s.seed = s.cell_system.get_state()['n_nodes'] * [1234]
+        s = self.system
         box_yz = 15.
         box_x = 20.
         s.box_l = [box_x, box_yz, box_yz]

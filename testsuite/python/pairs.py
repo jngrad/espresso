@@ -17,15 +17,14 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
-import espressomd
+import unittest_system as uts
 
 
 @utx.skipIfMissingFeatures(["LENNARD_JONES"])
-class PairTest(ut.TestCase):
-    s = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    s.seed = s.cell_system.get_state()['n_nodes'] * [1234]
+class PairTest(uts.TestCaseSystem):
 
     def setUp(self):
+        self.s = self.system
         self.s.time_step = 0.1
         self.s.thermostat.turn_off()
 

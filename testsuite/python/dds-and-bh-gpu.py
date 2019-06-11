@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 from numpy.random import random
 
@@ -34,13 +35,8 @@ def stopAll(system):
 
 @utx.skipIfMissingGPU()
 @utx.skipIfMissingFeatures(["DIPOLAR_BARNES_HUT"])
-class BH_DDS_gpu_multCPU_test(ut.TestCase):
-    system = espressomd.System(box_l=[1, 1, 1])
-    # just some seeding based on 14
-    system.seed = [s * 14 for s in range(
-        system.cell_system.get_state()["n_nodes"])]
-    # just some seeding different from the previous one
-    np.random.seed(71)
+class BH_DDS_gpu_multCPU_test(uts.TestCaseSystem):
+    np.random.seed(1)
 
     def vectorsTheSame(self, a, b):
         tol = 5E-2
@@ -63,7 +59,7 @@ class BH_DDS_gpu_multCPU_test(ut.TestCase):
         for n in [128, 541]:
             dipole_modulus = 1.3
             for i in range(n):
-                part_pos = np.array(random(3)) * l
+                part_pos = random(3) * l
                 costheta = 2 * random() - 1
                 sintheta = np.sin(np.arccos(costheta))
                 phi = 2 * np.pi * random()

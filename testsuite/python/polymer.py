@@ -17,19 +17,20 @@
 from __future__ import print_function
 import sys
 import unittest as ut
+import unittest_system as uts
 import numpy as np
 import espressomd
 from espressomd import polymer
 from espressomd.shapes import Wall
 
 
-class PolymerPositions(ut.TestCase):
+class PolymerPositions(uts.TestCaseSystem):
     box_l = 15
-    seed = 23
+    seed = 1
+    np.random.seed(1)
 
-    system = espressomd.System(box_l=[box_l, box_l, box_l])
-    np.random.seed(1234)
-    system.set_random_state_PRNG()
+    def setUp(self):
+        self.system.box_l = 3 * [self.box_l]
 
     def assertShape(self, positions, n_poly, n_mono):
         """

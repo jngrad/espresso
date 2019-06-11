@@ -16,8 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
-import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import sys
 import math
 import numpy as np
@@ -107,9 +107,7 @@ def bisection(params):
 
 @utx.skipIfMissingGPU()
 @utx.skipIfMissingFeatures(["ELECTROKINETICS", "EK_BOUNDARIES"])
-class ek_eof_one_species(ut.TestCase):
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    system.seed = system.cell_system.get_state()['n_nodes'] * [1234]
+class ek_eof_one_species(uts.TestCaseSystem):
     xi = bisection(params_base)
 
     def run_test(self, params):

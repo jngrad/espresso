@@ -17,6 +17,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 import espressomd.analyze
 import espressomd.lb
@@ -24,7 +25,7 @@ import numpy as np
 
 
 @utx.skipIfMissingGPU()
-class RemoveTotalMomentumTest(ut.TestCase):
+class RemoveTotalMomentumTest(uts.TestCaseSystem):
 
     def test(self):
         dt = 0.01
@@ -34,8 +35,7 @@ class RemoveTotalMomentumTest(ut.TestCase):
         visc = 1.0
         dens = 12.0
 
-        s = espressomd.System(box_l=[1.0, 1.0, 1.0])
-        s.seed = s.cell_system.get_state()['n_nodes'] * [1234]
+        s = self.system
         s.box_l = [10, 10, 10]
         s.time_step = dt
         s.cell_system.skin = skin

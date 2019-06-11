@@ -19,18 +19,21 @@ from itertools import product
 
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 
 import espressomd
 from espressomd import constraints
 
 
-class FieldTest(ut.TestCase):
+class FieldTest(uts.TestCaseSystem):
 
     """Tests for not space-dependent external fields.
     """
-    system = espressomd.System(box_l=[10, 10, 10], time_step=0.01)
-    system.cell_system.skin = 0.
+    def setUp(self):
+        self.system.box_l = 3 * [10.]
+        self.system.time_step = 0.01
+        self.system.cell_system.skin = 0.
 
     def potential(self, x):
         x0 = 5.0 * np.ones_like(x)

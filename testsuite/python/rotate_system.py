@@ -22,19 +22,21 @@ Testmodule for System.rotate_system()
 
 """
 import unittest as ut
+import unittest_system as uts
 import numpy as np
 import espressomd  # pylint: disable=import-error
 
 
-class RotateSystemTest(ut.TestCase):
-    s = espressomd.System(box_l=3 * [10.])
-    s.seed = s.cell_system.get_state()['n_nodes'] * [1234]
+class RotateSystemTest(uts.TestCaseSystem):
+
+    def setUp(self):
+        self.system.box_l = 3 * [10.]
 
     def tearDown(self):
-        self.s.part.clear()
+        self.system.part.clear()
 
     def test_no_mass(self):
-        s = self.s
+        s = self.system
         s.part.add(id=0, pos=[4, 4, 4])
         s.part.add(id=1, pos=[6, 6, 6])
 

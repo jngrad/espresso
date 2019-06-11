@@ -21,25 +21,24 @@ from __future__ import print_function
 import numpy as np
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 
 import espressomd
 from tests_common import single_component_maxwell
 
 @utx.skipIfMissingFeatures(["MASS"])
-class ThermalizedBond(ut.TestCase):
+class ThermalizedBond(uts.TestCaseSystem):
     """Tests the two velocity distributions for COM and distance created by the
        thermalized bond independently against the single component Maxwell
        distribution. Adapted from langevin_thermostat testcase."""
 
-    box_l = 10.0
-    system = espressomd.System(box_l=[box_l]*3)
-    system.cell_system.set_n_square()
-    system.cell_system.skin = 0.3
-    system.seed = range(system.cell_system.get_state()["n_nodes"])
+    np.random.seed(1)
 
     @classmethod
     def setUpClass(cls):
-        np.random.seed(42)
+        cls.system.box_l = [10.0] * 3
+        cls.system.cell_system.set_n_square()
+        cls.system.cell_system.skin = 0.3
 
     def check_velocity_distribution(self, vel, minmax, n_bins, error_tol, kT):
         """check the recorded particle distributions in velocity against a

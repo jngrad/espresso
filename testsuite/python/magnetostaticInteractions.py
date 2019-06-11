@@ -24,8 +24,8 @@ from tests_common import generate_test_for_class
 
 
 class MagnetostaticsInteractionsTests(ut.TestCase):
-    # Handle to espresso system
     system = espressomd.System(box_l=[1.0, 1.0, 1.0])
+    system.seed = system.cell_system.get_state()['n_nodes'] * [1234]
 
     def setUp(self):
         self.system.box_l = [10, 10, 10]

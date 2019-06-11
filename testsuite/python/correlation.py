@@ -19,6 +19,7 @@
 from __future__ import print_function
 
 import unittest as ut
+import unittest_system as uts
 import numpy as np
 import pickle
 
@@ -27,9 +28,7 @@ import espressomd.observables
 import espressomd.accumulators
 
 
-class CorrelatorTest(ut.TestCase):
-    # Handle for espresso system
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
+class CorrelatorTest(uts.TestCaseSystem):
 
     def test(self):
         s = self.system

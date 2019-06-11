@@ -19,26 +19,29 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 from espressomd.interactions import FeneBond
 from espressomd import pair_criteria
 
 
-class PairCriteria(ut.TestCase):
+class PairCriteria(uts.TestCaseSystem):
 
     """Tests interface and implementation of pair criteria"""
 
-    es = espressomd.System(box_l=[1., 1., 1.])
-
-    f1 = FeneBond(k=1, d_r_max=0.05)
-    es.bonded_inter.add(f1)
-    f2 = FeneBond(k=1, d_r_max=0.05)
-    es.bonded_inter.add(f2)
-    es.part.add(id=0, pos=(0, 0, 0))
-    es.part.add(id=1, pos=(0.91, 0, 0))
-    p1 = es.part[0]
-    p2 = es.part[1]
     epsilon = 1E-8
+
+    @classmethod
+    def setUpClass(cls):
+        f1 = FeneBond(k=1, d_r_max=0.05)
+        f2 = FeneBond(k=1, d_r_max=0.05)
+        cls.es = cls.system
+        cls.es.bonded_inter.add(f1)
+        cls.es.bonded_inter.add(f2)
+        cls.es.part.add(id=0, pos=(0, 0, 0))
+        cls.es.part.add(id=1, pos=(0.91, 0, 0))
+        cls.p1 = cls.es.part[0]
+        cls.p2 = cls.es.part[1]
 
     def test_distance_crit_periodic(self):
         dc = pair_criteria.DistanceCriterion(cut_off=0.1)

@@ -17,6 +17,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 import espressomd
 from espressomd.interactions import FeneBond
@@ -24,10 +25,8 @@ from espressomd import polymer
 
 
 @utx.skipIfMissingFeatures("LENNARD_JONES")
-class AnalyzeChain(ut.TestCase):
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    np.random.seed(1234)
-    system.set_random_state_PRNG()
+class AnalyzeChain(uts.TestCaseSystem):
+    np.random.seed(1)
 
     num_poly = 2
     num_mono = 5

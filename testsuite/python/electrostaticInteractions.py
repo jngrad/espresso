@@ -19,6 +19,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 
 import espressomd
@@ -26,9 +27,7 @@ from espressomd import electrostatics
 
 
 @utx.skipIfMissingFeatures(["ELECTROSTATICS"])
-class ElectrostaticInteractionsTests(ut.TestCase):
-    # Handle to espresso system
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
+class ElectrostaticInteractionsTests(uts.TestCaseSystem):
 
     def setUp(self):
         self.system.box_l = [20, 20, 20]

@@ -18,6 +18,7 @@ from __future__ import division, print_function
 
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 import math
 
@@ -28,10 +29,12 @@ import tests_common
 
 
 @utx.skipIfMissingFeatures(["LENNARD_JONES_GENERIC"])
-class ShapeBasedConstraintTest(ut.TestCase):
+class ShapeBasedConstraintTest(uts.TestCaseSystem):
 
     box_l = 30.
-    system = espressomd.System(box_l=3 * [box_l])
+
+    def setUp(self):
+        self.system.box_l = 3 * [self.box_l]
 
     def tearDown(self):
         self.system.part.clear()

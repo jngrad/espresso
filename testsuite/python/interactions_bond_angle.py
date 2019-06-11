@@ -21,10 +21,11 @@ import espressomd
 import numpy as np
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 
 
-class InteractionsAngleBondTest(ut.TestCase):
-    system = espressomd.System(box_l=[10.0, 10.0, 10.0])
+class InteractionsAngleBondTest(uts.TestCaseSystem):
+
     box_l = 10.
 
     start_pos = np.random.rand(3) * box_l

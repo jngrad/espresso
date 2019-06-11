@@ -17,21 +17,18 @@
 import sys
 import numpy as np
 import unittest as ut
+import unittest_system as uts
 import espressomd
 import espressomd.observables
 import tests_common
 
 
-class TestCylindricalObservable(ut.TestCase):
+class TestCylindricalObservable(uts.TestCaseSystem):
 
     """
     Testcase for the cylindrical observables.
 
     """
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    system.time_step = 0.01
-    system.box_l = [15.0, 15.0, 15.0]
-    system.cell_system.skin = 0.4
 
     params = {
         'ids': range(100),
@@ -47,6 +44,11 @@ class TestCylindricalObservable(ut.TestCase):
         'max_phi': np.pi,
         'max_z': 5.0,
     }
+
+    def setUp(self):
+        self.system.box_l = 3 * [15.0]
+        self.system.time_step = 0.01
+        self.system.cell_system.skin = 0.4
 
     def swap_axis(self, arr, axis):
         if axis == 'x':

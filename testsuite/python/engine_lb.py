@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 from tests_common import abspath
 
 import espressomd
@@ -53,12 +54,10 @@ def calculate_vtk_max_pointwise_difference(file1, file2, tol=1e-6):
 
 @utx.skipIfMissingFeatures(["ENGINE"])
 @utx.skipIfMissingModules(['vtk'])
-class SwimmerTest(ut.TestCase):
-    S = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    S.seed = S.cell_system.get_state()['n_nodes'] * [1234]
+class SwimmerTest(uts.TestCaseSystem):
 
     def setUp(self):
-        S = self.S
+        S = self.system
         S.box_l = 3 * [12]
         S.cell_system.skin = 0.1
         S.time_step = 0.01
@@ -78,10 +77,10 @@ class SwimmerTest(ut.TestCase):
         S.part[:].rotation = [1, 1, 1]
 
     def tearDown(self):
-        self.S.part.clear()
+        self.system.part.clear()
 
     def run_and_check(self, lbm, vtk_ref, vtk_out, tol):
-        self.S.integrator.run(2000)
+        self.system.integrator.run(2000)
 
         lbm.print_vtk_velocity(vtk_out)
         identical, err_max = calculate_vtk_max_pointwise_difference(
@@ -96,14 +95,14 @@ class SwimmerTestCPU(SwimmerTest):
 
     def test(self):
         lbm = espressomd.lb.LBFluid(
-            agrid=1.0, tau=self.S.time_step, visc=1.0, dens=1.0)
-        self.S.actors.add(lbm)
-        self.S.thermostat.set_lb(LB_fluid=lbm, gamma=0.5)
+            agrid=1.0, tau=self.system.time_step, visc=1.0, dens=1.0)
+        self.system.actors.add(lbm)
+        self.system.thermostat.set_lb(LB_fluid=lbm, gamma=0.5)
         self.run_and_check(
             lbm, abspath("data/engine_lb.vtk"),
             "engine_test_cpu_tmp.vtk", 1.5e-6)
-        self.S.thermostat.turn_off()
-        self.S.actors.remove(lbm)
+        self.system.thermostat.turn_off()
+        self.system.actors.remove(lbm)
 
 
 @utx.skipIfMissingGPU()
@@ -112,17 +111,17 @@ class SwimmerTestGPU(SwimmerTest):
     def test(self):
         lbm = espressomd.lb.LBFluidGPU(
             agrid=1.0,
-            tau=self.S.time_step,
+            tau=self.system.time_step,
             visc=1.0,
             dens=1.0
         )
-        self.S.actors.add(lbm)
-        self.S.thermostat.set_lb(LB_fluid=lbm, gamma=0.5)
+        self.system.actors.add(lbm)
+        self.system.thermostat.set_lb(LB_fluid=lbm, gamma=0.5)
         self.run_and_check(
             lbm, abspath("data/engine_lbgpu_2pt.vtk"),
             "engine_test_gpu_tmp.vtk", 2.0e-7)
-        self.S.thermostat.turn_off()
-        self.S.actors.remove(lbm)
+        self.system.thermostat.turn_off()
+        self.system.actors.remove(lbm)
 
 
 if __name__ == '__main__':

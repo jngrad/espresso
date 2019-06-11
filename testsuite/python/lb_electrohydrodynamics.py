@@ -14,17 +14,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import espressomd
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 
 
 @utx.skipIfMissingFeatures(["LB_ELECTROHYDRODYNAMICS"])
-class LBEHTest(ut.TestCase):
+class LBEHTest(uts.TestCaseSystem):
     from espressomd import lb
-    s = espressomd.System(box_l=[6.0, 6.0, 6.0])
-    s.seed = s.cell_system.get_state()['n_nodes'] * [1234]
 
     def setUp(self):
         self.params = {'time_step': 0.01,
@@ -37,28 +35,29 @@ class LBEHTest(ut.TestCase):
                        'skin': 0.2,
                        'muE': [0.1, 0.2, 0.3]}
 
-        self.s.periodicity = [1, 1, 1]
-        self.s.time_step = self.params['time_step']
-        self.s.cell_system.skin = self.params['skin']
+        self.system.box_l = 3 * [6.0]
+        self.system.periodicity = [1, 1, 1]
+        self.system.time_step = self.params['time_step']
+        self.system.cell_system.skin = self.params['skin']
 
-        for i in self.s.actors:
-            self.s.actors.remove(i)
+        for i in self.system.actors:
+            self.system.actors.remove(i)
 
         self.lbf = self.lb.LBFluid(
             visc=self.params['viscosity'],
             dens=self.params['dens'],
             agrid=self.params['agrid'],
-            tau=self.s.time_step,
+            tau=self.system.time_step,
             kT=self.params['temp']
         )
 
-        self.s.actors.add(self.lbf)
-        self.s.thermostat.set_lb(
+        self.system.actors.add(self.lbf)
+        self.system.thermostat.set_lb(
             LB_fluid=self.lbf,
             gamma=self.params['friction'])
 
     def test(self):
-        s = self.s
+        s = self.system
 
         s.part.add(pos=0.5 * s.box_l, mu_E=self.params['muE'])
 

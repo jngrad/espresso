@@ -18,11 +18,11 @@
 #
 from __future__ import print_function
 import unittest as ut
+import unittest_system as uts
 import espressomd
 
 
-class ParticleProperties(ut.TestCase):
-    system = espressomd.System(box_l=[10.0, 10.0, 10.0])
+class ParticleProperties(uts.TestCaseSystem):
 
     # Particle id to work on
     pid = 17
@@ -47,6 +47,7 @@ class ParticleProperties(ut.TestCase):
         return True
 
     def setUp(self):
+        self.system.box_l = 3 * [10.0]
         if not self.system.part.exists(self.pid):
             self.system.part.add(id=self.pid, pos=(0, 0, 0, 0))
 

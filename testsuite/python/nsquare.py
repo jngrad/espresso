@@ -18,27 +18,25 @@
 #
 from __future__ import print_function
 import unittest as ut
-import espressomd
+import unittest_system as uts
 import numpy as np
 
 
-class NSquare(ut.TestCase):
-    S = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    S.seed = S.cell_system.get_state()['n_nodes'] * [1234]
+class NSquare(uts.TestCaseSystem):
 
     def setUp(self):
-        self.S.part.clear()
-        self.S.cell_system.set_n_square(use_verlet_lists=False)
+        self.system.part.clear()
+        self.system.cell_system.set_n_square(use_verlet_lists=False)
 
     def test_load_balancing(self):
         n_part = 235
-        n_nodes = self.S.cell_system.get_state()['n_nodes']
+        n_nodes = self.system.cell_system.get_state()['n_nodes']
         n_part_avg = n_part // n_nodes
 
         for i in range(n_part):
-            self.S.part.add(id=i, pos=np.random.random(3), type=1)
+            self.system.part.add(id=i, pos=np.random.random(3), type=1)
 
-        part_dist = self.S.cell_system.resort()
+        part_dist = self.system.cell_system.resort()
 
         # Check that we did not lose particles
         self.assertEqual(sum(part_dist), n_part)
@@ -50,7 +48,7 @@ class NSquare(ut.TestCase):
         # Check that we can still access all the particles
         # This basically checks if part_node and local_particles
         # are still in a valid state after the particle exchange
-        self.assertEqual(sum(self.S.part[:].type), n_part)
+        self.assertEqual(sum(self.system.part[:].type), n_part)
 
 
 if __name__ == "__main__":

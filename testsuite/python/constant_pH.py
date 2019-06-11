@@ -20,12 +20,13 @@
 """Testmodule for the Reaction Ensemble.
 """
 import unittest as ut
+import unittest_system as uts
 import numpy as np
 import espressomd  # pylint: disable=import-error
 from espressomd import reaction_ensemble
 
 
-class ReactionEnsembleTest(ut.TestCase):
+class ReactionEnsembleTest(uts.TestCaseSystem):
 
     """Test the core implementation of the reaction ensemble."""
 
@@ -43,17 +44,16 @@ class ReactionEnsembleTest(ut.TestCase):
     pKa = pKa_minus_pH + pH
     Ka = 10**(-pKa)
     box_l = (N0 / c0)**(1.0 / 3.0)
-    system = espressomd.System(box_l=[box_l, box_l, box_l])
-    system.seed = system.cell_system.get_state()['n_nodes'] * [2]
-    np.random.seed(69)  # make reaction code fully deterministic
-    system.cell_system.skin = 0.4
-    system.time_step = 0.01
+    np.random.seed(1)
     RE = reaction_ensemble.ConstantpHEnsemble(
         temperature=1.0,
-        exclusion_radius=1, seed=44)
+        exclusion_radius=1, seed=1)
 
     @classmethod
     def setUpClass(cls):
+        cls.system.box_l = 3 * [cls.box_l]
+        cls.system.cell_system.skin = 0.4
+        cls.system.time_step = 0.01
         for i in range(0, 2 * cls.N0, 2):
             cls.system.part.add(id=i, pos=np.random.random(3) *
                                 cls.system.box_l, type=cls.type_A)

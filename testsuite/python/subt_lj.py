@@ -20,16 +20,17 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 import numpy as np
 
 
 @utx.skipIfMissingFeatures("LENNARD_JONES")
-class SubtLjTest(ut.TestCase):
-    system = espressomd.System(box_l=[10, 10, 10])
-    system.time_step = .1
+class SubtLjTest(uts.TestCaseSystem):
 
     def setUp(self):
+        self.system.box_l = 3 * [10.]
+        self.system.time_step = 0.1
         self.system.part.clear()
 
     def test(self):

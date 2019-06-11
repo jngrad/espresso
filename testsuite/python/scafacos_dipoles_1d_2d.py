@@ -25,13 +25,14 @@ import os
 import numpy as np
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 import espressomd.magnetostatics as magnetostatics
 from tests_common import abspath
 
 
 @utx.skipIfMissingFeatures(["SCAFACOS_DIPOLES"])
-class Scafacos1d2d(ut.TestCase):
+class Scafacos1d2d(uts.TestCaseSystem):
 
     def test_scafacos(self):
         rho = 0.3
@@ -49,8 +50,7 @@ class Scafacos1d2d(ut.TestCase):
                     1.0 / 3.0) * particle_radius
         skin = 0.5
 
-        s = espressomd.System(box_l=[1.0, 1.0, 1.0])
-        s.seed = s.cell_system.get_state()['n_nodes'] * [1234]
+        s = self.system
         # give Espresso some parameters
         s.time_step = 0.01
         s.cell_system.skin = skin

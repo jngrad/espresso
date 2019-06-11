@@ -17,6 +17,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 import numpy as np
 import espressomd.electrostatics
@@ -24,15 +25,15 @@ from espressomd import electrostatic_extensions
 
 
 @utx.skipIfMissingFeatures(["ELECTROSTATICS", "PARTIAL_PERIODIC"])
-class ELC_vs_MMM2D_neutral(ut.TestCase):
-    # Handle to espresso system
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
+class ELC_vs_MMM2D_neutral(uts.TestCaseSystem):
     acc = 1e-6
     elc_gap = 5.0
     box_l = 10.0
     bl2 = box_l * 0.5
-    system.time_step = 0.01
-    system.cell_system.skin = 0.1
+
+    def setUp(self):
+        self.system.time_step = 0.01
+        self.system.cell_system.skin = 0.1
 
     def test_elc_vs_mmm2d(self):
         elc_param_sets = {

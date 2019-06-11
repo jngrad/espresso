@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from __future__ import print_function
-import espressomd
+import unittest_system as uts
 import numpy
 import unittest as ut
 import unittest_decorators as utx
@@ -25,8 +25,7 @@ from tests_common import abspath
 
 
 @utx.skipIfMissingFeatures(["LENNARD_JONES"])
-class LennardJonesTest(ut.TestCase):
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
+class LennardJonesTest(uts.TestCaseSystem):
     data = numpy.loadtxt(abspath('data/lj_system.dat'))
 
     def setUp(self):

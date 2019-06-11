@@ -17,6 +17,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 from numpy.random import uniform
 import espressomd
@@ -26,10 +27,8 @@ import random
 
 @utx.skipIfMissingFeatures(["MASS", "PARTICLE_ANISOTROPY",
                             "ROTATIONAL_INERTIA", "LANGEVIN_PER_PARTICLE"])
-class ThermoTest(ut.TestCase):
+class ThermoTest(uts.TestCaseSystem):
     longMessage = True
-    # Handle for espresso system
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
     # The NVT thermostat parameters
     kT = 0.0
     gamma_global = np.zeros((3))
@@ -60,14 +59,10 @@ class ThermoTest(ut.TestCase):
     # Diffusivity
     D_tran_p_validate = np.zeros((2, 3))
 
+    np.random.seed(15) # 15 makes reference numerical results reproducible
+
     @classmethod
     def setUpClass(cls):
-        # Handle a random generator seeding
-        seed1 = 15
-        np.random.seed(seed1)
-        seed2 = 42
-        # The Espresso system configuration
-        cls.system.seed = [s * seed2 for s in range(cls.system.cell_system.get_state()["n_nodes"])]
         cls.system.cell_system.set_domain_decomposition(use_verlet_lists=True)
         cls.system.cell_system.skin = 5.0
 

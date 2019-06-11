@@ -18,14 +18,14 @@
 #
 from __future__ import print_function
 import unittest as ut
-import espressomd
+import unittest_system as uts
 import numpy as np
 
 
-class DomainDecomposition(ut.TestCase):
-    system = espressomd.System(box_l=[10.0, 10.0, 10.0])
+class DomainDecomposition(uts.TestCaseSystem):
 
     def setUp(self):
+        self.system.box_l = 3 * [10.0]
         self.system.part.clear()
         self.system.cell_system.set_domain_decomposition(
             use_verlet_lists=False)
@@ -53,8 +53,7 @@ class DomainDecomposition(ut.TestCase):
         self.assertEqual(sum(self.system.part[:].type), n_part)
 
     def test_min_num_cells(self):
-        s = self.system
-        cs = s.cell_system
+        cs = self.system.cell_system
         cs.min_num_cells = 23
 
         self.assertEqual(cs.min_num_cells, 23)

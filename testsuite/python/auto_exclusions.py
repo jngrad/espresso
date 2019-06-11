@@ -20,12 +20,12 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 
 
 @utx.skipIfMissingFeatures("EXCLUSIONS")
-class AutoExclusions(ut.TestCase):
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
+class AutoExclusions(uts.TestCaseSystem):
 
     def setUp(self):
         self.system.part.clear()

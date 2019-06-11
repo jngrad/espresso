@@ -16,13 +16,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import unittest as ut
+import unittest_system as uts
 import espressomd
 import numpy as np
 import itertools
 import collections
 
 
-class RandomPairTest(ut.TestCase):
+class RandomPairTest(uts.TestCaseSystem):
 
     """This test creates a system of random particles.
        Then the interaction pairs for a certain cutoff
@@ -32,10 +33,10 @@ class RandomPairTest(ut.TestCase):
        repeated for all valid combinations of periodicities.
 
     """
-    system = espressomd.System(box_l=3 * [10.])
 
     def setUp(self):
         s = self.system
+        s.box_l = 3 * [10.]
         s.time_step = .1
         s.cell_system.skin = 0.0
         s.min_global_cut = 1.5

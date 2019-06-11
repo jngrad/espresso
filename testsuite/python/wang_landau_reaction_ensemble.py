@@ -21,6 +21,7 @@
 from __future__ import print_function
 import numpy as np
 import unittest as ut
+import unittest_system as uts
 
 import espressomd
 from espressomd.interactions import HarmonicBond
@@ -29,7 +30,7 @@ from espressomd import system
 import numpy.testing as npt
 
 
-class ReactionEnsembleTest(ut.TestCase):
+class ReactionEnsembleTest(uts.TestCaseSystem):
 
     """Test the core implementation of the wang_landau reaction ensemble.
 
@@ -39,55 +40,47 @@ class ReactionEnsembleTest(ut.TestCase):
     oscillator
     """
 
-    # System parameters
-    #
-    box_l = 6 * np.sqrt(2)
     temperature = 1.0
 
-    # Integration parameters
-    #
-    system = espressomd.System(box_l=[box_l, box_l, box_l])
-    system.seed = system.cell_system.get_state()['n_nodes'] * [1234]
-    np.random.seed(seed=system.seed)
-    system.time_step = 0.01
-    system.cell_system.skin = 0
-    system.cell_system.set_n_square(use_verlet_lists=False)
+    np.random.seed(1)
 
-    #
-    # Setup System
-    #
-
-    N0 = 1  # number of titratable units
-    K_diss = 0.0088
-
-    system.part.add(id=0, pos=[0, 0, 0] * system.box_l, type=3)
-    system.part.add(id=1, pos=[1.0, 1.0, 1.0] * system.box_l / 2.0, type=1)
-    system.part.add(id=2, pos=np.random.random() * system.box_l, type=2)
-    system.part.add(id=3, pos=np.random.random() * system.box_l, type=2)
-
-    h = HarmonicBond(r_0=0, k=1)
-    system.bonded_inter[0] = h
-    system.part[0].add_bond((h, 1))
-    WLRE = reaction_ensemble.WangLandauReactionEnsemble(
-        temperature=temperature, exclusion_radius=0, seed=69)
-    WLRE.add_reaction(
-        gamma=K_diss, reactant_types=[0], reactant_coefficients=[1],
-        product_types=[1, 2], product_coefficients=[1, 1],
-        default_charges={0: 0, 1: -1, 2: +1})
-    system.setup_type_map([0, 1, 2, 3])
-    # initialize wang_landau
     # generate preliminary_energy_run_results here, this should be done in a
     # separate simulation without energy reweighting using the update energy
     # functions
     np.savetxt("energy_boundaries.dat", np.c_[[0, 1], [0, 0], [9, 9]],
                delimiter='\t', header="nbar   E_potmin   E_potmax")
 
-    WLRE.add_collective_variable_degree_of_association(
-        associated_type=0, min=0, max=1, corresponding_acid_types=[0, 1])
-    WLRE.set_wang_landau_parameters(
-        final_wang_landau_parameter=1e-2,
-        do_not_sample_reaction_partition_function=True,
-        full_path_to_output_filename="WL_potential_out.dat")
+    # initialize wang_landau
+    WLRE = reaction_ensemble.WangLandauReactionEnsemble(
+        temperature=temperature, exclusion_radius=0, seed=69)
+
+    @classmethod
+    def setUpClass(cls):
+        box_l = 6 * np.sqrt(2)
+        cls.system.box_l = 3 * [box_l]
+        cls.system.time_step = 0.01
+        cls.system.cell_system.skin = 0
+        cls.system.cell_system.set_n_square(use_verlet_lists=False)
+        cls.system.part.add(id=0, pos=[0, 0, 0], type=3)
+        cls.system.part.add(id=1, pos=cls.system.box_l / 2.0, type=1)
+        cls.system.part.add(id=2, pos=np.random.random(3) * box_l, type=2)
+        cls.system.part.add(id=3, pos=np.random.random(3) * box_l, type=2)
+        h = HarmonicBond(r_0=0, k=1)
+        cls.system.bonded_inter[0] = h
+        cls.system.part[0].add_bond((h, 1))
+        cls.system.setup_type_map([0, 1, 2, 3])
+        K_diss = 0.0088
+        cls.WLRE.add_reaction(
+            gamma=K_diss, reactant_types=[0], reactant_coefficients=[1],
+            product_types=[1, 2], product_coefficients=[1, 1],
+            default_charges={0: 0, 1: -1, 2: +1})
+
+        cls.WLRE.add_collective_variable_degree_of_association(
+            associated_type=0, min=0, max=1, corresponding_acid_types=[0, 1])
+        cls.WLRE.set_wang_landau_parameters(
+            final_wang_landau_parameter=1e-2,
+            do_not_sample_reaction_partition_function=True,
+            full_path_to_output_filename="WL_potential_out.dat")
 
     def test_wang_landau_energy_recording(self):
         self.WLRE.update_maximum_and_minimum_energies_at_current_state()

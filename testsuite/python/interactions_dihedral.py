@@ -22,6 +22,7 @@ import unittest_decorators as utx
 import numpy as np
 
 import espressomd
+import unittest_system as uts
 
 # Dihedral interaction needs more rigorous tests.
 # The geometry checked here is rather simple and special.
@@ -75,11 +76,8 @@ def dihedral_force(k, n, phase, p1, p2, p3, p4):
         return force1, force2, force3
 
 
-class InteractionsBondedTest(ut.TestCase):
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    np.random.seed(seed=system.seed)
-
-    box_l = 10.
+class InteractionsBondedTest(uts.TestCaseSystem):
+    np.random.seed(1)
 
     start_pos = [5., 5., 5.]
     axis = np.array([1., 0., 0.])
@@ -88,8 +86,7 @@ class InteractionsBondedTest(ut.TestCase):
     rel_pos_2 = np.array([0., 0., 1.])
 
     def setUp(self):
-
-        self.system.box_l = [self.box_l] * 3
+        self.system.box_l = [10.] * 3
         self.system.cell_system.skin = 0.4
         self.system.time_step = .1
 

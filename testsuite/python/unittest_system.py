@@ -1,5 +1,4 @@
-#
-# Copyright (C) 2013-2018 The ESPResSo project
+# Copyright (C) 2019 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -15,21 +14,18 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-from __future__ import print_function
-import unittest as ut
-import unittest_decorators as utx
-from espressomd import lb
-
-from virtual_sites_tracers_common import VirtualSitesTracersCommon
+import espressomd  # pylint: disable=import-error
+import unittest
 
 
-@utx.skipIfMissingGPU()
-@utx.skipIfMissingFeatures(['VIRTUAL_SITES_INERTIALESS_TRACERS'])
-class VirtualSitesTracers(ut.TestCase, VirtualSitesTracersCommon):
+class CaseSystem(object):
 
-    def setUp(self):
-        self.LBClass = lb.LBFluidGPU
+    """
+    Utility class that initializes the espresso system and sets the random seed.
+    """
+    system = espressomd.System(box_l=3 * [1.])
+    system.seed = system.cell_system.get_state()['n_nodes'] * [1234]
 
-if __name__ == "__main__":
-    ut.main()
+
+class TestCaseSystem(unittest.TestCase, CaseSystem):
+    pass

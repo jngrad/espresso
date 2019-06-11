@@ -17,18 +17,18 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 
 
 @utx.skipIfMissingFeatures(["P3M", "EXTERNAL_FORCES"])
-class test_icc(ut.TestCase):
+class test_icc(uts.TestCaseSystem):
 
     def runTest(self):
         from espressomd.electrostatics import P3M
         from espressomd.electrostatic_extensions import ICC
 
-        S = espressomd.System(box_l=[1.0, 1.0, 1.0])
-        S.seed = S.cell_system.get_state()['n_nodes'] * [1234]
+        S = self.system
         # Parameters
         box_l = 20.0
         nicc = 10

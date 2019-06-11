@@ -17,12 +17,12 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
-import espressomd
 
 
 @utx.skipIfMissingFeatures(["ENGINE"])
-class SwimmerTest(ut.TestCase):
+class SwimmerTest(uts.TestCaseSystem):
 
     def test(self):
         boxl = 12
@@ -45,26 +45,23 @@ class SwimmerTest(ut.TestCase):
             return v_swim * (-1. / gamma + t + (1. / gamma) *
                              np.exp(-gamma * t)) + z0
 
-        S = espressomd.System(box_l=[1.0, 1.0, 1.0])
-        S.seed = S.cell_system.get_state()['n_nodes'] * [1234]
+        self.system.box_l = [boxl, boxl, boxl]
+        self.system.cell_system.skin = 0.1
+        self.system.time_step = tstep
 
-        S.box_l = [boxl, boxl, boxl]
-        S.cell_system.skin = 0.1
-        S.time_step = tstep
+        self.system.part.add(id=0, pos=pos_0, swimming={"v_swim": v_swim})
+        self.system.part.add(id=1, pos=pos_1, swimming={"f_swim": f_swim})
+        self.system.part[:].rotation = [1, 1, 1]
 
-        S.part.add(id=0, pos=pos_0, swimming={"v_swim": v_swim})
-        S.part.add(id=1, pos=pos_1, swimming={"f_swim": f_swim})
-        S.part[:].rotation = 1, 1, 1
+        self.system.thermostat.set_langevin(kT=temp, gamma=gamma, seed=42)
 
-        S.thermostat.set_langevin(kT=temp, gamma=gamma, seed=42)
+        self.system.integrator.run(sampsteps)
 
-        S.integrator.run(sampsteps)
+        pos_0[2] = z_v(self.system.time, pos_0[2])
+        pos_1[2] = z_f(self.system.time, pos_1[2])
 
-        pos_0[2] = z_v(S.time, pos_0[2])
-        pos_1[2] = z_f(S.time, pos_1[2])
-
-        delta_pos_0 = np.linalg.norm(S.part[0].pos - pos_0)
-        delta_pos_1 = np.linalg.norm(S.part[1].pos - pos_1)
+        delta_pos_0 = np.linalg.norm(self.system.part[0].pos - pos_0)
+        delta_pos_1 = np.linalg.norm(self.system.part[1].pos - pos_1)
 
         self.assertLess(1.4e-3, delta_pos_0)
         self.assertLess(delta_pos_0, 1.6e-3)

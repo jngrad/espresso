@@ -20,18 +20,18 @@ from __future__ import print_function
 import espressomd
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 from tests_common import params_match
 
 
 @utx.skipIfMissingGPU()
 @utx.skipIfMissingFeatures("ELECTROSTATICS")
-class P3MGPU_test(ut.TestCase):
+class P3MGPU(uts.TestCaseSystem):
 
     def test(self):
         from espressomd.electrostatics import P3MGPU
 
-        es = espressomd.System(box_l=[10.0, 10.0, 10.0])
-        es.seed = es.cell_system.get_state()['n_nodes'] * [1234]
+        self.system.box_l = 3 * [10.0]
         test_params = {}
         test_params["prefactor"] = 2
         test_params["cao"] = 2
@@ -43,7 +43,7 @@ class P3MGPU_test(ut.TestCase):
         test_params["tune"] = False
 
         p3m = P3MGPU(**test_params)
-        es.actors.add(p3m)
+        self.system.actors.add(p3m)
         self.assertTrue(params_match(test_params, p3m.get_params()))
 
 

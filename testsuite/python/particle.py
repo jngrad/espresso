@@ -19,12 +19,13 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 import numpy as np
 from espressomd.interactions import FeneBond
 
 
-class ParticleProperties(ut.TestCase):
+class ParticleProperties(uts.TestCaseSystem):
 
     # Particle id to work on
     pid = 17
@@ -32,15 +33,16 @@ class ParticleProperties(ut.TestCase):
     # Error tolerance when comparing arrays/tuples...
     tol = 1E-9
 
-    # Handle for espresso system
-    system = espressomd.System(box_l=[100.0, 100.0, 100.0])
-    system.cell_system.skin = 0
-    system.time_step = 0.01
-
     f1 = FeneBond(k=1, d_r_max=2)
-    system.bonded_inter.add(f1)
     f2 = FeneBond(k=1, d_r_max=2)
-    system.bonded_inter.add(f2)
+
+    @classmethod
+    def setUpClass(cls):
+        cls.system.box_l = 3 * [100.]
+        cls.system.cell_system.skin = 0
+        cls.system.time_step = 0.01
+        cls.system.bonded_inter.add(cls.f1)
+        cls.system.bonded_inter.add(cls.f2)
 
     def setUp(self):
         if not self.system.part.exists(self.pid):

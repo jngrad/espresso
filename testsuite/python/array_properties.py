@@ -17,6 +17,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 import espressomd
 from espressomd import lb
@@ -81,14 +82,16 @@ class ArrayLockedTest(ut.TestCase):
         np.testing.assert_array_equal(v, [4, 5, 6])
 
 
-class ArrayPropertyTest(ut.TestCase):
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    system.box_l = [12.0, 12.0, 12.0]
-    system.time_step = 0.01
-    system.cell_system.skin = 0.01
-    system.part.add(pos=[0, 0, 0])
-    lbf = lb.LBFluid(agrid=0.5, dens=1, visc=1, tau=0.01)
-    system.actors.add(lbf)
+class ArrayPropertyTest(uts.TestCaseSystem):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.system.box_l = 3 * [12.0]
+        cls.system.time_step = 0.01
+        cls.system.cell_system.skin = 0.01
+        cls.system.part.add(pos=[0, 0, 0])
+        cls.lbf = lb.LBFluid(agrid=0.5, dens=1, visc=1, tau=0.01)
+        cls.system.actors.add(cls.lbf)
 
     def locked_operators(self, v):
         with self.assertRaises(ValueError):

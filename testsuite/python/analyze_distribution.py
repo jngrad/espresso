@@ -17,14 +17,13 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
-import espressomd
 
 
 @utx.skipIfMissingFeatures("LENNARD_JONES")
-class AnalyzeDistributions(ut.TestCase):
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    np.random.seed(1234)
+class AnalyzeDistributions(uts.TestCaseSystem):
+    np.random.seed(1)
     num_part = 10
 
     @classmethod

@@ -19,6 +19,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import espressomd
 if espressomd.has_features("VIRTUAL_SITES_RELATIVE"):
     from espressomd.virtual_sites import VirtualSitesRelative, VirtualSitesOff
@@ -29,11 +30,8 @@ from numpy import random
 
 
 @utx.skipIfMissingFeatures("VIRTUAL_SITES_RELATIVE")
-class VirtualSites(ut.TestCase):
-    system = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    system.seed = range(system.cell_system.get_state()["n_nodes"])
-
-    np.random.seed(42)
+class VirtualSites(uts.TestCaseSystem):
+    np.random.seed(1)
 
     def multiply_quaternions(self, a, b):
         return np.array(

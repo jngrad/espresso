@@ -18,31 +18,29 @@
 #
 from __future__ import print_function
 import unittest as ut
-import espressomd
+import unittest_system as uts
 import numpy as np
 
 
-class Layered(ut.TestCase):
-    S = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    S.seed = S.cell_system.get_state()['n_nodes'] * [1234]
+class Layered(uts.TestCaseSystem):
 
     def setUp(self):
-        self.S.part.clear()
-        self.S.cell_system.set_layered()
+        self.system.part.clear()
+        self.system.cell_system.set_layered()
 
     def test_resort(self):
         n_part = 2351
 
         # Add the particles on node 0, so that they have to be resorted
         for i in range(n_part):
-            self.S.part.add(id=i, pos=[0, 0, 0], type=1)
+            self.system.part.add(id=i, pos=[0, 0, 0], type=1)
 
         # And now change their positions
         for i in range(n_part):
-            self.S.part[i].pos = pos = np.random.random(3)
+            self.system.part[i].pos = pos = np.random.random(3)
 
         # Distribute the particles on the nodes
-        part_dist = self.S.cell_system.resort()
+        part_dist = self.system.cell_system.resort()
 
         # Check that we did not lose particles
         self.assertEqual(sum(part_dist), n_part)
@@ -50,7 +48,7 @@ class Layered(ut.TestCase):
         # Check that we can still access all the particles
         # This basically checks if part_node and local_particles
         # is still in a valid state after the particle exchange
-        self.assertEqual(sum(self.S.part[:].type), n_part)
+        self.assertEqual(sum(self.system.part[:].type), n_part)
 
 
 if __name__ == "__main__":

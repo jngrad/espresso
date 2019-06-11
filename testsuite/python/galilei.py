@@ -19,6 +19,7 @@
 from __future__ import print_function
 
 import unittest as ut
+import unittest_system as uts
 import numpy as np
 
 import espressomd
@@ -28,10 +29,10 @@ BOX_L = np.array([10, 20, 30])
 N_PART = 500
 
 
-class Galilei(ut.TestCase):
-    system = espressomd.System(box_l=BOX_L)
+class Galilei(uts.TestCaseSystem):
 
     def setUp(self):
+        self.system.box_l = BOX_L
         self.system.part.add(pos=BOX_L * np.random.random((N_PART, 3)),
                              v=-5. + 10. * np.random.random((N_PART, 3)),
                              f=np.random.random((N_PART, 3)))

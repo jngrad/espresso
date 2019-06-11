@@ -19,17 +19,15 @@
 
 from __future__ import print_function
 import unittest as ut
-import espressomd
+import unittest_system as uts
 import numpy as np
 
 
-class RdfTest(ut.TestCase):
-    s = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    s.seed = s.cell_system.get_state()['n_nodes'] * [1234]
+class RdfTest(uts.TestCaseSystem):
 
     def setUp(self):
-        self.s.box_l = 3 * [10]
-        self.s.part.clear()
+        self.system.box_l = 3 * [10]
+        self.system.part.clear()
 
     def bin_volumes(self, midpoints):
         bin_size = midpoints[1] - midpoints[0]
@@ -40,10 +38,10 @@ class RdfTest(ut.TestCase):
         return 4. * np.pi * (r2 * bin_size + r * bin_size**2 + bin_size**3 / 3.)
 
     def test_single_type(self):
-        s = self.s
+        s = self.system
 
         n_part = 99
-        dx = self.s.box_l[0] / float(n_part + 1)
+        dx = s.box_l[0] / float(n_part + 1)
 
         for i in range(n_part):
             s.part.add(
@@ -63,10 +61,10 @@ class RdfTest(ut.TestCase):
         self.assertTrue(np.allclose(parts_in_bin[:-1], 2.0))
 
     def test_mixed(self):
-        s = self.s
+        s = self.system
 
         n_part = 99
-        dx = self.s.box_l[0] / float(n_part + 1)
+        dx = s.box_l[0] / float(n_part + 1)
 
         for i in range(n_part):
             s.part.add(
@@ -96,7 +94,7 @@ class RdfTest(ut.TestCase):
         self.assertTrue(np.allclose(rdf10, rdf01))
 
     def test_av(self):
-        s = self.s
+        s = self.system
 
         for i in range(200):
             s.part.add(id=i, pos=s.box_l * np.random.random(3), type=(i % 3))

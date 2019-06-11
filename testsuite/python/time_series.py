@@ -24,6 +24,7 @@ Testmodule for the observable recorder.
 from __future__ import print_function
 
 import unittest as ut
+import unittest_system as uts
 import numpy as np
 import espressomd  # pylint: disable=import-error
 from espressomd.observables import ParticlePositions
@@ -32,7 +33,7 @@ from espressomd.accumulators import TimeSeries
 N_PART = 100
 
 
-class TimeSeriesTest(ut.TestCase):
+class TimeSeriesTest(uts.TestCaseSystem):
 
     """
     Test class for the observable time series.
@@ -44,10 +45,9 @@ class TimeSeriesTest(ut.TestCase):
 
         """
 
-        system = espressomd.System(box_l=3 * [1.])
-        system.part.add(pos=np.random.random((N_PART, 3)))
+        self.system.part.add(pos=np.random.random((N_PART, 3)))
 
-        obs = ParticlePositions(ids=system.part[:].id)
+        obs = ParticlePositions(ids=self.system.part[:].id)
         time_series = TimeSeries(obs=obs)
 
         positions = []
@@ -55,7 +55,7 @@ class TimeSeriesTest(ut.TestCase):
             pos = np.random.random((N_PART, 3))
             positions.append(pos)
 
-            system.part[:].pos = pos
+            self.system.part[:].pos = pos
             time_series.update()
 
         for result, expected in zip(time_series.time_series(), positions):

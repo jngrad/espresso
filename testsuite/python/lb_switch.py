@@ -17,6 +17,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 import espressomd
 import espressomd.lb
@@ -24,11 +25,13 @@ from itertools import product
 
 
 @utx.skipIfMissingFeatures(["EXTERNAL_FORCES"])
-class LBSwitchActor(ut.TestCase):
-    system = espressomd.System(box_l=[10.0, 10.0, 10.0])
+class LBSwitchActor(uts.TestCaseSystem):
 
-    system.time_step = 0.01
-    system.cell_system.skin = 0.1
+    @classmethod
+    def setUpClass(cls):
+        cls.system.box_l = 3 * [10.0]
+        cls.system.time_step = 0.01
+        cls.system.cell_system.skin = 0.1
 
     def switch_test(self, GPU=False):
         system = self.system

@@ -20,28 +20,26 @@ from __future__ import print_function
 import numpy as np
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 from itertools import product
 
 import espressomd
 from tests_common import single_component_maxwell
 
 @utx.skipIfMissingFeatures("DPD")
-class DPDThermostat(ut.TestCase):
+class DPDThermostat(uts.TestCaseSystem):
     """Tests the velocity distribution created by the dpd thermostat against
        the single component Maxwell distribution."""
 
-    s = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    s.box_l = 3 * [10]
-    s.time_step = 0.01
-    s.cell_system.skin = 0.4
+    np.random.seed(1)
 
     def setUp(self):
-        self.s.seed = range(self.s.cell_system.get_state()["n_nodes"])
-        np.random.seed(16)
+        self.system.box_l = 3 * [10]
+        self.system.time_step = 0.01
+        self.system.cell_system.skin = 0.4
 
     def tearDown(self):
-        s = self.s
-        s.part.clear()
+        self.system.part.clear()
 
     def check_velocity_distribution(self, vel, minmax, n_bins, error_tol, kT):
         """check the recorded particle distributions in velocity against a
@@ -63,7 +61,7 @@ class DPDThermostat(ut.TestCase):
             abs(single_component_maxwell(-10, 10, 4.)-1.), 1E-4)
 
     def check_total_zero(self):
-        v_total = np.sum(self.s.part[:].v, axis=0)
+        v_total = np.sum(self.system.part[:].v, axis=0)
         self.assertTrue(v_total[0] < 1e-11)
         self.assertTrue(v_total[1] < 1e-11)
         self.assertTrue(v_total[2] < 1e-11)
@@ -71,7 +69,7 @@ class DPDThermostat(ut.TestCase):
     def test_single(self):
         """Test velocity distribution of a dpd fluid with a single type."""
         N = 200
-        s = self.s
+        s = self.system
         s.part.add(pos=s.box_l * np.random.random((N, 3)))
         kT = 2.3
         gamma = 1.5
@@ -95,7 +93,7 @@ class DPDThermostat(ut.TestCase):
     def test_binary(self):
         """Test velocity distribution of binary dpd fluid"""
         N = 200
-        s = self.s
+        s = self.system
         s.part.add(pos=s.box_l * np.random.random((N // 2, 3)), type=N//2*[0])
         s.part.add(pos=s.box_l * np.random.random((N // 2, 3)), type=N//2*[1])
         kT = 2.3
@@ -125,7 +123,7 @@ class DPDThermostat(ut.TestCase):
 
     def test_disable(self):
         N = 200
-        s = self.s
+        s = self.system
         s.time_step = 0.01
         s.part.add(pos=np.random.random((N, 3)))
         kT = 2.3
@@ -169,7 +167,7 @@ class DPDThermostat(ut.TestCase):
             v_stored, v_minmax, bins, error_tol, kT)
 
     def test_const_weight_function(self):
-        s = self.s
+        s = self.system
         kT = 0.
         gamma = 1.42
         s.thermostat.set_dpd(kT=kT)
@@ -217,7 +215,7 @@ class DPDThermostat(ut.TestCase):
         self.assertTrue(abs(s.part[1].f[2] + gamma * v[2]) < 1e-11)
 
     def test_linear_weight_function(self):
-        s = self.s
+        s = self.system
         kT = 0.
         gamma = 1.42
         s.thermostat.set_dpd(kT=kT)
@@ -296,7 +294,7 @@ class DPDThermostat(ut.TestCase):
             abs(s.part[1].f[2] + omega(0.5, 1.4)**2*gamma*v[2]) < 1e-11)
 
     def test_ghosts_have_v(self):
-        s = self.s
+        s = self.system
 
         s.box_l = 3 * [10.]
 
@@ -335,7 +333,7 @@ class DPDThermostat(ut.TestCase):
     def test_constraint(self):
         import espressomd.shapes
 
-        s = self.s
+        s = self.system
 
         s.constraints.add(shape=espressomd.shapes.Wall(
             dist=0, normal=[1, 0, 0]), particle_type=0, particle_velocity=[1, 2, 3])

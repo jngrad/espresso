@@ -19,6 +19,7 @@
 from __future__ import print_function
 import unittest as ut
 import unittest_decorators as utx
+import unittest_system as uts
 import numpy as np
 
 import espressomd
@@ -28,13 +29,11 @@ from tests_common import abspath
 
 
 @utx.skipIfMissingFeatures("ELECTROSTATICS")
-class CoulombCloudWall(ut.TestCase):
+class CoulombCloudWall(uts.TestCaseSystem):
 
     """This compares p3m, p3m_gpu, scafacos_p3m and scafacos_p2nfft
        electrostatic forces and energy against stored data."""
-    S = espressomd.System(box_l=[1.0, 1.0, 1.0])
-    S.seed = S.cell_system.get_state()['n_nodes'] * [1234]
-    np.random.seed(S.seed)
+    np.random.seed(1)
 
     forces = {}
     tolerance = 1E-3
@@ -43,6 +42,7 @@ class CoulombCloudWall(ut.TestCase):
     reference_energy = 2. * 148.94229549
 
     def setUp(self):
+        self.S = self.system
         self.S.box_l = (10, 10, 20)
         self.S.time_step = 0.01
         self.S.cell_system.skin = 0.4
