@@ -596,40 +596,40 @@ def gay_berne_potential(r_ij, u_i, u_j, epsilon_0, sigma_0, mu, nu, k_1, k_2):
     return 4. * epsilon * (rr**-12 - rr**-6)
 
 
-def calc_derivative(func, x, eps=1.0e-7, index=None):    
-    """Approximates the derivative at point x for the given function.
-    If x is an array the index for which the calculation should be done
-    needs to be specified.
+def calc_partial_derivative(func, x0, dx=1.0e-7, variables=(0,)):
+    """
+    Approximate the first derivative of a function at a point x0 using a
+    two-point central difference formula with spacing dx. For multivariate
+    functions, the variable dimension(s) must be provided.
 
     Parameters
     ----------
-    func: `function` obj
-        function from which the derivative is calculated
-    x: array_like or float: obj:`float`    
-        point at which the derivative is calculated
-    eps: `float`
-        spacing that is added/subtracted to/from x at index
-    index: `int` or `NoneType`
-        if None is given: x is assumed to be a `float`
-        if an index is given: the value of eps is added/subtracted to x at 
-        that index
-
+    func: :obj:`function`
+        Function from which the derivative is calculated
+    x0: (N,) array_like of obj:`float`
+        Point in N-dimensional space where the derivative is calculated
+    dx: :obj:`float`, optional
+        Spacing
+    variables: array_like of obj:`int`, optional
+        Indices of the variable dimensions, by default the partial derivative
+        of the first dimension is calculated
     Returns
     -------
-    `float`
-        the approximated derivative        
-    """    
-    if(index is None):
-        x_plus = np.copy(x) + eps
-        x_minus = np.copy(x) - eps
+    array_like of obj:`float`
+        The approximated partial derivative
 
-    else:
-        x_plus = np.copy(x)
-        x_minus = np.copy(x)
-        x_plus[index] += eps
-        x_minus[index] -= eps
-
-    return (func(x_plus) - func(x_minus)) / (2.0 * eps)
+    """
+    unidimensional = not np.array(x0).shape
+    if unidimensional:
+        x0 = [x0]
+    x_plus = np.array(x0, dtype=float)
+    x_minus = np.array(x0, dtype=float)
+    x_plus[variables] += dx / 2
+    x_minus[variables] -= dx / 2
+    derivative = (func(x_plus) - func(x_minus)) / dx
+    if unidimensional:
+        derivative = derivative[0]
+    return derivative
 
 
 class DynamicDict(dict):

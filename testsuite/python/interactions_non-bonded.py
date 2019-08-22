@@ -629,18 +629,18 @@ class InteractionsNonBondedTest(ut.TestCase):
         def get_reference_force(gb_params, r, dir1, dir2):
             force_ref = numpy.zeros(3)
             for i in range(3):
-                force_ref[i] = tests_common.calc_derivative(
+                force_ref[i] = tests_common.calc_partial_derivative(
                     lambda x: get_reference_energy(gb_params, x, dir1, dir2),
-                    x=r, index=i)
+                    x0=r, variables=i)
 
             return -force_ref
 
         def get_reference_torque(gb_params, r, dir1, dir2):
             force_in_dir1 = numpy.zeros(3)
             for i in range(3):
-                force_in_dir1[i] = tests_common.calc_derivative(
+                force_in_dir1[i] = tests_common.calc_partial_derivative(
                     lambda x: get_reference_energy(gb_params, r, x, dir2),
-                    x=dir1, index=i)
+                    x0=dir1, variables=i)
 
             torque_ref = numpy.cross(-dir1, force_in_dir1)
             return torque_ref
