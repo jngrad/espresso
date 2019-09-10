@@ -1093,6 +1093,83 @@ class OifCell(object):
         for p in self.mesh.points:
             p.set_force(new_force)
 
+
+    def set_rotation(self,ids=[]):
+        if ids == []:
+            self.rot_ids = [-1,-1,-1,-1,-1,-1]
+            # searching for extremal points IDs
+            x_min = large_number
+            x_max = -large_number
+            y_min = large_number
+            y_max = -large_number
+            z_min = large_number
+            z_max = -large_number
+            for tmp_part_point in self.cell_type.mesh.points:
+                coords = tmp_part_point.get_pos()
+                if coords[0] < x_min:
+                    x_min = coords[0]
+                    self.rot_ids[0] = tmp_part_point.get_id()
+                if coords[0] > x_max:
+                    x_max = coords[0]
+                    self.rot_ids[1] = tmp_part_point.get_id()
+                if coords[1] < y_min:
+                    y_min = coords[1]
+                    self.rot_ids[2] = tmp_part_point.get_id()
+                if coords[1] > y_max:
+                    y_max = coords[1]
+                    self.rot_ids[3] = tmp_part_point.get_id()
+                if coords[2] < z_min:
+                    z_min = coords[2]
+                    self.rot_ids[4] = tmp_part_point.get_id()
+                if coords[2] > z_max:
+                    z_max = coords[2]
+                    self.rot_ids[5] = tmp_part_point.get_id()
+        else:
+            ok = 1
+            for it in ids:
+                if isinstance(it, int) != True:
+                    ok = 0
+                it = int(it)
+                if it < 0 or it >= len(self.mesh.points):
+                    ok = 0
+            if ok == 0:
+                raise Exception("OifCell: set_rotation: rotation_ids must be a tuple of integer valued ids between 0 and the number of mesh points.")
+            self.rot_ids = ids
+
+        self.rot_init_pos = []
+        orig = self.get_origin()
+        for it in self.rot_ids:
+            pos = list(self.mesh.points[it].get_pos())
+            for ii in range(0,3):
+                pos[ii] = pos[ii] - orig[ii]
+            self.rot_init_pos.append(pos)
+            
+    def get_rotation_angles(self):
+        i = 0
+        ang = []
+        orig = self.get_origin()
+        for it in self.rot_ids:
+            vec_cur = list(self.mesh.points[it].get_pos())
+            vec_init = self.rot_init_pos[i]
+            for ii in range(0,3):
+                vec_cur[ii] = vec_cur[ii] - orig[ii]    
+            ang.append(angle_btw_vectors(vec_init,vec_cur))
+            i = i + 1
+        return ang
+
+    def get_rotation_positions(self):
+        pos = []
+        orig = self.get_origin()
+        for it in self.rot_ids:
+            tmp = list(self.mesh.points[it].get_pos())
+            for ii in range(0,3):
+                tmp[ii] = tmp[ii] - orig[ii]
+            pos.append(tmp)
+        return pos
+ 
+
+
+
     # this is not implemented
     # def kill_motion(self):
     #    for p in self.mesh.points:
