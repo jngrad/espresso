@@ -890,11 +890,14 @@ class OifCellType(object):  # analogous to oif_template
         print("\t resize: " + str(self.resize))
         print(" ")
         
-    def suggest_LBgamma(self,fluidVisc,fluidDens):
+    def suggest_LBgamma(self,visc = None,dens = None):
+        if not (isinstance(visc, float) and isinstance(dens, float)): 
+            raise Exception(
+                "OifCellType: viscosity or density must be real numbers in suggest_LBgamma. Quitting.")
         noNodes = self.mesh.get_n_nodes()
         surface = self.mesh.surface()
 
-        LBgamma = (393.0/(1.0*noNodes))*np.sqrt(surface/201.0619)*((5.6 - 1.82)/(5.853658537 - 1.5)*(fluidVisc - 1.5) + (10 - 1.82)/(6 - 1.025)*(fluidDens - 1.025) + 1.82)
+        LBgamma = (393.0/(1.0*noNodes))*np.sqrt(surface/201.0619)*((5.6 - 1.82)/(5.853658537 - 1.5)*(visc - 1.5) + (10 - 1.82)/(6 - 1.025)*(dens - 1.025) + 1.82)
         return LBgamma
 
 class OifCell(object):
@@ -1170,8 +1173,8 @@ class OifCell(object):
     def volume(self):
         return self.mesh.volume()
 
-    def suggest_LBgamma(self, fluidVisc, fluidDens):
-        return self.cell_type.suggest_LBgamma(fluidVisc, fluidDens)
+    def suggest_LBgamma(self, visc = None, dens = None):
+        return self.cell_type.suggest_LBgamma(visc = visc, dens = dens)
         
     
 
