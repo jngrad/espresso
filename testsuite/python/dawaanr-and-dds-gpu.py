@@ -61,8 +61,8 @@ class DDSGPUTest(ut.TestCase):
                 part_dip[0] = sintheta * np.cos(phi) * dipole_modulus
                 part_dip[1] = sintheta * np.sin(phi) * dipole_modulus
                 part_dip[2] = costheta * dipole_modulus
-                self.es.part.add(id=i, type=0, pos=part_pos, dip=part_dip,
-                                 v=np.array([0, 0, 0]), omega_body=np.array([0, 0, 0]))
+                self.es.part.add(id=i, type=0, pos=part_pos, dip=part_dip, v=np.array(
+                    [0, 0, 0]), omega_body=np.array([0, 0, 0]))
 
             self.es.non_bonded_inter[0, 0].lennard_jones.set_params(
                 epsilon=10.0, sigma=0.5, cutoff=0.55, shift="auto")

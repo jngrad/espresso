@@ -756,7 +756,16 @@ class ShapeBasedConstraintTest(ut.TestCase):
         part_offset = 1.2
 
         system.part.add(
-            id=0, pos=[self.box_l / 2.0, self.box_l / 2.0 + part_offset, self.box_l / 2.0], type=0)
+            id=0,
+            pos=[
+                self.box_l /
+                2.0,
+                self.box_l /
+                2.0 +
+                part_offset,
+                self.box_l /
+                2.0],
+            type=0)
 
         # check force calculation of cylinder constraint
         torus_shape = espressomd.shapes.Torus(
@@ -795,9 +804,18 @@ class ShapeBasedConstraintTest(ut.TestCase):
         system.integrator.run(0)
 
         self.assertAlmostEqual(torus_wall.total_force()[1], 0.0)
-        self.assertAlmostEqual(torus_wall.total_normal_force(), 2 * tests_common.lj_force(
-            espressomd, cutoff=2.0, offset=0., eps=1.0, sig=1.0,
-            r=radius - tube_radius - part_offset))
+        self.assertAlmostEqual(
+            torus_wall.total_normal_force(),
+            2 *
+            tests_common.lj_force(
+                espressomd,
+                cutoff=2.0,
+                offset=0.,
+                eps=1.0,
+                sig=1.0,
+                r=radius -
+                tube_radius -
+                part_offset))
 
         # Test the geometry of the shape directly
         phi_steps = 11

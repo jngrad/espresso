@@ -67,15 +67,32 @@ cpdef check_type_or_throw_except(x, n, t, msg):
         if hasattr(x, "__getitem__"):
             for i in range(len(x)):
                 if not isinstance(x[i], t):
-                    if not ((t == float and is_valid_type(x[i], int))
-                            or (t == float and issubclass(type(x[i]), np.integer))) \
-                            and not (t == int and issubclass(type(x[i]), np.integer)):
+                    if not (
+                        (t == float and is_valid_type(
+                            x[i],
+                            int)) or (
+                            t == float and issubclass(
+                                type(
+                                    x[i]),
+                                np.integer))) and not (
+                        t == int and issubclass(
+                            type(
+                                x[i]),
+                            np.integer)):
                         raise ValueError(
-                            msg + " -- Item " + str(i) + " was of type " + type(x[i]).__name__)
+                            msg +
+                            " -- Item " +
+                            str(i) +
+                            " was of type " +
+                            type(
+                                x[i]).__name__)
         else:
             # if n>1, but the user passed a single value, also throw exception
             raise ValueError(
-                msg + " -- A single value was given but " + str(n) + " were expected.")
+                msg +
+                " -- A single value was given but " +
+                str(n) +
+                " were expected.")
     else:
         # N=1 and a single value
         if not isinstance(x, t):
@@ -114,14 +131,30 @@ cdef check_range_or_except(D, name, v_min, incl_min, v_max, incl_max):
                                 or (not incl_min and not all(v > v_min for v in x)))) or \
            (v_max != "inf" and ((incl_max and not all(v <= v_max for v in x))
                                 or (not incl_max and not all(v < v_max for v in x)))):
-            raise ValueError("In " + name + ": Some values in " + str(x) + "are out of range " +
-                             ("[" if incl_min else "]") + str(v_min) + "," + str(v_max) + ("]" if incl_max else "["))
+            raise ValueError("In " +
+                             name +
+                             ": Some values in " +
+                             str(x) +
+                             "are out of range " +
+                             ("[" if incl_min else "]") +
+                             str(v_min) +
+                             "," +
+                             str(v_max) +
+                             ("]" if incl_max else "["))
     # Single Value
     else:
-        if (v_min != "inf" and ((incl_min and x < v_min) or (not incl_min and x <= v_min)) or
-                v_max != "inf" and ((incl_max and x > v_max) or (not incl_max and x >= v_max))):
-            raise ValueError("In " + name + ": Value " + str(x) + " is out of range " + ("[" if incl_min else "]") +
-                             str(v_min) + "," + str(v_max) + ("]" if incl_max else "["))
+        if (v_min != "inf" and ((incl_min and x < v_min) or (not incl_min and x <= v_min))
+                or v_max != "inf" and ((incl_max and x > v_max) or (not incl_max and x >= v_max))):
+            raise ValueError("In " +
+                             name +
+                             ": Value " +
+                             str(x) +
+                             " is out of range " +
+                             ("[" if incl_min else "]") +
+                             str(v_min) +
+                             "," +
+                             str(v_max) +
+                             ("]" if incl_max else "["))
 
 
 def to_char_pointer(s):
@@ -294,7 +327,13 @@ def is_valid_type(value, t):
     elif t == float:
         if hasattr(np, 'float128'):
             return isinstance(
-                value, (float, np.float16, np.float32, np.float64, np.float128, np.longdouble))
+                value,
+                (float,
+                 np.float16,
+                 np.float32,
+                 np.float64,
+                 np.float128,
+                 np.longdouble))
         return isinstance(
             value, (float, np.float16, np.float32, np.float64, np.longdouble))
     else:

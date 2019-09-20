@@ -66,7 +66,9 @@ class VirtualSitesTracersCommon:
         # Switch implementation
         self.system.virtual_sites = VirtualSitesInertialessTracers()
         self.assertTrue(
-            isinstance(self.system.virtual_sites, VirtualSitesInertialessTracers))
+            isinstance(
+                self.system.virtual_sites,
+                VirtualSitesInertialessTracers))
         self.assertEqual(self.system.virtual_sites.have_velocity, True)
 
     def test_advection(self):
@@ -132,13 +134,25 @@ class VirtualSitesTracersCommon:
         # Add first triel, weak modulus
         from espressomd.interactions import IBM_Triel
         tri1 = IBM_Triel(
-            ind1=0, ind2=1, ind3=2, elasticLaw="Skalak", k1=0.1, k2=0, maxDist=2.4)
+            ind1=0,
+            ind2=1,
+            ind3=2,
+            elasticLaw="Skalak",
+            k1=0.1,
+            k2=0,
+            maxDist=2.4)
         system.bonded_inter.add(tri1)
         system.part[0].add_bond((tri1, 1, 2))
 
         # Add second triel
         tri2 = IBM_Triel(
-            ind1=0, ind2=2, ind3=3, elasticLaw="Skalak", k1=10, k2=0, maxDist=2.4)
+            ind1=0,
+            ind2=2,
+            ind3=3,
+            elasticLaw="Skalak",
+            k1=10,
+            k2=0,
+            maxDist=2.4)
         system.bonded_inter.add(tri2)
         system.part[0].add_bond((tri2, 2, 3))
 
@@ -187,13 +201,25 @@ class VirtualSitesTracersCommon:
         # Add triel, weak modulus for 3-5
         from espressomd.interactions import IBM_Triel
         triWeak = IBM_Triel(
-            ind1=3, ind2=4, ind3=5, elasticLaw="Skalak", k1=5, k2=0, maxDist=2.4)
+            ind1=3,
+            ind2=4,
+            ind3=5,
+            elasticLaw="Skalak",
+            k1=5,
+            k2=0,
+            maxDist=2.4)
         system.bonded_inter.add(triWeak)
         system.part[3].add_bond((triWeak, 4, 5))
 
         # Add triel, strong modulus for 6-8
         triStrong = IBM_Triel(
-            ind1=6, ind2=7, ind3=8, elasticLaw="Skalak", k1=15, k2=0, maxDist=2.4)
+            ind1=6,
+            ind2=7,
+            ind3=8,
+            elasticLaw="Skalak",
+            k1=15,
+            k2=0,
+            maxDist=2.4)
         system.bonded_inter.add(triStrong)
         system.part[6].add_bond((triStrong, 7, 8))
 

@@ -76,7 +76,12 @@ class Mpiio:
             raise ValueError("No output fields chosen.")
 
         self._instance.call_method(
-            "write", prefix=prefix, pos=positions, vel=velocities, typ=types, bond=bonds)
+            "write",
+            prefix=prefix,
+            pos=positions,
+            vel=velocities,
+            typ=types,
+            bond=bonds)
 
     def read(self, prefix=None, positions=False, velocities=False,
              types=False, bonds=False):
@@ -97,7 +102,12 @@ class Mpiio:
             raise ValueError("No output fields chosen.")
 
         self._instance.call_method(
-            "read", prefix=prefix, pos=positions, vel=velocities, typ=types, bond=bonds)
+            "read",
+            prefix=prefix,
+            pos=positions,
+            vel=velocities,
+            typ=types,
+            bond=bonds)
 
 
 mpiio = Mpiio()

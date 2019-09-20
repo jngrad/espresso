@@ -41,8 +41,7 @@ class CheckpointTest(ut.TestCase):
     def setUpClass(cls):
         cls.checkpoint = espressomd.checkpointing.Checkpoint(
             checkpoint_id="mycheckpoint_@TEST_COMBINATION@_@TEST_BINARY@".replace(
-                '.', '__'),
-            checkpoint_path="@CMAKE_CURRENT_BINARY_DIR@")
+                '.', '__'), checkpoint_path="@CMAKE_CURRENT_BINARY_DIR@")
         cls.checkpoint.load(0)
 
     @ut.skipIf(not LB, "Skipping test due to missing mode.")
@@ -231,8 +230,8 @@ class CheckpointTest(ut.TestCase):
 
     def test_constraints(self):
         from espressomd import constraints
-        self.assertEqual(len(system.constraints),
-                         8 - int(not espressomd.has_features("ELECTROSTATICS")))
+        self.assertEqual(len(system.constraints), 8 -
+                         int(not espressomd.has_features("ELECTROSTATICS")))
         c = system.constraints
 
         self.assertEqual(type(c[0].shape), Sphere)

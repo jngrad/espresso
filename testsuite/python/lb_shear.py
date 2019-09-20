@@ -75,8 +75,8 @@ def shear_flow(x, t, nu, v, h, k_max):
 
     u = x / h - 0.5
     for k in np.arange(1, k_max + 1):
-        u += 1.0 / (np.pi * k) * np.exp(
-            -4 * np.pi ** 2 * nu * k ** 2 / h ** 2 * t) * np.sin(2 * np.pi / h * k * x)
+        u += 1.0 / (np.pi * k) * np.exp(-4 * np.pi ** 2 * nu * k **
+                                        2 / h ** 2 * t) * np.sin(2 * np.pi / h * k * x)
     return -v * u
 
 
@@ -153,8 +153,8 @@ class LBShearCommon:
         # pressure tensor not the viscous stress tensor!
         shear_rate = SHEAR_VELOCITY / H
         dynamic_viscosity = self.lbf.viscosity * self.lbf.density
-        p_expected = p_eq * np.identity(3) - dynamic_viscosity * shear_rate * (
-            np.outer(shear_plane_normal, shear_direction) + np.transpose(np.outer(shear_plane_normal, shear_direction)))
+        p_expected = p_eq * np.identity(3) - dynamic_viscosity * shear_rate * (np.outer(
+            shear_plane_normal, shear_direction) + np.transpose(np.outer(shear_plane_normal, shear_direction)))
         for n in (2, 3, 4), (3, 4, 2), (5, 4, 3):
             node_stress = np.copy(self.lbf[n[0], n[1], n[2]].stress)
             np.testing.assert_allclose(node_stress,
@@ -164,8 +164,15 @@ class LBShearCommon:
             np.copy(wall1.get_force()),
             -np.copy(wall2.get_force()),
             atol=1E-4)
-        np.testing.assert_allclose(np.copy(wall1.get_force()), 
-                                   shear_direction * SHEAR_VELOCITY / H * W**2 * VISC, atol=2E-4)
+        np.testing.assert_allclose(
+            np.copy(
+                wall1.get_force()),
+            shear_direction *
+            SHEAR_VELOCITY /
+            H *
+            W**2 *
+            VISC,
+            atol=2E-4)
 
     def test(self):
         x = np.array((1, 0, 0), dtype=float)

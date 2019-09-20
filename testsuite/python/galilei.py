@@ -59,7 +59,9 @@ class Galilei(ut.TestCase):
 
         total_mass = np.sum(parts.mass)
         com = np.sum(
-            np.multiply(parts.mass.reshape((N_PART, 1)), parts.pos), axis=0) / total_mass
+            np.multiply(
+                parts.mass.reshape(
+                    (N_PART, 1)), parts.pos), axis=0) / total_mass
 
         np.testing.assert_allclose(np.copy(g.system_CMS()), com)
 
@@ -68,7 +70,9 @@ class Galilei(ut.TestCase):
         g = GalileiTransform()
         total_mass = np.sum(parts.mass)
         com_v = np.sum(
-            np.multiply(parts.mass.reshape((N_PART, 1)), parts.v), axis=0) / total_mass
+            np.multiply(
+                parts.mass.reshape(
+                    (N_PART, 1)), parts.v), axis=0) / total_mass
 
         np.testing.assert_allclose(np.copy(g.system_CMS_velocity()), com_v)
 

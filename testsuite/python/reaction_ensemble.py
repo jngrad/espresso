@@ -79,7 +79,11 @@ class ReactionEnsembleTest(ut.TestCase):
             reactant_coefficients=cls.reactant_coefficients,
             product_types=cls.product_types,
             product_coefficients=cls.product_coefficients,
-            default_charges={cls.type_HA: 0, cls.type_A: -1, cls.type_H: +1}, check_for_electroneutrality=True)
+            default_charges={
+                cls.type_HA: 0,
+                cls.type_A: -1,
+                cls.type_H: +1},
+            check_for_electroneutrality=True)
 
     def test_ideal_titration_curve(self):
         N0 = ReactionEnsembleTest.N0
@@ -122,14 +126,19 @@ class ReactionEnsembleTest(ut.TestCase):
         self.assertLess(
             rel_error_alpha,
             0.015,
-            msg="\nDeviation from ideal titration curve is too big for the given input parameters.\n"
-            + "  gamma: " + str(gamma)
-            + "  average_NH: " + str(average_NH)
-            + "  average_NA: " + str(average_NA)
-            + "  average_NHA:" + str(average_NHA)
-            + "  average alpha: " + str(average_alpha)
-            + "  target_alpha: " + str(target_alpha)
-        )
+            msg="\nDeviation from ideal titration curve is too big for the given input parameters.\n" +
+            "  gamma: " +
+            str(gamma) +
+            "  average_NH: " +
+            str(average_NH) +
+            "  average_NA: " +
+            str(average_NA) +
+            "  average_NHA:" +
+            str(average_NHA) +
+            "  average alpha: " +
+            str(average_alpha) +
+            "  target_alpha: " +
+            str(target_alpha))
 
     def test_reaction_system(self):
         RE_status = ReactionEnsembleTest.RE.get_status()

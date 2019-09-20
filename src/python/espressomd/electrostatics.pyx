@@ -247,9 +247,13 @@ IF P3M == 1:
 
             if (isinstance(self._params["mesh"], basestring) and len(
                     self._params["mesh"]) == 3):
-                if (self._params["mesh"][0] % 2 != 0 and self._params["mesh"][0] != -1) or \
-                   (self._params["mesh"][1] % 2 != 0 and self._params["mesh"][1] != -1) or \
-                   (self._params["mesh"][2] % 2 != 0 and self._params["mesh"][2] != -1):
+                if (self._params["mesh"][0] %
+                    2 != 0 and self._params["mesh"][0] != -
+                    1) or (self._params["mesh"][1] %
+                           2 != 0 and self._params["mesh"][1] != -
+                           1) or (self._params["mesh"][2] %
+                                  2 != 0 and self._params["mesh"][2] != -
+                                  1):
                     raise ValueError(
                         "P3M requires an even number of mesh points in all directions")
 
@@ -263,15 +267,18 @@ IF P3M == 1:
             if self._params["epsilon"] == "metallic":
                 self._params = 0.0
 
-            if not (is_valid_type(
-                    self._params["epsilon"], float) or self._params["epsilon"] == "metallic"):
+            if not (
+                is_valid_type(
+                    self._params["epsilon"],
+                    float) or self._params["epsilon"] == "metallic"):
                 raise ValueError("epsilon should be a double or 'metallic'")
 
             if not (self._params["inter"] == default_params["inter"]
                     or self._params["inter"] >= 0):
                 raise ValueError("inter should be a positive integer")
 
-            if not (self._params["mesh_off"] == default_params["mesh_off"] or len(
+            if not (
+                self._params["mesh_off"] == default_params["mesh_off"] or len(
                     self._params) != 3):
                 raise ValueError(
                     "mesh_off should be a list of length 3 and values between 0.0 and 1.0")
@@ -310,9 +317,12 @@ IF P3M == 1:
             # Sets lb, bcast, resets vars to zero if lb=0
             set_prefactor(self._params["prefactor"])
             # Sets cdef vars and calls p3m_set_params() in core
-            python_p3m_set_params(self._params["r_cut"],
-                                  self._params["mesh"], self._params["cao"],
-                                  self._params["alpha"], self._params["accuracy"])
+            python_p3m_set_params(
+                self._params["r_cut"],
+                self._params["mesh"],
+                self._params["cao"],
+                self._params["alpha"],
+                self._params["accuracy"])
             # p3m_set_params()  -> set r_cuts, mesh, cao, validates sanity, bcasts
             # Careful: bcast calls on_coulomb_change(), which calls p3m_init(),
             #         which resets r_cut if lb is zero. OK.
@@ -395,9 +405,13 @@ IF P3M == 1:
 
                 if (isinstance(self._params["mesh"], basestring) and len(
                         self._params["mesh"]) == 3):
-                    if (self._params["mesh"][0] % 2 != 0 and self._params["mesh"][0] != -1) or \
-                       (self._params["mesh"][1] % 2 != 0 and self._params["mesh"][1] != -1) or \
-                       (self._params["mesh"][2] % 2 != 0 and self._params["mesh"][2] != -1):
+                    if (self._params["mesh"][0] %
+                        2 != 0 and self._params["mesh"][0] != -
+                        1) or (self._params["mesh"][1] %
+                               2 != 0 and self._params["mesh"][1] != -
+                               1) or (self._params["mesh"][2] %
+                                      2 != 0 and self._params["mesh"][2] != -
+                                      1):
                         raise ValueError(
                             "P3M requires an even number of mesh points in all directions")
 
@@ -412,8 +426,10 @@ IF P3M == 1:
                 # if self._params["epsilon"] == "metallic":
                 #  self._params = 0.0
 
-                if not (is_valid_type(
-                        self._params["epsilon"], float) or self._params["epsilon"] == "metallic"):
+                if not (
+                    is_valid_type(
+                        self._params["epsilon"],
+                        float) or self._params["epsilon"] == "metallic"):
                     raise ValueError(
                         "epsilon should be a double or 'metallic'")
 
@@ -421,7 +437,8 @@ IF P3M == 1:
                         self._params["inter"] == default_params["inter"] or self._params["inter"] > 0):
                     raise ValueError("inter should be a positive integer")
 
-                if not (self._params["mesh_off"] == default_params["mesh_off"] or len(
+                if not (
+                    self._params["mesh_off"] == default_params["mesh_off"] or len(
                         self._params) != 3):
                     raise ValueError(
                         "mesh_off should be a list of length 3 with values between 0.0 and 1.0")
@@ -639,8 +656,11 @@ IF ELECTROSTATICS and MMM1D_GPU:
         def _tune(self):
             self.thisptr.setup(dereference(self.interface))
             self.thisptr.tune(
-                dereference(self.interface), self._params["maxPWerror"],
-                self._params["far_switch_radius"], self._params["bessel_cutoff"])
+                dereference(
+                    self.interface),
+                self._params["maxPWerror"],
+                self._params["far_switch_radius"],
+                self._params["bessel_cutoff"])
 
         def _activate_method(self):
             check_neutrality(self._params)
@@ -753,9 +773,11 @@ IF ELECTROSTATICS:
             set_prefactor(self._params["prefactor"])
             if self._params["dielectric"]:
                 self._params["delta_mid_top"] = (
-                    self._params["mid"] - self._params["top"]) / (self._params["mid"] + self._params["top"])
+                    self._params["mid"] - self._params["top"]) / (
+                    self._params["mid"] + self._params["top"])
                 self._params["delta_mid_bot"] = (
-                    self._params["mid"] - self._params["bot"]) / (self._params["mid"] + self._params["bot"])
+                    self._params["mid"] - self._params["bot"]) / (
+                    self._params["mid"] + self._params["bot"])
 
             if self._params["const_pot"]:
                 self._params["delta_mid_top"] = -1

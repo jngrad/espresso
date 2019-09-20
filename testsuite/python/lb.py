@@ -159,9 +159,13 @@ class TestLB:
         temp_prec_fluid = 0.05 * self.params["temp"]
 
         self.assertAlmostEqual(
-            np.mean(all_temp_fluid), self.params["temp"], delta=temp_prec_fluid)
+            np.mean(all_temp_fluid),
+            self.params["temp"],
+            delta=temp_prec_fluid)
         self.assertAlmostEqual(
-            np.mean(all_temp_particle), self.params["temp"], delta=temp_prec_particle)
+            np.mean(all_temp_particle),
+            self.params["temp"],
+            delta=temp_prec_particle)
 
     def test_properties(self):
         self.lbf = self.lb_class(
@@ -204,8 +208,8 @@ class TestLB:
         """
         system = self.system
         self.n_col_part = 1000
-        system.part.add(pos=np.random.random(
-            (self.n_col_part, 3)) * self.params["box_l"], v=np.random.random((self.n_col_part, 3)))
+        system.part.add(pos=np.random.random((self.n_col_part, 3)) *
+                        self.params["box_l"], v=np.random.random((self.n_col_part, 3)))
         system.thermostat.turn_off()
 
         self.lbf = self.lb_class(
@@ -294,14 +298,14 @@ class TestLB:
             ext_force_density=[0, 0, 0])
         self.system.actors.add(self.lbf)
         with self.assertRaises(ValueError):
-            v = self.lbf[
-                int(self.params['box_l'] / self.params['agrid']) + 1, 0, 0].velocity
+            v = self.lbf[int(self.params['box_l'] /
+                             self.params['agrid']) + 1, 0, 0].velocity
         with self.assertRaises(ValueError):
-            v = self.lbf[
-                0, int(self.params['box_l'] / self.params['agrid']) + 1, 0].velocity
+            v = self.lbf[0, int(self.params['box_l'] /
+                                self.params['agrid']) + 1, 0].velocity
         with self.assertRaises(ValueError):
-            v = self.lbf[
-                0, 0, int(self.params['box_l'] / self.params['agrid']) + 1].velocity
+            v = self.lbf[0, 0, int(
+                self.params['box_l'] / self.params['agrid']) + 1].velocity
 
     def test_incompatible_agrid(self):
         """
@@ -345,8 +349,8 @@ class TestLB:
             v_fluid = self.lbf.get_interpolated_velocity(
                 self.system.part[0].pos)
         self.system.integrator.run(1)
-        np.testing.assert_allclose(
-            np.copy(self.system.part[0].f), -self.params['friction'] * (v_part - v_fluid), atol=1E-6)
+        np.testing.assert_allclose(np.copy(
+            self.system.part[0].f), -self.params['friction'] * (v_part - v_fluid), atol=1E-6)
 
     @utx.skipIfMissingFeatures("EXTERNAL_FORCES")
     def test_ext_force_density(self):
@@ -366,7 +370,12 @@ class TestLB:
             n_time_steps + 0.5) / self.params['dens']
         for n in self.lbf.nodes():
             np.testing.assert_allclose(
-                np.copy(n.velocity), fluid_velocity, atol=1E-6, err_msg="Fluid node velocity not as expected on node {}".format(n.index))
+                np.copy(
+                    n.velocity),
+                fluid_velocity,
+                atol=1E-6,
+                err_msg="Fluid node velocity not as expected on node {}".format(
+                    n.index))
 
     @utx.skipIfMissingFeatures("EXTERNAL_FORCES")
     def test_unequal_time_step(self):

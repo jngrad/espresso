@@ -88,8 +88,9 @@ class FieldTest(ut.TestCase):
 
         self.assertAlmostEqual(self.system.analysis.energy()['total'],
                                p.q * (- np.dot(E, p.pos) + phi0))
-        self.assertAlmostEqual(self.system.analysis.energy()['total'],
-                               self.system.analysis.energy()['external_fields'])
+        self.assertAlmostEqual(
+            self.system.analysis.energy()['total'],
+            self.system.analysis.energy()['external_fields'])
 
     @utx.skipIfMissingFeatures("ELECTROSTATICS")
     def test_electric_plane_wave(self):

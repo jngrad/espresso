@@ -101,14 +101,18 @@ class VirtualSites(ut.TestCase):
         # Now check that quaternion of the virtual particle gets updated.
         self.system.virtual_sites = VirtualSitesRelative(have_quaternion=True)
         self.system.integrator.run(1)
-        self.assertRaises(AssertionError, np.testing.assert_array_equal, np.copy(
-            self.system.part[1].quat), [1, 0, 0, 0])
+        self.assertRaises(
+            AssertionError, np.testing.assert_array_equal, np.copy(
+                self.system.part[1].quat), [
+                1, 0, 0, 0])
 
         # co-aligned case
         self.system.part[1].vs_quat = (1, 0, 0, 0)
         self.system.integrator.run(1)
         np.testing.assert_allclose(
-            np.copy(self.system.part[1].director), np.copy(self.system.part[0].director), atol=1E-12)
+            np.copy(
+                self.system.part[1].director), np.copy(
+                self.system.part[0].director), atol=1E-12)
 
         # Construct a quaternion with perpendicular orientation.
         p0 = np.cos(np.pi / 4.0)
@@ -121,11 +125,18 @@ class VirtualSites(ut.TestCase):
         self.system.integrator.run(1)
         # Check for orthogonality.
         self.assertAlmostEqual(
-            np.dot(self.system.part[0].director, self.system.part[1].director), 0.0, delta=1E-12)
+            np.dot(
+                self.system.part[0].director,
+                self.system.part[1].director),
+            0.0,
+            delta=1E-12)
         # Check if still true after integration.
         self.system.integrator.run(1)
         self.assertAlmostEqual(
-            np.dot(self.system.part[0].director, self.system.part[1].director), 0.0)
+            np.dot(
+                self.system.part[0].director,
+                self.system.part[1].director),
+            0.0)
 
     def test_pos_vel_forces(self):
         system = self.system
@@ -345,9 +356,15 @@ class VirtualSites(ut.TestCase):
 
         # expected stress
         s_expected = 1. / system.volume() * (
-            np.outer(system.part[1].ext_force, system.distance_vec(
-                system.part[1], system.part[0]))
-            + np.outer(system.part[2].ext_force, system.distance_vec(system.part[2], system.part[0])))
+            np.outer(
+                system.part[1].ext_force,
+                system.distance_vec(
+                    system.part[1],
+                    system.part[0])) + np.outer(
+                system.part[2].ext_force,
+                system.distance_vec(
+                    system.part[2],
+                    system.part[0])))
         np.testing.assert_allclose(stress_total, s_expected, atol=1E-5)
         np.testing.assert_allclose(stress_vs, s_expected, atol=1E-5)
         np.testing.assert_allclose(stress_vs_total, s_expected, atol=1E-5)

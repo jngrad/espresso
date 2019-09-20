@@ -72,15 +72,23 @@ class ParticleProperties(ut.TestCase):
         self.assertIsInstance(required_keys, set,
                               "{}.required_keys() must return a set".format(
                                   classname))
-        self.assertTrue(default_keys.issubset(valid_keys),
-                        "{}.set_default_params() has unknown parameters: {}".format(
-            classname, default_keys.difference(valid_keys)))
-        self.assertTrue(default_keys.isdisjoint(required_keys),
-                        "{}.set_default_params() has extra parameters: {}".format(
-            classname, default_keys.intersection(required_keys)))
-        self.assertSetEqual(default_keys, valid_keys - required_keys,
-                            "{}.set_default_params() should have keys: {}, got: {}".format(
-                                classname, valid_keys - required_keys, default_keys))
+        self.assertTrue(
+            default_keys.issubset(valid_keys),
+            "{}.set_default_params() has unknown parameters: {}".format(
+                classname,
+                default_keys.difference(valid_keys)))
+        self.assertTrue(
+            default_keys.isdisjoint(required_keys),
+            "{}.set_default_params() has extra parameters: {}".format(
+                classname,
+                default_keys.intersection(required_keys)))
+        self.assertSetEqual(
+            default_keys,
+            valid_keys - required_keys,
+            "{}.set_default_params() should have keys: {}, got: {}".format(
+                classname,
+                valid_keys - required_keys,
+                default_keys))
 
     def setUp(self):
         if not self.system.part.exists(self.pid):
@@ -132,24 +140,30 @@ class ParticleProperties(ut.TestCase):
         return func
 
     test_fene = generateTestForBondParams(
-        0, espressomd.interactions.FeneBond, {"r_0": 1.1, "k": 5.2, "d_r_max": 3.})
+        0, espressomd.interactions.FeneBond, {
+            "r_0": 1.1, "k": 5.2, "d_r_max": 3.})
     test_fene2 = generateTestForBondParams(
-        1, espressomd.interactions.FeneBond, {"r_0": 1.1, "k": 5.2, "d_r_max": 3.})
+        1, espressomd.interactions.FeneBond, {
+            "r_0": 1.1, "k": 5.2, "d_r_max": 3.})
     test_harmonic = generateTestForBondParams(
         0, espressomd.interactions.HarmonicBond, {"r_0": 1.1, "k": 5.2})
     test_harmonic2 = generateTestForBondParams(
-        0, espressomd.interactions.HarmonicBond, {"r_0": 1.1, "k": 5.2, "r_cut": 1.3})
+        0, espressomd.interactions.HarmonicBond, {
+            "r_0": 1.1, "k": 5.2, "r_cut": 1.3})
 
     # HarmonicDumbbell has only interface tests, so it is marked as
     # experimental
     if espressomd.has_features(["ROTATION", "EXPERIMENTAL_FEATURES"]):
         test_harmonic_dumbbell = generateTestForBondParams(
-            0, espressomd.interactions.HarmonicDumbbellBond, {"k1": 1.1, "k2": 2.2, "r_0": 1.5})
+            0, espressomd.interactions.HarmonicDumbbellBond, {
+                "k1": 1.1, "k2": 2.2, "r_0": 1.5})
         test_harmonic_dumbbell2 = generateTestForBondParams(
-            0, espressomd.interactions.HarmonicDumbbellBond, {"k1": 1.1, "k2": 2.2, "r_0": 1.5, "r_cut": 1.9})
+            0, espressomd.interactions.HarmonicDumbbellBond, {
+                "k1": 1.1, "k2": 2.2, "r_0": 1.5, "r_cut": 1.9})
 
     test_dihedral = generateTestForBondParams(
-        0, espressomd.interactions.Dihedral, {"mult": 3.0, "bend": 5.2, "phase": 3.})
+        0, espressomd.interactions.Dihedral, {
+            "mult": 3.0, "bend": 5.2, "phase": 3.})
 
     test_angle_harm = generateTestForBondParams(
         0, espressomd.interactions.AngleHarmonic, {"bend": 5.2, "phi0": 3.2})

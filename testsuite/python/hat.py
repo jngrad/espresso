@@ -61,7 +61,12 @@ class HatTest(ut.TestCase):
             self.assertAlmostEqual(
                 self.force(F_max, cutoff, i * dx), s.part[0].f[0], places=7)
             self.assertAlmostEqual(
-                self.pot(F_max, cutoff, i * dx), s.analysis.energy()['total'], places=7)
+                self.pot(
+                    F_max,
+                    cutoff,
+                    i * dx),
+                s.analysis.energy()['total'],
+                places=7)
 
 
 if __name__ == "__main__":

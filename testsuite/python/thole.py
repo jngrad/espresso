@@ -81,11 +81,15 @@ class TestThole(ut.TestCase):
 
         for f in res_dForce:
             self.assertLess(
-                abs(f), 1e-3, msg="Deviation of thole interaction force (damped coulomb) from analytical result too large")
+                abs(f),
+                1e-3,
+                msg="Deviation of thole interaction force (damped coulomb) from analytical result too large")
 
         for e in res_dEnergy:
             self.assertLess(
-                abs(e), 0.012, msg="Deviation of thole interaction energy (damped coulomb) from analytical result too large")
+                abs(e),
+                0.012,
+                msg="Deviation of thole interaction energy (damped coulomb) from analytical result too large")
 
 
 if __name__ == "__main__":

@@ -70,7 +70,17 @@ class RdfTest(ut.TestCase):
 
         for i in range(n_part):
             s.part.add(
-                id=i, pos=[i * dx, 0.5 * s.box_l[1], 0.5 * s.box_l[2]], type=(i % 2))
+                id=i,
+                pos=[
+                    i *
+                    dx,
+                    0.5 *
+                    s.box_l[1],
+                    0.5 *
+                    s.box_l[2]],
+                type=(
+                    i %
+                    2))
 
         r_bins = 50
         r_min = 0.5 * dx

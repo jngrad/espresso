@@ -124,7 +124,8 @@ class defs:
                             implied = implied[:-1]
                         if implied in externals:
                             raise SyntaxError(
-                                "Implied feature %s is already defined as external above:" % feature, line)
+                                "Implied feature %s is already defined as external above:" %
+                                feature, line)
 
                         implications.append((feature, implied))
 
@@ -161,7 +162,7 @@ class defs:
         # handle implications
         for feature, implied in self.implications:
             #            print feature, ' -> ', implied
-            if feature in newset and not implied in newset:
+            if feature in newset and implied not in newset:
                 newset.add(implied)
 #        print 'Implied set: ' + str(newset)
 

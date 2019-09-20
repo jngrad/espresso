@@ -153,8 +153,8 @@ class Drude(ut.TestCase):
             gamma=gamma_com,
             seed=42)
 
-        p3m = espressomd.electrostatics.P3M(prefactor=coulomb_prefactor,
-                                            accuracy=1e-4, mesh=3 * [18], cao=5)
+        p3m = espressomd.electrostatics.P3M(
+            prefactor=coulomb_prefactor, accuracy=1e-4, mesh=3 * [18], cao=5)
 
         system.actors.add(p3m)
 

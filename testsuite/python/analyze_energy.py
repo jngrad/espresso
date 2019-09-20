@@ -88,9 +88,15 @@ class AnalyzeEnergy(ut.TestCase):
         self.assertAlmostEqual(energy["non_bonded"], 3., delta=1e-7)
         self.assertAlmostEqual(
             energy["non_bonded", 0, 1], energy["non_bonded", 1, 0], delta=1e-7)
-        self.assertAlmostEqual(energy["non_bonded", 0, 0]
-                               + energy["non_bonded", 0, 1]
-                               + energy["non_bonded", 1, 1], energy["total"], delta=1e-7)
+        self.assertAlmostEqual(energy["non_bonded",
+                                      0,
+                                      0] + energy["non_bonded",
+                                                  0,
+                                                  1] + energy["non_bonded",
+                                                              1,
+                                                              1],
+                               energy["total"],
+                               delta=1e-7)
         self.system.part[2].remove()
         self.system.part[3].remove()
 

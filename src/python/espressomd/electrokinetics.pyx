@@ -28,7 +28,8 @@ IF ELECTROKINETICS:
                     return ElectrokineticsRoutines(np.array(key))
             else:
                 raise Exception(
-                    "%s is not a valid key. Should be a point on the nodegrid e.g. ek[0,0,0]," % key)
+                    "%s is not a valid key. Should be a point on the nodegrid e.g. ek[0,0,0]," %
+                    key)
 
         def validate_params(self):
             """
@@ -416,7 +417,8 @@ IF ELECTROKINETICS:
                     return SpecieRoutines(np.array(key), self.id)
             else:
                 raise Exception(
-                    "%s is not a valid key. Should be a point on the nodegrid e.g. species[0,0,0]," % key)
+                    "%s is not a valid key. Should be a point on the nodegrid e.g. species[0,0,0]," %
+                    key)
 
         def __init__(self, **kwargs):
             Species.py_number_of_species += 1
@@ -427,7 +429,10 @@ IF ELECTROKINETICS:
             for k in self.required_keys():
                 if k not in kwargs:
                     raise ValueError(
-                        "At least the following keys have to be given as keyword arguments: " + self.required_keys().__str__() + " got " + kwargs.__str__())
+                        "At least the following keys have to be given as keyword arguments: " +
+                        self.required_keys().__str__() +
+                        " got " +
+                        kwargs.__str__())
                 self._params[k] = kwargs[k]
 
             for k in kwargs:
@@ -458,24 +463,21 @@ IF ELECTROKINETICS:
             return {"ext_force_density": [0, 0, 0]}
 
         def _get_params_from_es_core(self):
-            return {
-                "density": ek_parameters.density[
-                    ek_parameters.species_index[self.id]],
-                "D": ek_parameters.D[ek_parameters.species_index[self.id]],
-                "valency": ek_parameters.valency[
-                    ek_parameters.species_index[self.id]],
-                "ext_force_density": [ek_parameters.ext_force_density[0][ek_parameters.species_index[self.id]],
-                                      ek_parameters.ext_force_density[1][
-                    ek_parameters.species_index[
-                        self.id]],
-                    ek_parameters.ext_force_density[2][ek_parameters.species_index[self.id]]]}
+            return {"density": ek_parameters.density[ek_parameters.species_index[self.id]],
+                    "D": ek_parameters.D[ek_parameters.species_index[self.id]],
+                    "valency": ek_parameters.valency[ek_parameters.species_index[self.id]],
+                    "ext_force_density": [ek_parameters.ext_force_density[0][ek_parameters.species_index[self.id]],
+                                          ek_parameters.ext_force_density[1][ek_parameters.species_index[self.id]],
+                                          ek_parameters.ext_force_density[2][ek_parameters.species_index[self.id]]]}
 
         def _set_params_in_es_core(self):
             ek_set_D(self.id, self._params["D"])
             ek_set_valency(self.id, self._params["valency"])
             ek_set_density(self.id, self._params["density"])
-            ek_set_ext_force_density(self.id, self._params["ext_force_density"][
-                                     0], self._params["ext_force_density"][1], self._params["ext_force_density"][2])
+            ek_set_ext_force_density(self.id,
+                                     self._params["ext_force_density"][0],
+                                     self._params["ext_force_density"][1],
+                                     self._params["ext_force_density"][2])
 
         def _activate_method(self):
             self._set_params_in_es_core()
@@ -534,7 +536,11 @@ IF ELECTROKINETICS:
             def __set__(self, value):
                 if is_valid_type(value, float) or is_valid_type(value, int):
                     if ek_node_set_density(
-                            self.id, self.node[0], self.node[1], self.node[2], value) != 0:
+                            self.id,
+                            self.node[0],
+                            self.node[1],
+                            self.node[2],
+                            value) != 0:
                         raise Exception("Species has not been added to EK.")
                 else:
                     raise ValueError(
@@ -553,7 +559,11 @@ IF ELECTROKINETICS:
             def __get__(self):
                 cdef double flux[3]
                 if ek_node_print_flux(
-                        self.id, self.node[0], self.node[1], self.node[2], flux) != 0:
+                        self.id,
+                        self.node[0],
+                        self.node[1],
+                        self.node[2],
+                        flux) != 0:
                     raise Exception("Species has not been added to EK.")
 
                 return np.array(flux[0], flux[1], flux[2])

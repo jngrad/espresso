@@ -54,8 +54,11 @@ cdef class Integrator:
             self.set_nvt()
         elif self._method == "NPT":
             npt_params = state['_isotropic_npt_params']
-            self.set_isotropic_npt(npt_params['ext_pressure'], npt_params[
-                                   'piston'], direction=npt_params['direction'], cubic_box=npt_params['cubic_box'])
+            self.set_isotropic_npt(
+                npt_params['ext_pressure'],
+                npt_params['piston'],
+                direction=npt_params['direction'],
+                cubic_box=npt_params['cubic_box'])
 
     def run(self, steps=1, recalc_forces=False, reuse_forces=False):
         """
@@ -87,10 +90,11 @@ cdef class Integrator:
                 PyErr_CheckSignals()
 
         elif self._method == "STEEPEST_DESCENT":
-            minimize_energy_init(self._steepest_descent_params["f_max"],
-                                 self._steepest_descent_params["gamma"],
-                                 steps,
-                                 self._steepest_descent_params["max_displacement"])
+            minimize_energy_init(
+                self._steepest_descent_params["f_max"],
+                self._steepest_descent_params["gamma"],
+                steps,
+                self._steepest_descent_params["max_displacement"])
             mpi_minimize_energy()
         else:
             raise ValueError("No integrator method set!")
@@ -107,7 +111,7 @@ cdef class Integrator:
         """
         req = ["f_max", "gamma", "max_displacement"]
         for key in kwargs:
-            if not key in req:
+            if key not in req:
                 raise Exception("Set required parameter %s first." % key)
 
         self._steepest_descent_params.update(kwargs)
@@ -156,7 +160,10 @@ cdef class Integrator:
             check_type_or_throw_except(
                 piston, 1, float, "NPT parameter piston must be a float")
             check_type_or_throw_except(
-                direction, 3, int, "NPT parameter direction must be an array-like of three ints")
+                direction,
+                3,
+                int,
+                "NPT parameter direction must be an array-like of three ints")
             if (integrate_set_npt_isotropic(ext_pressure, piston,
                                             direction[0], direction[1], direction[2], cubic_box)):
                 handle_errors(

@@ -82,11 +82,18 @@ class Rotation(ut.TestCase):
                     # The axis for which rotation is on should coincide in body
                     # and space frame
                     self.assertAlmostEqual(
-                        np.dot(rot, s.part[0].convert_vector_body_to_space(rot)), 1, places=8)
+                        np.dot(
+                            rot,
+                            s.part[0].convert_vector_body_to_space(rot)),
+                        1,
+                        places=8)
                 else:
                     # For non-rotation axis, body and space frame should differ
                     self.assertLess(
-                        np.dot(axis, s.part[0].convert_vector_body_to_space(axis)), 0.95)
+                        np.dot(
+                            axis,
+                            s.part[0].convert_vector_body_to_space(axis)),
+                        0.95)
 
     def test_frame_conversion_and_rotation(self):
         s = self.s
@@ -95,7 +102,9 @@ class Rotation(ut.TestCase):
 
         # Space and body frame co-incide?
         np.testing.assert_allclose(
-            np.copy(p.director), p.convert_vector_body_to_space((0, 0, 1)), atol=1E-10)
+            np.copy(
+                p.director), p.convert_vector_body_to_space(
+                (0, 0, 1)), atol=1E-10)
 
         # Random vector should still co-incide
         v = (1., 5.5, 17)

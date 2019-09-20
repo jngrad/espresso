@@ -108,9 +108,13 @@ IF DP3M == 1:
 
             if (isinstance(self._params["mesh"], basestring) and len(
                     self._params["mesh"]) == 3):
-                if (self._params["mesh"][0] % 2 != 0 and self._params["mesh"][0] != -1) or \
-                   (self._params["mesh"][1] % 2 != 0 and self._params["mesh"][1] != -1) or \
-                   (self._params["mesh"][2] % 2 != 0 and self._params["mesh"][2] != -1):
+                if (self._params["mesh"][0] %
+                    2 != 0 and self._params["mesh"][0] != -
+                    1) or (self._params["mesh"][1] %
+                           2 != 0 and self._params["mesh"][1] != -
+                           1) or (self._params["mesh"][2] %
+                                  2 != 0 and self._params["mesh"][2] != -
+                                  1):
                     raise ValueError(
                         "P3M requires an even number of mesh points in all directions")
 
@@ -124,23 +128,42 @@ IF DP3M == 1:
             if self._params["epsilon"] == "metallic":
                 self._params["epsilon"] = 0.0
 
-            if not (is_valid_type(
-                    self._params["epsilon"], float) or self._params["epsilon"] == "metallic"):
+            if not (
+                is_valid_type(
+                    self._params["epsilon"],
+                    float) or self._params["epsilon"] == "metallic"):
                 raise ValueError("epsilon should be a double or 'metallic'")
 
             if not (
                     self._params["inter"] == default_params["inter"] or self._params["inter"] > 0):
                 raise ValueError("inter should be a positive integer")
 
-            if not (self._params["mesh_off"] == default_params["mesh_off"] or len(
+            if not (
+                self._params["mesh_off"] == default_params["mesh_off"] or len(
                     self._params["mesh_off"]) == 3):
                 raise ValueError(
                     "mesh_off should be a (3,) array_like of values between 0.0 and 1.0")
 
         def valid_keys(self):
-            return ["prefactor", "alpha_L", "r_cut_iL", "mesh", "mesh_off",
-                    "cao", "inter", "accuracy", "epsilon", "cao_cut", "a", "ai",
-                    "alpha", "r_cut", "inter2", "cao3", "additional_mesh", "tune"]
+            return [
+                "prefactor",
+                "alpha_L",
+                "r_cut_iL",
+                "mesh",
+                "mesh_off",
+                "cao",
+                "inter",
+                "accuracy",
+                "epsilon",
+                "cao_cut",
+                "a",
+                "ai",
+                "alpha",
+                "r_cut",
+                "inter2",
+                "cao3",
+                "additional_mesh",
+                "tune"]
 
         def required_keys(self):
             return ["accuracy", ]
@@ -168,8 +191,11 @@ IF DP3M == 1:
             dp3m_set_ninterpol(self._params["inter"])
             self.python_dp3m_set_mesh_offset(self._params["mesh_off"])
             self.python_dp3m_set_params(
-                self._params["r_cut"], self._params["mesh"],
-                self._params["cao"], self._params["alpha"], self._params["accuracy"])
+                self._params["r_cut"],
+                self._params["mesh"],
+                self._params["cao"],
+                self._params["alpha"],
+                self._params["accuracy"])
 
         def _tune(self):
             self.set_magnetostatics_prefactor()

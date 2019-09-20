@@ -26,8 +26,8 @@ sim = np.array(node_v_list)
 pos = [(i + 0.5) * agrid for i in range(len(sim))]
 # analytical curve: the box width is not box_l, but box_l - 2 * wall_offset
 # also, the velocity is zero beyond the walls
-ana = np.array([max(0, force_density / 2. / visc
-                    * ((box_l - 2 * wall_offset)**2 / 4. - (x - box_l / 2.)**2)) for x in pos])
+ana = np.array([max(0, force_density / 2. / visc * ((box_l - \
+               2 * wall_offset)**2 / 4. - (x - box_l / 2.)**2)) for x in pos])
 # fit the simulated curve to the analytical curve with a least squares fit
 nonzero = np.nonzero(sim)
 fit = ana[nonzero] / sim[nonzero]

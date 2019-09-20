@@ -423,19 +423,62 @@ def output_vtk_rhomboid(rhom_shape, out_file):
         corner[1]) + " " + str(corner[2]) + "\n")
     output_file.write(str(corner[0] + a[0]) + " " + str(
         corner[1] + a[1]) + " " + str(corner[2] + a[2]) + "\n")
-    output_file.write(str(corner[0] + a[0] + b[0]) + " " + str(corner[1] + a[1] + b[1]) + " " +
-                      str(corner[2] + a[2] + b[2]) + "\n")
+    output_file.write(str(corner[0] +
+                          a[0] +
+                          b[0]) +
+                      " " +
+                      str(corner[1] +
+                          a[1] +
+                          b[1]) +
+                      " " +
+                      str(corner[2] +
+                          a[2] +
+                          b[2]) +
+                      "\n")
     output_file.write(str(corner[0] + b[0]) + " " + str(
         corner[1] + b[1]) + " " + str(corner[2] + b[2]) + "\n")
 
     output_file.write(str(corner[0] + c[0]) + " " + str(
         corner[1] + c[1]) + " " + str(corner[2] + c[2]) + "\n")
-    output_file.write(str(corner[0] + a[0] + c[0]) + " " + str(corner[1] + a[1] + c[1]) + " " +
-                      str(corner[2] + a[2] + c[2]) + "\n")
-    output_file.write(str(corner[0] + a[0] + b[0] + c[0]) + " " + str(corner[1] + a[1] + b[1] + c[1]) + " " +
-                      str(corner[2] + a[2] + b[2] + c[2]) + "\n")
-    output_file.write(str(corner[0] + b[0] + c[0]) + " " + str(corner[1] + b[1] + c[1]) + " " +
-                      str(corner[2] + b[2] + c[2]) + "\n")
+    output_file.write(str(corner[0] +
+                          a[0] +
+                          c[0]) +
+                      " " +
+                      str(corner[1] +
+                          a[1] +
+                          c[1]) +
+                      " " +
+                      str(corner[2] +
+                          a[2] +
+                          c[2]) +
+                      "\n")
+    output_file.write(str(corner[0] +
+                          a[0] +
+                          b[0] +
+                          c[0]) +
+                      " " +
+                      str(corner[1] +
+                          a[1] +
+                          b[1] +
+                          c[1]) +
+                      " " +
+                      str(corner[2] +
+                          a[2] +
+                          b[2] +
+                          c[2]) +
+                      "\n")
+    output_file.write(str(corner[0] +
+                          b[0] +
+                          c[0]) +
+                      " " +
+                      str(corner[1] +
+                          b[1] +
+                          c[1]) +
+                      " " +
+                      str(corner[2] +
+                          b[2] +
+                          c[2]) +
+                      "\n")
 
     output_file.write("POLYGONS 6 30\n")
     output_file.write("4 0 1 2 3\n")
@@ -497,13 +540,21 @@ def output_vtk_cylinder(cyl_shape, n, out_file):
     output_file.write("DATASET POLYDATA\n")
     output_file.write("POINTS " + str(points) + " float\n")
     for i in range(0, n):
-        output_file.write(
-            str(p1[0] + radius * np.cos(i * alpha)) + " " + str(p1[1] + radius * np.sin(i * alpha)) + " " +
-            str(p1[2]) + "\n")
+        output_file.write(str(p1[0] +
+                              radius *
+                              np.cos(i *
+                                     alpha)) +
+                          " " +
+                          str(p1[1] +
+                              radius *
+                              np.sin(i *
+                                     alpha)) +
+                          " " +
+                          str(p1[2]) +
+                          "\n")
     for i in range(0, n):
-        output_file.write(
-            str(p1[0] + radius * np.cos(i * alpha)) + " " + str(p1[1] + radius * np.sin(i * alpha)) + " " +
-            str(p1[2] + length * axisZ) + "\n")
+        output_file.write(str(p1[0] + radius * np.cos(i * alpha)) + " " + str(
+            p1[1] + radius * np.sin(i * alpha)) + " " + str(p1[2] + length * axisZ) + "\n")
     output_file.write(
         "POLYGONS " + str(n + 2) + " " + str(5 * n + (n + 1) * 2) + "\n")
 
@@ -569,8 +620,16 @@ def output_vtk_lines(lines, out_file):
 
 
 def output_vtk_pore(
-        axis, length, outer_rad_left, outer_rad_right, pos, rad_left, rad_right,
-        smoothing_radius, m, out_file):
+        axis,
+        length,
+        outer_rad_left,
+        outer_rad_right,
+        pos,
+        rad_left,
+        rad_right,
+        smoothing_radius,
+        m,
+        out_file):
     """
     Outputs the VTK files for visualisation of a pore in e.g. Paraview.
 
@@ -629,9 +688,26 @@ def output_vtk_pore(
     # points on the left half torus
     for j in range(0, n / 2 + 1):
         for i in range(0, n):
-            output_file.write(str(p1[0] - np.sin(j * beta)) + " " +
-                              str(p1[1] + (rad_left + smoothing_radius - np.cos(j * beta)) * np.cos(i * alpha)) + " " +
-                              str(p1[2] + (rad_left + smoothing_radius - np.cos(j * beta)) * np.sin(i * alpha)) + "\n")
+            output_file.write(str(p1[0] -
+                                  np.sin(j *
+                                         beta)) +
+                              " " +
+                              str(p1[1] +
+                                  (rad_left +
+                                   smoothing_radius -
+                                   np.cos(j *
+                                          beta)) *
+                                  np.cos(i *
+                                         alpha)) +
+                              " " +
+                              str(p1[2] +
+                                  (rad_left +
+                                   smoothing_radius -
+                                   np.cos(j *
+                                          beta)) *
+                                  np.sin(i *
+                                         alpha)) +
+                              "\n")
     n_points_left = n * (n / 2 + 1)
 
     # shift center to the right half torus
@@ -640,9 +716,26 @@ def output_vtk_pore(
     # points on the right half torus
     for j in range(0, n / 2 + 1):
         for i in range(0, n):
-            output_file.write(str(p1[0] + np.sin(j * beta)) + " " +
-                              str(p1[1] + (rad_right + smoothing_radius - np.cos(j * beta)) * np.cos(i * alpha)) + " " +
-                              str(p1[2] + (rad_right + smoothing_radius - np.cos(j * beta)) * np.sin(i * alpha)) + "\n")
+            output_file.write(str(p1[0] +
+                                  np.sin(j *
+                                         beta)) +
+                              " " +
+                              str(p1[1] +
+                                  (rad_right +
+                                   smoothing_radius -
+                                   np.cos(j *
+                                          beta)) *
+                                  np.cos(i *
+                                         alpha)) +
+                              " " +
+                              str(p1[2] +
+                                  (rad_right +
+                                   smoothing_radius -
+                                   np.cos(j *
+                                          beta)) *
+                                  np.sin(i *
+                                         alpha)) +
+                              "\n")
 
     number_of_rectangles = n * n + 2 * n
     output_file.write("POLYGONS " + str(number_of_rectangles)

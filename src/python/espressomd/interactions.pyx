@@ -63,7 +63,8 @@ cdef class NonBondedInteraction:
             for k in self.required_keys():
                 if k not in kwargs:
                     raise ValueError(
-                        "At least the following keys have to be given as keyword arguments: " + self.required_keys().__str__())
+                        "At least the following keys have to be given as keyword arguments: " +
+                        self.required_keys().__str__())
 
             self._params.update(kwargs)
             self.validate_params()
@@ -113,7 +114,8 @@ cdef class NonBondedInteraction:
         for k in p.keys():
             if k not in self.valid_keys():
                 raise ValueError(
-                    "Only the following keys are supported: " + self.valid_keys().__str__())
+                    "Only the following keys are supported: " +
+                    self.valid_keys().__str__())
 
         # When an interaction is newly activated, all required keys must be
         # given
@@ -121,7 +123,8 @@ cdef class NonBondedInteraction:
             for k in self.required_keys():
                 if k not in p:
                     raise ValueError(
-                        "At least the following keys have to be given as keyword arguments: " + self.required_keys().__str__())
+                        "At least the following keys have to be given as keyword arguments: " +
+                        self.required_keys().__str__())
 
         # If this instance refers to an interaction defined in the espresso core,
         # load the parameters from there
@@ -158,7 +161,8 @@ cdef class NonBondedInteraction:
         """
         attr = object.__getattribute__(self, name)
         if hasattr(
-                attr, '__call__') and attr.__name__ == "_set_params_in_es_core":
+                attr,
+                '__call__') and attr.__name__ == "_set_params_in_es_core":
             def sync_params(*args, **kwargs):
                 result = attr(*args, **kwargs)
                 self._params.update(self._get_params_from_es_core())
@@ -1438,12 +1442,24 @@ IF AFFINITY == 1:
             return "Affinity"
 
         def valid_keys(self):
-            return {"affinity_type", "affinity_kappa", "affinity_r0",
-                    "affinity_Kon", "affinity_Koff", "affinity_maxBond", "affinity_cut"}
+            return {
+                "affinity_type",
+                "affinity_kappa",
+                "affinity_r0",
+                "affinity_Kon",
+                "affinity_Koff",
+                "affinity_maxBond",
+                "affinity_cut"}
 
         def required_keys(self):
-            return {"affinity_type", "affinity_kappa", "affinity_r0",
-                    "affinity_Kon", "affinity_Koff", "affinity_maxBond", "affinity_cut"}
+            return {
+                "affinity_type",
+                "affinity_kappa",
+                "affinity_r0",
+                "affinity_Kon",
+                "affinity_Koff",
+                "affinity_maxBond",
+                "affinity_cut"}
 
 
 IF MEMBRANE_COLLISION == 1:
@@ -1781,7 +1797,9 @@ cdef class BondedInteraction:
             # Check if the bond type in Espresso core matches this class
             if bonded_ia_params[bond_id].type != self.type_number():
                 raise Exception(
-                    "The bond with this id is not defined as a " + self.type_name() + " bond in the Espresso core.")
+                    "The bond with this id is not defined as a " +
+                    self.type_name() +
+                    " bond in the Espresso core.")
 
             self._bond_id = bond_id
 
@@ -1795,7 +1813,8 @@ cdef class BondedInteraction:
             for k in self.required_keys():
                 if k not in kwargs:
                     raise ValueError(
-                        "At least the following keys have to be given as keyword arguments: " + self.required_keys().__str__())
+                        "At least the following keys have to be given as keyword arguments: " +
+                        self.required_keys().__str__())
 
             self.params = kwargs
 
@@ -1836,8 +1855,9 @@ cdef class BondedInteraction:
             for k in p.keys():
                 if k not in self.valid_keys():
                     raise ValueError(
-                        "Key '{}' invalid! Only the following keys are supported: {}"
-                        .format(k, ", ".join(self.valid_keys())))
+                        "Key '{}' invalid! Only the following keys are supported: {}" .format(
+                            k, ", ".join(
+                                self.valid_keys())))
 
             # Initialize default values
             self.set_default_params()
@@ -1856,7 +1876,8 @@ cdef class BondedInteraction:
         """
         attr = object.__getattribute__(self, name)
         if hasattr(
-                attr, '__call__') and attr.__name__ == "_set_params_in_es_core":
+                attr,
+                '__call__') and attr.__name__ == "_set_params_in_es_core":
             def sync_params(*args, **kwargs):
                 result = attr(*args, **kwargs)
                 self._params.update(self._get_params_from_es_core())
@@ -2021,7 +2042,10 @@ class FeneBond(BondedInteraction):
 
     def _set_params_in_es_core(self):
         fene_set_params(
-            self._bond_id, self._params["k"], self._params["d_r_max"], self._params["r_0"])
+            self._bond_id,
+            self._params["k"],
+            self._params["d_r_max"],
+            self._params["r_0"])
 
 
 class HarmonicBond(BondedInteraction):
@@ -2078,7 +2102,10 @@ class HarmonicBond(BondedInteraction):
 
     def _set_params_in_es_core(self):
         harmonic_set_params(
-            self._bond_id, self._params["k"], self._params["r_0"], self._params["r_cut"])
+            self._bond_id,
+            self._params["k"],
+            self._params["r_0"],
+            self._params["r_cut"])
 
 
 if ELECTROSTATICS:
@@ -2243,8 +2270,12 @@ class ThermalizedBond(BondedInteraction):
             thermalized_bond_set_rng_state(self.params["seed"])
 
         thermalized_bond_set_params(
-            self._bond_id, self._params["temp_com"], self._params["gamma_com"],
-            self._params["temp_distance"], self._params["gamma_distance"], self._params["r_cut"])
+            self._bond_id,
+            self._params["temp_com"],
+            self._params["gamma_com"],
+            self._params["temp_distance"],
+            self._params["gamma_distance"],
+            self._params["r_cut"])
 
 
 IF THOLE:
@@ -2480,7 +2511,10 @@ IF BOND_CONSTRAINT == 1:
 
         def _set_params_in_es_core(self):
             rigid_bond_set_params(
-                self._bond_id, self._params["r"], self._params["ptol"], self._params["vtol"])
+                self._bond_id,
+                self._params["r"],
+                self._params["ptol"],
+                self._params["vtol"])
 ELSE:
     class RigidBond(BondedInteractionNotDefined):
         name = "RIGID"
@@ -2537,7 +2571,10 @@ class Dihedral(BondedInteraction):
 
     def _set_params_in_es_core(self):
         dihedral_set_params(
-            self._bond_id, self._params["mult"], self._params["bend"], self._params["phase"])
+            self._bond_id,
+            self._params["mult"],
+            self._params["bend"],
+            self._params["phase"])
 
 
 class _TabulatedBase(BondedInteraction):
@@ -3276,7 +3313,11 @@ class OifGlobalForces(BondedInteraction):
 
     def _set_params_in_es_core(self):
         oif_global_forces_set_params(
-            self._bond_id, self._params["A0_g"], self._params["ka_g"], self._params["V0"], self._params["kv"])
+            self._bond_id,
+            self._params["A0_g"],
+            self._params["ka_g"],
+            self._params["V0"],
+            self._params["kv"])
 
 
 class OifLocalForces(BondedInteraction):
@@ -3452,7 +3493,11 @@ class QuarticBond(BondedInteraction):
 
     def _set_params_in_es_core(self):
         quartic_set_params(
-            self._bond_id, self._params["k0"], self._params["k1"], self._params["r"], self._params["r_cut"])
+            self._bond_id,
+            self._params["k0"],
+            self._params["k1"],
+            self._params["r"],
+            self._params["r_cut"])
 
 
 bonded_interaction_classes = {
@@ -3509,7 +3554,9 @@ class BondedInteractions:
         # Check if the bonded interaction exists in Espresso core
         if bond_type == -1:
             raise ValueError(
-                "The bonded interaction with the id " + str(key) + " is not yet defined.")
+                "The bonded interaction with the id " +
+                str(key) +
+                " is not yet defined.")
 
         # Find the appropriate class representing such a bond
         bond_class = bonded_interaction_classes[bond_type]

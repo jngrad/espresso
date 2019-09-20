@@ -64,10 +64,8 @@ def writevsf(system, fp, types='all'):
     fp.write("unitcell {} {} {}\n".format(*(system.box_l)))
 
     for pid, vtf_id, in vtf_index.items():
-        fp.write("atom {} radius 1 name {} type {} \n".format(vtf_id,
-                                                              system.part[
-                                                                  pid].type,
-                                                              system.part[pid].type))
+        fp.write("atom {} radius 1 name {} type {} \n".format(
+            vtf_id, system.part[pid].type, system.part[pid].type))
     for pid, vtf_id, in vtf_index.items():
         for b in system.part[pid].bonds:
             if (system.part[b[1]].id in vtf_index):

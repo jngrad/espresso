@@ -75,10 +75,18 @@ class CoulombCloudWall(ut.TestCase):
         if energy:
             energy_abs_diff = abs(
                 self.S.analysis.energy()["total"] - self.reference_energy)
-            self.assertTrue(energy_abs_diff <= self.tolerance, "Absolute energy difference " +
-                            str(energy_abs_diff) + " too large for " + method_name)
-        self.assertTrue(force_abs_diff <= self.tolerance, "Absolute force difference " +
-                        str(force_abs_diff) + " too large for method " + method_name)
+            self.assertTrue(
+                energy_abs_diff <= self.tolerance,
+                "Absolute energy difference " +
+                str(energy_abs_diff) +
+                " too large for " +
+                method_name)
+        self.assertTrue(
+            force_abs_diff <= self.tolerance,
+            "Absolute force difference " +
+            str(force_abs_diff) +
+            " too large for method " +
+            method_name)
 
     # Tests for individual methods
 

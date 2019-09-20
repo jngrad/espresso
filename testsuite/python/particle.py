@@ -295,7 +295,10 @@ class ParticleProperties(ut.TestCase):
             pos=3 * [np.nextafter(0., -1.)], v=system.box_l / 3)
         print(p1.pos)
         p2 = system.part.add(
-            pos=np.nextafter(system.box_l, 2 * system.box_l), v=system.box_l / 3)
+            pos=np.nextafter(
+                system.box_l,
+                2 * system.box_l),
+            v=system.box_l / 3)
         print(p2.pos)
         p3 = system.part.add(
             pos=np.nextafter(system.box_l, (0, 0, 0)), v=system.box_l / 3)

@@ -64,7 +64,8 @@ cdef class MinimizeEnergy:
         for k in self.required_keys():
             if k not in kwargs:
                 raise ValueError(
-                    "At least the following keys have to be given as keyword arguments: " + self.required_keys().__str__())
+                    "At least the following keys have to be given as keyword arguments: " +
+                    self.required_keys().__str__())
 
         self._params = kwargs
         self.validate_params()
@@ -73,7 +74,8 @@ cdef class MinimizeEnergy:
         for k in self.required_keys():
             if k not in kwargs:
                 raise ValueError(
-                    "At least the following keys have to be given as keyword arguments: " + self.required_keys().__str__())
+                    "At least the following keys have to be given as keyword arguments: " +
+                    self.required_keys().__str__())
 
         self._params = kwargs
         self.validate_params()

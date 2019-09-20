@@ -32,6 +32,9 @@ def WriteVTK(system, outFile):
 
         # points, positions
         for i in range(0, len(system.part)):
-            fp.write(str(system.part[i].pos_folded[0]) + " " + str(
-                system.part[i].pos_folded[1]) + " " + str(system.part[i].pos_folded[2]))
+            fp.write(str(system.part[i].pos_folded[0]) +
+                     " " +
+                     str(system.part[i].pos_folded[1]) +
+                     " " +
+                     str(system.part[i].pos_folded[2]))
             fp.write("\n")

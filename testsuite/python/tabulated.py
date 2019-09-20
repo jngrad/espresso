@@ -67,10 +67,12 @@ class TabulatedTest(ut.TestCase):
             self.force, self.s.non_bonded_inter[0, 0].tabulated.get_params()['force'])
         np.testing.assert_allclose(
             self.energy, self.s.non_bonded_inter[0, 0].tabulated.get_params()['energy'])
-        self.assertAlmostEqual(
-            self.min_, self.s.non_bonded_inter[0, 0].tabulated.get_params()['min'])
-        self.assertAlmostEqual(
-            self.max_, self.s.non_bonded_inter[0, 0].tabulated.get_params()['max'])
+        self.assertAlmostEqual(self.min_,
+                               self.s.non_bonded_inter[0,
+                                                       0].tabulated.get_params()['min'])
+        self.assertAlmostEqual(self.max_,
+                               self.s.non_bonded_inter[0,
+                                                       0].tabulated.get_params()['max'])
 
         self.check()
 

@@ -192,23 +192,35 @@ IF ELECTROSTATICS and P3M:
             self._params["normals"] = np.array(self._params["normals"])
             if self._params["normals"].size != self._params["n_icc"] * 3:
                 raise ValueError(
-                    "Expecting normal list with " + self._params["n_icc"] * 3 + " entries.")
+                    "Expecting normal list with " +
+                    self._params["n_icc"] *
+                    3 +
+                    " entries.")
             check_type_or_throw_except(self._params["normals"], self._params[
                 "n_icc"], np.ndarray, "Error in normal list.")
 
             check_type_or_throw_except(
-                self._params["areas"], self._params["n_icc"], float, "Error in area list.")
+                self._params["areas"],
+                self._params["n_icc"],
+                float,
+                "Error in area list.")
 
             # Not Required
             if "sigmas" in self._params.keys():
                 check_type_or_throw_except(
-                    self._params["sigmas"], self._params["n_icc"], float, "Error in sigma list.")
+                    self._params["sigmas"],
+                    self._params["n_icc"],
+                    float,
+                    "Error in sigma list.")
             else:
                 self._params["sigmas"] = np.zeros(self._params["n_icc"])
 
             if "epsilons" in self._params.keys():
                 check_type_or_throw_except(
-                    self._params["epsilons"], self._params["n_icc"], float, "Error in epsilon list.")
+                    self._params["epsilons"],
+                    self._params["n_icc"],
+                    float,
+                    "Error in epsilon list.")
             else:
                 self._params["epsilons"] = np.zeros(self._params["n_icc"])
 
@@ -253,8 +265,10 @@ IF ELECTROSTATICS and P3M:
             params["epsilons"] = epsilons
             params["sigmas"] = sigmas
 
-            params["ext_field"] = [iccp3m_cfg.ext_field[0],
-                                   iccp3m_cfg.ext_field[1], iccp3m_cfg.ext_field[2]]
+            params["ext_field"] = [
+                iccp3m_cfg.ext_field[0],
+                iccp3m_cfg.ext_field[1],
+                iccp3m_cfg.ext_field[2]]
             params["first_id"] = iccp3m_cfg.first_id
             params["max_iterations"] = iccp3m_cfg.num_iteration
             params["convergence"] = iccp3m_cfg.convergence

@@ -55,7 +55,7 @@ ROT_Z = 8
 particle_attributes = []
 for d in dir(ParticleHandle):
     if type(getattr(ParticleHandle, d)) == type(ParticleHandle.pos):
-        if not d in ["pos_folded"]:
+        if d not in ["pos_folded"]:
             particle_attributes.append(d)
 
 cdef class ParticleHandle:
@@ -163,7 +163,7 @@ cdef class ParticleHandle:
 
         def __get__(self):
             self.update_particle_data()
-            return make_array_locked(unfolded_position( < Vector3d > self.particle_data.r.p, < Vector3i > self.particle_data.l.i, box_geo.length()))
+            return make_array_locked(unfolded_position(< Vector3d > self.particle_data.r.p, < Vector3i > self.particle_data.l.i, box_geo.length()))
 
     property pos_folded:
         """
@@ -740,8 +740,11 @@ cdef class ParticleHandle:
                 for i in range(4):
                     _q[i] = q[i]
 
-                if is_valid_type(_relto, int) and is_valid_type(
-                        _dist, float) and all(is_valid_type(fq, float) for fq in q):
+                if is_valid_type(
+                    _relto, int) and is_valid_type(
+                    _dist, float) and all(
+                    is_valid_type(
+                        fq, float) for fq in q):
                     set_particle_vs_relative(self._id, _relto, _dist, _q) 
                 else:
                     raise ValueError(
@@ -1148,14 +1151,16 @@ cdef class ParticleHandle:
 
             """
             if _partner in self.exclusions:
-                raise Exception("Exclusion id {} already in exclusion list of particle {}".format(
-                    _partner, self._id))
+                raise Exception(
+                    "Exclusion id {} already in exclusion list of particle {}".format(
+                        _partner, self._id))
 
             check_type_or_throw_except(
                 _partner, 1, int, "PID of partner has to be an int.")
             if self._id == _partner:
                 raise Exception(
-                    "Cannot exclude of a particle with itself!\n->particle id %i, partner %i." % (self._id, _partner))
+                    "Cannot exclude of a particle with itself!\n->particle id %i, partner %i." %
+                    (self._id, _partner))
             if change_exclusion(self._id, _partner, 0) == 1:
                 raise Exception("Particle with id " +
                                 str(_partner) + " does not exist.")
@@ -1163,7 +1168,7 @@ cdef class ParticleHandle:
         def delete_exclusion(self, _partner):
             check_type_or_throw_except(
                 _partner, 1, int, "PID of partner has to be an int.")
-            if not _partner in self.exclusions:
+            if _partner not in self.exclusions:
                 raise Exception("Particle with id " +
                                 str(_partner) + " is not in exclusion list.")
             if change_exclusion(self._id, _partner, 1) == 1:
@@ -1290,7 +1295,10 @@ cdef class ParticleHandle:
 
                     if 'rotational_friction' in _params:
                         check_type_or_throw_except(
-                            _params['rotational_friction'], 1, float, "rotational_friction has to be a float.")
+                            _params['rotational_friction'],
+                            1,
+                            float,
+                            "rotational_friction has to be a float.")
                         swim.rotational_friction = _params[
                             'rotational_friction']
 
@@ -1428,8 +1436,12 @@ cdef class ParticleHandle:
         bond_id = bond[0]._bond_id
         # Number of partners
         if bonded_ia_params[bond_id].num != len(bond) - 1:
-            raise ValueError("Bond of type", bond[
-                             0]._bond_id, "needs", bonded_ia_params[bond_id].num, "partners.")
+            raise ValueError(
+                "Bond of type",
+                bond[0]._bond_id,
+                "needs",
+                bonded_ia_params[bond_id].num,
+                "partners.")
 
         # Type check on partners
         for i in range(1, len(bond)):
@@ -1841,7 +1853,7 @@ cdef class ParticleList:
                     "add() takes either a dictionary or a bunch of keyword args.")
 
         # Check for presence of pos attribute
-        if not "pos" in P:
+        if "pos" not in P:
             raise ValueError(
                 "pos attribute must be specified for new particle")
 
@@ -1852,7 +1864,7 @@ cdef class ParticleList:
 
     def _place_new_particle(self, P):
         # Handling of particle id
-        if not "id" in P:
+        if "id" not in P:
             # Generate particle id
             P["id"] = max_seen_particle + 1
         else:
@@ -2190,8 +2202,9 @@ def _add_particle_slice_properties():
                 elif np.shape(values)[0] == N:
                     set_slice_one_for_each(particle_slice, attribute, values)
                 else:
-                    raise Exception("Shape of value (%s) does not broadcast to shape of attribute (%s)." % (
-                        np.shape(values), target_shape))
+                    raise Exception(
+                        "Shape of value (%s) does not broadcast to shape of attribute (%s)." %
+                        (np.shape(values), target_shape))
 
                 return
 
@@ -2202,8 +2215,9 @@ def _add_particle_slice_properties():
                 elif target_shape == tuple(np.shape(values)[1:]) and np.shape(values)[0] == N:
                     set_slice_one_for_each(particle_slice, attribute, values)
                 else:
-                    raise Exception("Shape of value (%s) does not broadcast to shape of attribute (%s)." % (
-                        np.shape(values), target_shape))
+                    raise Exception(
+                        "Shape of value (%s) does not broadcast to shape of attribute (%s)." %
+                        (np.shape(values), target_shape))
 
                 return
 
@@ -2245,8 +2259,11 @@ def _add_particle_slice_properties():
             continue
 
         # synthesize a new property
-        new_property = property(functools.partial(geta, attribute=attribute_name), functools.partial(
-            seta, attribute=attribute_name), doc=getattr(ParticleHandle, attribute_name).__doc__)
+        new_property = property(
+            functools.partial(
+                geta, attribute=attribute_name), functools.partial(
+                seta, attribute=attribute_name), doc=getattr(
+                ParticleHandle, attribute_name).__doc__)
         # attach the property to ParticleSlice
         setattr(ParticleSlice, attribute_name, new_property)
 

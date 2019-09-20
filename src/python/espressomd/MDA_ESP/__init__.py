@@ -216,11 +216,20 @@ class ESPReader(SingleFrameReaderBase):
                     n_atoms = int(line)
                     self.n_atoms = n_atoms
                     positions = np.zeros(
-                        self.n_atoms * 3, dtype=np.float32).reshape(self.n_atoms, 3)
+                        self.n_atoms * 3,
+                        dtype=np.float32).reshape(
+                        self.n_atoms,
+                        3)
                     velocities = np.zeros(
-                        self.n_atoms * 3, dtype=np.float32).reshape(self.n_atoms, 3)
+                        self.n_atoms * 3,
+                        dtype=np.float32).reshape(
+                        self.n_atoms,
+                        3)
                     forces = np.zeros(
-                        self.n_atoms * 3, dtype=np.float32).reshape(self.n_atoms, 3)
+                        self.n_atoms * 3,
+                        dtype=np.float32).reshape(
+                        self.n_atoms,
+                        3)
                     self.ts = ts = self._Timestep(
                         self.n_atoms, **self._ts_kwargs)
                     self.ts.time = time

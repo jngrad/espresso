@@ -80,8 +80,7 @@ class WidomInsertionTest(ut.TestCase):
                              type=self.TYPE_HA)
 
         self.system.non_bonded_inter[self.TYPE_HA, self.TYPE_HA].lennard_jones.set_params(
-            epsilon=self.LJ_EPS, sigma=self.LJ_SIG, cutoff=self.LJ_CUT,
-            shift="auto")
+            epsilon=self.LJ_EPS, sigma=self.LJ_SIG, cutoff=self.LJ_CUT, shift="auto")
 
         self.Widom.add_reaction(
             reactant_types=[],

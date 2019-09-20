@@ -170,7 +170,9 @@ class CoulombCloudWall(ut.TestCase):
             espressomd.electrostatics.Scafacos(
                 prefactor=2.8,
                 method_name="p2nfft",
-                method_params={"p2nfft_r_cut": 1.001, "tolerance_field": 1E-4}))
+                method_params={
+                    "p2nfft_r_cut": 1.001,
+                    "tolerance_field": 1E-4}))
         self.S.integrator.run(0)
         self.compare("scafacos_p2nfft", energy=True, prefactor=2.8)
 

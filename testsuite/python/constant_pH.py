@@ -110,16 +110,23 @@ class ReactionEnsembleTest(ut.TestCase):
         self.assertLess(
             rel_error_alpha,
             0.015,
-            msg="\nDeviation from ideal titration curve is too big for the given input parameters.\n"
-            + "  pH: " + str(pH)
-            + "  pKa: " + str(pKa)
-            + "  average_NH: " + str(average_NH)
-            + "  average_NA: " + str(average_NA)
-            + "  average_NHA:" + str(average_NHA)
-            + "  average alpha: " + str(average_alpha)
-            + "  target_alpha: " + str(target_alpha)
-            + "  rel_error: " + str(rel_error_alpha)
-        )
+            msg="\nDeviation from ideal titration curve is too big for the given input parameters.\n" +
+            "  pH: " +
+            str(pH) +
+            "  pKa: " +
+            str(pKa) +
+            "  average_NH: " +
+            str(average_NH) +
+            "  average_NA: " +
+            str(average_NA) +
+            "  average_NHA:" +
+            str(average_NHA) +
+            "  average alpha: " +
+            str(average_alpha) +
+            "  target_alpha: " +
+            str(target_alpha) +
+            "  rel_error: " +
+            str(rel_error_alpha))
 
 
 if __name__ == "__main__":

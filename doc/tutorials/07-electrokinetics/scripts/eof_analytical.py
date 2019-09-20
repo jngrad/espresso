@@ -146,13 +146,22 @@ for i in range(int(box_z / agrid)):
                                     bjerrum_length=bjerrum_length))
 
         # velocity
-        velocity_list.append(velocity(x=position, xi=xi,
-                                      d=width, bjerrum_length=bjerrum_length,
-                                      force=force, viscosity_kinematic=viscosity_kinematic,
-                                      density_water=density_water))
+        velocity_list.append(
+            velocity(
+                x=position,
+                xi=xi,
+                d=width,
+                bjerrum_length=bjerrum_length,
+                force=force,
+                viscosity_kinematic=viscosity_kinematic,
+                density_water=density_water))
         # xz component pressure tensor
-        pressure_xy_list.append(pressure_tensor_offdiagonal(x=position, xi=xi,
-                                                            bjerrum_length=bjerrum_length, force=force))
+        pressure_xy_list.append(
+            pressure_tensor_offdiagonal(
+                x=position,
+                xi=xi,
+                bjerrum_length=bjerrum_length,
+                force=force))
 
 np.savetxt(
     "eof_analytical.dat", np.column_stack(

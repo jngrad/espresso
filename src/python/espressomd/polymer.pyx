@@ -34,8 +34,12 @@ def validate_params(_params, default):
     if _params["bond_length"] < 0:
         raise ValueError(
             "bond_length has to be a positive float")
-    if not ((np.size(_params["start_positions"]) == 0)
-            or np.shape(_params["start_positions"]) == (_params["n_polymers"], 3)):
+    if not (
+        (np.size(
+            _params["start_positions"]) == 0) or np.shape(
+            _params["start_positions"]) == (
+                _params["n_polymers"],
+            3)):
         raise ValueError(
             "start_positions has to be a numpy array with shape (n_polymers, 3)")
     if _params["min_distance"] < 0:
@@ -128,7 +132,7 @@ def positions(**kwargs):
     required_keys = ["n_polymers", "beads_per_chain", "bond_length", "seed"]
 
     for k in kwargs:
-        if not k in valid_keys:
+        if k not in valid_keys:
             raise ValueError("Unknown parameter '%s'" % k)
         params[k] = kwargs[k]
 
@@ -136,7 +140,8 @@ def positions(**kwargs):
         if k not in kwargs:
             print(k)
             raise ValueError(
-                "At least the following keys have to be given as keyword arguments: " + required_keys.__str__())
+                "At least the following keys have to be given as keyword arguments: " +
+                required_keys.__str__())
 
     validate_params(params, default_params)
 

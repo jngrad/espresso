@@ -140,8 +140,16 @@ gamma_drude = mass_red_drude / T_spring
 system.cell_system.skin = 0.4
 
 # FORCEFIELD
-types = {"PF6": 0, "BMIM_C1": 1, "BMIM_C2": 2, "BMIM_C3":
-         3, "BMIM_COM": 4, "PF6_D": 5, "BMIM_C1_D": 6, "BMIM_C2_D": 7, "BMIM_C3_D": 8}
+types = {
+    "PF6": 0,
+    "BMIM_C1": 1,
+    "BMIM_C2": 2,
+    "BMIM_C3": 3,
+    "BMIM_COM": 4,
+    "PF6_D": 5,
+    "BMIM_C1_D": 6,
+    "BMIM_C2_D": 7,
+    "BMIM_C3_D": 8}
 charges = {"PF6": -0.78, "BMIM_C1": 0.4374,
            "BMIM_C2": 0.1578, "BMIM_C3": 0.1848, "BMIM_COM": 0}
 polarizations = {"PF6": 4.653, "BMIM_C1":
@@ -357,8 +365,16 @@ else:
     n_int_steps = 1000
     n_int_cycles = int(args.walltime * 3600.0 / time_per_step / n_int_steps)
     print(
-        "Simulating for", args.walltime, "h, which is", n_int_cycles, "cycles x",
-        n_int_steps, "steps, which is", args.walltime * ns_per_hour, "ns simulation time")
+        "Simulating for",
+        args.walltime,
+        "h, which is",
+        n_int_cycles,
+        "cycles x",
+        n_int_steps,
+        "steps, which is",
+        args.walltime *
+        ns_per_hour,
+        "ns simulation time")
 
     file_traj = open(args.path + "traj.xyz", "w")
     n_parts_tot = len(system.part)

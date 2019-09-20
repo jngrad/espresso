@@ -44,8 +44,10 @@ def skipIfMissingModules(*args):
         args = set(args)
     missing_modules = set(args) - set(sys.modules.keys())
     if missing_modules:
-        return unittest.skip("Skipping test: missing python module{} {}".format(
-            's' if len(missing_modules) else '', ', '.join(missing_modules)))
+        return unittest.skip(
+            "Skipping test: missing python module{} {}".format(
+                's' if len(missing_modules) else '',
+                ', '.join(missing_modules)))
     return _id
 
 

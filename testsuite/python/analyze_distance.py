@@ -67,7 +67,11 @@ class AnalyzeDistance(ut.TestCase):
     # python version of the espresso core function, using id
     def dist_to_id(self, id):
         dist = np.fabs(
-            np.delete(self.system.part[:].pos, id, axis=0) - self.system.part[id].pos)
+            np.delete(
+                self.system.part[:].pos,
+                id,
+                axis=0) -
+            self.system.part[id].pos)
         # check smaller distances via PBC
         dist = np.where(
             dist > 0.5 * self.system.box_l, self.system.box_l - dist, dist)

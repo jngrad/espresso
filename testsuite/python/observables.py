@@ -128,9 +128,11 @@ class Observables(ut.TestCase):
         obs_data = obs.calculate()
         part_data = np.array([p.convert_vector_space_to_body(p.v)
                               for p in self.system.part])
-        np.testing.assert_array_almost_equal(part_data.flatten(), obs_data,
-                                             err_msg="Data did not agree for observable ParticleBodyVelocities and particle derived values.",
-                                             decimal=9)
+        np.testing.assert_array_almost_equal(
+            part_data.flatten(),
+            obs_data,
+            err_msg="Data did not agree for observable ParticleBodyVelocities and particle derived values.",
+            decimal=9)
 
     def test_stress_tensor(self):
         s = self.system.analysis.stress_tensor()["total"].reshape(9)
@@ -151,7 +153,10 @@ class Observables(ut.TestCase):
         self.assertEqual(espressomd.observables.Current(
             ids=range(self.N_PART)).n_values(), len(part_data.flatten()))
         np.testing.assert_array_almost_equal(
-            obs_data, part_data, err_msg="Data did not agree for observable 'Current'", decimal=9)
+            obs_data,
+            part_data,
+            err_msg="Data did not agree for observable 'Current'",
+            decimal=9)
 
     @utx.skipIfMissingFeatures('ELECTROSTATICS')
     def test_dipolemoment(self):
@@ -160,7 +165,10 @@ class Observables(ut.TestCase):
         part_data = self.system.part[:].q.dot(self.system.part[:].pos)
         self.assertEqual(obs.n_values(), len(part_data.flatten()))
         np.testing.assert_array_almost_equal(
-            obs_data, part_data, err_msg="Data did not agree for observable 'DipoleMoment'", decimal=9)
+            obs_data,
+            part_data,
+            err_msg="Data did not agree for observable 'DipoleMoment'",
+            decimal=9)
 
 
 if __name__ == "__main__":

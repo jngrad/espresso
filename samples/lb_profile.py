@@ -39,7 +39,16 @@ system.cell_system.skin = 0.4
 n_steps = 500
 
 lb_fluid = espressomd.lb.LBFluidGPU(
-    agrid=1.0, dens=1.0, visc=1.0, tau=0.01, ext_force_density=[0, 0, 0.15], kT=1.0, seed=32)
+    agrid=1.0,
+    dens=1.0,
+    visc=1.0,
+    tau=0.01,
+    ext_force_density=[
+        0,
+        0,
+        0.15],
+    kT=1.0,
+    seed=32)
 system.actors.add(lb_fluid)
 system.thermostat.set_lb(LB_fluid=lb_fluid, seed=23)
 fluid_obs = espressomd.observables.CylindricalLBVelocityProfile(

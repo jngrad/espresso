@@ -124,7 +124,12 @@ class CollisionDetection(ut.TestCase):
         expected_np = 4 * len(positions) + 1
 
         self.s.collision_detection.set_params(
-            mode="bind_at_point_of_collision", distance=0.11, bond_centers=self.H, bond_vs=self.H2, part_type_vs=1, vs_placement=0.4)
+            mode="bind_at_point_of_collision",
+            distance=0.11,
+            bond_centers=self.H,
+            bond_vs=self.H2,
+            part_type_vs=1,
+            vs_placement=0.4)
         self.get_state_set_state_consistency()
         self.s.integrator.run(1, recalc_forces=True)
         self.verify_state_after_bind_at_poc(expected_np)
@@ -240,7 +245,10 @@ class CollisionDetection(ut.TestCase):
             np.array((0.0, 0, 0)), np.array((0.7, 0, 0)))
         # Head + mixed + other
         self.run_test_bind_at_point_of_collision_for_pos(
-            np.array((0.2, 0, 0)), np.array((0.95, 0, 0)), np.array((0.7, 0, 0)))
+            np.array(
+                (0.2, 0, 0)), np.array(
+                (0.95, 0, 0)), np.array(
+                (0.7, 0, 0)))
 
     @utx.skipIfMissingFeatures(["LENNARD_JONES", "VIRTUAL_SITES_RELATIVE"])
     def test_bind_at_point_of_collision_random(self):
@@ -348,7 +356,15 @@ class CollisionDetection(ut.TestCase):
         expected_np = 3 * len(positions) + 1
 
         self.s.collision_detection.set_params(
-            mode="glue_to_surface", distance=0.11, distance_glued_particle_to_vs=0.02, bond_centers=self.H, bond_vs=self.H2, part_type_vs=self.part_type_vs, part_type_to_attach_vs_to=self.part_type_to_attach_vs_to, part_type_to_be_glued=self.part_type_to_be_glued, part_type_after_glueing=self.part_type_after_glueing)
+            mode="glue_to_surface",
+            distance=0.11,
+            distance_glued_particle_to_vs=0.02,
+            bond_centers=self.H,
+            bond_vs=self.H2,
+            part_type_vs=self.part_type_vs,
+            part_type_to_attach_vs_to=self.part_type_to_attach_vs_to,
+            part_type_to_be_glued=self.part_type_to_be_glued,
+            part_type_after_glueing=self.part_type_after_glueing)
         self.get_state_set_state_consistency()
         self.s.integrator.run(1, recalc_forces=True)
         self.verify_state_after_glue_to_surface(expected_np)
@@ -443,8 +459,21 @@ class CollisionDetection(ut.TestCase):
         self.assertAlmostEqual(self.s.distance(base_p, vs), 0.08, places=3)
 
         # base_p,vs,bound_p on a line
-        self.assertGreater(np.dot(self.s.distance_vec(base_p, vs), self.s.distance_vec(base_p, bound_p))
-                           / self.s.distance(base_p, vs) / self.s.distance(base_p, bound_p), 0.99)
+        self.assertGreater(
+            np.dot(
+                self.s.distance_vec(
+                    base_p,
+                    vs),
+                self.s.distance_vec(
+                    base_p,
+                    bound_p)) /
+            self.s.distance(
+                base_p,
+                vs) /
+            self.s.distance(
+                base_p,
+                bound_p),
+            0.99)
 
     @utx.skipIfMissingFeatures("VIRTUAL_SITES_RELATIVE")
     def test_glue_to_surface(self):
@@ -466,7 +495,10 @@ class CollisionDetection(ut.TestCase):
             np.array((0.0, 0, 0)), np.array((0.7, 0, 0)))
         # Head + mixed + other
         self.run_test_glue_to_surface_for_pos(
-            np.array((0.2, 0, 0)), np.array((0.95, 0, 0)), np.array((0.7, 0, 0)))
+            np.array(
+                (0.2, 0, 0)), np.array(
+                (0.95, 0, 0)), np.array(
+                (0.7, 0, 0)))
 
     @utx.skipIfMissingFeatures("VIRTUAL_SITES_RELATIVE")
     def test_glue_to_surface_random(self):
@@ -498,7 +530,15 @@ class CollisionDetection(ut.TestCase):
 
         # Collision detection
         self.s.collision_detection.set_params(
-            mode="glue_to_surface", distance=0.11, distance_glued_particle_to_vs=0.02, bond_centers=self.H, bond_vs=self.H2, part_type_vs=self.part_type_vs, part_type_to_attach_vs_to=self.part_type_to_attach_vs_to, part_type_to_be_glued=self.part_type_to_be_glued, part_type_after_glueing=self.part_type_after_glueing)
+            mode="glue_to_surface",
+            distance=0.11,
+            distance_glued_particle_to_vs=0.02,
+            bond_centers=self.H,
+            bond_vs=self.H2,
+            part_type_vs=self.part_type_vs,
+            part_type_to_attach_vs_to=self.part_type_to_attach_vs_to,
+            part_type_to_be_glued=self.part_type_to_be_glued,
+            part_type_after_glueing=self.part_type_after_glueing)
         self.get_state_set_state_consistency()
 
         # Integrate lj liquid
@@ -603,8 +643,11 @@ class CollisionDetection(ut.TestCase):
                 bend=1, phi0=float(i) / (res - 1) * np.pi)
         cutoff = 0.11
         self.s.collision_detection.set_params(
-            mode="bind_three_particles", bond_centers=self.H,
-            bond_three_particles=2, three_particle_binding_angle_resolution=res, distance=cutoff)
+            mode="bind_three_particles",
+            bond_centers=self.H,
+            bond_three_particles=2,
+            three_particle_binding_angle_resolution=res,
+            distance=cutoff)
         self.get_state_set_state_consistency()
 
         self.s.time_step = 1E-6
@@ -664,20 +707,23 @@ class CollisionDetection(ut.TestCase):
                     d_ik /= np.sqrt(np.sum(d_ik**2))
                     d_jk /= np.sqrt(np.sum(d_jk**2))
 
-                    if self.s.distance(p_i, p_j) <= distance and self.s.distance(
+                    if self.s.distance(
+                            p_i, p_j) <= distance and self.s.distance(
                             p_i, p_k) <= distance:
                         id_i = first_bond._bond_id + \
                             int(np.round(
                                 np.arccos(np.dot(d_ij, d_ik)) * angle_res / np.pi))
                         expected_angle_bonds.append((i, id_i, j, k))
 
-                    if self.s.distance(p_i, p_j) <= distance and self.s.distance(
+                    if self.s.distance(
+                            p_i, p_j) <= distance and self.s.distance(
                             p_j, p_k) <= distance:
                         id_j = first_bond._bond_id + \
                             int(np.round(
                                 np.arccos(np.dot(-d_ij, d_jk)) * angle_res / np.pi))
                         expected_angle_bonds.append((j, id_j, i, k))
-                    if self.s.distance(p_i, p_k) <= distance and self.s.distance(
+                    if self.s.distance(
+                            p_i, p_k) <= distance and self.s.distance(
                             p_j, p_k) <= distance:
                         id_k = first_bond._bond_id + \
                             int(np.round(

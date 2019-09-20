@@ -29,8 +29,11 @@ def params_match(inParams, outParams):
             return False
         if isinstance(inParams[k], float):
             if abs(outParams[k] - inParams[k]) >= 1E-14:
-                print("Mismatch in parameter ", k, inParams[k], outParams[k], type(
-                    inParams[k]), type(outParams[k]), abs(inParams[k] - outParams[k]))
+                print(
+                    "Mismatch in parameter ", k, inParams[k], outParams[k], type(
+                        inParams[k]), type(
+                        outParams[k]), abs(
+                        inParams[k] - outParams[k]))
                 return False
         else:
             if outParams[k] != inParams[k]:
@@ -355,8 +358,8 @@ def lj_generic_force(espressomd, r, eps, sig, cutoff, offset=0., e1=12, e2=6,
         f = 0.
     else:
         h = (r - offset)**2 + delta * (1. - lam) * sig**2
-        f = (r - offset) * eps * lam * (
-            b1 * e1 * np.power(sig / np.sqrt(h), e1) - b2 * e2 * np.power(sig / np.sqrt(h), e2)) / h
+        f = (r - offset) * eps * lam * (b1 * e1 * np.power(sig /
+                                                           np.sqrt(h), e1) - b2 * e2 * np.power(sig / np.sqrt(h), e2)) / h
         if (not espressomd.has_features("LJGEN_SOFTCORE")) and generic:
             f *= np.sign(r - offset)
     return f

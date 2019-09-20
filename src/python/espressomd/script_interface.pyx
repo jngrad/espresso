@@ -296,7 +296,10 @@ class ScriptInterfaceHelper(PScriptInterface):
             return self.__dict__[attr]
 
         raise AttributeError(
-            "Class " + self.__class__.__name__ + " does not have an attribute " + attr)
+            "Class " +
+            self.__class__.__name__ +
+            " does not have an attribute " +
+            attr)
 
     def __setattr__(self, attr, value):
         if attr in self._valid_parameters():

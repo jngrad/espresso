@@ -13,7 +13,7 @@ from .grid cimport get_mi_vector, box_geo
 
 include "myconfig.pxi"
 
-if not "ETS_TOOLKIT" in os.environ:
+if "ETS_TOOLKIT" not in os.environ:
     os.environ["ETS_TOOLKIT"] = "wx"
 from mayavi import mlab
 from pyface.api import GUI
@@ -71,8 +71,17 @@ cdef class mayaviLive:
         self.points.glyph.glyph_source.glyph_source.center = [0, 0, 0]
         self.box = mlab.outline(extent=(0, 0, 0, 0, 0, 0), color=(1, 1, 1),
                                 name="Box")
-        self.arrows = mlab.quiver3d([], [], [], [], [], [], scalars=[],
-                                    mode="2ddash", scale_factor=1, name="Bonds")
+        self.arrows = mlab.quiver3d(
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            scalars=[],
+            mode="2ddash",
+            scale_factor=1,
+            name="Bonds")
         self.arrows.glyph.color_mode = 'color_by_scalar'
 
         # state
@@ -251,9 +260,10 @@ cdef class mayaviLive:
                 bond_coords, (self.last_Nbonds != Nbonds), \
                 boxl, (self.last_boxl != boxl).any()
         else:
-            self.data = coords, types, radii, self.data[3] or (self.last_N != N), \
-                bond_coords, self.data[5] or (self.last_Nbonds != Nbonds), \
-                boxl, self.data[7] or (self.last_boxl != boxl).any()
+            self.data = coords, types, radii, self.data[3] or (
+                self.last_N != N), bond_coords, self.data[5] or (
+                self.last_Nbonds != Nbonds), boxl, self.data[7] or (
+                self.last_boxl != boxl).any()
         self.last_N = N
         self.last_Nbonds = Nbonds
         self.last_boxl = boxl

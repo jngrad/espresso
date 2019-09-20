@@ -66,10 +66,14 @@ class ElectrostaticInteractionsTests:
             for comp in range(3):
                 abs_deviation = abs(measured_f[i, comp]
                                     - self.vec_f_target[i, comp])
-                self.assertLess(abs_deviation,
-                                self.allowed_error,
-                                msg="Measured force has a deviation of {} which is too big for "
-                                    "particle {} in component {}".format(abs_deviation, i, comp))
+                self.assertLess(
+                    abs_deviation,
+                    self.allowed_error,
+                    msg="Measured force has a deviation of {} which is too big for "
+                    "particle {} in component {}".format(
+                        abs_deviation,
+                        i,
+                        comp))
 
     def test_energy(self):
         measured_el_energy = self.system.analysis.energy()["total"] \

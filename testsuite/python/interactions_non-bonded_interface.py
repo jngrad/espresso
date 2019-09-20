@@ -68,15 +68,21 @@ class Non_bonded_interactionsTests(ut.TestCase):
         self.assertIsInstance(required_keys, set,
                               "{}.required_keys() must return a set".format(
                                   classname))
-        self.assertTrue(default_keys.issubset(valid_keys),
-                        "{}.default_params() has unknown parameters: {}".format(
-            classname, default_keys.difference(valid_keys)))
+        self.assertTrue(
+            default_keys.issubset(valid_keys),
+            "{}.default_params() has unknown parameters: {}".format(
+                classname,
+                default_keys.difference(valid_keys)))
         self.assertTrue(default_keys.isdisjoint(required_keys),
                         "{}.default_params() has extra parameters: {}".format(
             classname, default_keys.intersection(required_keys)))
-        self.assertSetEqual(default_keys, valid_keys - required_keys,
-                            "{}.default_params() should have keys: {}, got: {}".format(
-                                classname, valid_keys - required_keys, default_keys))
+        self.assertSetEqual(
+            default_keys,
+            valid_keys - required_keys,
+            "{}.default_params() should have keys: {}, got: {}".format(
+                classname,
+                valid_keys - required_keys,
+                default_keys))
 
     def generateTestForNon_bonded_interaction(
             _partType1, _partType2, _interClass, _params, _interName):

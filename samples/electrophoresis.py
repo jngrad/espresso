@@ -184,7 +184,10 @@ print(system.actors)
 #############################################################
 n_part = len(system.part)
 system.part[:].ext_force = np.dstack(
-    (system.part[:].q * np.ones(n_part), np.zeros(n_part), np.zeros(n_part)))[0]
+    (system.part[:].q *
+     np.ones(n_part),
+     np.zeros(n_part),
+     np.zeros(n_part)))[0]
 
 # print(system.part[:].ext_force)
 

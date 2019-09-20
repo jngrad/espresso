@@ -154,7 +154,7 @@ class Checkpoint:
 
         """
         for a in args:
-            if not isinstance(a, str) or not a in self.checkpoint_objects:
+            if not isinstance(a, str) or a not in self.checkpoint_objects:
                 raise KeyError(
                     "The given object '{}' was not registered for checkpointing yet.".format(a))
 
@@ -255,8 +255,8 @@ class Checkpoint:
 
         with open(os.path.join(self.checkpoint_dir, "signals"), "r") as signal_file:
             signals = signal_file.readline().strip().split()
-            signals = [int(i)
-                       for i in signals]  # will raise exception if signal file contains invalid entries
+            # will raise exception if signal file contains invalid entries
+            signals = [int(i) for i in signals]
         return signals
 
     def __write_signal(self, signum=None):
@@ -269,7 +269,7 @@ class Checkpoint:
 
         signals = self.read_signals()
 
-        if not signum in signals:
+        if signum not in signals:
             signals.append(signum)
             signals = " ".join(str(i) for i in signals)
             with open(os.path.join(self.checkpoint_dir, "signals"), "w") as signal_file:

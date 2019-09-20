@@ -34,8 +34,11 @@ cdef class Diamond:
         self._params = self.default_params()
         for k in self.required_keys():
             if k not in kwargs:
-                raise ValueError("At least the following keys have to be given as keyword arguments: " +
-                                 self.required_keys().__str__() + " got " + kwargs.__str__())
+                raise ValueError(
+                    "At least the following keys have to be given as keyword arguments: " +
+                    self.required_keys().__str__() +
+                    " got " +
+                    kwargs.__str__())
         for k in kwargs:
             if k in self.valid_keys():
                 self._params[k] = kwargs[k]
@@ -46,8 +49,16 @@ cdef class Diamond:
         self._set_params_in_es_core()
 
     def default_params(self):
-        return {"a": 0.0, "bond_length": 0.0, "MPC": 0, "N_CI": 0,
-                "val_nodes": 0.0, "val_cM": 0.0, "val_CI": 0.0, "cM_dist": 1, "nonet": False}
+        return {
+            "a": 0.0,
+            "bond_length": 0.0,
+            "MPC": 0,
+            "N_CI": 0,
+            "val_nodes": 0.0,
+            "val_cM": 0.0,
+            "val_CI": 0.0,
+            "cM_dist": 1,
+            "nonet": False}
 
     def required_keys(self):
         return "a", "bond_length", "MPC"
@@ -85,10 +96,16 @@ cdef class Diamond:
                 "Please define a bonded interaction [0] before setting up polymers!")
 
     def __set_params_in_es_core(self):
-        return create_diamond(
-            partCfg(), self._params["a"], self._params[
-                "bond_length"], self._params["MPC"], self._params["N_CI"],
-            self._params["val_nodes"], self._params["val_cM"], self._params["val_CI"], self._params["cM_dist"], int(self._params["nonet"]))
+        return create_diamond(partCfg(),
+                              self._params["a"],
+                              self._params["bond_length"],
+                              self._params["MPC"],
+                              self._params["N_CI"],
+                              self._params["val_nodes"],
+                              self._params["val_cM"],
+                              self._params["val_CI"],
+                              self._params["cM_dist"],
+                              int(self._params["nonet"]))
 
     def _set_params_in_es_core(self):
         error_code = self.__set_params_in_es_core()

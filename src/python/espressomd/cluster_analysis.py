@@ -49,8 +49,13 @@ class Cluster(ScriptInterfaceHelper):
         Return value: (fractal_dimension, mean_square_residual)
     """
     _so_name = "ClusterAnalysis::Cluster"
-    _so_bind_methods = ("particle_ids", "size", "longest_distance",
-                        "radius_of_gyration", "fractal_dimension", "center_of_mass")
+    _so_bind_methods = (
+        "particle_ids",
+        "size",
+        "longest_distance",
+        "radius_of_gyration",
+        "fractal_dimension",
+        "center_of_mass")
 
     _so_creation_policy = "LOCAL"
 

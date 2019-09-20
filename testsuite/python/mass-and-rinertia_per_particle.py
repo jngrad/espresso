@@ -67,7 +67,9 @@ class ThermoTest(ut.TestCase):
         seed2 = 42
         # The Espresso system configuration
         cls.system.seed = [
-            s * seed2 for s in range(cls.system.cell_system.get_state()["n_nodes"])]
+            s *
+            seed2 for s in range(
+                cls.system.cell_system.get_state()["n_nodes"])]
         cls.system.cell_system.set_domain_decomposition(use_verlet_lists=True)
         cls.system.cell_system.skin = 5.0
 
@@ -256,8 +258,8 @@ class ThermoTest(ut.TestCase):
                         self.assertLess(abs(
                             self.system.part[ind].v[j] - math.exp(- self.gamma_tran_p_validate[k, j] * self.system.time / self.mass)), tol)
                         if espressomd.has_features("ROTATION"):
-                            self.assertLess(abs(
-                                self.system.part[ind].omega_body[j] - math.exp(- self.gamma_rot_p_validate[k, j] * self.system.time / self.J[j])), tol)
+                            self.assertLess(abs(self.system.part[ind].omega_body[j] - math.exp(
+                                - self.gamma_rot_p_validate[k, j] * self.system.time / self.J[j])), tol)
 
     def check_fluctuation_dissipation(self, n):
         """

@@ -136,8 +136,12 @@ class AnalyzeDistributions(ut.TestCase):
         self.assertTrue(np.allclose(core_rdf[0], (bins[1:] + bins[:-1]) * 0.5))
 
         # rdf
-        self.assertTrue(np.allclose(core_rdf[1],
-                                    self.calc_min_distribution(bins, type_list_a=[0])))
+        self.assertTrue(
+            np.allclose(
+                core_rdf[1],
+                self.calc_min_distribution(
+                    bins,
+                    type_list_a=[0])))
         # with int flag
         core_rdf = self.system.analysis.distribution(type_list_a=[0],
                                                      type_list_b=[0],
@@ -146,8 +150,11 @@ class AnalyzeDistributions(ut.TestCase):
                                                      r_bins=r_bins,
                                                      log_flag=0,
                                                      int_flag=1)
-        self.assertTrue(np.allclose(core_rdf[1],
-                                    np.cumsum(self.calc_min_distribution(bins, type_list_a=[0]))))
+        self.assertTrue(
+            np.allclose(
+                core_rdf[1], np.cumsum(
+                    self.calc_min_distribution(
+                        bins, type_list_a=[0]))))
 
 
 if __name__ == "__main__":

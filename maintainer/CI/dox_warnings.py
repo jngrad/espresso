@@ -62,7 +62,8 @@ for (filepath, lineno, warning), warning_list in raw_warnings.items():
         # the "Private functions" and "Exported functions" groups in .hpp files
         continue
     if re.search(
-            '^documented symbol `\S+\' was not declared or defined\.$', warning):
+        '^documented symbol `\S+\' was not declared or defined\.$',
+            warning):
         # known bug, fixed in 1.8.16
         continue
     if re.search('^no uniquely matching class member found for $', warning):
@@ -88,8 +89,13 @@ if n_unique == 0:
 
 # generate a log file
 with open('dox_warnings.log', 'w') as f:
-    f.write('The Doxygen documentation generated {} unique warnings (total: {},'
-            ' ignored: {}):\n'.format(n_unique, n_all, n_unique_raw - n_unique))
+    f.write(
+        'The Doxygen documentation generated {} unique warnings (total: {},'
+        ' ignored: {}):\n'.format(
+            n_unique,
+            n_all,
+            n_unique_raw -
+            n_unique))
     for filepath in sorted(warnings.keys()):
         f.write(filepath + ':\n')
         for (lineno, warning) in sorted(warnings[filepath].keys()):

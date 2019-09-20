@@ -155,7 +155,7 @@ class Analysis:
         if id is not None:
             if not is_valid_type(id, int):
                 raise ValueError("Id has to be an integer")
-            if not id in self._system.part[:].id:
+            if id not in self._system.part[:].id:
                 raise ValueError(
                     "Id has to be an index of an existing particle")
             _pos = self._system.part[id].pos
@@ -372,8 +372,8 @@ class Analysis:
                 buffer[index_axial + bins_axial * index_radial, 4] = binvolume
                 for type_id in range(0, c_types.size()):
                     for name in range(0, names.size()):
-                        buffer[index_axial + bins_axial * index_radial, 5 + name + type_id * names.size()] \
-                            = distribution[names[name]][type_id][index_radial][index_axial]
+                        buffer[index_axial + bins_axial * index_radial, 5 + name + type_id * \
+                            names.size()] = distribution[names[name]][type_id][index_radial][index_axial]
 
         return buffer
 
@@ -432,8 +432,8 @@ class Analysis:
         total_bonded = 0
         for i in range(bonded_ia_params.size()):
             if (bonded_ia_params[i].type != BONDED_IA_NONE):
-                p["bonded", i] = analyze.obsstat_bonded(& analyze.total_pressure, i)[0]
-                total_bonded += analyze.obsstat_bonded(& analyze.total_pressure, i)[0]
+                p["bonded", i] = analyze.obsstat_bonded( & analyze.total_pressure, i)[0]
+                total_bonded += analyze.obsstat_bonded( & analyze.total_pressure, i)[0]
         p["bonded"] = total_bonded
 
         # Non-Bonded interactions, total as well as intra and inter molecular
@@ -448,12 +448,12 @@ class Analysis:
         for i in range(analyze.max_seen_particle_type):
             for j in range(i, analyze.max_seen_particle_type):
                 #      if checkIfParticlesInteract(i, j):
-                p["non_bonded", i, j] = analyze.obsstat_nonbonded(& analyze.total_pressure, i, j)[0]
-                total_non_bonded += analyze.obsstat_nonbonded(& analyze.total_pressure, i, j)[0]
-                total_intra += analyze.obsstat_nonbonded_intra(& analyze.total_pressure_non_bonded, i, j)[0]
-                p["non_bonded_intra", i, j] = analyze.obsstat_nonbonded_intra(& analyze.total_pressure_non_bonded, i, j)[0]
-                p["non_bonded_inter", i, j] = analyze.obsstat_nonbonded_inter(& analyze.total_pressure_non_bonded, i, j)[0]
-                total_inter += analyze.obsstat_nonbonded_inter(& analyze.total_pressure_non_bonded, i, j)[0]
+                p["non_bonded", i, j] = analyze.obsstat_nonbonded( & analyze.total_pressure, i, j)[0]
+                total_non_bonded += analyze.obsstat_nonbonded( & analyze.total_pressure, i, j)[0]
+                total_intra += analyze.obsstat_nonbonded_intra( & analyze.total_pressure_non_bonded, i, j)[0]
+                p["non_bonded_intra", i, j] = analyze.obsstat_nonbonded_intra( & analyze.total_pressure_non_bonded, i, j)[0]
+                p["non_bonded_inter", i, j] = analyze.obsstat_nonbonded_inter( & analyze.total_pressure_non_bonded, i, j)[0]
+                total_inter += analyze.obsstat_nonbonded_inter( & analyze.total_pressure_non_bonded, i, j)[0]
         p["non_bonded_intra"] = total_intra
         p["non_bonded_inter"] = total_inter
         p["non_bonded"] = total_non_bonded
@@ -547,7 +547,7 @@ class Analysis:
         for i in range(bonded_ia_params.size()):
             if (bonded_ia_params[i].type != BONDED_IA_NONE):
                 p["bonded", i] = np.reshape(create_nparray_from_double_array(
-                    analyze.obsstat_bonded(& analyze.total_p_tensor, i), 9),
+                    analyze.obsstat_bonded( & analyze.total_p_tensor, i), 9),
                     (3, 3))
                 total_bonded += p["bonded", i]
         p["bonded"] = total_bonded
@@ -654,7 +654,7 @@ class Analysis:
         e = OrderedDict()
 
         if analyze.total_energy.init_status == 0:
-            analyze.init_energies(& analyze.total_energy)
+            analyze.init_energies( & analyze.total_energy)
             analyze.master_energy_calc()
             handle_errors("calc_long_range_energies failed")
 
@@ -676,8 +676,8 @@ class Analysis:
         total_bonded = 0
         for i in range(bonded_ia_params.size()):
             if (bonded_ia_params[i].type != BONDED_IA_NONE):
-                e["bonded", i] = analyze.obsstat_bonded(& analyze.total_energy, i)[0]
-                total_bonded += analyze.obsstat_bonded(& analyze.total_energy, i)[0]
+                e["bonded", i] = analyze.obsstat_bonded( & analyze.total_energy, i)[0]
+                total_bonded += analyze.obsstat_bonded( & analyze.total_energy, i)[0]
         e["bonded"] = total_bonded
 
         # Non-Bonded interactions, total as well as intra and inter molecular
@@ -692,9 +692,9 @@ class Analysis:
         for i in range(analyze.max_seen_particle_type):
             for j in range(analyze.max_seen_particle_type):
                 #      if checkIfParticlesInteract(i, j):
-                e["non_bonded", i, j] = analyze.obsstat_nonbonded(& analyze.total_energy, i, j)[0]
+                e["non_bonded", i, j] = analyze.obsstat_nonbonded( & analyze.total_energy, i, j)[0]
                 if i <= j:
-                    total_non_bonded += analyze.obsstat_nonbonded(& analyze.total_energy, i, j)[0]
+                    total_non_bonded += analyze.obsstat_nonbonded( & analyze.total_energy, i, j)[0]
     #        total_intra +=analyze.obsstat_nonbonded_intra(&analyze.total_energy_non_bonded, i, j)[0]
     #        e["non_bonded_intra",i,j] =analyze.obsstat_nonbonded_intra(&analyze.total_energy_non_bonded, i, j)[0]
     #        e["nonBondedInter",i,j] =analyze.obsstat_nonbonded_inter(&analyze.total_energy_non_bonded, i, j)[0]
@@ -824,15 +824,22 @@ class Analysis:
         check_type_or_throw_except(
             chain_start, 1, int, "chain_start=int is a required argument")
         check_type_or_throw_except(
-            number_of_chains, 1, int, "number_of_chains=int is a required argument")
+            number_of_chains,
+            1,
+            int,
+            "number_of_chains=int is a required argument")
         check_type_or_throw_except(
             chain_length, 1, int, "chain_length=int is a required argument")
         id_min = chain_start
         id_max = chain_start + chain_length * number_of_chains
         for i in range(id_min, id_max):
             if (not self._system.part.exists(i)):
-                raise ValueError('particle with id {0:.0f} does not exist\ncannot perform analysis on the range chain_start={1:.0f}, n_chains={2:.0f}, chain_length={3:.0f}\nplease provide a contiguous range of particle ids'.format(
-                    i, chain_start, number_of_chains, chain_length))
+                raise ValueError(
+                    'particle with id {0:.0f} does not exist\ncannot perform analysis on the range chain_start={1:.0f}, n_chains={2:.0f}, chain_length={3:.0f}\nplease provide a contiguous range of particle ids'.format(
+                        i,
+                        chain_start,
+                        number_of_chains,
+                        chain_length))
         analyze.chain_start = chain_start
         analyze.chain_n_chains = number_of_chains
         analyze.chain_length = chain_length
@@ -926,9 +933,11 @@ class Analysis:
 
         if rdf_type != 'rdf':
             if n_configs == 0:
-                raise ValueError("No configurations founds!\n",
-                                 "Use 'analyze append' to save some,",
-                                 "or 'analyze rdf' to only look at current RDF!""")
+                raise ValueError(
+                    "No configurations founds!\n",
+                    "Use 'analyze append' to save some,",
+                    "or 'analyze rdf' to only look at current RDF!"
+                    "")
             if n_conf is None:
                 n_conf = n_configs
 
@@ -964,8 +973,15 @@ class Analysis:
     # distribution
     #
 
-    def distribution(self, type_list_a=None, type_list_b=None,
-                     r_min=0.0, r_max=None, r_bins=100, log_flag=0, int_flag=0):
+    def distribution(
+            self,
+            type_list_a=None,
+            type_list_b=None,
+            r_min=0.0,
+            r_max=None,
+            r_bins=100,
+            log_flag=0,
+            int_flag=0):
         """
         Calculates the distance distribution of particles (probability of
         finding a particle of type A at a certain distance around a particle of

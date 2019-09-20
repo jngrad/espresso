@@ -180,8 +180,11 @@ cdef class ReactionAlgorithm:
         self._params["check_for_electroneutrality"] = True
         for k in self._required_keys_add():
             if k not in kwargs:
-                raise ValueError("At least the following keys have to be given as keyword arguments: " +
-                                 self._required_keys_add().__str__() + " got " + kwargs.__str__())
+                raise ValueError(
+                    "At least the following keys have to be given as keyword arguments: " +
+                    self._required_keys_add().__str__() +
+                    " got " +
+                    kwargs.__str__())
             self._params[k] = kwargs[k]
 
         for k in self._valid_keys_add():
@@ -223,10 +226,20 @@ cdef class ReactionAlgorithm:
         for i in range(len(self._params["product_coefficients"])):
             product_coefficients.push_back(
                 self._params["product_coefficients"][i])
-        deref(self.RE).add_reaction(
-            self._params["gamma"], reactant_types, reactant_coefficients, product_types, product_coefficients)
-        deref(self.RE).add_reaction(
-            1.0 / self._params["gamma"], product_types, product_coefficients, reactant_types, reactant_coefficients)
+        deref(
+            self.RE).add_reaction(
+            self._params["gamma"],
+            reactant_types,
+            reactant_coefficients,
+            product_types,
+            product_coefficients)
+        deref(
+            self.RE).add_reaction(
+            1.0 / self._params["gamma"],
+            product_types,
+            product_coefficients,
+            reactant_types,
+            reactant_coefficients)
 
         for key in self._params["default_charges"]:  # the keys are the types
             deref(self.RE).charges_of_types[
@@ -270,8 +283,8 @@ cdef class ReactionAlgorithm:
         """
         deref(self.RE).do_reaction(int(reaction_steps))
 
-    def displacement_mc_move_for_particles_of_type(self, type_mc,
-                                                   particle_number_to_be_changed=1):
+    def displacement_mc_move_for_particles_of_type(
+            self, type_mc, particle_number_to_be_changed=1):
         """
         Performs a displacement Monte Carlo move for particles of given type.
         New positions of the displaced particles are chosen from the whole box
@@ -301,35 +314,43 @@ cdef class ReactionAlgorithm:
         for single_reaction_i in range(deref(self.RE).reactions.size()):
             reactant_types = []
             for i in range(
-                    deref(self.RE).reactions[single_reaction_i].reactant_types.size()):
+                deref(
+                    self.RE).reactions[single_reaction_i].reactant_types.size()):
                 reactant_types.append(
                     deref(self.RE).reactions[single_reaction_i].reactant_types[i])
             reactant_coefficients = []
             for i in range(
-                    deref(self.RE).reactions[single_reaction_i].reactant_types.size()):
+                deref(
+                    self.RE).reactions[single_reaction_i].reactant_types.size()):
                 reactant_coefficients.append(
                     deref(self.RE).reactions[single_reaction_i].reactant_coefficients[i])
 
             product_types = []
             for i in range(
-                    deref(self.RE).reactions[single_reaction_i].product_types.size()):
+                deref(
+                    self.RE).reactions[single_reaction_i].product_types.size()):
                 product_types.append(
                     deref(self.RE).reactions[single_reaction_i].product_types[i])
             product_coefficients = []
             for i in range(
-                    deref(self.RE).reactions[single_reaction_i].product_types.size()):
+                deref(
+                    self.RE).reactions[single_reaction_i].product_types.size()):
                 product_coefficients.append(
                     deref(self.RE).reactions[single_reaction_i].product_coefficients[i])
-            reaction = {"reactant_coefficients": reactant_coefficients,
-                        "reactant_types": reactant_types,
-                        "product_types": product_types,
-                        "product_coefficients": product_coefficients,
-                        "reactant_types": reactant_types,
-                        "gamma": deref(self.RE).reactions[single_reaction_i].gamma}
+            reaction = {
+                "reactant_coefficients": reactant_coefficients,
+                "reactant_types": reactant_types,
+                "product_types": product_types,
+                "product_coefficients": product_coefficients,
+                "reactant_types": reactant_types,
+                "gamma": deref(
+                    self.RE).reactions[single_reaction_i].gamma}
             reactions.append(reaction)
 
-        return {"reactions": reactions, "temperature": deref(
-            self.RE).temperature, "exclusion_radius": deref(self.RE).exclusion_radius}
+        return {
+            "reactions": reactions, "temperature": deref(
+                self.RE).temperature, "exclusion_radius": deref(
+                self.RE).exclusion_radius}
 
     def delete_particle(self, p_id):
         """
@@ -354,7 +375,10 @@ cdef class ReactionEnsemble(ReactionAlgorithm):
         for k in self._required_keys():
             if k not in kwargs:
                 raise ValueError(
-                    "At least the following keys have to be given as keyword arguments: " + self._required_keys().__str__() + " got " + kwargs.__str__())
+                    "At least the following keys have to be given as keyword arguments: " +
+                    self._required_keys().__str__() +
+                    " got " +
+                    kwargs.__str__())
             self._params[k] = kwargs[k]
 
         self.REptr.reset(new CReactionEnsemble(int(self._params["seed"])))
@@ -377,7 +401,10 @@ cdef class ConstantpHEnsemble(ReactionAlgorithm):
         for k in self._required_keys():
             if k not in kwargs:
                 raise ValueError(
-                    "At least the following keys have to be given as keyword arguments: " + self._required_keys().__str__() + " got " + kwargs.__str__())
+                    "At least the following keys have to be given as keyword arguments: " +
+                    self._required_keys().__str__() +
+                    " got " +
+                    kwargs.__str__())
             self._params[k] = kwargs[k]
 
         self.constpHptr.reset(new CConstantpHEnsemble(int(self._params["seed"])))
@@ -427,7 +454,10 @@ cdef class WangLandauReactionEnsemble(ReactionAlgorithm):
         for k in self._required_keys():
             if k not in kwargs:
                 raise ValueError(
-                    "At least the following keys have to be given as keyword arguments: " + self._required_keys().__str__() + " got " + kwargs.__str__())
+                    "At least the following keys have to be given as keyword arguments: " +
+                    self._required_keys().__str__() +
+                    " got " +
+                    kwargs.__str__())
             self._params[k] = kwargs[k]
         for k in kwargs:
             if k in self._valid_keys():
@@ -482,15 +512,22 @@ cdef class WangLandauReactionEnsemble(ReactionAlgorithm):
         for k in self._required_keys_add_collective_variable_degree_of_association():
             if k not in kwargs:
                 raise ValueError(
-                    "At least the following keys have to be given as keyword arguments: " + self._required_keys_add_collective_variable_degree_of_association().__str__() + " got " + kwargs.__str__())
+                    "At least the following keys have to be given as keyword arguments: " +
+                    self._required_keys_add_collective_variable_degree_of_association().__str__() +
+                    " got " +
+                    kwargs.__str__())
             self._params[k] = kwargs[k]
 
         cdef vector[int] _corresponding_acid_types
         for i in range(len(self._params["corresponding_acid_types"])):
             _corresponding_acid_types.push_back(
                 self._params["corresponding_acid_types"][i])
-        deref(self.WLRptr).add_new_CV_degree_of_association(
-            self._params["associated_type"], self._params["min"], self._params["max"], _corresponding_acid_types)
+        deref(
+            self.WLRptr).add_new_CV_degree_of_association(
+            self._params["associated_type"],
+            self._params["min"],
+            self._params["max"],
+            _corresponding_acid_types)
 
     def _valid_keys_add_collective_variable_degree_of_association(self):
         return "associated_type", "min", "max", "corresponding_acid_types"
@@ -534,7 +571,10 @@ cdef class WangLandauReactionEnsemble(ReactionAlgorithm):
             for k in self._required_keys_add_collective_variable_potential_energy():
                 if k not in kwargs:
                     raise ValueError(
-                        "At least the following keys have to be given as keyword arguments: " + self._required_keys_add_collective_variable_degree_of_association().__str__() + " got " + kwargs.__str__())
+                        "At least the following keys have to be given as keyword arguments: " +
+                        self._required_keys_add_collective_variable_degree_of_association().__str__() +
+                        " got " +
+                        kwargs.__str__())
                 self._params[k] = kwargs[k]
         filname_potential_energy_boundaries_file = self._params[
             "filename"].encode("utf-8")
@@ -635,8 +675,8 @@ cdef class WangLandauReactionEnsemble(ReactionAlgorithm):
         self.WLRptr.get().write_wang_landau_results_to_file(
             filename.encode("utf-8"))
 
-    def displacement_mc_move_for_particles_of_type(self, type_mc,
-                                                   particle_number_to_be_changed=1):
+    def displacement_mc_move_for_particles_of_type(
+            self, type_mc, particle_number_to_be_changed=1):
         """
         Performs an MC (Monte Carlo) move for particle_number_to_be_changed
         particle of type type_mc. Positions for the particles are drawn
@@ -685,10 +725,13 @@ cdef class WidomInsertion(ReactionAlgorithm):
         for k in self._required_keys():
             if k not in kwargs:
                 raise ValueError(
-                    "At least the following keys have to be given as keyword arguments: " + self._required_keys().__str__() + " got " + kwargs.__str__())
+                    "At least the following keys have to be given as keyword arguments: " +
+                    self._required_keys().__str__() +
+                    " got " +
+                    kwargs.__str__())
             self._params[k] = kwargs[k]
-        self._params[
-            "exclusion_radius"] = 0.0  # this is not used by the widom insertion method
+        # this is not used by the widom insertion method
+        self._params["exclusion_radius"] = 0.0
         self._params[
             "gamma"] = 1.0  # this is not used by the widom insertion method
 

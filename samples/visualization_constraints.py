@@ -82,8 +82,15 @@ if args.shape == "Cylinder":
 
 if args.shape == "SpheroCylinder":
     system.constraints.add(
-        shape=espressomd.shapes.SpheroCylinder(center=[25] * 3, axis=[1, 0, 0],
-                                               direction=1, radius=10, length=30),
+        shape=espressomd.shapes.SpheroCylinder(
+            center=[25] * 3,
+            axis=[
+                1,
+                0,
+                0],
+            direction=1,
+            radius=10,
+            length=30),
         particle_type=0,
         penetrable=True)
 

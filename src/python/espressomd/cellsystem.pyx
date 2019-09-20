@@ -165,7 +165,8 @@ cdef class CellSystem:
             elif key == "type":
                 if d[key] == "layered":
                     self.set_layered(
-                        n_layers=d['n_layers'], use_verlet_lists=use_verlet_lists)
+                        n_layers=d['n_layers'],
+                        use_verlet_lists=use_verlet_lists)
                 elif d[key] == "domain_decomposition":
                     self.set_domain_decomposition(
                         use_verlet_lists=use_verlet_lists)
@@ -242,8 +243,12 @@ cdef class CellSystem:
 
         def __set__(self, _node_grid):
             if not np.prod(_node_grid) == n_nodes:
-                raise ValueError("Number of available nodes " + str(
-                    n_nodes) + " and imposed node grid " + str(_node_grid) + " do not agree.")
+                raise ValueError(
+                    "Number of available nodes " +
+                    str(n_nodes) +
+                    " and imposed node grid " +
+                    str(_node_grid) +
+                    " do not agree.")
             else:
                 node_grid[0] = _node_grid[0]
                 node_grid[1] = _node_grid[1]

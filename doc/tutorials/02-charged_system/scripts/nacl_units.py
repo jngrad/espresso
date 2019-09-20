@@ -73,11 +73,21 @@ for i in range(n_ppside):
         for k in range(n_ppside):
             p = numpy.array([i, j, k]) * l
             if q < 0:
-                system.part.add(id=len(
-                    system.part), type=types["Cl"], pos=p, q=charges["Cl"], mass=masses["Cl"])
+                system.part.add(
+                    id=len(
+                        system.part),
+                    type=types["Cl"],
+                    pos=p,
+                    q=charges["Cl"],
+                    mass=masses["Cl"])
             else:
-                system.part.add(id=len(
-                    system.part), type=types["Na"], pos=p, q=charges["Na"], mass=masses["Na"])
+                system.part.add(
+                    id=len(
+                        system.part),
+                    type=types["Na"],
+                    pos=p,
+                    q=charges["Na"],
+                    mass=masses["Na"])
 
             q *= -1
         q *= -1

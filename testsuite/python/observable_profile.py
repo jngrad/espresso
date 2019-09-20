@@ -47,8 +47,11 @@ class ProfileObservablesTest(ut.TestCase):
         density_profile = espressomd.observables.DensityProfile(**self.kwargs)
         self.assertEqual(density_profile.calculate()[
                          self.flat_index], 2.0 / self.bin_volume)
-        self.assertEqual(density_profile.n_values(),
-                         self.kwargs['n_x_bins'] * self.kwargs['n_y_bins'] * self.kwargs['n_z_bins'])
+        self.assertEqual(
+            density_profile.n_values(),
+            self.kwargs['n_x_bins'] *
+            self.kwargs['n_y_bins'] *
+            self.kwargs['n_z_bins'])
 
     @utx.skipIfMissingFeatures("EXTERNAL_FORCES")
     def test_force_density_profile(self):
@@ -59,8 +62,12 @@ class ProfileObservablesTest(ut.TestCase):
         self.system.integrator.run(0)
         self.assertEqual(density_profile.calculate()[
                          self.flat_index_3d], 2.0 / self.bin_volume)
-        self.assertEqual(density_profile.n_values(),
-                         3 * self.kwargs['n_x_bins'] * self.kwargs['n_y_bins'] * self.kwargs['n_z_bins'])
+        self.assertEqual(
+            density_profile.n_values(),
+            3 *
+            self.kwargs['n_x_bins'] *
+            self.kwargs['n_y_bins'] *
+            self.kwargs['n_z_bins'])
 
     def test_flux_density_profile(self):
         density_profile = espressomd.observables.FluxDensityProfile(
@@ -68,8 +75,12 @@ class ProfileObservablesTest(ut.TestCase):
         self.system.integrator.run(0)
         self.assertEqual(density_profile.calculate()[
                          self.flat_index_3d], 2.0 / self.bin_volume)
-        self.assertEqual(density_profile.n_values(),
-                         3 * self.kwargs['n_x_bins'] * self.kwargs['n_y_bins'] * self.kwargs['n_z_bins'])
+        self.assertEqual(
+            density_profile.n_values(),
+            3 *
+            self.kwargs['n_x_bins'] *
+            self.kwargs['n_y_bins'] *
+            self.kwargs['n_z_bins'])
 
 
 if __name__ == '__main__':

@@ -34,7 +34,10 @@ cdef class Actor:
         for k in self.required_keys():
             if k not in kwargs:
                 raise ValueError(
-                    "At least the following keys have to be given as keyword arguments: " + self.required_keys().__str__() + " got " + kwargs.__str__())
+                    "At least the following keys have to be given as keyword arguments: " +
+                    self.required_keys().__str__() +
+                    " got " +
+                    kwargs.__str__())
             self._params[k] = kwargs[k]
 
         for k in kwargs:
@@ -63,7 +66,8 @@ cdef class Actor:
         if inter in Actor.active_list:
             if not Actor.active_list[inter]:
                 raise Exception(
-                    "Class not registered in Actor.active_list " + self.__class__.__bases__[0])
+                    "Class not registered in Actor.active_list " +
+                    self.__class__.__bases__[0])
             Actor.active_list[inter] = False
 
     def is_valid(self):
@@ -93,7 +97,8 @@ cdef class Actor:
         for k in p.keys():
             if k not in self.valid_keys():
                 raise ValueError(
-                    "Only the following keys are supported: " + self.valid_keys().__str__())
+                    "Only the following keys are supported: " +
+                    self.valid_keys().__str__())
 
         # When an interaction is newly activated, all required keys must be
         # given
@@ -101,7 +106,8 @@ cdef class Actor:
             for k in self.required_keys():
                 if k not in p:
                     raise ValueError(
-                        "At least the following keys have to be given as keyword arguments: " + self.required_keys().__str__())
+                        "At least the following keys have to be given as keyword arguments: " +
+                        self.required_keys().__str__())
 
         self._params.update(p)
         # validate updated parameters
@@ -131,42 +137,50 @@ cdef class Actor:
     def valid_keys(self):
         """Virtual method."""
         raise Exception(
-            "Subclasses of %s must define the valid_keys() method." % self._get_interaction_type())
+            "Subclasses of %s must define the valid_keys() method." %
+            self._get_interaction_type())
 
     def required_keys(self):
         """Virtual method."""
         raise Exception(
-            "Subclasses of %s must define the required_keys() method." % self._get_interaction_type())
+            "Subclasses of %s must define the required_keys() method." %
+            self._get_interaction_type())
 
     def validate_params(self):
         """Virtual method."""
         raise Exception(
-            "Subclasses of %s must define the validate_params() method." % self._get_interaction_type())
+            "Subclasses of %s must define the validate_params() method." %
+            self._get_interaction_type())
 
     def _get_params_from_es_core(self):
         """Virtual method."""
         raise Exception(
-            "Subclasses of %s must define the _get_params_from_es_core() method." % self._get_interaction_type())
+            "Subclasses of %s must define the _get_params_from_es_core() method." %
+            self._get_interaction_type())
 
     def _set_params_in_es_core(self):
         """Virtual method."""
         raise Exception(
-            "Subclasses of %s must define the _set_params_in_es_core() method." % self._get_interaction_type())
+            "Subclasses of %s must define the _set_params_in_es_core() method." %
+            self._get_interaction_type())
 
     def default_params(self):
         """Virtual method."""
         raise Exception(
-            "Subclasses of %s must define the default_params() method." % self._get_interaction_type())
+            "Subclasses of %s must define the default_params() method." %
+            self._get_interaction_type())
 
     def _activate_method(self):
         """Virtual method."""
         raise Exception(
-            "Subclasses of %s must define the _activate_method() method." % self._get_interaction_type())
+            "Subclasses of %s must define the _activate_method() method." %
+            self._get_interaction_type())
 
     def _deactivate_method(self):
         """Virtual method."""
         raise Exception(
-            "Subclasses of %s must define the _deactivate_method() method." % self._get_interaction_type())
+            "Subclasses of %s must define the _deactivate_method() method." %
+            self._get_interaction_type())
 
 
 class Actors:
@@ -194,7 +208,7 @@ class Actors:
             Actor to add to this container.
 
         """
-        if not actor in Actors.active_actors:
+        if actor not in Actors.active_actors:
             self.active_actors.append(actor)
             actor._activate()
         else:
@@ -208,7 +222,7 @@ class Actors:
             Actor to remove from this container.
 
         """
-        if not actor in self.active_actors:
+        if actor not in self.active_actors:
             raise Exception("Actor is not active")
         actor._deactivate()
         self.active_actors.remove(actor)

@@ -339,8 +339,11 @@ class DPDThermostat(ut.TestCase):
 
         s = self.s
 
-        s.constraints.add(shape=espressomd.shapes.Wall(
-            dist=0, normal=[1, 0, 0]), particle_type=0, particle_velocity=[1, 2, 3])
+        s.constraints.add(
+            shape=espressomd.shapes.Wall(
+                dist=0, normal=[
+                    1, 0, 0]), particle_type=0, particle_velocity=[
+                1, 2, 3])
 
         s.thermostat.set_dpd(kT=0.0, seed=42)
         s.non_bonded_inter[0, 0].dpd.set_params(

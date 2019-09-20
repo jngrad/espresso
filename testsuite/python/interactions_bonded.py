@@ -70,12 +70,22 @@ class InteractionsBondedTest(ut.TestCase):
 
         fene = espressomd.interactions.FeneBond(
             k=fene_k, d_r_max=fene_d_r_max, r_0=fene_r_0)
-        self.run_test(fene,
-                      lambda r: tests_common.fene_force(
-                          scalar_r=r, k=fene_k, d_r_max=fene_d_r_max, r_0=fene_r_0),
-                      lambda r: tests_common.fene_potential(
-                          scalar_r=r, k=fene_k, d_r_max=fene_d_r_max, r_0=fene_r_0),
-                      0.01, fene_r_0 + fene_d_r_max, True)
+        self.run_test(
+            fene,
+            lambda r: tests_common.fene_force(
+                scalar_r=r,
+                k=fene_k,
+                d_r_max=fene_d_r_max,
+                r_0=fene_r_0),
+            lambda r: tests_common.fene_potential(
+                scalar_r=r,
+                k=fene_k,
+                d_r_max=fene_d_r_max,
+                r_0=fene_r_0),
+            0.01,
+            fene_r_0 +
+            fene_d_r_max,
+            True)
 
     @utx.skipIfMissingFeatures(["ELECTROSTATICS"])
     def test_coulomb(self):
@@ -130,12 +140,23 @@ class InteractionsBondedTest(ut.TestCase):
                                                       r=quartic_r,
                                                       r_cut=quartic_r_cut)
 
-        self.run_test(quartic,
-                      lambda r: tests_common.quartic_force(
-                          k0=quartic_k0, k1=quartic_k1, r=quartic_r, r_cut=quartic_r_cut, scalar_r=r),
-                      lambda r: tests_common.quartic_potential(
-                          k0=quartic_k0, k1=quartic_k1, r=quartic_r, r_cut=quartic_r_cut, scalar_r=r),
-                      0.01, quartic_r_cut, True)
+        self.run_test(
+            quartic,
+            lambda r: tests_common.quartic_force(
+                k0=quartic_k0,
+                k1=quartic_k1,
+                r=quartic_r,
+                r_cut=quartic_r_cut,
+                scalar_r=r),
+            lambda r: tests_common.quartic_potential(
+                k0=quartic_k0,
+                k1=quartic_k1,
+                r=quartic_r,
+                r_cut=quartic_r_cut,
+                scalar_r=r),
+            0.01,
+            quartic_r_cut,
+            True)
 
     def run_test(self, bond_instance, force_func, energy_func, min_dist,
                  cutoff, test_breakage=False):

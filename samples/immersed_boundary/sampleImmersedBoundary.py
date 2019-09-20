@@ -58,8 +58,15 @@ AddVolCons(system, kV)
 outputDir = "outputVolParaCUDA"
 
 # Add LB Fluid
-lbf = lb.LBFluid(agrid=1, dens=1, visc=1, tau=system.time_step, ext_force_density=[
-                 force, 0, 0])
+lbf = lb.LBFluid(
+    agrid=1,
+    dens=1,
+    visc=1,
+    tau=system.time_step,
+    ext_force_density=[
+        force,
+        0,
+        0])
 system.actors.add(lbf)
 
 system.thermostat.set_lb(LB_fluid=lbf, gamma=1.0, act_on_virtual=False)

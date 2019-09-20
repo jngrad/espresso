@@ -42,7 +42,8 @@ class AnalyzeMassRelated(ut.TestCase):
             pos=np.random.random((10, 3)) * cls.box_l, type=[1] * 10)
         if espressomd.has_features("VIRTUAL_SITES"):
             cls.system.part.add(
-                pos=np.random.random((10, 3)) * cls.box_l, type=[0] * 10, virtual=[True] * 10)
+                pos=np.random.random(
+                    (10, 3)) * cls.box_l, type=[0] * 10, virtual=[True] * 10)
         cls.system.part[:].v = np.random.random(
             (len(cls.system.part), 3)) + 0.1
         if espressomd.has_features("MASS"):
@@ -74,11 +75,16 @@ class AnalyzeMassRelated(ut.TestCase):
             lambda p: (not p.virtual) and p.type == 0).id)
 
         np.testing.assert_allclose(
-            I0, self.system.analysis.moment_of_inertia_matrix(p_type=0), atol=1E-9)
+            I0, self.system.analysis.moment_of_inertia_matrix(
+                p_type=0), atol=1E-9)
         # type=1
         I1 = self.i_tensor(self.system.part.select(type=1).id)
         self.assertTrue(
-            np.allclose(I1, self.system.analysis.moment_of_inertia_matrix(p_type=1), atol=1E-9))
+            np.allclose(
+                I1,
+                self.system.analysis.moment_of_inertia_matrix(
+                    p_type=1),
+                atol=1E-9))
 
     def test_center_of_mass(self):
         no_virtual_type_0 = self.system.part.select(
@@ -142,9 +148,9 @@ class AnalyzeMassRelated(ut.TestCase):
     def test_gyration_radius(self):        
         if len(self.system.part.select(virtual=True)) > 0:
             with self.assertRaisesRegexp(Exception, "not well-defined"):
-                core_rg = self.system.analysis.calc_rg(chain_start=0,
-                                                       number_of_chains=1,
-                                                       chain_length=len(self.system.part))
+                core_rg = self.system.analysis.calc_rg(
+                    chain_start=0, number_of_chains=1, chain_length=len(
+                        self.system.part))
 
 
 if __name__ == "__main__":
