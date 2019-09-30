@@ -21,7 +21,7 @@ from sys import argv
 
 class Defines:
 
-    def __init__(self, compiler, flags=[]):
+    def __init__(self, compiler, flags=()):
         self._compiler = compiler
         self._flags = flags + ["-E", "-dM"]
 
