@@ -1,34 +1,32 @@
 /*
-  Copyright (C) 2010-2018 The ESPResSo project
-  Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2009,2010
-    Max-Planck-Institute for Polymer Research, Theory Group
-
-  This file is part of ESPResSo.
-
-  ESPResSo is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  ESPResSo is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-/** \file
- * Unit tests for the Utils::Vector class.
+ * Copyright (C) 2010-2019 The ESPResSo project
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2009,2010
+ *   Max-Planck-Institute for Polymer Research, Theory Group
  *
+ * This file is part of ESPResSo.
+ *
+ * ESPResSo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ESPResSo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/* Unit tests for the Utils::Vector class. */
 
 #define BOOST_TEST_MODULE Vector test
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
 #include <boost/range/numeric.hpp>
+#include <sstream>
 
 #include <algorithm>
 #include <complex>
@@ -38,7 +36,7 @@
 #include "utils/Vector.hpp"
 using Utils::Vector;
 
-/** Number of nontrivial Baxter permutations of length 2n-1. (A001185) */
+/* Number of nontrivial Baxter permutations of length 2n-1. (A001185) */
 #define TEST_NUMBERS                                                           \
   { 0, 1, 1, 7, 21, 112, 456, 2603, 13203 }
 #define TEST_NUMBERS_PARTIAL_NORM2                                             \
@@ -181,6 +179,18 @@ BOOST_AUTO_TEST_CASE(algebraic_operators) {
 
   BOOST_CHECK((sqrt(Utils::Vector3d{1., 2., 3.}) ==
                Utils::Vector3d{sqrt(1.), sqrt(2.), sqrt(3.)}));
+
+  /* modulo */
+  {
+    Utils::Vector3i v1{2, 7, 8};
+    Utils::Vector3i v2{1, 2, 3};
+
+    auto const res = v1 % v2;
+
+    BOOST_CHECK_EQUAL(res[0], v1[0] % v2[0]);
+    BOOST_CHECK_EQUAL(res[1], v1[1] % v2[1]);
+    BOOST_CHECK_EQUAL(res[2], v1[2] % v2[2]);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(broadcast) {
@@ -228,22 +238,76 @@ BOOST_AUTO_TEST_CASE(vector_broadcast) {
   BOOST_CHECK_EQUAL(v[1], 1.4);
 }
 
-BOOST_AUTO_TEST_CASE(scalar_product) {
-  static_assert(std::is_same<decltype(Utils::Vector3d{} * Utils::Vector3d{}),
-                             double>::value,
-                "");
-  static_assert(std::is_same<decltype(Utils::Vector3d{} * Utils::Vector3i{}),
-                             double>::value,
-                "");
-  static_assert(std::is_same<decltype(Vector<std::complex<float>, 2>{} * 3.f),
-                             Vector<std::complex<float>, 2>>::value,
-                "");
+BOOST_AUTO_TEST_CASE(transpose_test) {
+  // clang-format off
+  auto const A = Utils::Matrix<Utils::VectorXi<2>, 3, 3>{
+      {{0,0}, {0, 1}, {0, 2}},
+      {{1,0}, {1, 1}, {1, 2}},
+      {{2,0}, {2, 1}, {2, 2}}
+  };
 
-  auto const v1 = Utils::Vector3d{1., 2., 3.};
-  auto const v2 = Utils::Vector3d{4.1, 5.2, 6.3};
-  auto const v3 = Utils::Vector3i{11, 12, 13};
-  BOOST_CHECK_EQUAL(v1 * v2, boost::inner_product(v1, v2, 0.));
-  BOOST_CHECK_EQUAL(v1 * v3, boost::inner_product(v1, v3, 0.));
+  auto const expected = Utils::Matrix<Utils::VectorXi<2>, 3, 3>{
+      {{0, 0}, {1, 0}, {2, 0}},
+      {{0, 1}, {1, 1}, {2, 1}},
+      {{0, 2}, {1, 2}, {2, 2}}
+  };
+  // clang-format on
+
+  auto const result = transpose(A);
+  BOOST_CHECK(result == expected);
+}
+
+BOOST_AUTO_TEST_CASE(products) {
+  /* Types */
+  {
+    static_assert(std::is_same<decltype(Utils::Vector3d{} * Utils::Vector3d{}),
+                               double>::value,
+                  "");
+    static_assert(std::is_same<decltype(Utils::Vector3d{} * Utils::Vector3i{}),
+                               double>::value,
+                  "");
+    static_assert(std::is_same<decltype(Vector<std::complex<float>, 2>{} * 3.f),
+                               Vector<std::complex<float>, 2>>::value,
+                  "");
+  }
+
+  /* Vector-Vector */
+  {
+    auto const v1 = Utils::Vector3d{1., 2., 3.};
+    auto const v2 = Utils::Vector3d{4.1, 5.2, 6.3};
+    auto const v3 = Utils::Vector3i{11, 12, 13};
+    BOOST_CHECK_EQUAL(v1 * v2, boost::inner_product(v1, v2, 0.));
+    BOOST_CHECK_EQUAL(v1 * v3, boost::inner_product(v1, v3, 0.));
+  }
+
+  /* Matrix-Vector */
+  {
+    auto const result =
+        (Utils::Matrix<int, 3, 3>{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}) *
+        Utils::Vector<int, 3>{3, 4, 5};
+    auto const expected = Utils::Vector<int, 3>{26, 62, 98};
+
+    BOOST_CHECK_EQUAL(result[0], expected[0]);
+    BOOST_CHECK_EQUAL(result[1], expected[1]);
+    BOOST_CHECK_EQUAL(result[2], expected[2]);
+  }
+
+  /* Matrix-Matrix */
+  {
+    auto const A = Utils::Matrix<double, 3, 3>{{1, 2, 3}, {3, 2, 1}, {2, 1, 3}};
+    auto const Ai = Utils::Matrix<double, 3, 3>{{-5. / 12, 1. / 4, 1. / 3},
+                                                {7. / 12, 1. / 4, -2. / 3},
+                                                {1. / 12, -1. / 4, 1. / 3}};
+
+    auto const result = A * Ai;
+    auto const expected =
+        Utils::Matrix<double, 3, 3>{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+
+    for (int i = 0; i < 3; i++)
+      for (int j = 0; j < 3; j++)
+        BOOST_CHECK_SMALL(result[i][j] - expected[i][j],
+                          std::numeric_limits<double>::epsilon());
+  }
 }
 
 BOOST_AUTO_TEST_CASE(conversion) {
@@ -256,4 +320,31 @@ BOOST_AUTO_TEST_CASE(conversion) {
   BOOST_CHECK_EQUAL(result[0], static_cast<float>(orig[0]));
   BOOST_CHECK_EQUAL(result[1], static_cast<float>(orig[1]));
   BOOST_CHECK_EQUAL(result[2], static_cast<float>(orig[2]));
+}
+
+BOOST_AUTO_TEST_CASE(vector_product_test) {
+  auto const v1 = Utils::Vector3d{1., 2., 3.};
+  auto const v2 = Utils::Vector3d{4.1, 5.2, 6.3};
+
+  auto const res = vector_product(v1, v2);
+  BOOST_CHECK_SMALL(std::abs(v1 * res), 1e-14);
+  BOOST_CHECK_SMALL(std::abs(v2 * res), 1e-14);
+}
+
+BOOST_AUTO_TEST_CASE(hadamard_product_test) {
+  auto const v1 = Utils::Vector<int, 2>{8, 9};
+  auto const v2 = Utils::Vector<int, 2>{5, 6};
+
+  auto res = Utils::hadamard_product(v1, v2);
+  BOOST_CHECK_EQUAL(res[0], v1[0] * v2[0]);
+  BOOST_CHECK_EQUAL(res[1], v1[1] * v2[1]);
+}
+
+BOOST_AUTO_TEST_CASE(diag_matrix) {
+  auto const v = Utils::Vector3d{1, 2, 3};
+  auto const result = Utils::diag_matrix(v);
+
+  for (int i = 0; i < 3; i++)
+    for (int j = 0; j < 3; j++)
+      BOOST_CHECK_EQUAL(result[i][j], (i == j) ? v[i] : 0);
 }

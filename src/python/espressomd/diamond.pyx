@@ -1,10 +1,25 @@
-from __future__ import print_function, absolute_import
+# Copyright (C) 2010-2019 The ESPResSo project
+#
+# This file is part of ESPResSo.
+#
+# ESPResSo is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ESPResSo is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 include "myconfig.pxi"
 from .interactions cimport bonded_ia_params
 from espressomd.utils cimport handle_errors
 from espressomd.utils import is_valid_type
 
-cdef class Diamond(object):
+cdef class Diamond:
     """
     Class to create a diamond-like polymer network.
 
@@ -26,8 +41,8 @@ cdef class Diamond(object):
         Valency of the charge bearing monomers.
     val_CI : :obj:`float`, optional
         Valency of the counterions.
-    nonet : :obj:`int`, optional
-        0 creates network, 1 does not crosslink the individual polymers.
+    nonet : :obj:`bool`, optional
+        False creates network, True does not crosslink the individual polymers.
 
     """
 
@@ -41,14 +56,14 @@ cdef class Diamond(object):
             if k in self.valid_keys():
                 self._params[k] = kwargs[k]
             else:
-                raise KeyError("%s is not a vaild key" % k)
+                raise KeyError("%s is not a valid key" % k)
 
         self.validate_params()
         self._set_params_in_es_core()
 
     def default_params(self):
         return {"a": 0.0, "bond_length": 0.0, "MPC": 0, "N_CI": 0,
-                "val_nodes": 0.0, "val_cM": 0.0, "val_CI": 0.0, "cM_dist": 1, "nonet": 0}
+                "val_nodes": 0.0, "val_cM": 0.0, "val_CI": 0.0, "cM_dist": 1, "nonet": False}
 
     def required_keys(self):
         return "a", "bond_length", "MPC"
@@ -80,16 +95,18 @@ cdef class Diamond(object):
             raise ValueError(
                 "The distance between two charged monomers' indices must be integer ", self._params[valid_keys[7]])
         if(self._params[valid_keys[7]] == "nonet"):
-            self._params[valid_keys[7]] = 1
+            self._params[valid_keys[7]] = True
         if(bonded_ia_params.size() == 0):
             raise ValueError(
                 "Please define a bonded interaction [0] before setting up polymers!")
 
     def __set_params_in_es_core(self):
         return create_diamond(
-            partCfg(), self._params["a"], self._params[
-                "bond_length"], self._params["MPC"], self._params["N_CI"],
-                        self._params["val_nodes"], self._params["val_cM"], self._params["val_CI"], self._params["cM_dist"], self._params["nonet"])
+            partCfg(), self._params["a"], self._params["bond_length"],
+            self._params["MPC"], self._params["N_CI"],
+            self._params["val_nodes"], self._params["val_cM"],
+            self._params["val_CI"], self._params["cM_dist"],
+            int(self._params["nonet"]))
 
     def _set_params_in_es_core(self):
         error_code = self.__set_params_in_es_core()
@@ -98,6 +115,6 @@ cdef class Diamond(object):
             pass
         elif error_code == -3:
             raise Exception(
-                "Failed upon creating one of the monomers in Espresso!\nAborting...\n")
+                "Failed upon creating one of the monomers in ESPResSo!\nAborting...\n")
         else:
             raise Exception("Unknown error code: {}".format(error_code))

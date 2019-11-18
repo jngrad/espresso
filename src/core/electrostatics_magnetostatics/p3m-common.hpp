@@ -1,23 +1,23 @@
 /*
-  Copyright (C) 2010-2018 The ESPResSo project
-  Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2009,2010
-    Max-Planck-Institute for Polymer Research, Theory Group
-
-  This file is part of ESPResSo.
-
-  ESPResSo is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  ESPResSo is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2010-2019 The ESPResSo project
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2009,2010
+ *   Max-Planck-Institute for Polymer Research, Theory Group
+ *
+ * This file is part of ESPResSo.
+ *
+ * ESPResSo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ESPResSo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #ifndef _P3M_COMMON_H
 #define _P3M_COMMON_H
 /** \file
@@ -25,29 +25,11 @@
  *
  *  We use here a P3M (Particle-Particle Particle-Mesh) method based
  *  on the Ewald summation. Details of the used method can be found in
- *  Hockney/Eastwood and Deserno/Holm. The file p3m contains only the
- *  Particle-Mesh part.
+ *  @cite hockney88a and @cite deserno98a @cite deserno98b. The file p3m
+ *  contains only the Particle-Mesh part.
  *
- *  Further reading:
- *  -    P. P. Ewald,
- *       *Die Berechnung optischer und elektrostatischer Gitterpotentiale*,
- *       Ann. Phys. (64) 253-287, 1921
- *  -    R. W. Hockney and J. W. Eastwood,
- *       *Computer simulation using particles*,
- *       IOP, London, 1988
- *  -    M. Deserno and C. Holm,
- *       *How to mesh up Ewald sums I + II*,
- *       J. Chem. Phys. (109) 7678, 1998; (109) 7694, 1998
- *  -    M. Deserno, C. Holm and H. J. Limbach,
- *       *How to mesh up Ewald sums*,
- *       in Molecular Dynamics on Parallel Computers,
- *       Ed. R. Esser et al., World Scientific, Singapore, 2000
- *  -    M. Deserno,
- *       *Counterion condensation for rigid linear polyelectrolytes*,
- *       PhD Thesis, Universität Mainz, 2000
- *  -    J. J. Cerda,
- *       *P3M for dipolar interactions*,
- *       J. Chem. Phys (129) 234104, 2008
+ *  Further reading: @cite ewald21a, @cite hockney88a, @cite deserno98a,
+ *  @cite deserno98b, @cite deserno00e, @cite deserno00b, @cite cerda08d
  *
  */
 #include "config.hpp"
@@ -189,16 +171,6 @@ typedef struct {
 
 } P3MParameters;
 
-/** Print local mesh content.
- *  \param l local mesh structure.
- */
-void p3m_p3m_print_local_mesh(p3m_local_mesh l);
-
-/** Print send mesh content.
- *  \param sm send mesh structure.
- */
-void p3m_p3m_print_send_mesh(p3m_send_mesh sm);
-
 /** Add values of a 3d-grid input block (size[3]) to values of 3d-grid
  *  output array with dimension dim[3] at start position start[3].
  *
@@ -216,8 +188,8 @@ void p3m_add_block(double const *in, double *out, int const start[3],
  *  most slowly, since it is not damped exponentially) can be
  *  calculated analytically. The result (which depends on the order of
  *  the spline interpolation) can be written as an even trigonometric
- *  polynomial. The results are tabulated here (The employed formula
- *  is Eqn. 7.66 in the book of Hockney and Eastwood).
+ *  polynomial. The results are tabulated here (the employed formula
+ *  is eq. (7.66) in @cite hockney88a).
  */
 double p3m_analytic_cotangent_sum(int n, double mesh_i, int cao);
 

@@ -1,10 +1,10 @@
-.. _Lattice Boltzmann:
+.. _Lattice-Boltzmann:
 
-Lattice Boltzmann
+Lattice-Boltzmann
 =================
 
 For an implicit treatment of a solvent, |es| allows to couple the molecular
-dynamics simulation to a lattice Boltzmann fluid. The Lattice Boltzmann Method (LBM) is a fast, lattice-based method that, in its
+dynamics simulation to a lattice-Boltzmann fluid. The lattice-Boltzmann method (LBM) is a fast, lattice-based method that, in its
 "pure" form, allows to calculate fluid flow in different boundary
 conditions of arbitrarily complex geometries. Coupled to molecular
 dynamics, it allows for the computationally efficient inclusion of
@@ -16,7 +16,7 @@ geometries and boundary conditions are somewhat limited in comparison to
 Here we restrict the documentation to the interface. For a more detailed
 description of the method, please refer to the literature.
 
-.. note:: Please cite :cite:`espresso2` (Bibtex key espresso2 in :file:`doc/sphinx/zref.bib`) if you use the LB fluid and :cite:`lbgpu` (Bibtex key lbgpu in :file:`doc/sphinx/zref.bib`) if you use the GPU implementation.
+.. note:: Please cite :cite:`arnold13a` (Bibtex key ``arnold13a`` in :file:`doc/sphinx/zrefs.bib`) if you use the LB fluid and :cite:`rohm12a` (Bibtex key ``rohm12a`` in :file:`doc/sphinx/zrefs.bib`) if you use the GPU implementation.
 
 .. _Setting up a LB fluid:
 
@@ -76,7 +76,7 @@ the fluid thermalization::
     lbfluid = espressomd.lb.LBFluid(kT=1.0, seed=134, ...)
 
 The parameter ``ext_force_density`` takes a three dimensional vector as an
-`array_like`, representing a homogeneous external body force density in MD
+array_like of :obj:`float`, representing a homogeneous external body force density in MD
 units to be applied to the fluid. The parameter ``bulk_visc`` allows one to
 tune the bulk viscosity of the fluid and is given in MD units. In the limit of
 low Mach number, the flow does not compress the fluid and the resulting flow
@@ -121,53 +121,59 @@ load in the particles with the correct forces, and use::
 
     sys.integrator.run(steps=number_of_steps, reuse_forces=True)
 
-upon the first call to :ref:`run <Integrator>`. This causes the
+upon the first call ``integrator.run``. This causes the
 old forces to be reused and thus conserves momentum.
 
-.. _LB as a thermostat:
+.. _Interpolating velocities:
 
-LB as a thermostat
-------------------
+Interpolating velocities
+------------------------
 
-The LB fluid can be used to thermalize particles, while also including their hydrodynamic interactions.
-The LB thermostat expects an instance of either :class:`espressomd.lb.LBFluid` or :class:`espressomd.lb.LBFluidGPU`.
-Temperature is set via the ``kT`` argument of the LB fluid. Furthermore a seed has to be given for the
-thermalization of the particle coupling. The magnitude of the fricitional coupling can be adjusted by
-the parameter ``gamma``.
-To enable the LB thermostat, use::
+To get interpolated velocity values between lattice nodes, the function::
+
+    lb.get_interpolated_velocity(pos = [1.1,1.2,1.3])
+    
+with a single position  ``pos`` as an argument can be used. 
+For the GPU fluid :class:`espressomd.lb.LBFluidGPU`
+also :py:meth:`espressomd.lb.LBFluidGPU.get_interpolated_fluid_velocity_at_positions()`
+is available, which expects a numpy array of positions as an argument.
+
+By default, the interpolation is done linearly between the nearest 8 LB nodes,
+but for the GPU implementation also a quadratic scheme involving 27 nodes is implemented 
+(see eqs. 297 and 301 in :cite:`duenweg08a`). 
+You can choose by calling 
+one of::
+
+    lb.set_interpolation_order('linear')
+    lb.set_interpolation_order('quadratic')
+    
+A note on boundaries:
+both interpolation schemes don't take into account the physical location of the boundaries
+(e.g. in the middle between two nodes for a planar wall) but will use the boundary node slip velocity 
+at the node position. This means that every interpolation involving at least one
+boundary node will introduce an error.
+
+.. _Coupling LB to a MD simulation:
+
+Coupling LB to a MD simulation
+------------------------------
+
+MD particles can be coupled to a LB fluid through frictional coupling. The friction force
+
+  .. math:: F_{i,\text{frict}} = - \gamma (v_i(t)-u(x_i(t),t))
+
+depends on the particle velocity :math:`v` and the fluid velocity :math:`u`. It acts both
+on the particle and the fluid (in opposite direction). Because the fluid is also affected,
+multiple particles can interact via hydrodynamic interactions. As friction in molecular systems is
+accompanied by fluctuations, the particle-fluid coupling has to be activated through
+the :ref:`LB thermostat` (See more detailed description there). A short example is::
 
     sys.thermostat.set_lb(LB_fluid=lbf, seed=123, gamma=1.5)
 
-The LBM implementation in |es| uses Ahlrichs and Dünweg's point coupling
-method to couple MD particles the LB fluid. This coupling consists of a
-frictional and a random force, similar to the :ref:`Langevin thermostat`:
+where ``lbf`` is an instance of either :class:`espressomd.lb.LBFluid` or :class:`espressomd.lb.LBFluidGPU`, 
+``gamma`` the friction coefficient and ``seed`` the seed for the random number generator involved 
+in the thermalization.
 
-.. math:: \vec{F} = -\gamma \left(\vec{v}-\vec{u}\right) + \vec{F}_R.
-
-The momentum acquired by the particles is then transferred back to the
-fluid using a linear interpolation scheme, to preserve total momentum.
-In the GPU implementation the force can alternatively be interpolated
-using a three point scheme which couples the particles to the nearest 27
-LB nodes. This can be called using "lbfluid 3pt" and is described in
-Dünweg and Ladd by equation 301 :cite:`duenweg08a`.
-
-The frictional force tends to decrease the relative
-velocity between the fluid and the particle whereas the random forces
-are chosen so large that the average kinetic energy per particle
-corresponds to the given temperature, according to a fluctuation
-dissipation theorem. No other thermostatting mechanism is necessary
-then. Please switch off any other thermostat before starting the LB
-thermostatting mechanism.
-
-The LBM implementation provides a fully thermalized LB fluid, all
-nonconserved modes, including the pressure tensor, fluctuate correctly
-according to the given temperature and the relaxation parameters. All
-fluctuations can be switched off by setting the temperature to 0.
-
-.. note:: Coupling between LB and MD only happens if the LB thermostat is set with a :math:`\gamma \ge 0.0`.
-
-Regarding the unit of the temperature, please refer to
-Section :ref:`On units`.
 
 .. _Reading and setting properties of single lattice nodes:
 
@@ -178,8 +184,8 @@ Appending three indices to the ``lb`` object returns an object that represents t
 
     lb[x, y, z].density     # fluid density (one scalar for LB and CUDA)
     lb[x, y, z].velocity    # fluid velocity (a numpy array of three floats)
-    lb[x, y, z].pi          # fluid pressure tensor (a symmetric 3x3 numpy array of floats)
-    lb[x, y, z].pi_neq      # nonequilbrium part of the pressure tensor (as above)
+    lb[x, y, z].stress      # fluid pressure tensor (a symmetric 3x3 numpy array of floats)
+    lb[x, y, z].stress_neq  # nonequilbrium part of the pressure tensor (as above)
     lb[x, y, z].boundary    # flag indicating whether the node is fluid or boundary (fluid: boundary=0, boundary: boundary != 0)
     lb[x, y, z].population  # 19 LB populations (a numpy array of 19 floats, check order from the source code)
 
@@ -282,7 +288,7 @@ Electrohydrodynamics
         .. note::
            This needs the feature ``LB_ELECTROHYDRODYNAMICS``.
 
-If the feature is activated, the Lattice Boltzmann Code can be
+If the feature is activated, the lattice-Boltzmann code can be
 used to implicitly model surrounding salt ions in an external electric
 field by having the charged particles create flow.
 
@@ -295,15 +301,15 @@ For more information on this method and how it works, read the
 publication :cite:`hickey10a`.
 
 
-.. _Using shapes as lattice Boltzmann boundary:
+.. _Using shapes as lattice-Boltzmann boundary:
 
-Using shapes as lattice Boltzmann boundary
+Using shapes as lattice-Boltzmann boundary
 ------------------------------------------
 
 .. note::
     Feature ``LB_BOUNDARIES`` required
 
-Lattice Boltzmann boundaries are implemented in the module
+Lattice-Boltzmann boundaries are implemented in the module
 :mod:`espressomd.lbboundaries`. You might want to take a look
 at the classes :class:`espressomd.lbboundaries.LBBoundary`
 and :class:`espressomd.lbboundaries.LBBoundaries` for more information.
@@ -327,7 +333,7 @@ Minimal usage example
 
 .. note:: Feature ``LB_BOUNDARIES`` or ``LB_BOUNDARIES_GPU`` required
 
-In order to add a wall as boundary for a lattice Boltzmann fluid
+In order to add a wall as boundary for a lattice-Boltzmann fluid
 you could do the following::
 
     wall = espressomd.shapes.Wall(dist=5, normal=[1, 0, 0])
@@ -385,7 +391,7 @@ Intersecting boundaries are in principle possible but must be treated
 with care. In the current implementation, all nodes that are
 within at least one boundary are treated as boundary nodes.
 
-Currently, only the so called "link-bounce-back" algorithm for wall
+Currently, only the so-called "link-bounce-back" algorithm for wall
 nodes is available. This creates a boundary that is located
 approximately midway between the lattice nodes, so in the above example ``wall[0]``
 corresponds to a boundary at :math:`x=1.5`. Note that the

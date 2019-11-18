@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013-2018 The ESPResSo project
+# Copyright (C) 2013-2019 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -19,11 +19,9 @@
 
 """Testmodule for the Reaction Ensemble.
 """
-import os
-import sys
 import unittest as ut
 import numpy as np
-import espressomd  # pylint: disable=import-error
+import espressomd
 from espressomd import reaction_ensemble
 
 
@@ -32,17 +30,18 @@ class ReactionEnsembleTest(ut.TestCase):
     """Test the core implementation of the reaction ensemble."""
 
     # The reaction ensemble follows the ideal titration curve only if N>>1,
-    # Ideal curve is derived in the grandcanionical ensemble and for low N
-    # there are systematic devations caused by differences between the
+    # Ideal curve is derived in the grandcanonical ensemble and for low N
+    # there are systematic deviations caused by differences between the
     # ensembles. This is not an error but a fundamental difference (various
-    # ensembles are equivalent only in the thermodynamic limit N \to \infty
+    # ensembles are equivalent only in the thermodynamic limit N \to \infty)
     N0 = 40
     c0 = 0.00028
     type_HA = 0
     type_A = 1
     type_H = 2
     target_alpha = 0.6
-    # We get best statistics at alpha=0.5 Then the test is least sensistive to # the exact sequence of random numbers and does not require hard-coded
+    # We get best statistics at alpha=0.5 Then the test is less sensitive to
+    # the exact sequence of random numbers and does not require hard-coded
     # output values
     temperature = 1.0
     exclusion_radius = 1.0
@@ -68,7 +67,6 @@ class ReactionEnsembleTest(ut.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Prepare a testsystem."""
         for i in range(0, 2 * cls.N0, 2):
             cls.system.part.add(id=i, pos=np.random.random(
                 3) * cls.system.box_l, type=cls.type_A)
@@ -83,24 +81,14 @@ class ReactionEnsembleTest(ut.TestCase):
             product_coefficients=cls.product_coefficients,
             default_charges={cls.type_HA: 0, cls.type_A: -1, cls.type_H: +1}, check_for_electroneutrality=True)
 
-    @classmethod
-    def ideal_alpha(cls, gamma, N0, V, nubar):
-        # gamma = prod_i (N_i / V) = alpha^2 N0 / (1-alpha)*V**(-nubar)
-        # degree of dissociation alpha = N_A / N_HA = N_H / N_0
-        X = 2 * N0 / (gamma * V**nubar)
-        return (np.sqrt(1 + 2 * X) - 1) / X
-
     def test_ideal_titration_curve(self):
         N0 = ReactionEnsembleTest.N0
         type_A = ReactionEnsembleTest.type_A
         type_H = ReactionEnsembleTest.type_H
         type_HA = ReactionEnsembleTest.type_HA
-        box_l = ReactionEnsembleTest.system.box_l
         system = ReactionEnsembleTest.system
         gamma = ReactionEnsembleTest.gamma
-        nubar = ReactionEnsembleTest.nubar
 
-        volume = ReactionEnsembleTest.volume
         RE = ReactionEnsembleTest.RE
         target_alpha = ReactionEnsembleTest.target_alpha
 
@@ -112,7 +100,7 @@ class ReactionEnsembleTest(ut.TestCase):
         average_NHA = 0.0
         average_NA = 0.0
         num_samples = 1000
-        for i in range(num_samples):
+        for _ in range(num_samples):
             RE.reaction(10)
             average_NH += system.number_of_particles(type=type_H)
             average_NHA += system.number_of_particles(type=type_HA)
@@ -183,5 +171,4 @@ class ReactionEnsembleTest(ut.TestCase):
 
 
 if __name__ == "__main__":
-    print("Features: ", espressomd.features())
     ut.main()

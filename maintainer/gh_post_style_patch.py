@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 # Copyright (C) 2018-2019 The ESPResSo project
 #
@@ -18,7 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from __future__ import print_function
 import os
 import requests
 import subprocess
@@ -30,11 +29,13 @@ PR = os.environ['CI_COMMIT_REF_NAME'][3:]
 URL = 'https://api.github.com/repos/espressomd/espresso/issues/' + \
       PR + '/comments?access_token=' + os.environ['GITHUB_TOKEN']
 SIZELIMIT = 10000
+TOKEN_ESPRESSO_CI = 'style.patch'
 
 # Delete all existing comments
 comments = requests.get(URL)
 for comment in comments.json():
-    if comment['user']['login'] == 'espresso-ci' and 'style.patch' in comment['body']:
+    if comment['user']['login'] == 'espresso-ci' and \
+            TOKEN_ESPRESSO_CI in comment['body']:
         requests.delete(comment['url'] + '?access_token=' +
                         os.environ['GITHUB_TOKEN'])
 
@@ -45,7 +46,7 @@ if subprocess.call(["git", "diff-index", "--quiet", "HEAD", "--"]) != 0:
     if len(patch) <= SIZELIMIT:
         comment += 'Specifically, I suggest you make the following changes:\n'
         comment += '```diff\n'
-        comment += patch.replace('`', r'\`').strip()
+        comment += patch.decode('utf-8').replace('`', r'\`').strip()
         comment += '\n```\n'
         comment += 'To apply these changes, please do one of the following:\n'
     else:
@@ -61,5 +62,6 @@ if subprocess.call(["git", "diff-index", "--quiet", "HEAD", "--"]) != 0:
     comment += 'You can run `gitlab-runner exec docker style` afterwards to check if your changes worked out properly.\n\n'
     comment += 'Please note that there are often multiple ways to correctly format code. As I am just a robot, I sometimes fail to identify the most aesthetically pleasing way. So please look over my suggested changes and adapt them where the style does not make sense.'
 
-    if len(patch) > 0:
+    if patch:
+        assert TOKEN_ESPRESSO_CI in comment
         requests.post(URL, json={'body': comment})

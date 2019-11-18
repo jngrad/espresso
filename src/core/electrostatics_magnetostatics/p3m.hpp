@@ -1,23 +1,23 @@
 /*
-  Copyright (C) 2010-2018 The ESPResSo project
-  Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2009,2010
-    Max-Planck-Institute for Polymer Research, Theory Group
-
-  This file is part of ESPResSo.
-
-  ESPResSo is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  ESPResSo is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2010-2019 The ESPResSo project
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2009,2010
+ *   Max-Planck-Institute for Polymer Research, Theory Group
+ *
+ * This file is part of ESPResSo.
+ *
+ * ESPResSo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ESPResSo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #ifndef _P3M_H
 #define _P3M_H
 /** \file
@@ -25,28 +25,10 @@
  *
  *  We use a P3M (Particle-Particle Particle-Mesh) method based on the
  *  Ewald summation. Details of the used method can be found in
- *  Hockney/Eastwood and Deserno/Holm.
+ *  @cite hockney88a and @cite deserno98a @cite deserno98b.
  *
- *  Further reading:
- *  - P. P. Ewald,
- *    *Die Berechnung optischer und elektrostatischer Gitterpotentiale*,
- *    Ann. Phys. (64) 253-287, 1921
- *  - R. W. Hockney and J. W. Eastwood,
- *    *Computer simulation using particles*,
- *    IOP, London, 1988
- *  - M. Deserno and C. Holm,
- *    *How to mesh up Ewald sums I + II*,
- *    J. Chem. Phys. (109) 7678, 1998; (109) 7694, 1998
- *  - M. Deserno, C. Holm and H. J. Limbach,
- *    *How to mesh up Ewald sums*,
- *    in Molecular Dynamics on Parallel Computers,
- *    Ed. R. Esser et al., World Scientific, Singapore, 2000
- *  - M. Deserno,
- *    *Counterion condensation for rigid linear polyelectrolytes*,
- *    PhD Thesis, Universität Mainz, 2000
- *  - J. J. Cerda,
- *    *P3M for dipolar interactions*,
- *    J. Chem. Phys (129) 234104, 2008
+ *  Further reading: @cite ewald21a, @cite hockney88a, @cite deserno98a,
+ *  @cite deserno98b, @cite deserno00e, @cite deserno00b, @cite cerda08d.
  *
  *  Implementation in p3m.cpp.
  */
@@ -55,10 +37,10 @@
 
 #ifdef P3M
 
-#include "debug.hpp"
 #include "fft.hpp"
 #include "p3m-common.hpp"
 
+#include <ParticleRange.hpp>
 #include <utils/constants.hpp>
 #include <utils/math/AS_erfc_part.hpp>
 
@@ -76,7 +58,7 @@ struct p3m_data_struct {
   /** real space mesh (local) for CA/FFT.*/
   double *rs_mesh;
   /** k-space mesh (local) for k-space calculation and FFT.*/
-  double *ks_mesh;
+  std::vector<double> ks_mesh;
 
   /** number of charged particles (only on master node). */
   int sum_qpart;
@@ -86,30 +68,30 @@ struct p3m_data_struct {
   double square_sum_q;
 
   /** interpolation of the charge assignment function. */
-  double *int_caf[7];
+  std::array<std::vector<double>, 7> int_caf;
 
   /** position shift for calc. of first assignment mesh point. */
   double pos_shift;
   /** help variable for calculation of aliasing sums */
-  double *meshift_x;
-  double *meshift_y;
-  double *meshift_z;
+  std::vector<double> meshift_x;
+  std::vector<double> meshift_y;
+  std::vector<double> meshift_z;
 
   /** Spatial differential operator in k-space. We use an i*k differentiation.
    */
-  double *d_op[3];
+  std::array<std::vector<double>, 3> d_op;
   /** Force optimised influence function (k-space) */
-  double *g_force;
+  std::vector<double> g_force;
   /** Energy optimised influence function (k-space) */
-  double *g_energy;
+  std::vector<double> g_energy;
 
 #ifdef P3M_STORE_CA_FRAC
   /** number of charged particles on the node. */
   int ca_num;
   /** Charge fractions for mesh assignment. */
-  double *ca_frac;
+  std::vector<double> ca_frac;
   /** index of first mesh point for charge assignment. */
-  int *ca_fmp;
+  std::vector<int> ca_fmp;
 #endif
 
   /** number of permutations in k_space */
@@ -118,10 +100,10 @@ struct p3m_data_struct {
   /** send/recv mesh sizes */
   p3m_send_mesh sm;
 
-  /** Field to store grid points to send. */
-  double *send_grid;
-  /** Field to store grid points to recv */
-  double *recv_grid;
+  /** vector to store grid points to send. */
+  std::vector<double> send_grid;
+  /** vector to store grid points to recv */
+  std::vector<double> recv_grid;
 
   fft_data_struct fft;
 };
@@ -141,15 +123,12 @@ extern p3m_data_struct p3m;
  *  These parameters are stored in the @ref p3m object.
  *
  *  The function utilizes the analytic expression of the error estimate
- *  for the P3M method in the book of Hockney and Eastwood (Eqn. 8.23) in
+ *  for the P3M method in @cite hockney88a (eq. (8.23)) in
  *  order to obtain the rms error in the force for a system of N randomly
  *  distributed particles in a cubic box.
  *  For the real space error the estimate of Kolafa/Perram is used.
  *
  *  Parameter ranges if not given explicit values via p3m_set_tune_params():
- *  - @p r_cut_iL starts from (@ref min_local_box_l - @ref #skin) / (
- *    n * @ref box_l), with n an integer (this implies @p r_cut_iL is the
- *    largest cutoff in the system!)
  *  - @p mesh is set up such that the number of mesh points is equal to the
  *    number of charged particles
  *  - @p cao explores all possible values
@@ -178,14 +157,15 @@ int p3m_adaptive_tune(char **log);
 void p3m_init();
 
 /** Update @ref P3MParameters::alpha "alpha" and
- *  @ref P3MParameters::r_cut "r_cut" if @ref box_l changed
+ *  @ref P3MParameters::r_cut "r_cut" if box length changed
  */
 void p3m_scaleby_box_l();
 
 /** Compute the k-space part of forces and energies for the charge-charge
  *  interaction
  */
-double p3m_calc_kspace_forces(int force_flag, int energy_flag);
+double p3m_calc_kspace_forces(bool force_flag, bool energy_flag,
+                              const ParticleRange &particles);
 
 /** Compute the k-space part of the stress tensor **/
 void p3m_calc_kspace_stress(double *stress);
@@ -203,7 +183,7 @@ void p3m_count_charged_particles();
  *  in @ref p3m_data_struct::ca_fmp "ca_fmp" and @ref p3m_data_struct::ca_frac
  *  "ca_frac".
  */
-void p3m_charge_assign();
+void p3m_charge_assign(const ParticleRange &particles);
 
 /** Assign a single charge into the current charge grid.
  *
@@ -219,12 +199,9 @@ void p3m_assign_charge(double q, Utils::Vector3d &real_pos, int cp_cnt);
 /** Shrink wrap the charge grid */
 void p3m_shrink_wrap_charge_grid(int n_charges);
 
-/** Calculate real space contribution of Coulomb pair forces.
- *
- *  If NPT is compiled in, it returns the energy, which is needed for NPT.
- */
-inline void p3m_add_pair_force(double q1q2, double const *d, double dist,
-                               double *force) {
+/** Calculate real space contribution of Coulomb pair forces. */
+inline void p3m_add_pair_force(double q1q2, Utils::Vector3d const &d,
+                               double dist, Utils::Vector3d &force) {
   if (dist < p3m.params.r_cut) {
     if (dist > 0.0) {
       double adist = p3m.params.alpha * dist;
@@ -243,8 +220,7 @@ inline void p3m_add_pair_force(double q1q2, double const *d, double dist,
            2.0 * p3m.params.alpha * Utils::sqrt_pi_i() * exp(-adist * adist)) /
           (dist * dist);
 #endif
-      for (int j = 0; j < 3; j++)
-        force[j] += fac2 * d[j];
+      force += fac2 * d;
     }
   }
 }

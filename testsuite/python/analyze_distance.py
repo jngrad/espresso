@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2018 The ESPResSo project
+# Copyright (C) 2010-2019 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -14,16 +14,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import print_function
-import sys
 import unittest as ut
+import unittest_decorators as utx
 import numpy as np
 import espressomd
 
 BOX_L = 50.
 
 
-@ut.skipIf(not espressomd.has_features("LENNARD_JONES"), "Skipped because LENNARD_JONES turned off.")
+@utx.skipIfMissingFeatures("LENNARD_JONES")
 class AnalyzeDistance(ut.TestCase):
     system = espressomd.System(box_l=3 * [BOX_L])
     system.seed = system.cell_system.get_state()['n_nodes'] * [1234]
@@ -77,7 +76,7 @@ class AnalyzeDistance(ut.TestCase):
 
     def test_min_dist(self):
         # try five times
-        for i in range(5):
+        for _ in range(5):
             self.system.part[:].pos = np.random.random(
                 (len(self.system.part), 3)) * BOX_L
             self.assertAlmostEqual(self.system.analysis.min_dist(),
@@ -114,6 +113,6 @@ class AnalyzeDistance(ut.TestCase):
             self.assertAlmostEqual(self.system.analysis.dist_to(id=i),
                                    self.dist_to_id(i))
 
+
 if __name__ == "__main__":
-    print("Features: ", espressomd.features())
     ut.main()
