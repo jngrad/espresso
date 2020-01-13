@@ -860,9 +860,12 @@ class OifCellType:  # analogous to oif_template
         self.kv = kv
         self.kvisc = kvisc
         self.normal = normal
+        r_cut_global = 0.0
         if (ks != 0.0) or (kslin != 0.0) or (kb != 0.0) or (kal != 0.0) or (kvisc != 0.0):
             for angle in self.mesh.angles:
                 r0 = vec_distance(angle.B.get_pos(), angle.C.get_pos())
+                if r0 > r_cut_global:
+                    r_cut_global = r0
                 phi = angle_btw_triangles(
                     angle.A.get_pos(), angle.B.get_pos(), angle.C.get_pos(), angle.D.get_pos())
                 area1 = area_triangle(
@@ -871,15 +874,16 @@ class OifCellType:  # analogous to oif_template
                     angle.D.get_pos(), angle.B.get_pos(), angle.C.get_pos())
                 tmp_local_force_inter = OifLocalForces(
                     r0=r0, ks=ks, kslin=kslin, phi0=phi, kb=kb, A01=area1, A02=area2,
-                    kal=kal, kvisc=kvisc)
+                    kal=kal, kvisc=kvisc, r_cut=5.0*r0)
                 self.local_force_interactions.append(
                     [tmp_local_force_inter, [angle.A, angle.B, angle.C, angle.D]])
                 self.system.bonded_inter.add(tmp_local_force_inter)
+        r_cut_global *= 5.0
         if (kag != 0.0) or (kv != 0.0):
             surface = self.mesh.surface()
             volume = self.mesh.volume()
             self.global_force_interaction = OifGlobalForces(
-                A0_g=surface, ka_g=kag, V0=volume, kv=kv)
+                A0_g=surface, ka_g=kag, V0=volume, kv=kv, r_cut=r_cut_global)
             self.system.bonded_inter.add(self.global_force_interaction)
 
     def print_info(self):

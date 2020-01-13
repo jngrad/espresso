@@ -27,7 +27,7 @@
 
 /** Set parameters for the OIF global forces potential. */
 int oif_global_forces_set_params(int bond_type, double A0_g, double ka_g,
-                                 double V0, double kv);
+                                 double V0, double kv, double r_cut);
 
 /** Calculate the OIF global force.
  *  Called in force_calc() from within forces.cpp

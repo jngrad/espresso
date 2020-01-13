@@ -126,6 +126,9 @@ struct Oif_global_forces_bond_parameters {
   double V0;
   /** Volume coefficient */
   double kv;
+  /** cutoff bond length */
+  double r_cut;
+
 };
 
 /** Parameters for OIF local forces
@@ -151,6 +154,9 @@ struct Oif_local_forces_bond_parameters {
   double kal;
   /** Viscous coefficient of the triangle vertices */
   double kvisc;
+  /** cutoff bond length */
+  double r_cut;
+
 };
 
 /** Parameters for harmonic bond Potential */

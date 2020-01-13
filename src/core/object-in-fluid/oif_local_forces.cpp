@@ -26,7 +26,7 @@
 int oif_local_forces_set_params(int bond_type, double r0, double ks,
                                 double kslin, double phi0, double kb,
                                 double A01, double A02, double kal,
-                                double kvisc) {
+                                double kvisc, double r_cut) {
   if (bond_type < 0)
     return ES_ERROR;
 
@@ -41,6 +41,7 @@ int oif_local_forces_set_params(int bond_type, double r0, double ks,
   bonded_ia_params[bond_type].p.oif_local_forces.A02 = A02;
   bonded_ia_params[bond_type].p.oif_local_forces.kal = kal;
   bonded_ia_params[bond_type].p.oif_local_forces.kvisc = kvisc;
+  bonded_ia_params[bond_type].p.oif_local_forces.r_cut = r_cut;
 
   bonded_ia_params[bond_type].type = BONDED_IA_OIF_LOCAL_FORCES;
   bonded_ia_params[bond_type].num = 3;

@@ -3172,6 +3172,8 @@ class OifGlobalForces(BondedInteraction):
         Relaxed volume of the mesh
     kv : :obj:`float`
         Volume coefficient
+    r_cut : :obj:`float`
+        Cut_off of the local forces interaction
 
     """
 
@@ -3188,13 +3190,13 @@ class OifGlobalForces(BondedInteraction):
         """All parameters that can be set.
 
         """
-        return {"A0_g", "ka_g", "V0", "kv"}
+        return {"A0_g", "ka_g", "V0", "kv", "r_cut"}
 
     def required_keys(self):
         """Parameters that have to be set.
 
         """
-        return {"A0_g", "ka_g", "V0", "kv"}
+        return {"A0_g", "ka_g", "V0", "kv", "r_cut"}
 
     def set_default_params(self):
         """Sets parameters that are not required to their default value.
@@ -3207,11 +3209,12 @@ class OifGlobalForces(BondedInteraction):
             {"A0_g": bonded_ia_params[self._bond_id].p.oif_global_forces.A0_g,
              "ka_g": bonded_ia_params[self._bond_id].p.oif_global_forces.ka_g,
              "V0": bonded_ia_params[self._bond_id].p.oif_global_forces.V0,
-             "kv": bonded_ia_params[self._bond_id].p.oif_global_forces.kv}
+             "kv": bonded_ia_params[self._bond_id].p.oif_global_forces.kv,
+             "r_cut": bonded_ia_params[self._bond_id].p.oif_global_forces.r_cut}
 
     def _set_params_in_es_core(self):
         oif_global_forces_set_params(
-            self._bond_id, self._params["A0_g"], self._params["ka_g"], self._params["V0"], self._params["kv"])
+            self._bond_id, self._params["A0_g"], self._params["ka_g"], self._params["V0"], self._params["kv"], self._params["r_cut"])
 
 
 class OifLocalForces(BondedInteraction):
@@ -3241,6 +3244,8 @@ class OifLocalForces(BondedInteraction):
         Stretching coefficient of a triangle surface
     kvisc : :obj:`float`
         Viscous coefficient of the triangle vertices
+    r_cut : :obj:`float`
+        Cut_off of the local forces interaction
 
     """
 
@@ -3258,14 +3263,14 @@ class OifLocalForces(BondedInteraction):
 
         """
         return {"r0", "ks", "kslin", "phi0",
-                "kb", "A01", "A02", "kal", "kvisc"}
+                "kb", "A01", "A02", "kal", "kvisc", "r_cut"}
 
     def required_keys(self):
         """Parameters that have to be set.
 
         """
         return {"r0", "ks", "kslin", "phi0",
-                "kb", "A01", "A02", "kal", "kvisc"}
+                "kb", "A01", "A02", "kal", "kvisc", "r_cut"}
 
     def set_default_params(self):
         """Sets parameters that are not required to their default value.
@@ -3283,14 +3288,15 @@ class OifLocalForces(BondedInteraction):
              "A01": bonded_ia_params[self._bond_id].p.oif_local_forces.A01,
              "A02": bonded_ia_params[self._bond_id].p.oif_local_forces.A02,
              "kal": bonded_ia_params[self._bond_id].p.oif_local_forces.kal,
-             "kvisc": bonded_ia_params[self._bond_id].p.oif_local_forces.kvisc}
+             "kvisc": bonded_ia_params[self._bond_id].p.oif_local_forces.kvisc,
+             "r_cut": bonded_ia_params[self._bond_id].p.oif_local_forces.r_cut}
 
     def _set_params_in_es_core(self):
         oif_local_forces_set_params(
             self._bond_id, self._params["r0"], self._params["ks"],
             self._params["kslin"], self._params["phi0"], self._params["kb"],
             self._params["A01"], self._params["A02"], self._params["kal"],
-            self._params["kvisc"])
+            self._params["kvisc"], self._params["r_cut"])
 
 
 IF MEMBRANE_COLLISION == 1:

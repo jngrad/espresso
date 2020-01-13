@@ -41,7 +41,7 @@
 int oif_local_forces_set_params(int bond_type, double r0, double ks,
                                 double kslin, double phi0, double kb,
                                 double A01, double A02, double kal,
-                                double kvisc);
+                                double kvisc, double r_cut);
 
 /** @details see eq. (19) in @cite dupin07a */
 inline double KS(double lambda) {
@@ -86,6 +86,14 @@ calc_oif_local(Particle const &p2, Particle const &p1, Particle const &p3,
   auto const fp1 = fp2 + get_mi_vector(p1.r.p, fp2, box_geo);
   auto const fp3 = fp2 + get_mi_vector(p3.r.p, fp2, box_geo);
   auto const fp4 = fp2 + get_mi_vector(p4.r.p, fp2, box_geo);
+
+  auto const dx = fp2 - fp3;
+  auto const len = dx.norm();
+
+  if ((iaparams.p.oif_local_forces.r_cut > 0.0) && (len > iaparams.p.oif_local_forces.r_cut)) {
+    return {};
+  }
+
 
   Utils::Vector3d force1{}, force2{}, force3{}, force4{};
 //>>>>>>> espressomd/python
