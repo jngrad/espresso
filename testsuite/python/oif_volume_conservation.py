@@ -19,7 +19,7 @@ import unittest as ut
 import unittest_decorators as utx
 from tests_common import abspath
 
-
+import numpy as np
 @utx.skipIfMissingFeatures(["MEMBRANE_COLLISION", "OIF_LOCAL_FORCES",
                             "OIF_GLOBAL_FORCES"])
 class OifVolumeConservation(ut.TestCase):
@@ -30,7 +30,7 @@ class OifVolumeConservation(ut.TestCase):
     def test(self):
         import object_in_fluid as oif
 
-        system = espressomd.System(box_l=(10, 10, 10))
+        system = espressomd.System(box_l=(50, 50, 50))
         self.assertEqual(system.max_oif_objects, 0)
         system.time_step = 0.4
         system.cell_system.skin = 0.5
