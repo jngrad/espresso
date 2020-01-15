@@ -68,7 +68,7 @@ void init_forces(const ParticleRange &particles) {
   /* initialize ghost forces with zero
      set torque to zero for all and rescale quaternions
   */
-  for (auto &p : ghost_cells.particles()) {
+  for (auto &p : cell_structure.ghost_cells().particles()) {
     p.f = init_ghost_force(p);
   }
 }
@@ -116,8 +116,11 @@ void force_calc(CellStructure &cell_structure) {
   auto const dipole_cutoff = INACTIVE_CUTOFF;
 #endif
 
+  for (auto &p : particles) {
+    add_single_particle_force(p);
+  }
   short_range_loop(
-      [](Particle &p) { add_single_particle_force(p); },
+      [](Particle &p) {},
       [](Particle &p1, Particle &p2, Distance &d) {
         add_non_bonded_pair_force(p1, p2, d.vec21, sqrt(d.dist2), d.dist2);
 #ifdef COLLISION_DETECTION

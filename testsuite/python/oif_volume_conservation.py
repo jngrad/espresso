@@ -19,7 +19,7 @@ import unittest as ut
 import unittest_decorators as utx
 from tests_common import abspath
 
-
+import numpy as np
 @utx.skipIfMissingFeatures(["MEMBRANE_COLLISION", "OIF_LOCAL_FORCES",
                             "OIF_GLOBAL_FORCES"])
 class OifVolumeConservation(ut.TestCase):
@@ -30,7 +30,7 @@ class OifVolumeConservation(ut.TestCase):
     def test(self):
         import object_in_fluid as oif
 
-        system = espressomd.System(box_l=(10, 10, 10))
+        system = espressomd.System(box_l=(50, 50, 50))
         self.assertEqual(system.max_oif_objects, 0)
         system.time_step = 0.4
         system.cell_system.skin = 0.5
@@ -60,10 +60,25 @@ class OifVolumeConservation(ut.TestCase):
         diameter_stretched = cell0.diameter()
         print("stretched diameter = " + str(diameter_stretched))
 
+        # Apply non-isotropic deformation
+        system.part[:].pos = system.part[:].pos * np.array((0.96, 1.05, 1.02))
+
+        # Test that restoring forces net to zero and don't produce a torque
+        system.integrator.run(1)
+        np.testing.assert_allclose(
+            np.sum(
+                system.part[:].f, axis=0), [
+                0., 0., 0.], atol=1E-12)
+
+        total_torque = np.zeros(3)
+        for p in system.part:
+            total_torque += np.cross(p.pos, p.f)
+        np.testing.assert_allclose(total_torque, [0., 0., 0.], atol=2E-12)
+
         # main integration loop
         # OIF object is let to relax into relaxed shape of the sphere
-        for _ in range(3):
-            system.integrator.run(steps=90)
+        for _ in range(2):
+            system.integrator.run(steps=240)
             diameter_final = cell0.diameter()
             print("final diameter = " + str(diameter_final))
             self.assertAlmostEqual(
