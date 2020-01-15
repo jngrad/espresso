@@ -94,9 +94,8 @@ membrane_collision_pair_force(Particle const &p1, Particle const &p2,
       // for very small angles the force should not be applied - these happen at
       // the crossing of the boundary and would result in oscillation
       auto const product = out1 * out2;
-      auto const angle = acos(product);
 
-      if (fabs(angle) > SMALL_OIF_MEMBRANE_CUTOFF) {
+      if (1.0 - product > SMALL_OIF_MEMBRANE_CUTOFF) {
         auto const fac =
             sigmoid_force_r(ia_params.membrane.a, ia_params.membrane.n, r_off) /
             dist;
