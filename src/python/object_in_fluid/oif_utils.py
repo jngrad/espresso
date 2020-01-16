@@ -466,48 +466,53 @@ def output_vtk_cylinder(cyl_shape, n, out_file):
           filename for the output
 
     """
-    # length is the full height of the cylinder (note: used to be just half in the previous versions)
-    # only vertical cylinders are supported for now, i.e. with normal (0.0,
-    # 0.0, 1.0)
 
-    axis = cyl_shape.axis
-    length = cyl_shape.length
+    axis = cyl_shape.axis/norm(cyl_shape.axis)
+    length = cyl_shape.length  # length is the full height of the cylinder
     radius = cyl_shape.radius
     center = cyl_shape.center
 
-    check_axis = True
-    if axis[0] != 0.0:
-        check_axis = False
-    if axis[1] != 0.0:
-        check_axis = False
-    if axis[2] == 0.0:
-        check_axis = False
-    if check_axis is False:
-        raise Exception(
-            "output_vtk_cylinder: Output for this type of cylinder is not supported yet.")
-    axisZ = 1.0
+    # v1 and v2 are unit vectors perpendicular to axis and to each other
+    if axis[0] == 0.0 and axis[1] == 0.0 and axis[2] != 0.0:
+        # this is for vertical cylinder
+        v1 = (1, 0, 0)
+        v2 = (0, 1, 0)
+    else:
+        # these are for all other cylinders
+        v1 = (axis[1], -axis[0], 0)
+        v2 = np.cross(axis, v1)
 
     # setting points on perimeter
     alpha = 2 * np.pi / n
     points = 2 * n
 
-    # shift center to the bottom circle
-    p1 = center - length * np.array(axis) / 2.0
-
+    # write file header
     output_file = open(out_file, "w")
     output_file.write("# vtk DataFile Version 3.0\n")
     output_file.write("Data\n")
     output_file.write("ASCII\n")
     output_file.write("DATASET POLYDATA\n")
     output_file.write("POINTS " + str(points) + " float\n")
+
+    # shift center to the bottom circle
+    p1 = center - length * np.array(axis) / 2.0
+
     for i in range(0, n):
         output_file.write(
-            str(p1[0] + radius * np.cos(i * alpha)) + " " + str(p1[1] + radius * np.sin(i * alpha)) + " " +
-            str(p1[2]) + "\n")
+            str(p1[0] + radius * (np.cos(i * alpha) * v1[0] + np.sin(i * alpha) * v2[0])) + " " +
+            str(p1[1] + radius * (np.cos(i * alpha) * v1[1] + np.sin(i * alpha) * v2[1])) + " " +
+            str(p1[2] + radius * (np.cos(i * alpha) * v1[2] + np.sin(i * alpha) * v2[2])) + "\n")
+
+    # shift center to the top circle
+    p1 = center + length * np.array(axis) / 2.0
+
     for i in range(0, n):
         output_file.write(
-            str(p1[0] + radius * np.cos(i * alpha)) + " " + str(p1[1] + radius * np.sin(i * alpha)) + " " +
-            str(p1[2] + length * axisZ) + "\n")
+            str(p1[0] + radius * (np.cos(i * alpha) * v1[0] + np.sin(i * alpha) * v2[0])) + " " +
+            str(p1[1] + radius * (np.cos(i * alpha) * v1[1] + np.sin(i * alpha) * v2[1])) + " " +
+            str(p1[2] + radius * (np.cos(i * alpha) * v1[2] + np.sin(i * alpha) * v2[2])) + "\n")
+
+
     output_file.write(
         "POLYGONS " + str(n + 2) + " " + str(5 * n + (n + 1) * 2) + "\n")
 
