@@ -540,6 +540,15 @@ def soft_sphere_force(r, a, n, cutoff, offset=0):
         f = n * a * np.power(r - offset, -(n + 1))
     return f
 
+# Membrane-collision
+
+
+def membrane_collision_force(r, a, n, dir, cutoff, offset=0):
+    f = 0.
+    if (r > offset) and (r < offset + cutoff):
+        f = - a / (1 + np.exp(n * (r - offset))) / (r * np.linalg.norm(dir))
+    return f
+
 # Hertzian
 
 
