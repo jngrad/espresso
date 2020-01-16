@@ -21,6 +21,7 @@ import unittest_decorators as utx
 import espressomd
 import numpy as np
 from espressomd.interactions import OifOutDirection, MembraneCollisionInteraction
+import tests_common
 
 
 class OifMembraneCollision(ut.TestCase):
@@ -28,16 +29,19 @@ class OifMembraneCollision(ut.TestCase):
     system.periodicity = 0, 0, 0
     out_dir = OifOutDirection()
     system.bonded_inter.add(out_dir)
-    system.non_bonded_inter[1, 1].membrane_collision.set_params(
-        a=2.1, n=1.3, cutoff=2.5)
 
     system.time_step = 0.01
     system.cell_system.skin = 0
+    mc_a = 2.1
+    mc_n = 1.3
+    mc_cutoff = 2.5
+    system.non_bonded_inter[1, 1].membrane_collision.set_params(
+        a=mc_a, n=mc_n, cutoff=mc_cutoff)
 
     def create_first_group(self, system):
         """
         Prepares system to contain 4 particles. Of these, p1-p3
-        form a triangle and p2,p3,p4 form a trianlge sharing one edge.
+        form a triangle and p2,p3,p4 form a triangle sharing one edge.
         The OutDirection bond needs to be created on P4 with P1-P3 as partners.
         Returns a four instances of ParticleHandle.
         """
@@ -87,6 +91,7 @@ class OifMembraneCollision(ut.TestCase):
 
     def test_membrane_collision(self):
         """
+        Checks that membrane collision interaction force is calculated correctly
         """
 
         system = self.system
@@ -111,6 +116,16 @@ class OifMembraneCollision(ut.TestCase):
         # Check that force does not change
         system.integrator.run(0, recalc_forces=True)
         np.testing.assert_allclose(np.copy(extra2.f), force)
+
+        # Check that force is correct
+        direction = extra1.out_direction - extra2.out_direction
+        distance = np.linalg.norm(system.distance_vec(extra1, extra2))
+        force_ref = direction * tests_common.membrane_collision_force(r=distance, a=self.mc_a, n=self.mc_n, dir=direction,
+                                                              cutoff=self.mc_cutoff)
+        np.testing.assert_allclose(force, -force_ref)
+
+        # Check that force equals minus the counter-force
+        np.testing.assert_allclose(force, -np.copy(extra1.f))
 
 
 if __name__ == "__main__":
