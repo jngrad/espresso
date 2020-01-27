@@ -53,10 +53,6 @@ double recalc_maximal_cutoff_bonded() {
       max_cut_bonded =
           std::max(max_cut_bonded, bonded_ia_param.p.ibm_triel.maxDist);
       break;
-    case BONDED_IA_OIF_LOCAL_FORCES:
-      max_cut_bonded =
-          std::max(max_cut_bonded, bonded_ia_param.p.oif_local_forces.r_cut);
-      break;
     case BONDED_IA_OIF_GLOBAL_FORCES:
       max_cut_bonded =
           std::max(max_cut_bonded, bonded_ia_param.p.oif_global_forces.r_cut);

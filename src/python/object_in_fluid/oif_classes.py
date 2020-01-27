@@ -874,7 +874,7 @@ class OifCellType:  # analogous to oif_template
                     angle.D.get_pos(), angle.B.get_pos(), angle.C.get_pos())
                 tmp_local_force_inter = OifLocalForces(
                     r0=r0, ks=ks, kslin=kslin, phi0=phi, kb=kb, A01=area1, A02=area2,
-                    kal=kal, kvisc=kvisc, r_cut=5.0*r0)
+                    kal=kal, kvisc=kvisc)
                 self.local_force_interactions.append(
                     [tmp_local_force_inter, [angle.A, angle.B, angle.C, angle.D]])
                 self.system.bonded_inter.add(tmp_local_force_inter)

@@ -41,7 +41,7 @@
 int oif_local_forces_set_params(int bond_type, double r0, double ks,
                                 double kslin, double phi0, double kb,
                                 double A01, double A02, double kal,
-                                double kvisc, double r_cut);
+                                double kvisc);
 
 /** @details see eq. (19) in @cite dupin07a */
 inline double KS(double lambda) {
@@ -90,7 +90,7 @@ calc_oif_local(Particle const &p2, Particle const &p1, Particle const &p3,
   auto const dx = fp2 - fp3;
   auto const len = dx.norm();
 
-  if ((iaparams.p.oif_local_forces.r_cut > 0.0) && (len > iaparams.p.oif_local_forces.r_cut)) {
+  if ((len > 5.0*iaparams.p.oif_local_forces.r0)) {
     return {};
   }
 

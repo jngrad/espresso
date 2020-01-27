@@ -3244,8 +3244,6 @@ class OifLocalForces(BondedInteraction):
         Stretching coefficient of a triangle surface
     kvisc : :obj:`float`
         Viscous coefficient of the triangle vertices
-    r_cut : :obj:`float`
-        Cut_off of the local forces interaction
 
     """
 
@@ -3263,14 +3261,14 @@ class OifLocalForces(BondedInteraction):
 
         """
         return {"r0", "ks", "kslin", "phi0",
-                "kb", "A01", "A02", "kal", "kvisc", "r_cut"}
+                "kb", "A01", "A02", "kal", "kvisc"}
 
     def required_keys(self):
         """Parameters that have to be set.
 
         """
         return {"r0", "ks", "kslin", "phi0",
-                "kb", "A01", "A02", "kal", "kvisc", "r_cut"}
+                "kb", "A01", "A02", "kal", "kvisc"}
 
     def set_default_params(self):
         """Sets parameters that are not required to their default value.
@@ -3288,15 +3286,14 @@ class OifLocalForces(BondedInteraction):
              "A01": bonded_ia_params[self._bond_id].p.oif_local_forces.A01,
              "A02": bonded_ia_params[self._bond_id].p.oif_local_forces.A02,
              "kal": bonded_ia_params[self._bond_id].p.oif_local_forces.kal,
-             "kvisc": bonded_ia_params[self._bond_id].p.oif_local_forces.kvisc,
-             "r_cut": bonded_ia_params[self._bond_id].p.oif_local_forces.r_cut}
+             "kvisc": bonded_ia_params[self._bond_id].p.oif_local_forces.kvisc}
 
     def _set_params_in_es_core(self):
         oif_local_forces_set_params(
             self._bond_id, self._params["r0"], self._params["ks"],
             self._params["kslin"], self._params["phi0"], self._params["kb"],
             self._params["A01"], self._params["A02"], self._params["kal"],
-            self._params["kvisc"], self._params["r_cut"])
+            self._params["kvisc"])
 
 
 IF MEMBRANE_COLLISION == 1:

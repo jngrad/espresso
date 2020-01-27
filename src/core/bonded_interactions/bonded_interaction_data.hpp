@@ -154,8 +154,6 @@ struct Oif_local_forces_bond_parameters {
   double kal;
   /** Viscous coefficient of the triangle vertices */
   double kvisc;
-  /** cutoff bond length */
-  double r_cut;
 
 };
 
