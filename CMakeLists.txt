@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.11)
 include(FeatureSummary)
 include(GNUInstallDirs)
 project(ESPResSo)
@@ -536,26 +536,34 @@ endif(WITH_BENCHMARKS)
 
 # Walberla 
 if (WITH_WALBERLA)
-  include(AddExternal)
-  include(Download)
-  download(
-      libs/walberla
-      GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla
-      GIT_TAG master)
-  add_external(walberla
-      libs/walberla/src
-      WALBERLA_BUILD_TESTS=off
-      WALBERLA_BUILD_BENCHMARKS=off
-      WALBERLA_BUILD_TOOLS=off
-      WALBERLA_BUILD_TUTORIALS=off
-      WALBERLA_BUILD_SHOWCASES=off
-      WALBERLA_BUILD_DOC=off
-      CMAKE_POSITION_INDEPENDENT_CODE=on
-      )
+  include(FetchContent)
+  FetchContent_Declare(
+    walberla
+    GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla
+    GIT_TAG        master
+  )
+  FetchContent_Populate(walberla)
+  # patching walberla CMake
+  set(_walberla_patched_file "${walberla_SOURCE_DIR}/patched.log")
+  if (NOT EXISTS "${_walberla_patched_file}")
+    EXECUTE_PROCESS(COMMAND cmake -E chdir "${walberla_SOURCE_DIR}"
+                    patch -p0 -i "${PROJECT_SOURCE_DIR}/cmake/waLBerlaFunctions.patch"
+                    RESULT_VARIABLE PATCH_ERROR_CODE)
+    if(PATCH_ERROR_CODE)
+      message(FATAL_ERROR "Patching of waLBerla failed: ${PATCH_ERROR_CODE}")
+    endif()
+    file(WRITE "${_walberla_patched_file}" "")
+  endif()
+  set(WALBERLA_BUILD_TESTS off CACHE BOOL "")
+  set(WALBERLA_BUILD_BENCHMARKS off CACHE BOOL "")
+  set(WALBERLA_BUILD_TOOLS off CACHE BOOL "")
+  set(WALBERLA_BUILD_TUTORIALS off CACHE BOOL "")
+  set(WALBERLA_BUILD_SHOWCASES off CACHE BOOL "")
+  set(WALBERLA_BUILD_DOC off CACHE BOOL "")
+  set(CMAKE_POSITION_INDEPENDENT_CODE on CACHE BOOL "")
+  add_subdirectory("${walberla_SOURCE_DIR}" "${walberla_BINARY_DIR}")
   set(WALBERLA 1)
-  include(${CMAKE_BINARY_DIR}/external/walberla/_external_targets.cmake)
   set(WALBERLA_LIBS walberla::core walberla::domain_decomposition walberla::blockforest walberla::boundary walberla::core walberla::domain_decomposition walberla::field walberla::lbm walberla::timeloop walberla::vtk stdc++fs)
-  set(WALBERLA 1)
 endif(WITH_WALBERLA)
 
 #######################################################################
