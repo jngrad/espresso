@@ -43,6 +43,7 @@ class FixedPoint:
         self.y = pos[1]
         self.z = pos[2]
         self.id = id
+        self.neighbour_ids = []
 
     def get_pos(self):
         return [self.x, self.y, self.z]
@@ -68,6 +69,7 @@ class PartPoint:
         self.part_id = part_id  # because in adding bonds to the particles in OifCell
         # one needs to know the global id of the particle.
         self.id = id
+        self.neighbour_ids = []
 
     def get_pos(self):
         return self.part.pos
@@ -385,6 +387,14 @@ class Mesh:
                     self.points[pc], self.points[pa], self.points[pb], self.points[pd])
                 self.angles.append(tmp_angle)
 
+            # fills the list of neighbours for each mesh point
+            for point in self.points:
+                for edge in self.edges:
+                    if edge.A.id == point.id:
+                        point.neighbour_ids.append(edge.B.id)
+                    if edge.B.id == point.id:
+                        point.neighbour_ids.append(edge.A.id)
+            
             # creating list of three neighbors for membrane collision
             if normal is True:
                 for point in self.points:
@@ -456,6 +466,7 @@ class Mesh:
                     selected_neighbors = ThreeNeighbors(point, point, point)
                     self.neighbors.append(selected_neighbors)
 
+
     def copy(self, origin=None, particle_type=-1, particle_mass=1.0,
              rotate=None):
         mesh = Mesh(system=self.system)
@@ -477,7 +488,6 @@ class Mesh:
                  [cb * sc, ca * cc + sa * sb *
                   sc, sc * sb * ca - cc * sa],
                  [-sb, cb * sa, ca * cb]])
-
         for point in self.points:
             # PartPoints are created
             tmp_pos = point.get_pos()
@@ -495,6 +505,7 @@ class Mesh:
                 pos=tmp_pos, type=particle_type, mass=particle_mass, mol_id=particle_type)
             new_part = self.system.part[new_part_id]
             new_part_point = PartPoint(new_part, len(mesh.points), new_part_id)
+            new_part_point.neighbour_ids = point.neighbour_ids
             mesh.points.append(new_part_point)
         for edge in self.edges:
             new_edge = Edge(mesh.points[edge.A.id], mesh.points[edge.B.id])
@@ -1003,9 +1014,32 @@ class OifCell:
                      self.mesh.neighbors[p.id].B.part_id, self.mesh.neighbors[p.id].C.part_id))
 
         if exclusion_neighbours is True:
-            for edge in self.mesh.edges:
-                self.cell_type.system.part[edge.A.part_id].add_exclusion(edge.B.part_id)
-        
+#            for edge in self.mesh.edges:
+#                self.cell_type.system.part[edge.A.part_id].add_exclusion(edge.B.part_id)
+            for point in self.mesh.points:
+                excl = []
+                for id in point.neighbour_ids:
+                    if id > point.id:
+                        if id not in excl:
+                            excl.append(id)
+                    for idd in self.mesh.points[id].neighbour_ids:
+                        if idd > point.id:
+                            if idd not in excl:
+                                excl.append(idd)
+                for id in excl:
+                    self.cell_type.system.part[point.id].add_exclusion(id)
+                
+                
+                excl = []
+                for id in point.neighbour_ids:
+                    if id != point.id:
+                        if id not in excl:
+                            excl.append(id)
+                    for idd in self.mesh.points[id].neighbour_ids:
+                        if idd != point.id:
+                            if idd not in excl:
+                                excl.append(idd)
+                point.exclusions = excl                
 
     def set_rotation(self,ids=[]):
         if ids == []:
@@ -1243,6 +1277,54 @@ class OifCell:
         for t in self.mesh.triangles:
             output_file.write(
                 "3 " + str(t.A.id) + " " + str(t.B.id) + " " + str(t.C.id) + "\n")
+        output_file.close()
+
+    def output_vtk_point_data(self, file_name=None, point_id=None, data_type=None):
+        if file_name is None:
+            raise Exception(
+                "OifCell: No file_name provided for vtk output. Quitting")
+        if point_id is None:
+            raise Exception(
+                "OifCell: No point_id provided for vtk output. Quitting")
+        if point_id < 0 or point_id >= len(self.mesh.points):
+            raise Exception(
+                "OifCell: point_id is negative or larger than number of mesh points. Quitting")
+        if (data_type is not "neighbours" and data_type is not "exclusions"):
+            raise Exception(
+                "OifCell: Wrong data_type provided, exclusions or neighbours allowed. Quitting")
+                
+        n_points = len(self.mesh.points)
+        n_triangles = len(self.mesh.triangles)
+        output_file = open(file_name, "w")
+        output_file.write("# vtk DataFile Version 3.0\n")
+        output_file.write("Data\n")
+        output_file.write("ASCII\n")
+        output_file.write("DATASET POLYDATA\n")
+        output_file.write("POINTS " + str(n_points) + " float\n")
+        for p in self.mesh.points:
+            coords = p.get_pos()
+            output_file.write(custom_str(coords[0]) + " " + custom_str(
+                coords[1]) + " " + custom_str(coords[2]) + "\n")
+        output_file.write("TRIANGLE_STRIPS " + str(
+            n_triangles) + " " + str(4 * n_triangles) + "\n")
+        for t in self.mesh.triangles:
+            output_file.write(
+                "3 " + str(t.A.id) + " " + str(t.B.id) + " " + str(t.C.id) + "\n")
+        output_file.write("POINT_DATA " + str(n_points) + "\n")
+        output_file.write("SCALARS neighbours float 1\n")
+        output_file.write("LOOKUP_TABLE default\n")
+        tmp_point = self.mesh.points[point_id]
+        for p in self.mesh.points:
+            if p.id == point_id:
+                output_file.write("1.5\n")
+            else:
+                if p.id in tmp_point.neighbour_ids:
+                    output_file.write("1.0\n")                    
+                else:
+                    if (p.id in tmp_point.exclusions) and (data_type == "exclusions"):
+                        output_file.write("0.5\n")
+                    else:
+                        output_file.write("0.0\n")
         output_file.close()
 
     def output_vtk_pos_folded(self, file_name=None):
