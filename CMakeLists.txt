@@ -544,17 +544,6 @@ if (WITH_WALBERLA)
     GIT_TAG        master
   )
   FetchContent_Populate(walberla)
-  # patching walberla CMake
-  set(_walberla_patched_file "${walberla_SOURCE_DIR}/patched.log")
-  if (NOT EXISTS "${_walberla_patched_file}")
-    EXECUTE_PROCESS(COMMAND cmake -E chdir "${walberla_SOURCE_DIR}"
-                    patch -p0 -i "${PROJECT_SOURCE_DIR}/cmake/waLBerlaFunctions.patch"
-                    RESULT_VARIABLE PATCH_ERROR_CODE)
-    if(PATCH_ERROR_CODE)
-      message(FATAL_ERROR "Patching of waLBerla failed: ${PATCH_ERROR_CODE}")
-    endif()
-    file(WRITE "${_walberla_patched_file}" "")
-  endif()
   set(WALBERLA_BUILD_TESTS off CACHE BOOL "")
   set(WALBERLA_BUILD_BENCHMARKS off CACHE BOOL "")
   set(WALBERLA_BUILD_TOOLS off CACHE BOOL "")
@@ -564,7 +553,7 @@ if (WITH_WALBERLA)
   set(CMAKE_POSITION_INDEPENDENT_CODE on CACHE BOOL "")
   add_subdirectory("${walberla_SOURCE_DIR}" "${walberla_BINARY_DIR}")
   set(WALBERLA 1)
-  set(WALBERLA_LIBS walberla::core walberla::domain_decomposition walberla::blockforest walberla::boundary walberla::core walberla::domain_decomposition walberla::field walberla::lbm walberla::timeloop walberla::vtk stdc++fs)
+  set(WALBERLA_LIBS core domain_decomposition blockforest boundary core domain_decomposition field lbm timeloop vtk stdc++fs)
 endif(WITH_WALBERLA)
 
 #######################################################################
