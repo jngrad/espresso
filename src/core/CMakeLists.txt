@@ -182,7 +182,6 @@ if(WITH_UNIT_TESTS)
 endif(WITH_UNIT_TESTS)
 
 IF(WALBERLA)
-  add_dependencies(EspressoCore walberla-build)
   target_link_libraries(EspressoCore PUBLIC
     walberla::core walberla::domain_decomposition walberla::blockforest
     walberla::boundary walberla::core walberla::domain_decomposition

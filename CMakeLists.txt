@@ -542,6 +542,7 @@ if (WITH_WALBERLA)
     walberla
     GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla
     GIT_TAG        master
+    UPDATE_DISCONNECTED TRUE
     CMAKE_ARGS
       -D WALBERLA_BUILD_TESTS=off
       -D WALBERLA_BUILD_TESTS=off
@@ -551,7 +552,8 @@ if (WITH_WALBERLA)
       -D WALBERLA_BUILD_SHOWCASES=off
       -D WALBERLA_BUILD_DOC=off
       -D CMAKE_POSITION_INDEPENDENT_CODE=on
-    STEP_TARGETS build
+    STEP_TARGETS update
+    INSTALL_COMMAND ${CMAKE_COMMAND} -E echo "Skipping walberla installation"
     EXCLUDE_FROM_ALL TRUE
   )
   ExternalProject_Get_Property(walberla BINARY_DIR)
