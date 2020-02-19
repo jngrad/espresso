@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.10)
 include(FeatureSummary)
 include(GNUInstallDirs)
 project(ESPResSo)
@@ -536,6 +536,7 @@ endif(WITH_BENCHMARKS)
 
 # Walberla 
 if (WITH_WALBERLA)
+  cmake_minimum_required(VERSION 3.11)
   include(FetchContent)
   FetchContent_Declare(
     walberla
