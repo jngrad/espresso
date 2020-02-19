@@ -536,26 +536,38 @@ endif(WITH_BENCHMARKS)
 
 # Walberla 
 if (WITH_WALBERLA)
-  include(AddExternal)
-  include(Download)
-  download(
-      libs/walberla
-      GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla
-      GIT_TAG master)
-  add_external(walberla
-      libs/walberla/src
-      WALBERLA_BUILD_TESTS=off
-      WALBERLA_BUILD_BENCHMARKS=off
-      WALBERLA_BUILD_TOOLS=off
-      WALBERLA_BUILD_TUTORIALS=off
-      WALBERLA_BUILD_SHOWCASES=off
-      WALBERLA_BUILD_DOC=off
-      CMAKE_POSITION_INDEPENDENT_CODE=on
-      )
+  cmake_minimum_required(VERSION 3.11)
+  include(ExternalProject)
+  ExternalProject_Add(
+    walberla
+    GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla
+    GIT_TAG        master
+    CMAKE_ARGS
+      -D WALBERLA_BUILD_TESTS=off
+      -D WALBERLA_BUILD_TESTS=off
+      -D WALBERLA_BUILD_BENCHMARKS=off
+      -D WALBERLA_BUILD_TOOLS=off
+      -D WALBERLA_BUILD_TUTORIALS=off
+      -D WALBERLA_BUILD_SHOWCASES=off
+      -D WALBERLA_BUILD_DOC=off
+      -D CMAKE_POSITION_INDEPENDENT_CODE=on
+    STEP_TARGETS build
+    EXCLUDE_FROM_ALL TRUE
+  )
+  ExternalProject_Get_Property(walberla BINARY_DIR)
+  ExternalProject_Get_Property(walberla SOURCE_DIR)
+  set(WALBERLA_BINARY_DIR ${BINARY_DIR})
+  set(WALBERLA_SOURCE_DIR ${SOURCE_DIR})
   set(WALBERLA 1)
-  include(${CMAKE_BINARY_DIR}/external/walberla/_external_targets.cmake)
-  set(WALBERLA_LIBS walberla::core walberla::domain_decomposition walberla::blockforest walberla::boundary walberla::core walberla::domain_decomposition walberla::field walberla::lbm walberla::timeloop walberla::vtk stdc++fs)
-  set(WALBERLA 1)
+  file(MAKE_DIRECTORY "${WALBERLA_SOURCE_DIR}/src" "${WALBERLA_BINARY_DIR}/src")
+  foreach(walberla_lib core domain_decomposition blockforest boundary field lbm timeloop vtk)
+    add_library(walberla::${walberla_lib} STATIC IMPORTED)
+    set_target_properties(walberla::${walberla_lib} PROPERTIES
+      IMPORTED_LOCATION "${WALBERLA_BINARY_DIR}/src/${walberla_lib}/lib${walberla_lib}.a"
+      INTERFACE_INCLUDE_DIRECTORIES "${WALBERLA_SOURCE_DIR}/src"
+      INTERFACE_INCLUDE_DIRECTORIES "${WALBERLA_BINARY_DIR}/src"
+    )
+  endforeach(walberla_lib)
 endif(WITH_WALBERLA)
 
 #######################################################################

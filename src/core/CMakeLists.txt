@@ -182,9 +182,12 @@ if(WITH_UNIT_TESTS)
 endif(WITH_UNIT_TESTS)
 
 IF(WALBERLA)
-target_link_libraries(EspressoCore PUBLIC ${WALBERLA_LIBS})
-target_include_directories(EspressoCore PUBLIC ${CMAKE_SOURCE_DIR}/libs/walberla/src/src)
-target_include_directories(EspressoCore PUBLIC ${CMAKE_BINARY_DIR}/external/walberla/src)
+  add_dependencies(EspressoCore walberla-build)
+  target_link_libraries(EspressoCore PUBLIC
+    walberla::core walberla::domain_decomposition walberla::blockforest
+    walberla::boundary walberla::core walberla::domain_decomposition
+    walberla::field walberla::lbm walberla::timeloop walberla::vtk stdc++fs)
+  target_include_directories(EspressoCore PUBLIC "${WALBERLA_SOURCE_DIR}/src")
 endif(WALBERLA)
 
 add_subdirectory(shapes)
