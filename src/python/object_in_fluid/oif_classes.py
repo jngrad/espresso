@@ -1027,7 +1027,7 @@ class OifCell:
                             if idd not in excl:
                                 excl.append(idd)
                 for id in excl:
-                    self.cell_type.system.part[point.id].add_exclusion(id)
+                    self.cell_type.system.part[point.part_id].add_exclusion(self.mesh.points[id].part_id)
                 
                 
                 excl = []
