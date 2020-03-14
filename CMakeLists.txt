@@ -47,7 +47,7 @@ set(PROJECT_VERSION "4.2-dev")
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel Codecov." FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 # On Mac OS X, first look for other packages, then frameworks
@@ -70,7 +70,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
    OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  option(WITH_COVERAGE "Generate code coverage report" OFF)
+  if(CMAKE_BUILD_TYPE STREQUAL Codecov)
+    option(WITH_COVERAGE "Generate code coverage report" ON)
+  else()
+    option(WITH_COVERAGE "Generate code coverage report" OFF)
+  endif()
   option(WITH_ASAN "Build with address sanitizer" OFF)
   option(WITH_UBSAN "Build with undefined behavior sanitizer" OFF)
 endif()
@@ -314,6 +318,7 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTDIR}/espressomd")
 # drop 'lib' prefix from all libraries
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
+set(CMAKE_CXX_FLAGS_CODECOV "-O0 -g")
 if(WARNINGS_ARE_ERRORS)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 endif(WARNINGS_ARE_ERRORS)
