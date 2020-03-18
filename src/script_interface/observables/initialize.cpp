@@ -53,6 +53,7 @@
 #include "core/observables/ParticlePositions.hpp"
 #include "core/observables/ParticleVelocities.hpp"
 #include "core/observables/TotalForce.hpp"
+#include "core/observables/RDF.hpp"
 
 namespace ScriptInterface {
 namespace Observables {
@@ -173,6 +174,7 @@ void initialize() {
 #ifdef DPD
   REGISTER(DPDStress)
 #endif
+  REGISTER_PTYPE_PROFILE_OBS_1D(RDF);
 
   REGISTER(LBFluidStress);
   REGISTER_CYLPID_PROFILE_OBS(

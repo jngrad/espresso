@@ -19,6 +19,7 @@
 
 import unittest as ut
 import espressomd
+import espressomd.observables
 import numpy as np
 
 
@@ -60,6 +61,8 @@ class RdfTest(ut.TestCase):
 
         # All but the last bin should contain 2 particles
         np.testing.assert_allclose(parts_in_bin[:-1], 2.0)
+        rdf = espressomd.observables.RDF(types=[[0, 1],[0, 1]],min_x=r_min, max_x=r_max, n_x_bins=r_bins).calculate()
+        np.testing.assert_allclose(rdf[:-1], 2.0)
 
     def test_mixed(self):
         s = self.s
