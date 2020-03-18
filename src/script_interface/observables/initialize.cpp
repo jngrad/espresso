@@ -25,6 +25,8 @@
 #include "PidObservable.hpp"
 #include "PidProfileObservable.hpp"
 #include "ProfileObservable.hpp"
+#include "PtypeObservable.hpp"
+#include "PtypeProfileObservable.hpp"
 #include "config.hpp"
 #include "script_interface/ScriptInterface.hpp"
 
@@ -103,6 +105,27 @@ namespace Observables {
 #define REGISTER_CYLLB_OBS(name)                                               \
   ScriptInterface::register_new<                                               \
       CylindricalLBProfileObservable<::Observables::name>>(                    \
+      "Observables::" #name "");
+
+/** Register a @ref ScriptInterface::Observables::PtypeProfileObservable1d
+ *  "PtypeProfileObservable1d"
+ */
+#define REGISTER_PTYPE_PROFILE_OBS_1D(name)                                    \
+  ScriptInterface::register_new<PtypeProfileObservable1d<::Observables::name>>(\
+      "Observables::" #name "");
+
+/** Register a @ref ScriptInterface::Observables::PtypeProfileObservable2d
+ *  "PtypeProfileObservable2d"
+ */
+#define REGISTER_PTYPE_PROFILE_OBS_2D(name)                                    \
+  ScriptInterface::register_new<PtypeProfileObservable2d<::Observables::name>>(\
+      "Observables::" #name "");
+
+/** Register a @ref ScriptInterface::Observables::PtypeProfileObservable3d
+ *  "PtypeProfileObservable3d"
+ */
+#define REGISTER_PTYPE_PROFILE_OBS_3D(name)                                    \
+  ScriptInterface::register_new<PtypeProfileObservable3d<::Observables::name>>(\
       "Observables::" #name "");
 
 /** Register an @ref ScriptInterface::Observables::LBProfileObservable
