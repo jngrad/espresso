@@ -23,12 +23,12 @@
 
 namespace Observables {
 
-// Observable which acts on a given list of particle ids
-class ProfileObservable : virtual public Observable {
+/** 3D distribution function */
+class ProfileObservable3d : virtual public Observable {
 public:
-  ProfileObservable(double min_x, double max_x, double min_y, double max_y,
-                    double min_z, double max_z, int n_x_bins, int n_y_bins,
-                    int n_z_bins)
+  ProfileObservable3d(double min_x, double max_x, double min_y, double max_y,
+                      double min_z, double max_z, int n_x_bins, int n_y_bins,
+                      int n_z_bins)
       : min_x(min_x), max_x(max_x), min_y(min_y), max_y(max_y), min_z(min_z),
         max_z(max_z), n_x_bins(static_cast<size_t>(n_x_bins)),
         n_y_bins(static_cast<size_t>(n_y_bins)),
@@ -39,6 +39,36 @@ public:
   size_t n_x_bins, n_y_bins, n_z_bins;
   std::vector<size_t> shape() const override {
     return {n_x_bins, n_y_bins, n_z_bins};
+  }
+};
+
+using ProfileObservable = ProfileObservable3d;
+
+/** 2D distribution function */
+class ProfileObservable2d : virtual public Observable {
+public:
+  ProfileObservable2d(double min_x, double max_x, double min_y, double max_y,
+                      int n_x_bins, int n_y_bins)
+      : min_x(min_x), max_x(max_x), min_y(min_y), max_y(max_y),
+        n_x_bins(static_cast<size_t>(n_x_bins)),
+        n_y_bins(static_cast<size_t>(n_y_bins)) {}
+  double min_x, max_x;
+  double min_y, max_y;
+  size_t n_x_bins, n_y_bins;
+  std::vector<size_t> shape() const override {
+    return {n_x_bins, n_y_bins};
+  }
+};
+
+/** 1D distribution function */
+class ProfileObservable1d : virtual public Observable {
+public:
+  ProfileObservable1d(double min_x, double max_x, int n_x_bins)
+      : min_x(min_x), max_x(max_x), n_x_bins(static_cast<size_t>(n_x_bins)) {}
+  double min_x, max_x;
+  size_t n_x_bins;
+  std::vector<size_t> shape() const override {
+    return {n_x_bins};
   }
 };
 
