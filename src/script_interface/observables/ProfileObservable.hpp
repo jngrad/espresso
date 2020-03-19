@@ -36,66 +36,145 @@ class ProfileObservable
     : public AutoParameters<ProfileObservable<CoreObs>, Observable> {
 public:
   ProfileObservable() {
-    this->add_parameters(
-        {{"n_x_bins",
-          [this](const Variant &v) {
-            profile_observable()->n_x_bins =
-                static_cast<size_t>(get_value<int>(v));
-          },
-          [this]() {
-            return static_cast<int>(profile_observable()->n_x_bins);
-          }},
-         {"n_y_bins",
-          [this](const Variant &v) {
-            profile_observable()->n_y_bins =
-                static_cast<size_t>(get_value<int>(v));
-          },
-          [this]() {
-            return static_cast<int>(profile_observable()->n_y_bins);
-          }},
-         {"n_z_bins",
-          [this](const Variant &v) {
-            profile_observable()->n_z_bins =
-                static_cast<size_t>(get_value<int>(v));
-          },
-          [this]() {
-            return static_cast<int>(profile_observable()->n_z_bins);
-          }},
-         {"min_x",
-          [this](const Variant &v) {
-            profile_observable()->min_x = get_value<double>(v);
-          },
-          [this]() { return profile_observable()->min_x; }},
-         {"min_y",
-          [this](const Variant &v) {
-            profile_observable()->min_y = get_value<double>(v);
-          },
-          [this]() { return profile_observable()->min_y; }},
-         {"min_z",
-          [this](const Variant &v) {
-            profile_observable()->min_z = get_value<double>(v);
-          },
-          [this]() { return profile_observable()->min_z; }},
-         {"max_x",
-          [this](const Variant &v) {
-            profile_observable()->max_x = get_value<double>(v);
-          },
-          [this]() { return profile_observable()->max_x; }},
-         {"max_y",
-          [this](const Variant &v) {
-            profile_observable()->max_y = get_value<double>(v);
-          },
-          [this]() { return profile_observable()->max_y; }},
-         {"max_z",
-          [this](const Variant &v) {
-            profile_observable()->max_z = get_value<double>(v);
-          },
-          [this]() { return profile_observable()->max_z; }}});
+    this->add_parameters({
+        {"n_x_bins",
+         [this](const Variant &v) {
+           profile_observable()->n_x_bins =
+               static_cast<size_t>(get_value<int>(v));
+         },
+         [this]() { return static_cast<int>(profile_observable()->n_x_bins); }},
+        {"n_y_bins",
+         [this](const Variant &v) {
+           profile_observable()->n_y_bins =
+               static_cast<size_t>(get_value<int>(v));
+         },
+         [this]() { return static_cast<int>(profile_observable()->n_y_bins); }},
+        {"n_z_bins",
+         [this](const Variant &v) {
+           profile_observable()->n_z_bins =
+               static_cast<size_t>(get_value<int>(v));
+         },
+         [this]() { return static_cast<int>(profile_observable()->n_z_bins); }},
+        {"min_x",
+         [this](const Variant &v) {
+           profile_observable()->min_x = get_value<double>(v);
+         },
+         [this]() { return profile_observable()->min_x; }},
+        {"min_y",
+         [this](const Variant &v) {
+           profile_observable()->min_y = get_value<double>(v);
+         },
+         [this]() { return profile_observable()->min_y; }},
+        {"min_z",
+         [this](const Variant &v) {
+           profile_observable()->min_z = get_value<double>(v);
+         },
+         [this]() { return profile_observable()->min_z; }},
+        {"max_x",
+         [this](const Variant &v) {
+           profile_observable()->max_x = get_value<double>(v);
+         },
+         [this]() { return profile_observable()->max_x; }},
+        {"max_y",
+         [this](const Variant &v) {
+           profile_observable()->max_y = get_value<double>(v);
+         },
+         [this]() { return profile_observable()->max_y; }},
+        {"max_z",
+         [this](const Variant &v) {
+           profile_observable()->max_z = get_value<double>(v);
+         },
+         [this]() { return profile_observable()->max_z; }},
+    });
   }
 
   void construct(VariantMap const &params) override {}
 
   std::shared_ptr<::Observables::ProfileObservable> profile_observable() const {
+    return m_observable;
+  }
+
+  std::shared_ptr<::Observables::Observable> observable() const override {
+    return m_observable;
+  }
+
+private:
+  std::shared_ptr<CoreObs> m_observable;
+};
+
+template <typename CoreObs>
+class CylindricalProfileObservable
+    : public AutoParameters<CylindricalProfileObservable<CoreObs>, Observable> {
+public:
+  CylindricalProfileObservable() {
+    this->add_parameters({
+        {"center",
+         [this](const Variant &v) {
+           profile_observable()->center = get_value<::Utils::Vector3d>(v);
+         },
+         [this]() { return profile_observable()->center; }},
+        {"axis",
+         [this](const Variant &v) {
+           profile_observable()->axis = get_value<Utils::Vector3d>(v);
+         },
+         [this]() { return profile_observable()->axis; }},
+        {"n_r_bins",
+         [this](const Variant &v) {
+           profile_observable()->n_r_bins =
+               static_cast<size_t>(get_value<int>(v));
+         },
+         [this]() { return static_cast<int>(profile_observable()->n_r_bins); }},
+        {"n_phi_bins",
+         [this](const Variant &v) {
+           profile_observable()->n_phi_bins =
+               static_cast<size_t>(get_value<int>(v));
+         },
+         [this]() {
+           return static_cast<int>(profile_observable()->n_phi_bins);
+         }},
+        {"n_z_bins",
+         [this](const Variant &v) {
+           profile_observable()->n_z_bins =
+               static_cast<size_t>(get_value<int>(v));
+         },
+         [this]() { return static_cast<int>(profile_observable()->n_z_bins); }},
+        {"min_r",
+         [this](const Variant &v) {
+           profile_observable()->min_r = get_value<double>(v);
+         },
+         [this]() { return profile_observable()->min_r; }},
+        {"min_phi",
+         [this](const Variant &v) {
+           profile_observable()->min_phi = get_value<double>(v);
+         },
+         [this]() { return profile_observable()->min_phi; }},
+        {"min_z",
+         [this](const Variant &v) {
+           profile_observable()->min_z = get_value<double>(v);
+         },
+         [this]() { return profile_observable()->min_z; }},
+        {"max_r",
+         [this](const Variant &v) {
+           profile_observable()->max_r = get_value<double>(v);
+         },
+         [this]() { return profile_observable()->max_r; }},
+        {"max_phi",
+         [this](const Variant &v) {
+           profile_observable()->max_phi = get_value<double>(v);
+         },
+         [this]() { return profile_observable()->max_phi; }},
+        {"max_z",
+         [this](const Variant &v) {
+           profile_observable()->max_z = get_value<double>(v);
+         },
+         [this]() { return profile_observable()->max_z; }},
+    });
+  }
+
+  void construct(VariantMap const &params) override {}
+
+  std::shared_ptr<::Observables::CylindricalProfileObservable>
+  profile_observable() const {
     return m_observable;
   }
 
