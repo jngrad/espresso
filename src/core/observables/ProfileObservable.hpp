@@ -26,6 +26,7 @@ namespace Observables {
 namespace CoordSystem {
 struct Cartesian {};
 struct Cylindrical {};
+struct Spherical {};
 } // namespace CoordSystem
 
 /** Cartesian profile observable */
@@ -68,6 +69,25 @@ public:
   double min_z, max_z;
   // Number of bins for each coordinate.
   size_t n_r_bins, n_phi_bins, n_z_bins;
+};
+
+/** Spherical profile observable */
+template <>
+class ProfileObservable<CoordSystem::Spherical> : virtual public Observable {
+public:
+  ProfileObservable(double min_r, double max_r, double min_theta,
+                    double max_theta, double min_phi, double max_phi,
+                    int n_r_bins, int n_theta_bins, int n_phi_bins)
+      : min_r(min_r), max_r(max_r), min_theta(min_theta), max_theta(max_theta),
+        min_phi(min_phi), max_phi(max_phi),
+        n_r_bins(static_cast<size_t>(n_r_bins)),
+        n_theta_bins(static_cast<size_t>(n_theta_bins)),
+        n_phi_bins(static_cast<size_t>(n_phi_bins)) {}
+  double min_r, max_r;
+  double min_theta, max_theta;
+  double min_phi, max_phi;
+  // Number of bins for each coordinate.
+  size_t n_r_bins, n_theta_bins, n_phi_bins;
 };
 
 } // Namespace Observables
