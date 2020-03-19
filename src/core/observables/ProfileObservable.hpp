@@ -21,6 +21,11 @@
 
 #include "Observable.hpp"
 
+#include <algorithm>
+#include <array>
+#include <iterator>
+#include <vector>
+
 namespace Observables {
 
 namespace CoordSystem {
@@ -29,8 +34,32 @@ struct Cylindrical {};
 struct Spherical {};
 } // namespace CoordSystem
 
-/** Cartesian profile observable */
-template <typename coord_system = CoordSystem::Cartesian>
+namespace {
+/** Calculate the dimensionality of a profile observable.
+ *  @param x, y, z  Dimensionality of the profile, use 0 for deleted dimensions
+ *  @return A 3D, 2D or 1D vector with the number of bins.
+ */
+inline std::vector<size_t> profile_shape(size_t x, size_t y, size_t z) {
+  std::array<size_t, 3> const dimensions = {x, y, z};
+  std::vector<size_t> non_zero_dimensions;
+  std::copy_if(dimensions.begin(), dimensions.end(),
+               std::back_inserter(non_zero_dimensions),
+               [](auto value) { return value != 0; });
+  return non_zero_dimensions;
+}
+} // namespace
+
+/** Profile observable
+ *
+ *  Measures a scalar field or a vector field in various coordinate systems
+ *  (defaults to Cartesian). For measurements in 1D or 2D (e.g. an average
+ *  along an axis or in a plane), set the number of bins on the degenerate
+ *  axes to 0.
+ *
+ *  @tparam CoordinateSystem  Coordinate system of the profile, can be any
+ *                            of the structs defined in @ref CoordSystem
+ */
+template <typename CoordinateSystem = CoordSystem::Cartesian>
 class ProfileObservable : virtual public Observable {
 public:
   ProfileObservable(double min_x, double max_x, double min_y, double max_y,
@@ -45,7 +74,8 @@ public:
   double min_z, max_z;
   size_t n_x_bins, n_y_bins, n_z_bins;
   std::vector<size_t> shape() const override {
-    return {n_x_bins, n_y_bins, n_z_bins};
+    assert(n_x_bins + n_y_bins + n_z_bins != 0);
+    return profile_shape(n_x_bins, n_y_bins, n_z_bins);
   }
 };
 
@@ -69,6 +99,10 @@ public:
   double min_z, max_z;
   // Number of bins for each coordinate.
   size_t n_r_bins, n_phi_bins, n_z_bins;
+  std::vector<size_t> shape() const override {
+    assert(n_r_bins + n_phi_bins + n_z_bins != 0);
+    return profile_shape(n_r_bins, n_phi_bins, n_z_bins);
+  }
 };
 
 /** Spherical profile observable */
@@ -88,6 +122,10 @@ public:
   double min_phi, max_phi;
   // Number of bins for each coordinate.
   size_t n_r_bins, n_theta_bins, n_phi_bins;
+  std::vector<size_t> shape() const override {
+    assert(n_r_bins + n_theta_bins + n_phi_bins != 0);
+    return profile_shape(n_r_bins, n_theta_bins, n_phi_bins);
+  }
 };
 
 } // Namespace Observables
