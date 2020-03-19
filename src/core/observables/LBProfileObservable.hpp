@@ -26,7 +26,7 @@
 
 namespace Observables {
 
-class LBProfileObservable : public ProfileObservable {
+class LBProfileObservable : public ProfileObservable<> {
 public:
   LBProfileObservable(double sampling_delta_x, double sampling_delta_y,
                       double sampling_delta_z, double sampling_offset_x,

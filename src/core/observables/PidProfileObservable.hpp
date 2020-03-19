@@ -29,7 +29,7 @@
 namespace Observables {
 
 // Observable which acts on a given list of particle ids
-class PidProfileObservable : public PidObservable, public ProfileObservable {
+class PidProfileObservable : public PidObservable, public ProfileObservable<> {
 public:
   PidProfileObservable(std::vector<int> const &ids, int n_x_bins, int n_y_bins,
                        int n_z_bins, double min_x, double min_y, double min_z,

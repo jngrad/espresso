@@ -23,7 +23,13 @@
 
 namespace Observables {
 
+namespace CoordSystem {
+struct Cartesian {};
+struct Cylindrical {};
+} // namespace CoordSystem
+
 /** Cartesian profile observable */
+template <typename coord_system = CoordSystem::Cartesian>
 class ProfileObservable : virtual public Observable {
 public:
   ProfileObservable(double min_x, double max_x, double min_y, double max_y,
@@ -43,13 +49,13 @@ public:
 };
 
 /** Cylindrical profile observable */
-class CylindricalProfileObservable : virtual public Observable {
+template <>
+class ProfileObservable<CoordSystem::Cylindrical> : virtual public Observable {
 public:
-  CylindricalProfileObservable(Utils::Vector3d const &center,
-                               Utils::Vector3d const &axis, double min_r,
-                               double max_r, double min_phi, double max_phi,
-                               double min_z, double max_z, int n_r_bins,
-                               int n_phi_bins, int n_z_bins)
+  ProfileObservable(Utils::Vector3d const &center, Utils::Vector3d const &axis,
+                    double min_r, double max_r, double min_phi, double max_phi,
+                    double min_z, double max_z, int n_r_bins, int n_phi_bins,
+                    int n_z_bins)
       : center(center), axis(axis), min_r(min_r), max_r(max_r),
         min_phi(min_phi), max_phi(max_phi), min_z(min_z), max_z(max_z),
         n_r_bins(static_cast<size_t>(n_r_bins)),
