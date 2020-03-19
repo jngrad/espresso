@@ -24,6 +24,8 @@
 #include "ParamlessObservable.hpp"
 #include "PidObservable.hpp"
 #include "PidProfileObservable.hpp"
+#include "PtypeObservable.hpp"
+#include "PtypeProfileObservable.hpp"
 #include "config.hpp"
 #include "script_interface/ScriptInterface.hpp"
 
@@ -95,6 +97,14 @@ namespace Observables {
 #define REGISTER_CYLLB_OBS(name)                                               \
   ScriptInterface::register_new<                                               \
       CylindricalLBProfileObservable<::Observables::name>>(                    \
+      "Observables::" #name "");
+
+/** Register a @ref ScriptInterface::Observables::PtypeProfileObservable
+ *  "PtypeProfileObservable"
+ */
+#define REGISTER_PTYPE_PROFILE_OBS(name, coord)                                \
+  ScriptInterface::register_new<PtypeProfileObservable<                        \
+      ::Observables::name, ::Observables::CoordSystem::coord>>(                \
       "Observables::" #name "");
 
 /** Register an @ref ScriptInterface::Observables::LBProfileObservable
