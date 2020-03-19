@@ -24,7 +24,6 @@
 #include "ParamlessObservable.hpp"
 #include "PidObservable.hpp"
 #include "PidProfileObservable.hpp"
-#include "ProfileObservable.hpp"
 #include "config.hpp"
 #include "script_interface/ScriptInterface.hpp"
 
@@ -66,13 +65,6 @@ namespace Observables {
  */
 #define REGISTER(name)                                                         \
   ScriptInterface::register_new<name>("Observables::" #name "");
-
-/** Register a @ref ScriptInterface::Observables::ProfileObservable
- *  "ProfileObservable"
- */
-#define REGISTER_PROFILE_OBS(name)                                             \
-  ScriptInterface::register_new<ProfileObservable<::Observables::name>>(       \
-      "Observables::" #name "");
 
 /** Register a @ref ScriptInterface::Observables::PidObservable
  *  "PidObservable"
