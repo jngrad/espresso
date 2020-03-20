@@ -24,7 +24,8 @@
 #include <vector>
 
 namespace Observables {
-class FluxDensityProfile : public PidProfileObservable {
+
+class FluxDensityProfile : public PidProfileObservable<> {
 public:
   using PidProfileObservable::PidProfileObservable;
   std::vector<size_t> shape() const override {

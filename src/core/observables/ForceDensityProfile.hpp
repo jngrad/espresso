@@ -25,7 +25,7 @@
 
 namespace Observables {
 
-class ForceDensityProfile : public PidProfileObservable {
+class ForceDensityProfile : public PidProfileObservable<> {
 public:
   using PidProfileObservable::PidProfileObservable;
   std::vector<size_t> shape() const override {

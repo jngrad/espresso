@@ -28,15 +28,31 @@
 
 namespace Observables {
 
-// Observable which acts on a given list of particle ids
-class PidProfileObservable : public PidObservable, public ProfileObservable<> {
+/** Distribution function which acts on a given list of particle ids */
+template <typename CoordinateSystem = CoordSystem::Cartesian>
+class PidProfileObservable : public PidObservable,
+                             public ProfileObservable<CoordinateSystem> {
 public:
   PidProfileObservable(std::vector<int> const &ids, int n_x_bins, int n_y_bins,
                        int n_z_bins, double min_x, double min_y, double min_z,
                        double max_x, double max_y, double max_z)
-      : PidObservable(ids),
-        ProfileObservable(min_x, max_x, min_y, max_y, min_z, max_z, n_x_bins,
-                          n_y_bins, n_z_bins) {}
+      : PidObservable(ids), ProfileObservable<CoordinateSystem>(
+                                min_x, max_x, min_y, max_y, min_z, max_z,
+                                n_x_bins, n_y_bins, n_z_bins) {}
+};
+
+template <>
+class PidProfileObservable<CoordSystem::Cylindrical>
+    : public PidObservable, public ProfileObservable<CoordSystem::Cylindrical> {
+public:
+  PidProfileObservable(std::vector<int> const &ids,
+                       Utils::Vector3d const &center,
+                       Utils::Vector3d const &axis, int n_x_bins, int n_y_bins,
+                       int n_z_bins, double min_x, double min_y, double min_z,
+                       double max_x, double max_y, double max_z)
+      : PidObservable(ids), ProfileObservable<CoordSystem::Cylindrical>(
+                                center, axis, min_x, max_x, min_y, max_y, min_z,
+                                max_z, n_x_bins, n_y_bins, n_z_bins) {}
 };
 
 } // Namespace Observables

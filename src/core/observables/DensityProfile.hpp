@@ -25,7 +25,7 @@
 
 namespace Observables {
 
-class DensityProfile : public PidProfileObservable {
+class DensityProfile : public PidProfileObservable<> {
 public:
   using PidProfileObservable::PidProfileObservable;
 

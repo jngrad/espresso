@@ -19,13 +19,14 @@
 #ifndef OBSERVABLES_CYLINDRICALVELOCITYPROFILE_HPP
 #define OBSERVABLES_CYLINDRICALVELOCITYPROFILE_HPP
 
-#include "CylindricalPidProfileObservable.hpp"
+#include "PidProfileObservable.hpp"
 #include <utils/Histogram.hpp>
 
 namespace Observables {
-class CylindricalVelocityProfile : public CylindricalPidProfileObservable {
+class CylindricalVelocityProfile
+    : public PidProfileObservable<CoordSystem::Cylindrical> {
 public:
-  using CylindricalPidProfileObservable::CylindricalPidProfileObservable;
+  using PidProfileObservable::PidProfileObservable;
 
   std::vector<double>
   evaluate(Utils::Span<const Particle *const> particles) const override {

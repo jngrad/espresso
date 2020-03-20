@@ -30,7 +30,8 @@
 namespace ScriptInterface {
 namespace Observables {
 
-template <typename CoreObs, typename CoordinateSystem>
+template <typename CoreObs,
+          typename CoordinateSystem = ::Observables::CoordSystem::Cartesian>
 class PtypeProfileObservable
     : public AutoParameters<PtypeProfileObservable<CoreObs, CoordinateSystem>,
                             Observable> {

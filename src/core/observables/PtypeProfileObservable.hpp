@@ -33,6 +33,7 @@ template <typename CoordinateSystem = CoordSystem::Cartesian>
 class PtypeProfileObservable : public PtypeObservable,
                                public ProfileObservable<CoordinateSystem> {
 public:
+  template <class... Args>
   PtypeProfileObservable(std::vector<std::vector<int>> const &types,
                          int n_x_bins, int n_y_bins, int n_z_bins, double min_x,
                          double max_x, double min_y, double max_y, double min_z,

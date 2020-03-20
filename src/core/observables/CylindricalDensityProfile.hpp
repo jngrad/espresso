@@ -19,14 +19,15 @@
 #ifndef OBSERVABLES_CYLINDRICALDENSITYPROFILE_HPP
 #define OBSERVABLES_CYLINDRICALDENSITYPROFILE_HPP
 
-#include "CylindricalPidProfileObservable.hpp"
+#include "PidProfileObservable.hpp"
 #include <utils/Histogram.hpp>
 #include <utils/math/coordinate_transformation.hpp>
 
 namespace Observables {
-class CylindricalDensityProfile : public CylindricalPidProfileObservable {
+class CylindricalDensityProfile
+    : public PidProfileObservable<CoordSystem::Cylindrical> {
 public:
-  using CylindricalPidProfileObservable::CylindricalPidProfileObservable;
+  using PidProfileObservable::PidProfileObservable;
   std::vector<double>
   evaluate(Utils::Span<const Particle *const> particles) const override {
     std::array<size_t, 3> n_bins{{n_r_bins, n_phi_bins, n_z_bins}};

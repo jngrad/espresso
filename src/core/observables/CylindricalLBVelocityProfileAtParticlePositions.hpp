@@ -19,13 +19,13 @@
 #ifndef OBSERVABLES_CYLINDRICALLBVELOCITYPROFILEATPARTICLEPOSITIONS_HPP
 #define OBSERVABLES_CYLINDRICALLBVELOCITYPROFILEATPARTICLEPOSITIONS_HPP
 
-#include "CylindricalPidProfileObservable.hpp"
+#include "PidProfileObservable.hpp"
 
 namespace Observables {
 class CylindricalLBVelocityProfileAtParticlePositions
-    : public CylindricalPidProfileObservable {
+    : public PidProfileObservable<CoordSystem::Cylindrical> {
 public:
-  using CylindricalPidProfileObservable::CylindricalPidProfileObservable;
+  using PidProfileObservable::PidProfileObservable;
 
   std::vector<double>
   evaluate(Utils::Span<const Particle *const> particles) const override;
