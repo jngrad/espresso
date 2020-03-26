@@ -842,3 +842,29 @@ class CylindricalLBVelocityProfile(Observable):
 
     """
     _so_name = "Observables::CylindricalLBVelocityProfile"
+
+
+@script_interface_register
+class RDF(Observable):
+
+    """Calculates a radial distribution function.
+    The result is normalized by the spherical bin shell, the total number
+    of particle pairs and the system volume.
+
+    type_list_a : lists of :obj:`int`
+        Left :attr:`~espressomd.particle_data.ParticleHandle.type` of the rdf.
+    type_list_b : lists of :obj:`int`, optional
+        Right :attr:`~espressomd.particle_data.ParticleHandle.type` of the rdf.
+    min_r : :obj:`float`
+        Minimal distance to consider.
+    max_r : :obj:`float`
+        Maximal distance to consider.
+    n_r_bins : :obj:`int`
+        Number of bins.
+
+    Returns
+    -------
+    (``n_r_bins``,) :obj:`ndarray` of :obj:`float`
+
+    """
+    _so_name = "Observables::RDF"

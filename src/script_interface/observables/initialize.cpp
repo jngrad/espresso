@@ -25,6 +25,7 @@
 #include "PidObservable.hpp"
 #include "PidProfileObservable.hpp"
 #include "ProfileObservable.hpp"
+#include "RDF.hpp"
 #include "config.hpp"
 #include "script_interface/ScriptInterface.hpp"
 
@@ -50,6 +51,7 @@
 #include "core/observables/ParticleForces.hpp"
 #include "core/observables/ParticlePositions.hpp"
 #include "core/observables/ParticleVelocities.hpp"
+#include "core/observables/RDF.hpp"
 #include "core/observables/TotalForce.hpp"
 
 namespace ScriptInterface {
@@ -150,6 +152,8 @@ void initialize() {
 #ifdef DPD
   REGISTER(DPDStress)
 #endif
+  ScriptInterface::register_new<TypesObservable<::Observables::RDF>>(
+      "Observables::RDF");
 
   REGISTER(LBFluidStress);
   REGISTER_CYLPID_PROFILE_OBS(
