@@ -19,6 +19,8 @@
 #ifndef OBSERVABLES_PROFILEOBSERVABLE_HPP
 #define OBSERVABLES_PROFILEOBSERVABLE_HPP
 
+#include <algorithm>
+
 #include "Observable.hpp"
 
 namespace Observables {
@@ -39,6 +41,20 @@ public:
   size_t n_x_bins, n_y_bins, n_z_bins;
   std::vector<size_t> shape() const override {
     return {n_x_bins, n_y_bins, n_z_bins};
+  }
+  /** Calculate the bin edges for each dimension */
+  std::vector<std::vector<double>> edges() {
+    std::vector<std::vector<double>> profile_edges(3);
+    profile_edges[0] = std::vector<double>(n_x_bins);
+    profile_edges[1] = std::vector<double>(n_y_bins);
+    profile_edges[2] = std::vector<double>(n_z_bins);
+    std::generate(profile_edges[0].begin(), profile_edges[0].end(),
+                  [n = 1, bin_size = (max_x - min_x) / n_x_bins] () mutable { return bin_size * n++; });
+    std::generate(profile_edges[1].begin(), profile_edges[1].end(),
+                  [n = 1, bin_size = (max_y - min_y) / n_y_bins] () mutable { return bin_size * n++; });
+    std::generate(profile_edges[2].begin(), profile_edges[2].end(),
+                  [n = 1, bin_size = (max_z - min_z) / n_z_bins] () mutable { return bin_size * n++; });
+    return profile_edges;
   }
 };
 
@@ -64,6 +80,20 @@ public:
   size_t n_r_bins, n_phi_bins, n_z_bins;
   std::vector<size_t> shape() const override {
     return {n_r_bins, n_phi_bins, n_z_bins};
+  }
+  /** Calculate the bin edges for each dimension */
+  std::vector<std::vector<double>> edges() {
+    std::vector<std::vector<double>> profile_edges(3);
+    profile_edges[0] = std::vector<double>(n_r_bins);
+    profile_edges[1] = std::vector<double>(n_phi_bins);
+    profile_edges[2] = std::vector<double>(n_z_bins);
+    std::generate(profile_edges[0].begin(), profile_edges[0].end(),
+                  [n = 1, bin_size = (max_r - min_r) / n_r_bins] () mutable { return bin_size * n++; });
+    std::generate(profile_edges[1].begin(), profile_edges[1].end(),
+                  [n = 1, bin_size = (max_phi - min_phi) / n_phi_bins] () mutable { return bin_size * n++; });
+    std::generate(profile_edges[2].begin(), profile_edges[2].end(),
+                  [n = 1, bin_size = (max_z - min_z) / n_z_bins] () mutable { return bin_size * n++; });
+    return profile_edges;
   }
 };
 

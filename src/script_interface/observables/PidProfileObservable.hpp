@@ -97,7 +97,9 @@ public:
           [this](const Variant &v) {
             pid_profile_observable()->max_z = get_value<double>(v);
           },
-          [this]() { return pid_profile_observable()->max_z; }}});
+          [this]() { return pid_profile_observable()->max_z; }},
+         {"edges",
+          [this]() { return pid_profile_observable()->edges(); }}});
   }
 
   void construct(VariantMap const &params) override {
