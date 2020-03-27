@@ -97,9 +97,7 @@ public:
           [this](const Variant &v) {
             pid_profile_observable()->max_z = get_value<double>(v);
           },
-          [this]() { return pid_profile_observable()->max_z; }},
-         {"edges",
-          [this]() { return pid_profile_observable()->edges(); }}});
+          [this]() { return pid_profile_observable()->max_z; }}});
   }
 
   void construct(VariantMap const &params) override {
@@ -108,6 +106,14 @@ public:
                               double, double, double, double, double>(
             params, "ids", "n_x_bins", "n_y_bins", "n_z_bins", "min_x", "min_y",
             "min_z", "max_x", "max_y", "max_z");
+  }
+
+  Variant call_method(std::string const &method,
+                      VariantMap const &parameters) override {
+    if (method == "edges") {
+      return pid_profile_observable()->edges();
+    }
+    return {};
   }
 
   std::shared_ptr<::Observables::PidProfileObservable>

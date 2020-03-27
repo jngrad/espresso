@@ -118,8 +118,6 @@ public:
            cylindrical_pid_profile_observable()->max_z = get_value<double>(v);
          },
          [this]() { return cylindrical_pid_profile_observable()->max_z; }},
-        {"edges",
-         [this]() { return cylindrical_pid_profile_observable()->edges(); }},
     });
   };
 
@@ -131,6 +129,14 @@ public:
             params, "ids", "center", "axis", "n_r_bins", "n_phi_bins",
             "n_z_bins", "min_r", "min_phi", "min_z", "max_r", "max_phi",
             "max_z");
+  }
+
+  Variant call_method(std::string const &method,
+                      VariantMap const &parameters) override {
+    if (method == "edges") {
+      return cylindrical_pid_profile_observable()->edges();
+    }
+    return {};
   }
 
   std::shared_ptr<::Observables::Observable> observable() const override {
