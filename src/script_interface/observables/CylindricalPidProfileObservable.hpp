@@ -37,7 +37,9 @@ template <typename CoreObs>
 class CylindricalPidProfileObservable
     : public AutoParameters<CylindricalPidProfileObservable<CoreObs>,
                             Observable> {
+  using Base = AutoParameters<CylindricalPidProfileObservable<CoreObs>, Observable>;
 public:
+  using Base::Base;
   static_assert(std::is_base_of<::Observables::CylindricalPidProfileObservable,
                                 CoreObs>::value,
                 "");
@@ -133,8 +135,16 @@ public:
 
   Variant call_method(std::string const &method,
                       VariantMap const &parameters) override {
+    auto const &retval = Base::call_method(method, parameters);
+    if (retval != Variant{}) {
+      return retval;
+    }
     if (method == "edges") {
-      return cylindrical_pid_profile_observable()->edges();
+      auto const a = cylindrical_pid_profile_observable()->edges();
+      std::vector<Variant> v;
+      for (auto &item : a)
+             v.push_back(Variant{item});
+      return v;
     }
     return {};
   }

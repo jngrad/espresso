@@ -36,7 +36,9 @@ namespace Observables {
 template <typename CoreObs>
 class PidProfileObservable
     : public AutoParameters<PidProfileObservable<CoreObs>, Observable> {
+  using Base = AutoParameters<PidProfileObservable<CoreObs>, Observable>;
 public:
+  using Base::Base;
   PidProfileObservable() {
     this->add_parameters(
         {{"ids",
@@ -110,8 +112,16 @@ public:
 
   Variant call_method(std::string const &method,
                       VariantMap const &parameters) override {
-    if (method == "edges") {
-      return pid_profile_observable()->edges();
+    auto const &retval = Base::call_method(method, parameters);
+    if (retval != Variant{}) {
+      return retval;
+    }
+      if (method == "edges") {
+      auto const a = pid_profile_observable()->edges();
+      std::vector<Variant> v;
+      for (auto &item : a)
+	      v.push_back(Variant{item});
+      return v;
     }
     return {};
   }
