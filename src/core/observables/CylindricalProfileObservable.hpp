@@ -36,15 +36,15 @@ public:
       : ProfileObservableBase(min_r, max_r, min_phi, max_phi, min_z, max_z,
                               n_r_bins, n_phi_bins, n_z_bins),
         center(center), axis(axis) {}
-  double &min_r = m_limits[0].first;
-  double &max_r = m_limits[0].second;
-  double &min_phi = m_limits[1].first;
-  double &max_phi = m_limits[1].second;
-  double &min_z = m_limits[2].first;
-  double &max_z = m_limits[2].second;
-  size_t &n_r_bins = m_bins[0];
-  size_t &n_phi_bins = m_bins[1];
-  size_t &n_z_bins = m_bins[2];
+  double min_r() const { return m_limits[0].first; }
+  double max_r() const { return m_limits[0].second; }
+  double min_phi() const { return m_limits[1].first; }
+  double max_phi() const { return m_limits[1].second; }
+  double min_z() const { return m_limits[2].first; }
+  double max_z() const { return m_limits[2].second; }
+  size_t n_r_bins() const { return m_bins[0]; }
+  size_t n_phi_bins() const { return m_bins[1]; }
+  size_t n_z_bins() const { return m_bins[2]; }
   Utils::Vector3d center;
   Utils::Vector3d axis;
 };

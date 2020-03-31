@@ -31,15 +31,15 @@ public:
                     int n_z_bins)
       : ProfileObservableBase(min_x, max_x, min_y, max_y, min_z, max_z,
                               n_x_bins, n_y_bins, n_z_bins) {}
-  double &min_x = m_limits[0].first;
-  double &max_x = m_limits[0].second;
-  double &min_y = m_limits[1].first;
-  double &max_y = m_limits[1].second;
-  double &min_z = m_limits[2].first;
-  double &max_z = m_limits[2].second;
-  size_t &n_x_bins = m_bins[0];
-  size_t &n_y_bins = m_bins[1];
-  size_t &n_z_bins = m_bins[2];
+  double min_x() const { return m_limits[0].first; }
+  double max_x() const { return m_limits[0].second; }
+  double min_y() const { return m_limits[1].first; }
+  double max_y() const { return m_limits[1].second; }
+  double min_z() const { return m_limits[2].first; }
+  double max_z() const { return m_limits[2].second; }
+  size_t n_x_bins() const { return m_bins[0]; }
+  size_t n_y_bins() const { return m_bins[1]; }
+  size_t n_z_bins() const { return m_bins[2]; }
 };
 
 } // Namespace Observables
