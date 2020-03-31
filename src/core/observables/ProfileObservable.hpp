@@ -19,18 +19,24 @@
 #ifndef OBSERVABLES_PROFILEOBSERVABLE_HPP
 #define OBSERVABLES_PROFILEOBSERVABLE_HPP
 
-#include "ProfileObservableBase.hpp"
+#include "Observable.hpp"
+#include "Profile.hpp"
 
 namespace Observables {
 
 /** Cartesian profile observable */
-class ProfileObservable : virtual public ProfileObservableBase {
+class ProfileObservable : public Profile, virtual public Observable {
 public:
   ProfileObservable(double min_x, double max_x, double min_y, double max_y,
                     double min_z, double max_z, int n_x_bins, int n_y_bins,
                     int n_z_bins)
-      : ProfileObservableBase(min_x, max_x, min_y, max_y, min_z, max_z,
-                              n_x_bins, n_y_bins, n_z_bins) {}
+      : Profile(min_x, max_x, min_y, max_y, min_z, max_z, n_x_bins, n_y_bins,
+                n_z_bins) {}
+
+  std::vector<size_t> shape() const override {
+    return {m_bins.begin(), m_bins.end()};
+  }
+
   double &min_x = m_limits[0].first;
   double &max_x = m_limits[0].second;
   double &min_y = m_limits[1].first;

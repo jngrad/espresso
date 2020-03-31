@@ -19,23 +19,29 @@
 #ifndef OBSERVABLES_CYLINDRICALPROFILEOBSERVABLE_HPP
 #define OBSERVABLES_CYLINDRICALPROFILEOBSERVABLE_HPP
 
-#include "ProfileObservableBase.hpp"
+#include "Observable.hpp"
+#include "Profile.hpp"
 
 #include <utils/Vector.hpp>
 
 namespace Observables {
 
 /** Cylindrical profile observable */
-class CylindricalProfileObservable : virtual public ProfileObservableBase {
+class CylindricalProfileObservable : public Profile, virtual public Observable {
 public:
   CylindricalProfileObservable(Utils::Vector3d const &center,
                                Utils::Vector3d const &axis, double min_r,
                                double max_r, double min_phi, double max_phi,
                                double min_z, double max_z, int n_r_bins,
                                int n_phi_bins, int n_z_bins)
-      : ProfileObservableBase(min_r, max_r, min_phi, max_phi, min_z, max_z,
-                              n_r_bins, n_phi_bins, n_z_bins),
+      : Profile(min_r, max_r, min_phi, max_phi, min_z, max_z, n_r_bins,
+                n_phi_bins, n_z_bins),
         center(center), axis(axis) {}
+
+  std::vector<size_t> shape() const override {
+    return {m_bins.begin(), m_bins.end()};
+  }
+
   double &min_r = m_limits[0].first;
   double &max_r = m_limits[0].second;
   double &min_phi = m_limits[1].first;
