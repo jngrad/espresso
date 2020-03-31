@@ -68,62 +68,32 @@ public:
          },
          [this]() { return cylindrical_pid_profile_observable()->axis; }},
         {"n_r_bins",
-         [this](const Variant &v) {
-           cylindrical_pid_profile_observable()->n_r_bins =
-               static_cast<size_t>(get_value<int>(v));
-         },
          [this]() {
            return static_cast<int>(
-               cylindrical_pid_profile_observable()->n_r_bins);
+               cylindrical_pid_profile_observable()->n_r_bins());
          }},
         {"n_phi_bins",
-         [this](const Variant &v) {
-           cylindrical_pid_profile_observable()->n_phi_bins =
-               static_cast<size_t>(get_value<int>(v));
-         },
          [this]() {
            return static_cast<int>(
-               cylindrical_pid_profile_observable()->n_phi_bins);
+               cylindrical_pid_profile_observable()->n_phi_bins());
          }},
         {"n_z_bins",
-         [this](const Variant &v) {
-           cylindrical_pid_profile_observable()->n_z_bins =
-               static_cast<size_t>(get_value<int>(v));
-         },
          [this]() {
            return static_cast<int>(
-               cylindrical_pid_profile_observable()->n_z_bins);
+               cylindrical_pid_profile_observable()->n_z_bins());
          }},
         {"min_r",
-         [this](const Variant &v) {
-           cylindrical_pid_profile_observable()->min_r = get_value<double>(v);
-         },
-         [this]() { return cylindrical_pid_profile_observable()->min_r; }},
+         [this]() { return cylindrical_pid_profile_observable()->min_r(); }},
         {"min_phi",
-         [this](const Variant &v) {
-           cylindrical_pid_profile_observable()->min_phi = get_value<double>(v);
-         },
-         [this]() { return cylindrical_pid_profile_observable()->min_phi; }},
+         [this]() { return cylindrical_pid_profile_observable()->min_phi(); }},
         {"min_z",
-         [this](const Variant &v) {
-           cylindrical_pid_profile_observable()->min_z = get_value<double>(v);
-         },
-         [this]() { return cylindrical_pid_profile_observable()->min_z; }},
+         [this]() { return cylindrical_pid_profile_observable()->min_z(); }},
         {"max_r",
-         [this](const Variant &v) {
-           cylindrical_pid_profile_observable()->max_r = get_value<double>(v);
-         },
-         [this]() { return cylindrical_pid_profile_observable()->max_r; }},
+         [this]() { return cylindrical_pid_profile_observable()->max_r(); }},
         {"max_phi",
-         [this](const Variant &v) {
-           cylindrical_pid_profile_observable()->max_phi = get_value<double>(v);
-         },
-         [this]() { return cylindrical_pid_profile_observable()->max_phi; }},
+         [this]() { return cylindrical_pid_profile_observable()->max_phi(); }},
         {"max_z",
-         [this](const Variant &v) {
-           cylindrical_pid_profile_observable()->max_z = get_value<double>(v);
-         },
-         [this]() { return cylindrical_pid_profile_observable()->max_z; }},
+         [this]() { return cylindrical_pid_profile_observable()->max_z(); }},
     });
   };
 

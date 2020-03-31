@@ -45,8 +45,8 @@ public:
   }
   void calculate_sampling_positions() {
     sampling_positions = Utils::get_cylindrical_sampling_positions(
-        m_limits[0], m_limits[1], m_limits[2], n_r_bins, n_phi_bins,
-        n_z_bins, sampling_density);
+        m_limits[0], m_limits[1], m_limits[2], n_r_bins(), n_phi_bins(),
+        n_z_bins(), sampling_density);
     double theta;
     Utils::Vector3d rotation_axis;
     for (auto &p : sampling_positions) {

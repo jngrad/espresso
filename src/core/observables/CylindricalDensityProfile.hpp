@@ -40,7 +40,7 @@ public:
     return histogram.get_histogram();
   }
   std::vector<size_t> shape() const override {
-    return {n_r_bins, n_phi_bins, n_z_bins};
+    return {n_r_bins(), n_phi_bins(), n_z_bins()};
   }
 };
 
