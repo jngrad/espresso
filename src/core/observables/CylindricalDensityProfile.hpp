@@ -29,11 +29,7 @@ public:
   using CylindricalPidProfileObservable::CylindricalPidProfileObservable;
   std::vector<double>
   evaluate(Utils::Span<const Particle *const> particles) const override {
-    std::array<size_t, 3> n_bins{{n_r_bins, n_phi_bins, n_z_bins}};
-    std::array<std::pair<double, double>, 3> limits{
-        {std::make_pair(min_r, max_r), std::make_pair(min_phi, max_phi),
-         std::make_pair(min_z, max_z)}};
-    Utils::CylindricalHistogram<double, 3> histogram(n_bins, 1, limits);
+    Utils::CylindricalHistogram<double, 3> histogram(m_bins, 1, m_limits);
 
     for (auto p : particles) {
       histogram.update(Utils::transform_coordinate_cartesian_to_cylinder(
