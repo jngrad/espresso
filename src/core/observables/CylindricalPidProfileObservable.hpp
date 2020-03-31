@@ -19,11 +19,16 @@
 #ifndef OBSERVABLES_CYLINDRICALPIDPROFILEOBSERVABLE_HPP
 #define OBSERVABLES_CYLINDRICALPIDPROFILEOBSERVABLE_HPP
 
+#include <vector>
+
+#include <utils/Vector.hpp>
+
 #include "CylindricalProfileObservable.hpp"
 #include "PidObservable.hpp"
 
 namespace Observables {
 
+/** Cylindrical profile observable which acts on a given list of particle ids */
 class CylindricalPidProfileObservable : public PidObservable,
                                         public CylindricalProfileObservable {
 public:

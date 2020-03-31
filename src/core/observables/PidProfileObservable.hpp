@@ -19,16 +19,14 @@
 #ifndef OBSERVABLES_PIDPROFILEOBSERVABLE_HPP
 #define OBSERVABLES_PIDPROFILEOBSERVABLE_HPP
 
-#include "Observable.hpp"
-#include "Particle.hpp"
+#include <vector>
+
 #include "PidObservable.hpp"
 #include "ProfileObservable.hpp"
-#include "integrate.hpp"
-#include <vector>
 
 namespace Observables {
 
-// Observable which acts on a given list of particle ids
+/** Cartesian profile observable which acts on a given list of particle ids */
 class PidProfileObservable : public PidObservable, public ProfileObservable {
 public:
   PidProfileObservable(std::vector<int> const &ids, int n_x_bins, int n_y_bins,

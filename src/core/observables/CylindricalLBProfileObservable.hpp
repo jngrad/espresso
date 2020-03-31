@@ -26,16 +26,16 @@
 #include <utils/math/vec_rotate.hpp>
 #include <utils/sampling.hpp>
 
-using Utils::Vector3d;
-
 namespace Observables {
 
+/** Cylindrical LB profile observable */
 class CylindricalLBProfileObservable : public CylindricalProfileObservable {
 public:
-  CylindricalLBProfileObservable(Vector3d const &center, Vector3d const &axis,
-                                 int n_r_bins, int n_phi_bins, int n_z_bins,
-                                 double min_r, double min_phi, double min_z,
-                                 double max_r, double max_phi, double max_z,
+  CylindricalLBProfileObservable(Utils::Vector3d const &center,
+                                 Utils::Vector3d const &axis, int n_r_bins,
+                                 int n_phi_bins, int n_z_bins, double min_r,
+                                 double min_phi, double min_z, double max_r,
+                                 double max_phi, double max_z,
                                  double sampling_density)
       : CylindricalProfileObservable(center, axis, min_r, max_r, min_phi,
                                      max_phi, min_z, max_z, n_r_bins,
@@ -49,19 +49,19 @@ public:
         std::make_pair(min_z, max_z), n_r_bins, n_phi_bins, n_z_bins,
         sampling_density);
     double theta;
-    Vector3d rotation_axis;
+    Utils::Vector3d rotation_axis;
     for (auto &p : sampling_positions) {
       auto p_cart = Utils::transform_coordinate_cylinder_to_cartesian(
-          p, Vector3d{{0.0, 0.0, 1.0}});
+          p, Utils::Vector3d{{0.0, 0.0, 1.0}});
       // We have to rotate the coordinates since the utils function assumes
       // z-axis symmetry.
       std::tie(theta, rotation_axis) =
-          Utils::rotation_params(Vector3d{{0.0, 0.0, 1.0}}, axis);
+          Utils::rotation_params(Utils::Vector3d{{0.0, 0.0, 1.0}}, axis);
       p_cart = Utils::vec_rotate(rotation_axis, theta, p_cart);
       p = p_cart + center;
     }
   }
-  std::vector<Vector3d> sampling_positions;
+  std::vector<Utils::Vector3d> sampling_positions;
   double sampling_density;
 };
 } // Namespace Observables

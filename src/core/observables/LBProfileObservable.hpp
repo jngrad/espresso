@@ -28,6 +28,7 @@
 
 namespace Observables {
 
+/** Cartesian LB profile observable */
 class LBProfileObservable : public ProfileObservable {
 public:
   LBProfileObservable(double sampling_delta_x, double sampling_delta_y,
