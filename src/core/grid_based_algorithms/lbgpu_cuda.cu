@@ -30,7 +30,6 @@
 extern int this_node;
 
 #ifdef CUDA
-#include <boost/optional.hpp>
 #include <cassert>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,6 +44,7 @@ extern int this_node;
 #include "grid_based_algorithms/lb_boundaries.hpp"
 #include "grid_based_algorithms/lbgpu.cuh"
 #include "grid_based_algorithms/lbgpu.hpp"
+#include "grid_based_algorithms/OptionalCounter.hpp"
 
 #include <utils/Array.hpp>
 #include <utils/Counter.hpp>
@@ -125,8 +125,8 @@ __device__ __constant__ LB_parameters_gpu para[1];
 /*********************************************************/
 
 static constexpr float sqrt12 = 3.4641016151377544f;
-boost::optional<Utils::Counter<uint64_t>> rng_counter_coupling_gpu;
-boost::optional<Utils::Counter<uint64_t>> rng_counter_fluid_gpu;
+OptionalCounter rng_counter_coupling_gpu;
+OptionalCounter rng_counter_fluid_gpu;
 
 /** Transformation from 1d array-index to xyz
  *  @param[in]  index   Node index / thread index
