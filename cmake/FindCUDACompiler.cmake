@@ -16,8 +16,11 @@ if(CUDA_NVCC_EXECUTABLE STREQUAL CMAKE_CXX_COMPILER)
                     ERROR_VARIABLE CUDA_DIR_STRING)
     string(REGEX REPLACE "^.*Found CUDA installation: ([^,]+).*\$" "\\1"
                          CUDA_DIR "${CUDA_DIR_STRING}")
-    string(REGEX REPLACE "^.*Found CUDA installation: .* version ([0-9]+).*\$"
+    string(REGEX REPLACE "^.*Found CUDA installation: .* version ([0-9\.]+|unknown).*\$"
                          "\\1" CUDA_VERSION "${CUDA_DIR_STRING}")
+    if(NOT CUDA_DIR_STRING MATCHES "Found CUDA installation" OR CUDA_VERSION STREQUAL "unknown")
+      message(FATAL_ERROR "Clang found no compatible CUDA library.")
+    endif()
     message(STATUS "Found CUDA version: ${CUDA_VERSION}")
     message(STATUS "Found CUDA installation: ${CUDA_DIR}")
     if(CUDA_VERSION VERSION_LESS 7.0)
