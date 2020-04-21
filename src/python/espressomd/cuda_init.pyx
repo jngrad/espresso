@@ -81,6 +81,13 @@ cdef class CudaInitHandle:
 IF CUDA:
     def gpu_available():
         return cuda_get_n_gpus() > 0
+
+    def assert_gpu_available():
+        if not gpu_available():
+            raise RuntimeError("No CUDA-capable GPU available")
 ELSE:
     def gpu_available():
         return False
+
+    def assert_gpu_available():
+        raise Exception("CUDA is not compiled in")

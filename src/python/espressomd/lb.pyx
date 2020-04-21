@@ -26,6 +26,7 @@ from libc cimport stdint
 from .actors cimport Actor
 from . cimport cuda_init
 from . import cuda_init
+from .cuda_init import assert_gpu_available
 from . import utils
 from .utils import array_locked, is_valid_type
 from .utils cimport Vector3i, Vector3d, Vector6d, Vector19d, make_array_locked
@@ -326,6 +327,10 @@ IF CUDA:
         Initialize the lattice-Boltzmann method for hydrodynamic flow using the GPU.
 
         """
+
+        def __init__(self, *args, **kwargs):
+            assert_gpu_available()
+            super().__init__(*args, **kwargs)
 
         def _set_lattice_switch(self):
             lb_lbfluid_set_lattice_switch(GPU)

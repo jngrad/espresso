@@ -22,6 +22,7 @@ IF CUDA:
     from .lb cimport lb_lbnode_is_index_valid
     from .lb cimport lb_lbfluid_set_lattice_switch
     from .lb cimport GPU
+from .cuda_init import assert_gpu_available
 from . import utils
 import tempfile
 import shutil
@@ -35,6 +36,10 @@ IF ELECTROKINETICS:
         Creates the electrokinetic method using the GPU unit.
 
         """
+
+        def __init__(self, *args, **kwargs):
+            assert_gpu_available()
+            super().__init__(*args, **kwargs)
 
         def __getitem__(self, key):
             if isinstance(key, tuple) or isinstance(

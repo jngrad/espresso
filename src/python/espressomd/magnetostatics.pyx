@@ -19,6 +19,7 @@
 include "myconfig.pxi"
 from .utils import requires_experimental_features
 from .actors cimport Actor
+from .cuda_init import assert_gpu_available
 IF SCAFACOS == 1:
     from .scafacos import ScafacosConnector
     from . cimport scafacos
@@ -381,6 +382,10 @@ IF DIPOLES == 1:
 
             """
 
+            def __init__(self, *args, **kwargs):
+                assert_gpu_available()
+                super().__init__(*args, **kwargs)
+
             def default_params(self):
                 return {}
 
@@ -414,6 +419,10 @@ IF DIPOLES == 1:
             TODO: If the system has periodic boundaries, the minimum image
             convention is applied.
             """
+
+            def __init__(self, *args, **kwargs):
+                assert_gpu_available()
+                super().__init__(*args, **kwargs)
 
             def default_params(self):
                 return {"epssq": 100.0,

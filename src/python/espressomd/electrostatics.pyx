@@ -20,6 +20,7 @@ from cython.operator cimport dereference
 include "myconfig.pxi"
 from .actors cimport Actor
 from .grid cimport box_geo
+from .cuda_init import assert_gpu_available
 import numpy as np
 IF SCAFACOS == 1:
     from .scafacos import ScafacosConnector
@@ -373,6 +374,7 @@ IF P3M == 1:
             """
 
             def __init__(self, *args, **kwargs):
+                assert_gpu_available()
                 super().__init__(*args, **kwargs)
 
             def validate_params(self):
@@ -575,6 +577,7 @@ IF ELECTROSTATICS and MMM1D_GPU:
         cdef int resp
 
         def __cinit__(self):
+            assert_gpu_available()
             self.interface = EspressoSystemInterface._Instance()
             default_params = self.default_params()
             self.thisptr = new Mmm1dgpuForce(dereference(self.interface), 0.0, default_params["maxPWerror"])
