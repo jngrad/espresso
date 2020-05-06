@@ -65,11 +65,6 @@ std::vector<int> nbhood(PartCfg &partCfg, const Utils::Vector3d &pos,
  */
 double distto(PartCfg &partCfg, const Utils::Vector3d &pos, int pid = -1);
 
-/** Append particles' positions in %p partCfg to #configs
- *  @param partCfg  @copybrief PartCfg
- */
-void analyze_append(PartCfg &partCfg);
-
 /** Calculate the distribution of particles around others.
  *
  *  Calculates the distance distribution of particles with types given

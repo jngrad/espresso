@@ -33,7 +33,7 @@ std::vector<double> RDF::operator()() const {
   boost::transform(particles1, particles_ptrs1.begin(),
                    [](auto const &p) { return std::addressof(p); });
 
-  if (ids2().size()) {
+  if (!ids2().empty()) {
     std::vector<Particle> particles2 = fetch_particles(ids2());
     std::vector<const Particle *> particles_ptrs2(particles2.size());
     boost::transform(particles2, particles_ptrs2.begin(),
@@ -51,7 +51,7 @@ RDF::evaluate(Utils::Span<const Particle *const> particles1,
   auto const inv_bin_width = 1.0 / bin_width;
   std::vector<double> res(n_values(), 0.0);
   long int cnt = 0;
-  bool const mixed_flag = particles2.size();
+  bool const mixed_flag = !ids2().empty();
   for (auto it = particles1.begin(); it != particles1.end(); ++it) {
     for (auto jt = mixed_flag ? particles2.begin() : std::next(it),
               jend = mixed_flag ? particles2.end() : particles1.end();
