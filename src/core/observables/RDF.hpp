@@ -38,8 +38,7 @@ class RDF : public Observable {
   std::vector<int> m_ids2;
 
   virtual std::vector<double>
-  evaluate(Utils::Span<const Particle *const> particles1,
-           Utils::Span<const Particle *const> particles2) const;
+  evaluate(Utils::Span<const std::pair<const Particle *const, const Particle *const>> particle_pairs) const;
 
 public:
   // Range of the profile.

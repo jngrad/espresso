@@ -25,46 +25,51 @@
 
 #include <boost/range/algorithm/transform.hpp>
 #include <cmath>
+#include <iostream>
+#include <chrono>
+using namespace std::chrono;
 
 namespace Observables {
 std::vector<double> RDF::operator()() const {
+auto t1 = std::chrono::high_resolution_clock::now();
   std::vector<Particle> particles1 = fetch_particles(ids1());
-  std::vector<const Particle *> particles_ptrs1(particles1.size());
-  boost::transform(particles1, particles_ptrs1.begin(),
-                   [](auto const &p) { return std::addressof(p); });
-
+  std::vector<Particle> particles2;
   if (!ids2().empty()) {
-    std::vector<Particle> particles2 = fetch_particles(ids2());
-    std::vector<const Particle *> particles_ptrs2(particles2.size());
-    boost::transform(particles2, particles_ptrs2.begin(),
-                     [](auto const &p) { return std::addressof(p); });
-    return this->evaluate(particles_ptrs1, particles_ptrs2);
+    particles2 = fetch_particles(ids2());
   }
-
-  return this->evaluate(particles_ptrs1, {});
-}
-
-std::vector<double>
-RDF::evaluate(Utils::Span<const Particle *const> particles1,
-              Utils::Span<const Particle *const> particles2) const {
-  auto const bin_width = (max_r - min_r) / static_cast<double>(n_r_bins);
-  auto const inv_bin_width = 1.0 / bin_width;
-  std::vector<double> res(n_values(), 0.0);
-  long int cnt = 0;
+  std::vector<std::pair<const Particle *const,const Particle *const>> particle_pairs_ptrs;
   bool const mixed_flag = !ids2().empty();
   for (auto it = particles1.begin(); it != particles1.end(); ++it) {
     for (auto jt = mixed_flag ? particles2.begin() : std::next(it),
               jend = mixed_flag ? particles2.end() : particles1.end();
          jt != jend; ++jt) {
-      auto const p1 = *it, p2 = *jt;
-      auto const dist = get_mi_vector(p1->r.p, p2->r.p, box_geo).norm();
-      if (dist > min_r && dist < max_r) {
+      auto const p1 = std::addressof(*it), p2 = std::addressof(*jt);
+      if (p1 != p2)
+            particle_pairs_ptrs.emplace_back(std::pair<const Particle *const, const Particle *const>{p1 ,p2});
+    }
+  }
+  auto ret = this->evaluate(particle_pairs_ptrs);
+  auto t2 = std::chrono::high_resolution_clock::now();
+  std::cout << "obs: " << std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count() << " " << ids1().size() << " " << ids2().size() << std::endl;
+
+  return ret;
+}
+
+std::vector<double>
+RDF::evaluate(Utils::Span<const std::pair<const Particle *const, const Particle *const>> particle_pairs) const {
+  auto const bin_width = (max_r - min_r) / static_cast<double>(n_r_bins);
+  auto const inv_bin_width = 1.0 / bin_width;
+  std::vector<double> res(n_values(), 0.0);
+  long int cnt = 0;
+  for (auto pair: particle_pairs) {
+    auto const p1 = pair.first, p2 = pair.second;
+    auto const dist = get_mi_vector(p1->r.p, p2->r.p, box_geo).norm();
+    if (dist > min_r && dist < max_r) {
         auto const ind =
             static_cast<int>(std::floor((dist - min_r) * inv_bin_width));
         res[ind]++;
       }
       cnt++;
-    }
   }
   if (cnt == 0)
     return res;
