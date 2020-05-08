@@ -51,6 +51,27 @@ void for_each_pair(ForwardRange &&rng, BinaryOp &&op) {
   using std::end;
   for_each_pair(begin(rng), end(rng), std::forward<BinaryOp>(op));
 }
-} // namespace Utils
 
+/**
+ * @brief Execute op for each pair of elements between (first1, last1] and
+ * (first2, last2].
+ *
+ * Identical elements are excluded. Pair are traversed ordered, so that
+ * for op(*it, *jt), it holds that distance(it - first) < distance(jt - first),
+ * and distance(it_n - first) < distance(it_n+1 - first) for consecutive calls.
+ */
+template <typename ForwardIterator, typename BinaryOp>
+void for_each_pair(ForwardIterator first1, ForwardIterator last1,
+                   ForwardIterator first2, ForwardIterator last2, BinaryOp op) {
+  while (first1 != last1) {
+    for (auto it = first2; it != last2; ++it) {
+      if (*it != *first1) {
+        op(*first1, *it);
+      }
+    }
+
+    ++first1;
+  }
+}
+} // namespace Utils
 #endif

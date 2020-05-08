@@ -21,13 +21,18 @@
 #include "fetch_particles.hpp"
 #include "particle_data.hpp"
 
+#include <utils/for_each_pair.hpp>
 #include <utils/math/int_pow.hpp>
 
 #include <boost/range/algorithm/transform.hpp>
+#include <chrono>
 #include <cmath>
+#include <iostream>
+using namespace std::chrono;
 
 namespace Observables {
 std::vector<double> RDF::operator()() const {
+  auto t1 = std::chrono::high_resolution_clock::now();
   std::vector<Particle> particles1 = fetch_particles(ids1());
   std::vector<const Particle *> particles_ptrs1(particles1.size());
   boost::transform(particles1, particles_ptrs1.begin(),
@@ -38,10 +43,23 @@ std::vector<double> RDF::operator()() const {
     std::vector<const Particle *> particles_ptrs2(particles2.size());
     boost::transform(particles2, particles_ptrs2.begin(),
                      [](auto const &p) { return std::addressof(p); });
-    return this->evaluate(particles_ptrs1, particles_ptrs2);
-  }
+    auto ret = this->evaluate(particles_ptrs1, particles_ptrs2);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::cout << "obs: "
+              << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1)
+                     .count()
+              << " " << ids1().size() << " " << ids2().size() << std::endl;
 
-  return this->evaluate(particles_ptrs1, {});
+    return ret;
+  }
+  auto ret = this->evaluate(particles_ptrs1, {});
+  auto t2 = std::chrono::high_resolution_clock::now();
+  std::cout
+      << "obs: "
+      << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()
+      << " " << ids1().size() << " " << ids2().size() << std::endl;
+
+  return ret;
 }
 
 std::vector<double>
@@ -51,20 +69,21 @@ RDF::evaluate(Utils::Span<const Particle *const> particles1,
   auto const inv_bin_width = 1.0 / bin_width;
   std::vector<double> res(n_values(), 0.0);
   long int cnt = 0;
-  bool const mixed_flag = !ids2().empty();
-  for (auto it = particles1.begin(); it != particles1.end(); ++it) {
-    for (auto jt = mixed_flag ? particles2.begin() : std::next(it),
-              jend = mixed_flag ? particles2.end() : particles1.end();
-         jt != jend; ++jt) {
-      auto const p1 = *it, p2 = *jt;
-      auto const dist = get_mi_vector(p1->r.p, p2->r.p, box_geo).norm();
-      if (dist > min_r && dist < max_r) {
-        auto const ind =
-            static_cast<int>(std::floor((dist - min_r) * inv_bin_width));
-        res[ind]++;
-      }
-      cnt++;
+  auto op = [=, &cnt, &res](const Particle *const p1,
+                            const Particle *const p2) {
+    auto const dist = get_mi_vector(p1->r.p, p2->r.p, box_geo).norm();
+    if (dist > min_r && dist < max_r) {
+      auto const ind =
+          static_cast<int>(std::floor((dist - min_r) * inv_bin_width));
+      res[ind]++;
     }
+    cnt++;
+  };
+  if (particles2.empty()) {
+    Utils::for_each_pair(particles1.begin(), particles1.end(), op);
+  } else {
+    Utils::for_each_pair(particles1.begin(), particles1.end(),
+                         particles2.begin(), particles2.end(), op);
   }
   if (cnt == 0)
     return res;
