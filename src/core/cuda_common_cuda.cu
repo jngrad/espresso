@@ -233,8 +233,8 @@ void copy_energy_from_GPU() {
     obs_energy.local.non_bonded[0] += energy_host.non_bonded;
   if (!obs_energy.local.coulomb.empty())
     obs_energy.local.coulomb[0] += energy_host.coulomb;
-  if (obs_energy.local.dipolar.size() >= 2)
-    obs_energy.local.dipolar[1] += energy_host.dipolar;
+  if (!obs_energy.local.dipolar.empty())
+    obs_energy.local.dipolar[0] += energy_host.dipolar;
 }
 
 void _cuda_safe_mem(cudaError_t CU_err, const char *file, unsigned int line) {

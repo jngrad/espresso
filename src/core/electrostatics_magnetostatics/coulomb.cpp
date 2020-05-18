@@ -60,7 +60,7 @@ void calc_pressure_long_range(Observable_stat &virials,
     p3m_charge_assign(particles);
     auto const p3m_stress = p3m_calc_kspace_stress();
     std::copy_n(p3m_stress.data(), 9, p_tensor.coulomb.begin() + 9);
-    virials.coulomb[1] = p3m_stress[0] + p3m_stress[4] + p3m_stress[8];
+    virials.coulomb[0] += p3m_stress[0] + p3m_stress[4] + p3m_stress[8];
 
     break;
   }
@@ -309,41 +309,41 @@ void calc_energy_long_range(Observable_stat &energy,
     break;
   case COULOMB_P3M:
     p3m_charge_assign(particles);
-    energy.coulomb[1] = p3m_calc_kspace_forces(false, true, particles);
+    energy.coulomb[0] += p3m_calc_kspace_forces(false, true, particles);
     break;
   case COULOMB_ELC_P3M:
     // assign the original charges first
     // they may not have been assigned yet
     p3m_charge_assign(particles);
     if (!elc_params.dielectric_contrast_on)
-      energy.coulomb[1] = p3m_calc_kspace_forces(false, true, particles);
+      energy.coulomb[0] += p3m_calc_kspace_forces(false, true, particles);
     else {
-      energy.coulomb[1] = 0.5 * p3m_calc_kspace_forces(false, true, particles);
-      energy.coulomb[1] +=
+      energy.coulomb[0] += 0.5 * p3m_calc_kspace_forces(false, true, particles);
+      energy.coulomb[0] +=
           0.5 * ELC_P3M_dielectric_layers_energy_self(particles);
 
       // assign both original and image charges now
       ELC_p3m_charge_assign_both(particles);
       ELC_P3M_modify_p3m_sums_both(particles);
 
-      energy.coulomb[1] += 0.5 * p3m_calc_kspace_forces(false, true, particles);
+      energy.coulomb[0] += 0.5 * p3m_calc_kspace_forces(false, true, particles);
 
       // assign only the image charges now
       ELC_p3m_charge_assign_image(particles);
       ELC_P3M_modify_p3m_sums_image(particles);
 
-      energy.coulomb[1] -= 0.5 * p3m_calc_kspace_forces(false, true, particles);
+      energy.coulomb[0] -= 0.5 * p3m_calc_kspace_forces(false, true, particles);
 
       // restore modified sums
       ELC_P3M_restore_p3m_sums(particles);
     }
-    energy.coulomb[2] = ELC_energy(particles);
+    energy.coulomb[0] += ELC_energy(particles);
     break;
 #endif
 #ifdef SCAFACOS
   case COULOMB_SCAFACOS:
     assert(!Scafacos::dipolar());
-    energy.coulomb[1] += Scafacos::long_range_energy();
+    energy.coulomb[0] += Scafacos::long_range_energy();
     break;
 #endif
   default:

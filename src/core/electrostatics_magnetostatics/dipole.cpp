@@ -211,26 +211,26 @@ void calc_energy_long_range(Observable_stat &energy,
 #ifdef DP3M
   case DIPOLAR_P3M:
     dp3m_dipole_assign(particles);
-    energy.dipolar[1] = dp3m_calc_kspace_forces(false, true, particles);
+    energy.dipolar[0] += dp3m_calc_kspace_forces(false, true, particles);
     break;
   case DIPOLAR_MDLC_P3M:
     dp3m_dipole_assign(particles);
-    energy.dipolar[1] = dp3m_calc_kspace_forces(false, true, particles);
-    energy.dipolar[2] = add_mdlc_energy_corrections(particles);
+    energy.dipolar[0] += dp3m_calc_kspace_forces(false, true, particles);
+    energy.dipolar[0] += add_mdlc_energy_corrections(particles);
     break;
 #endif
   case DIPOLAR_ALL_WITH_ALL_AND_NO_REPLICA:
-    energy.dipolar[1] = dawaanr_calculations(false, true, particles);
+    energy.dipolar[0] += dawaanr_calculations(false, true, particles);
     break;
 #ifdef DP3M
   case DIPOLAR_MDLC_DS:
-    energy.dipolar[1] =
+    energy.dipolar[0] +=
         magnetic_dipolar_direct_sum_calculations(false, true, particles);
-    energy.dipolar[2] = add_mdlc_energy_corrections(particles);
+    energy.dipolar[0] += add_mdlc_energy_corrections(particles);
     break;
 #endif
   case DIPOLAR_DS:
-    energy.dipolar[1] =
+    energy.dipolar[0] +=
         magnetic_dipolar_direct_sum_calculations(false, true, particles);
     break;
   case DIPOLAR_DS_GPU: // NOLINT(bugprone-branch-clone)
@@ -244,7 +244,7 @@ void calc_energy_long_range(Observable_stat &energy,
 #ifdef SCAFACOS_DIPOLES
   case DIPOLAR_SCAFACOS:
     assert(Scafacos::dipolar());
-    energy.dipolar[1] = Scafacos::long_range_energy();
+    energy.dipolar[0] += Scafacos::long_range_energy();
 #endif
   case DIPOLAR_NONE:
     break;

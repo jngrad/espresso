@@ -62,31 +62,18 @@ extern Coulomb_parameters coulomb;
 namespace Coulomb {
 /** Number of electrostatic contributions to the system pressure calculation. */
 inline size_t pressure_n() {
-  switch (coulomb.method) {
-  case COULOMB_NONE:
+  if (coulomb.method == COULOMB_NONE) {
     return 0;
-  case COULOMB_P3M_GPU:
-  case COULOMB_P3M:
-    return 2;
-  default:
-    return 1;
   }
+  return 1;
 }
 
 /** Number of electrostatic contributions to the system energy calculation. */
 inline size_t energy_n() {
-  switch (coulomb.method) {
-  case COULOMB_NONE:
+  if (coulomb.method == COULOMB_NONE) {
     return 0;
-  case COULOMB_ELC_P3M:
-    return 3;
-  case COULOMB_P3M_GPU:
-  case COULOMB_P3M:
-  case COULOMB_SCAFACOS:
-    return 2;
-  default:
-    return 1;
   }
+  return 1;
 }
 
 void calc_pressure_long_range(Observable_stat &virials,
