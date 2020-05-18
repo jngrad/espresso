@@ -205,54 +205,49 @@ void calc_long_range_force(const ParticleRange &particles) {
   }
 }
 
-void calc_energy_long_range(Observable_stat &energy,
-                            const ParticleRange &particles) {
+double calc_energy_long_range(const ParticleRange &particles) {
+  double energy = 0.;
   switch (dipole.method) {
 #ifdef DP3M
   case DIPOLAR_P3M:
     dp3m_dipole_assign(particles);
-    energy.dipolar[0] += dp3m_calc_kspace_forces(false, true, particles);
-    break;
+    return dp3m_calc_kspace_forces(false, true, particles);
   case DIPOLAR_MDLC_P3M:
     dp3m_dipole_assign(particles);
-    energy.dipolar[0] += dp3m_calc_kspace_forces(false, true, particles);
-    energy.dipolar[0] += add_mdlc_energy_corrections(particles);
-    break;
+    energy += dp3m_calc_kspace_forces(false, true, particles);
+    energy += add_mdlc_energy_corrections(particles);
+    return energy;
 #endif
   case DIPOLAR_ALL_WITH_ALL_AND_NO_REPLICA:
-    energy.dipolar[0] += dawaanr_calculations(false, true, particles);
-    break;
+    return dawaanr_calculations(false, true, particles);
 #ifdef DP3M
   case DIPOLAR_MDLC_DS:
-    energy.dipolar[0] +=
-        magnetic_dipolar_direct_sum_calculations(false, true, particles);
-    energy.dipolar[0] += add_mdlc_energy_corrections(particles);
-    break;
+    energy += magnetic_dipolar_direct_sum_calculations(false, true, particles);
+    energy += add_mdlc_energy_corrections(particles);
+    return energy;
 #endif
   case DIPOLAR_DS:
-    energy.dipolar[0] +=
-        magnetic_dipolar_direct_sum_calculations(false, true, particles);
-    break;
-  case DIPOLAR_DS_GPU: // NOLINT(bugprone-branch-clone)
-    // do nothing: it's an actor
+    return magnetic_dipolar_direct_sum_calculations(false, true, particles);
     break;
 #ifdef DIPOLAR_BARNES_HUT
   case DIPOLAR_BH_GPU:
-    // do nothing: it's an actor.
-    break;
 #endif
+  case DIPOLAR_DS_GPU:
+    // do nothing: it's an actor
+    break;
 #ifdef SCAFACOS_DIPOLES
   case DIPOLAR_SCAFACOS:
     assert(Scafacos::dipolar());
-    energy.dipolar[0] += Scafacos::long_range_energy();
+    return Scafacos::long_range_energy();
 #endif
   case DIPOLAR_NONE:
-    break;
+    return 0.;
   default:
     runtimeErrorMsg()
         << "energy calculation not implemented for dipolar method.";
     break;
   }
+  return 0.;
 }
 
 int set_mesh() {

@@ -69,8 +69,9 @@ nptiso_struct nptiso = {0.0,
 void calc_long_range_virials(const ParticleRange &particles) {
 #ifdef ELECTROSTATICS
   /* calculate k-space part of electrostatic interaction. */
-  Coulomb::calc_pressure_long_range(obs_scalar_pressure.local,
-                                    obs_stress_tensor.local, particles);
+  auto const ptensor = Coulomb::calc_pressure_long_range(particles);
+  std::copy_n(ptensor.data(), 9, obs_stress_tensor.local.coulomb.begin() + 9);
+  obs_scalar_pressure.local.coulomb[0] += ptensor[0] + ptensor[4] + ptensor[8];
 #endif
 #ifdef DIPOLES
   /* calculate k-space part of magnetostatic interaction. */

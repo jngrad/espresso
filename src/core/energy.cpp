@@ -99,11 +99,11 @@ void update_energy() {
 void calc_long_range_energies(const ParticleRange &particles) {
 #ifdef ELECTROSTATICS
   /* calculate k-space part of electrostatic interaction. */
-  Coulomb::calc_energy_long_range(obs_energy.local, particles);
+  obs_energy.local.coulomb[0] += Coulomb::calc_energy_long_range(particles);
 #endif /* ifdef ELECTROSTATICS */
 
 #ifdef DIPOLES
-  Dipole::calc_energy_long_range(obs_energy.local, particles);
+  obs_energy.local.dipolar[0] += Dipole::calc_energy_long_range(particles);
 #endif /* ifdef DIPOLES */
 }
 
