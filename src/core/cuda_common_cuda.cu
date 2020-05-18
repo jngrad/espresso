@@ -231,10 +231,12 @@ void copy_energy_from_GPU() {
     obs_energy.local.bonded[0] += energy_host.bonded;
   if (!obs_energy.local.non_bonded.empty())
     obs_energy.local.non_bonded[0] += energy_host.non_bonded;
-  if (!obs_energy.local.coulomb.empty())
-    obs_energy.local.coulomb[0] += energy_host.coulomb;
-  if (!obs_energy.local.dipolar.empty())
-    obs_energy.local.dipolar[0] += energy_host.dipolar;
+#ifdef ELECTROSTATICS
+  obs_energy.local.coulomb[0] += energy_host.coulomb;
+#endif
+#ifdef DIPOLES
+  obs_energy.local.dipolar[0] += energy_host.dipolar;
+#endif
 }
 
 void _cuda_safe_mem(cudaError_t CU_err, const char *file, unsigned int line) {

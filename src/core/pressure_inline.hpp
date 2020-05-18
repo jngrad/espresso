@@ -83,26 +83,21 @@ inline void add_non_bonded_pair_virials(Particle const &p1, Particle const &p2,
   }
 
 #ifdef ELECTROSTATICS
-  if (!obs_scalar_pressure.local.coulomb.empty()) {
-    /* real space Coulomb */
-    auto const p_coulomb = Coulomb::pair_pressure(p1, p2, d, dist);
+  /* real space Coulomb */
+  auto const p_coulomb = Coulomb::pair_pressure(p1, p2, d, dist);
 
-    for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 3; j++) {
-        obs_stress_tensor.local.coulomb[i * 3 + j] += p_coulomb[i][j];
-      }
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      obs_stress_tensor.local.coulomb[i * 3 + j] += p_coulomb[i][j];
     }
-
-    obs_scalar_pressure.local.coulomb[0] += trace(p_coulomb);
   }
+
+  obs_scalar_pressure.local.coulomb[0] += trace(p_coulomb);
 #endif /*ifdef ELECTROSTATICS */
 
 #ifdef DIPOLES
   /* real space magnetic dipole-dipole */
-  if (dipole.method != DIPOLAR_NONE) {
-    fprintf(stderr, "calculating pressure for magnetostatics which doesn't "
-                    "have it implemented\n");
-  }
+  Dipole::calc_pressure_long_range();
 #endif /*ifdef DIPOLES */
 }
 

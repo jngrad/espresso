@@ -49,11 +49,13 @@ void invalidate_obs() {
 
 void Observable_stat::resize() {
   // number of chunks for different interaction types
-  auto const n_coulomb =
-      m_pressure_obs ? Coulomb::pressure_n() : Coulomb::energy_n();
-  auto const n_dipolar =
-      m_pressure_obs ? Dipole::pressure_n() : Dipole::energy_n();
-  size_t n_vs = 0;
+  size_t n_coulomb = 0, n_dipolar = 0, n_vs = 0;
+#ifdef ELECTROSTATICS
+  n_coulomb = 1;
+#endif
+#ifdef DIPOLES
+  n_dipolar = 1;
+#endif
 #ifdef VIRTUAL_SITES
   n_vs = 1;
 #endif

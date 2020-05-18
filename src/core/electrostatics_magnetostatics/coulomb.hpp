@@ -60,21 +60,6 @@ struct Coulomb_parameters {
 extern Coulomb_parameters coulomb;
 
 namespace Coulomb {
-/** Number of electrostatic contributions to the system pressure calculation. */
-inline size_t pressure_n() {
-  if (coulomb.method == COULOMB_NONE) {
-    return 0;
-  }
-  return 1;
-}
-
-/** Number of electrostatic contributions to the system energy calculation. */
-inline size_t energy_n() {
-  if (coulomb.method == COULOMB_NONE) {
-    return 0;
-  }
-  return 1;
-}
 
 void calc_pressure_long_range(Observable_stat &virials,
                               Observable_stat &p_tensor,
@@ -110,11 +95,6 @@ void deactivate_method();
  *  namely ICC charges.
  */
 void update_dependent_particles();
-} // namespace Coulomb
-#else  // ELECTROSTATICS
-namespace Coulomb {
-constexpr size_t pressure_n() { return 0; }
-constexpr size_t energy_n() { return 0; }
 } // namespace Coulomb
 #endif // ELECTROSTATICS
 #endif // ESPRESSO_COULOMB_HPP
