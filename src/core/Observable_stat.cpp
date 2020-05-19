@@ -21,8 +21,6 @@
 
 #include "Observable_stat.hpp"
 
-#include "config.hpp"
-
 #include "communication.hpp"
 
 #include "bonded_interactions/bonded_interaction_data.hpp"
@@ -32,20 +30,14 @@
 
 void Observable_stat::resize() {
   // number of chunks for different interaction types
-  size_t n_coulomb = 0, n_dipolar = 0, n_vs = 0;
-#ifdef ELECTROSTATICS
-  n_coulomb = 1;
-#endif
-#ifdef DIPOLES
-  n_dipolar = 1;
-#endif
-#ifdef VIRTUAL_SITES
-  n_vs = 1;
-#endif
   auto const n_bonded = bonded_ia_params.size();
   auto const n_non_bonded = max_non_bonded_pairs();
-  constexpr size_t n_ext_fields = 1; // energies from all fields: accumulated
-  constexpr size_t n_kinetic = 1; // linear+angular kinetic energy: accumulated
+  // some contributions are accumulated in a single chunk
+  constexpr size_t n_ext_fields = 1; // energies from external potentials
+  constexpr size_t n_kinetic = 1;    // linear + angular kinetic energy
+  constexpr size_t n_coulomb = 1;    // Coulomb methods
+  constexpr size_t n_dipolar = 1;    // dipole methods + magnetic field
+  constexpr size_t n_vs = 1;         // virtual sites
 
   // resize vector
   auto const total = n_kinetic + n_bonded + n_non_bonded + n_coulomb +
