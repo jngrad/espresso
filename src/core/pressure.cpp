@@ -97,7 +97,11 @@ void pressure_calc(bool v_comp) {
   on_observable_calc();
 
   for (auto const &p : cell_structure.local_particles()) {
-    add_kinetic_virials(p, v_comp);
+    // velocity at half the time step: v(t + dt / 2) =
+    // v(t + dt) - a(t) * dt / 2 = v(t + dt) - F(t) * dt / m / 2
+    auto const v =
+        v_comp ? p.m.v - p.f.f * (time_step / (2 * p.p.mass)) : p.m.v;
+    add_kinetic_virials(p, v);
   }
 
   short_range_loop([](Particle &p) { add_single_particle_virials(p); },
