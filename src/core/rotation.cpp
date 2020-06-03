@@ -46,7 +46,9 @@
 
 /** Calculate the derivatives of the quaternion and angular acceleration
  *  for a given particle.
- *  See @cite sonnenschein85a
+ *  See @cite sonnenschein85a. Please note that ESPResSo uses scalar-first
+ *  notation for quaternions, while @cite sonnenschein85a use scalar-last
+ *  notation.
  *  @param[in]  p    %Particle
  *  @param[out] Qd   First derivative of the particle quaternion
  *  @param[out] Qdd  Second derivative of the particle quaternion
@@ -116,11 +118,13 @@ static void define_Qdd(Particle const &p, double Qd[4], double Qdd[4],
   S[2] = Qdd[0] * Qdd[0] + Qdd[1] * Qdd[1] + Qdd[2] * Qdd[2] + Qdd[3] * Qdd[3];
 }
 
-/** propagate angular velocities and quaternions
+/** Propagate angular velocities and quaternions.
+ *  See @cite omelyan98a. Please note that ESPResSo uses scalar-first
+ *  notation for quaternions, while @cite omelyan98a use scalar-last
+ *  notation.
  * \todo implement for fixed_coord_flag
  */
 void propagate_omega_quat_particle(Particle &p) {
-
   // If rotation for the particle is disabled entirely, return early.
   if (p.p.rotation == ROTATION_FIXED)
     return;
@@ -133,7 +137,7 @@ void propagate_omega_quat_particle(Particle &p) {
 
   define_Qdd(p, Qd.data(), Qdd.data(), S.data(), Wd.data());
 
-  /* Eq. (12) @cite sonnenschein85a. */
+  /* Eq. (12) @cite omelyan98a. */
   auto const lambda =
       1 - S[0] * time_step_squared_half -
       sqrt(1 - time_step_squared *
