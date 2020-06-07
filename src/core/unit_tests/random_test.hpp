@@ -111,16 +111,12 @@ noise_statistics(NoiseKernel &&noise_function, size_t sample_size) {
   // accumulate
   for (size_t step = 0; step < sample_size; ++step) {
     auto const noise_tuple = noise_function();
-    // for each vector, pool the random numbers of all columns
-    for (size_t vec1 = 0; vec1 < dimensions.size(); ++vec1) {
-      for (size_t col1 = 0; col1 < dimensions[vec1]; ++col1) {
-        acc_variance[vec1](::get_value(noise_tuple[vec1], col1));
-      }
-    }
-    // fill the covariance matrix (upper triangle)
     size_t index1 = 0;
     for (size_t vec1 = 0; vec1 < dimensions.size(); ++vec1) {
       for (size_t col1 = 0; col1 < dimensions[vec1]; ++col1) {
+        // for each vector, pool the random numbers of all columns
+        acc_variance[vec1](::get_value(noise_tuple[vec1], col1));
+        // fill the covariance matrix (upper triangle)
         size_t index2 = index1;
         for (size_t vec2 = vec1; vec2 < dimensions.size(); ++vec2) {
           for (size_t col2 = (vec2 == vec1) ? col1 : 0; col2 < dimensions[vec2];
