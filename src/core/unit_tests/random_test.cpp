@@ -21,6 +21,7 @@
 
 #define BOOST_TEST_MODULE PRNG test
 #define BOOST_TEST_DYN_LINK
+#include <array>
 #include <boost/test/unit_test.hpp>
 #include <tuple>
 
@@ -39,9 +40,9 @@ BOOST_AUTO_TEST_CASE(test_noise_statistics) {
   std::vector<std::vector<double>> covariance;
   std::vector<std::vector<double>> correlation;
   std::tie(means, variances, covariance, correlation) = noise_statistics(
-      [&value]() -> std::vector<VariantVectorXd> {
+      [&value]() -> std::array<VariantVectorXd, 1> {
         value *= -1;
-        return {{Utils::Vector2d{value, -value}}};
+        return {Utils::Vector2d{value, -value}};
       },
       sample_size);
   // check pooled mean and variance
@@ -66,8 +67,8 @@ BOOST_AUTO_TEST_CASE(test_noise_uniform_1d) {
   std::vector<std::vector<double>> covariance;
   std::vector<std::vector<double>> correlation;
   std::tie(means, variances, covariance, correlation) = noise_statistics(
-      [counter = 0]() mutable -> std::vector<VariantVectorXd> {
-        return {{Random::noise_uniform<RNGSalt::NPTISOV, 1>(counter++, 0)}};
+      [counter = 0]() mutable -> std::array<VariantVectorXd, 1> {
+        return {Random::noise_uniform<RNGSalt::NPTISOV, 1>(counter++, 0)};
       },
       sample_size);
   // check pooled mean and variance
@@ -83,8 +84,8 @@ BOOST_AUTO_TEST_CASE(test_noise_uniform_3d) {
   std::vector<std::vector<double>> covariance;
   std::vector<std::vector<double>> correlation;
   std::tie(means, variances, covariance, correlation) = noise_statistics(
-      [counter = 0]() mutable -> std::vector<VariantVectorXd> {
-        return {{Random::noise_uniform<RNGSalt::LANGEVIN>(counter++, 0)}};
+      [counter = 0]() mutable -> std::array<VariantVectorXd, 1> {
+        return {Random::noise_uniform<RNGSalt::LANGEVIN>(counter++, 0)};
       },
       sample_size);
   // check pooled mean and variance
@@ -108,9 +109,9 @@ BOOST_AUTO_TEST_CASE(test_noise_gaussian_4d) {
   std::vector<std::vector<double>> covariance;
   std::vector<std::vector<double>> correlation;
   std::tie(means, variances, covariance, correlation) = noise_statistics(
-      [counter = 0]() mutable -> std::vector<VariantVectorXd> {
+      [counter = 0]() mutable -> std::array<VariantVectorXd, 1> {
         return {
-            {Random::noise_gaussian<RNGSalt::BROWNIAN_WALK, 4>(counter++, 0)}};
+            Random::noise_gaussian<RNGSalt::BROWNIAN_WALK, 4>(counter++, 0)};
       },
       sample_size);
   // check pooled mean and variance
