@@ -26,7 +26,6 @@
 #include <boost/accumulators/statistics/variates/covariate.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/variant.hpp>
-#include <functional>
 #include <tuple>
 
 #include <utils/Vector.hpp>
@@ -85,10 +84,10 @@ template <typename T> auto square_matrix(size_t N) {
  *  them is fine), and a covariance and a correlation matrix of size
  *  @f$ \sum M_i @f$.
  */
+template <typename NoiseKernel>
 std::tuple<std::vector<double>, std::vector<double>,
            std::vector<std::vector<double>>, std::vector<std::vector<double>>>
-noise_statistics(std::function<std::vector<VariantVectorXd>()> noise_function,
-                 size_t sample_size) {
+noise_statistics(NoiseKernel &&noise_function, size_t sample_size) {
 
   // get size of the arrays and size of the triangular correlation matrix
   auto const first_value = noise_function();
