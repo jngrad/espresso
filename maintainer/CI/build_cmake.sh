@@ -95,6 +95,7 @@ set_default_value make_check_benchmarks false
 set_default_value with_cuda false
 set_default_value with_cuda_compiler "nvcc"
 set_default_value build_type "RelWithAssert"
+set_default_value with_glibcxx_assertions true
 set_default_value with_ccache false
 set_default_value with_scafacos false
 set_default_value test_timeout 300
@@ -118,6 +119,7 @@ cmake_params="${cmake_params} -DTEST_TIMEOUT=${test_timeout}"
 if [ "${with_ccache}" = true ]; then
     cmake_params="${cmake_params} -DWITH_CCACHE=ON"
 fi
+
 if [ "${with_scafacos}" = true ]; then
     cmake_params="${cmake_params} -DWITH_SCAFACOS=ON"
 fi
@@ -142,6 +144,10 @@ fi
 
 if [ "${with_static_analysis}" = true ]; then
     cmake_params="-DWITH_CLANG_TIDY=ON ${cmake_params}"
+fi
+
+if [ "${with_glibcxx_assertions}" = true ] && [ "${build_type}" = "RelWithAssert" ]; then
+    cmake_params="${cmake_params} -DWITH_GLIBCXX_ASSERTIONS=ON"
 fi
 
 if [ "${with_cuda}" = true ]; then

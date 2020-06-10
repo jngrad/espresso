@@ -93,6 +93,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT APPLE)
     OFF)
 endif()
 option(WARNINGS_ARE_ERRORS "Treat warnings as errors during compilation" OFF)
+option(WITH_GLIBCXX_ASSERTIONS "Enable _GLIBCXX_ASSERTIONS" OFF)
 option(WITH_CCACHE "Use ccache compiler invocation." OFF)
 option(WITH_PROFILER "Enable profiler annotations." OFF)
 set(TEST_TIMEOUT "300" CACHE STRING
@@ -347,6 +348,7 @@ add_library(cxx_interface INTERFACE)
 target_compile_options(
   cxx_interface
   INTERFACE -Wall -Wextra $<$<BOOL:${WARNINGS_ARE_ERRORS}>:-Werror>
+            $<$<BOOL:${WITH_GLIBCXX_ASSERTIONS}>:-D_GLIBCXX_ASSERTIONS>
             # disable warnings from -Wextra
             -Wno-sign-compare -Wno-unused-function -Wno-unused-variable
             -Wno-unused-parameter -Wno-missing-braces
