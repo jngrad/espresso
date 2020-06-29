@@ -66,7 +66,7 @@ class FieldTest(ut.TestCase):
             self.system.part[0].virtual = True
             self.system.integrator.run(0)
             np.testing.assert_allclose(
-                np.zeros(3),
+                0,
                 np.copy(self.system.part[0].f))
 
     @utx.skipIfMissingFeatures("ELECTROSTATICS")
