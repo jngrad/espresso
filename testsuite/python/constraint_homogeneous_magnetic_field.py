@@ -41,17 +41,15 @@ class HomogeneousMagneticFieldTest(ut.TestCase):
         H_constraint = espressomd.constraints.HomogeneousMagneticField(
             H=H_field1)
 
-        np.testing.assert_almost_equal(np.copy(H_constraint.H), H_field1)
+        np.testing.assert_almost_equal(H_constraint.H, H_field1)
 
         H_constraint.H = H_field2
-        np.testing.assert_almost_equal(np.copy(H_constraint.H), H_field2)
+        np.testing.assert_almost_equal(H_constraint.H, H_field2)
 
     def test_default_value(self):
         H_field_default = np.array([1.0, 0.0, 0.0])
         H_constraint = espressomd.constraints.HomogeneousMagneticField()
-        np.testing.assert_almost_equal(
-            np.copy(H_constraint.H),
-            H_field_default)
+        np.testing.assert_almost_equal(H_constraint.H, H_field_default)
 
     @utx.skipIfMissingFeatures(["DIPOLES"])
     def test_add_energy_and_forces(self):

@@ -37,23 +37,23 @@ class Integrate(ut.TestCase):
         p = system.part.add(pos=(0, 0, 0), v=(1, 2, 3))
         system.time_step = 0.01
         system.time = 12.
-        np.testing.assert_allclose(np.copy(p.v), (1, 2, 3))
+        np.testing.assert_allclose(p.v, (1, 2, 3))
         for i in range(10):
-            np.testing.assert_allclose(np.copy(p.pos), np.copy(
-                i * system.time_step * p.v), atol=1E-12)
+            np.testing.assert_allclose(
+                p.pos, i * system.time_step * np.copy(p.v), atol=1E-12)
             system.integrator.run(1)
 
         # Check that the time has passed
         np.testing.assert_allclose(system.time, 12. + 10 * system.time_step)
 
-        v = p.v
-        pos1 = p.pos
+        v = np.copy(p.v)
+        pos1 = np.copy(p.pos)
         system.time_step = 0.02
-        np.testing.assert_allclose(np.copy(v), np.copy(p.v), atol=1E-12)
-        np.testing.assert_allclose(np.copy(pos1), np.copy(p.pos), atol=1E-12)
+        np.testing.assert_allclose(p.v, v, atol=1E-12)
+        np.testing.assert_allclose(p.pos, pos1, atol=1E-12)
         for i in range(10):
-            np.testing.assert_allclose(np.copy(p.pos), np.copy(
-                pos1 + i * system.time_step * p.v), atol=1E-12)
+            np.testing.assert_allclose(
+                p.pos, pos1 + i * system.time_step * np.copy(p.v), atol=1E-12)
             system.integrator.run(1)
 
         # Newton's 2nd law
@@ -65,8 +65,8 @@ class Integrate(ut.TestCase):
             p.ext_force = ext_force
             system.time_step = 0.03
             for i in range(10):
-                np.testing.assert_allclose(np.copy(p.pos), np.copy(
-                    0.5 * ext_force / p.mass * (i * system.time_step)**2 + v * i * system.time_step), atol=1E-12)
+                np.testing.assert_allclose(
+                    p.pos, 0.5 * ext_force / p.mass * (i * system.time_step)**2 + v * i * system.time_step, atol=1E-12)
                 system.integrator.run(1)
 
 

@@ -96,9 +96,9 @@ class ElectrostaticInteractionsTests(ut.TestCase):
                                p3m_energy, places=5)
         # need to update forces
         self.system.integrator.run(0)
-        np.testing.assert_allclose(np.copy(self.system.part[0].f),
+        np.testing.assert_allclose(self.system.part[0].f,
                                    [p3m_force, 0, 0], atol=1E-4)
-        np.testing.assert_allclose(np.copy(self.system.part[1].f),
+        np.testing.assert_allclose(self.system.part[1].f,
                                    [-p3m_force, 0, 0], atol=1E-5)
         self.system.actors.remove(p3m)
 

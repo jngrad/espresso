@@ -67,7 +67,7 @@ class CheckpointTest(ut.TestCase):
             for j in range(ny):
                 for k in range(nz):
                     np.testing.assert_almost_equal(
-                        np.copy(lbf[i, j, k].population),
+                        lbf[i, j, k].population,
                         grid_3D[i, j, k] * np.arange(1, 20),
                         decimal=precision)
         state = lbf.get_params()
@@ -95,7 +95,7 @@ class CheckpointTest(ut.TestCase):
             for j in range(ny):
                 for k in range(nz):
                     np.testing.assert_almost_equal(
-                        np.copy(ek_species[i, j, k].density),
+                        ek_species[i, j, k].density,
                         grid_3D[i, j, k],
                         decimal=precision)
         state = ek.get_params()
@@ -132,12 +132,10 @@ class CheckpointTest(ut.TestCase):
         self.assertEqual(system.min_global_cut, 2.0)
 
     def test_part(self):
-        np.testing.assert_allclose(
-            np.copy(system.part[0].pos), np.array([1.0, 2.0, 3.0]))
-        np.testing.assert_allclose(
-            np.copy(system.part[1].pos), np.array([1.0, 1.0, 2.0]))
-        np.testing.assert_allclose(np.copy(system.part[0].f), particle_force0)
-        np.testing.assert_allclose(np.copy(system.part[1].f), particle_force1)
+        np.testing.assert_allclose(system.part[0].pos, [1.0, 2.0, 3.0])
+        np.testing.assert_allclose(system.part[1].pos, [1.0, 1.0, 2.0])
+        np.testing.assert_allclose(system.part[0].f, particle_force0)
+        np.testing.assert_allclose(system.part[1].f, particle_force1)
 
     @ut.skipIf('THERM.LB' not in modes, 'LB thermostat not in modes')
     def test_thermostat_LB(self):
@@ -309,7 +307,7 @@ class CheckpointTest(ut.TestCase):
     def test_lb_boundaries(self):
         self.assertEqual(len(system.lbboundaries), 1)
         np.testing.assert_allclose(
-            np.copy(system.lbboundaries[0].velocity), [1e-4, 1e-4, 0])
+            system.lbboundaries[0].velocity, [1e-4, 1e-4, 0])
         self.assertIsInstance(system.lbboundaries[0].shape, Wall)
 
     def test_constraints(self):
@@ -323,43 +321,42 @@ class CheckpointTest(ut.TestCase):
         self.assertEqual(c[0].particle_type, 17)
 
         self.assertIsInstance(c[1].shape, Wall)
-        np.testing.assert_allclose(np.copy(c[1].shape.normal),
-                                   [1. / np.sqrt(3)] * 3)
+        np.testing.assert_allclose(c[1].shape.normal, [1. / np.sqrt(3)] * 3)
 
         self.assertIsInstance(c[2], constraints.Gravity)
-        np.testing.assert_allclose(np.copy(c[2].g), [1., 2., 3.])
+        np.testing.assert_allclose(c[2].g, [1., 2., 3.])
 
         self.assertIsInstance(c[3], constraints.HomogeneousMagneticField)
-        np.testing.assert_allclose(np.copy(c[3].H), [1., 2., 3.])
+        np.testing.assert_allclose(c[3].H, [1., 2., 3.])
 
         self.assertIsInstance(c[4], constraints.HomogeneousFlowField)
-        np.testing.assert_allclose(np.copy(c[4].u), [1., 2., 3.])
+        np.testing.assert_allclose(c[4].u, [1., 2., 3.])
         self.assertAlmostEqual(c[4].gamma, 2.3, delta=1E-10)
 
         self.assertIsInstance(c[5], constraints.PotentialField)
         self.assertEqual(c[5].field.shape, (14, 16, 18, 1))
         self.assertAlmostEqual(c[5].default_scale, 1.6, delta=1E-10)
-        np.testing.assert_allclose(np.copy(c[5].origin), [-0.5, -0.5, -0.5])
-        np.testing.assert_allclose(np.copy(c[5].grid_spacing), np.ones(3))
+        np.testing.assert_allclose(c[5].origin, [-0.5, -0.5, -0.5])
+        np.testing.assert_allclose(c[5].grid_spacing, np.ones(3))
         ref_pot = constraints.PotentialField(
             field=pot_field_data, grid_spacing=np.ones(3), default_scale=1.6)
-        np.testing.assert_allclose(np.copy(c[5].field), np.copy(ref_pot.field),
+        np.testing.assert_allclose(c[5].field, np.copy(ref_pot.field),
                                    atol=1e-10)
 
         self.assertIsInstance(c[6], constraints.ForceField)
         self.assertEqual(c[6].field.shape, (14, 16, 18, 3))
         self.assertAlmostEqual(c[6].default_scale, 1.4, delta=1E-10)
-        np.testing.assert_allclose(np.copy(c[6].origin), [-0.5, -0.5, -0.5])
-        np.testing.assert_allclose(np.copy(c[6].grid_spacing), np.ones(3))
+        np.testing.assert_allclose(c[6].origin, [-0.5, -0.5, -0.5])
+        np.testing.assert_allclose(c[6].grid_spacing, np.ones(3))
         ref_vec = constraints.ForceField(
             field=vec_field_data, grid_spacing=np.ones(3), default_scale=1.4)
-        np.testing.assert_allclose(np.copy(c[6].field), np.copy(ref_vec.field),
+        np.testing.assert_allclose(c[6].field, np.copy(ref_vec.field),
                                    atol=1e-10)
 
         if espressomd.has_features("ELECTROSTATICS"):
             self.assertIsInstance(c[7], constraints.ElectricPlaneWave)
-            np.testing.assert_allclose(np.copy(c[7].E0), [1., -2., 3.])
-            np.testing.assert_allclose(np.copy(c[7].k), [-.1, .2, .3])
+            np.testing.assert_allclose(c[7].E0, [1., -2., 3.])
+            np.testing.assert_allclose(c[7].k, [-.1, .2, .3])
             self.assertAlmostEqual(c[7].omega, 5., delta=1E-10)
             self.assertAlmostEqual(c[7].phi, 1.4, delta=1E-10)
 

@@ -70,8 +70,8 @@ class ShapeBasedConstraintTest(ut.TestCase):
             dist = shape.calc_distance(position=[0.0, y, z(y, R1, R2, LENGTH)])
             self.assertAlmostEqual(dist[0], 0.5 * D)
 
-        np.testing.assert_almost_equal(np.copy(shape.center), [0.0, 0.0, 0.0])
-        np.testing.assert_almost_equal(np.copy(shape.axis), [0, 0, 1])
+        np.testing.assert_almost_equal(shape.center, [0.0, 0.0, 0.0])
+        np.testing.assert_almost_equal(shape.axis, [0, 0, 1])
         self.assertEqual(shape.r1, R1)
         self.assertEqual(shape.r2, R2)
         self.assertEqual(shape.thickness, D)
@@ -594,7 +594,7 @@ class ShapeBasedConstraintTest(ut.TestCase):
                 # numerical instability
                 continue
             np.testing.assert_almost_equal(
-                np.copy(slitpore_constraint.total_force()), ref_force, 10)
+                slitpore_constraint.total_force(), ref_force, 10)
 
         # Reset
         system.non_bonded_inter[0, 1].generic_lennard_jones.set_params(

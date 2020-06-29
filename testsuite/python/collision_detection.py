@@ -206,7 +206,7 @@ class CollisionDetection(ut.TestCase):
 
             # Check placement
             if rel_to == p1.id:
-                dist_centers = np.copy(p2.pos - p1.pos)
+                dist_centers = p2.pos - p1.pos
             else:
                 dist_centers = p1.pos - p2.pos
             expected_pos = self.s.part[rel_to].pos_folded + \
@@ -651,9 +651,9 @@ class CollisionDetection(ut.TestCase):
                     p_k = self.s.part[k]
 
                     # Normalized distance vectors
-                    d_ij = np.copy(p_j.pos - p_i.pos)
-                    d_ik = np.copy(p_k.pos - p_i.pos)
-                    d_jk = np.copy(p_k.pos - p_j.pos)
+                    d_ij = p_j.pos - p_i.pos
+                    d_ik = p_k.pos - p_i.pos
+                    d_jk = p_k.pos - p_j.pos
                     d_ij /= np.linalg.norm(d_ij)
                     d_ik /= np.linalg.norm(d_ik)
                     d_jk /= np.linalg.norm(d_jk)

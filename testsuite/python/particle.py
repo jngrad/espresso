@@ -128,8 +128,8 @@ class ParticleProperties(ut.TestCase):
                 def test_gamma_single(self):
                     self.system.part[self.pid].gamma = 17.4
                     np.testing.assert_array_equal(
-                        np.copy(self.system.part[self.pid].gamma),
-                        np.array([17.4, 17.4, 17.4]),
+                        self.system.part[self.pid].gamma,
+                        [17.4, 17.4, 17.4],
                         "gamma: value set and value gotten back differ.")
             else:
                 test_gamma = generateTestForScalarProperty("gamma", 17.3)
@@ -141,8 +141,8 @@ class ParticleProperties(ut.TestCase):
                 def test_gamma_rot_single(self):
                     self.system.part[self.pid].gamma_rot = 15.4
                     np.testing.assert_array_equal(
-                        np.copy(self.system.part[self.pid].gamma_rot),
-                        np.array([15.4, 15.4, 15.4]),
+                        self.system.part[self.pid].gamma_rot,
+                        [15.4, 15.4, 15.4],
                         "gamma_rot: value set and value gotten back differ.")
             else:
                 test_gamma_rot = generateTestForScalarProperty(
@@ -219,8 +219,7 @@ class ParticleProperties(ut.TestCase):
         res = s.part.select(pos=(0.2, 0.3, 0.4))
         self.assertEqual(len(res.id), len(charges))
         for p in res:
-            np.testing.assert_allclose(
-                (0.2, 0.3, 0.4), np.copy(p.pos), atol=1E-12)
+            np.testing.assert_allclose(p.pos, (0.2, 0.3, 0.4), atol=1E-12)
 
         # Two criteria
         res = s.part.select(pos=(0.2, 0.3, 0.4), q=0)
@@ -241,7 +240,7 @@ class ParticleProperties(ut.TestCase):
 
         s.part.add(pos=pos)
 
-        np.testing.assert_equal(np.copy(s.part[0].image_box), [1, 1, 1])
+        np.testing.assert_equal(s.part[0].image_box, [1, 1, 1])
 
     def test_accessing_invalid_id_raises(self):
         self.system.part.clear()

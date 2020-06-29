@@ -134,13 +134,13 @@ class LangevinThermostat(ut.TestCase):
             system.integrator.run(10)
             if espressomd.has_features("PARTICLE_ANISOTROPY"):
                 np.testing.assert_allclose(
-                    np.copy(system.part[0].v),
+                    system.part[0].v,
                     v0 * np.exp(-gamma_t_a /
                                 system.part[0].mass * system.time),
                     atol=4E-4)
             else:
                 np.testing.assert_allclose(
-                    np.copy(system.part[0].v),
+                    system.part[0].v,
                     v0 * np.exp(-gamma_t_i /
                                 system.part[0].mass * system.time),
                     atol=45E-4)
@@ -178,11 +178,11 @@ class LangevinThermostat(ut.TestCase):
             system.integrator.run(10)
             if espressomd.has_features("PARTICLE_ANISOTROPY"):
                 np.testing.assert_allclose(
-                    np.copy(system.part[0].omega_body),
+                    system.part[0].omega_body,
                     o0 * np.exp(-gamma_r_a / rinertia * system.time), atol=5E-4)
             else:
                 np.testing.assert_allclose(
-                    np.copy(system.part[0].omega_body),
+                    system.part[0].omega_body,
                     o0 * np.exp(-gamma_r_i / rinertia * system.time), atol=5E-4)
 
     def check_global_langevin(self, recalc_forces, loops):
@@ -488,15 +488,15 @@ class LangevinThermostat(ut.TestCase):
 
         system.integrator.run(0)
 
-        np.testing.assert_almost_equal(np.copy(virtual.f), [0, 0, 0])
-        np.testing.assert_almost_equal(np.copy(physical.f), [-1, 0, 0])
+        np.testing.assert_almost_equal(virtual.f, [0, 0, 0])
+        np.testing.assert_almost_equal(physical.f, [-1, 0, 0])
 
         system.thermostat.set_langevin(
             kT=0, gamma=1, gamma_rotation=1., act_on_virtual=True, seed=41)
         system.integrator.run(0)
 
-        np.testing.assert_almost_equal(np.copy(virtual.f), [-1, 0, 0])
-        np.testing.assert_almost_equal(np.copy(physical.f), [-1, 0, 0])
+        np.testing.assert_almost_equal(virtual.f, [-1, 0, 0])
+        np.testing.assert_almost_equal(physical.f, [-1, 0, 0])
 
     def test_08__noise_correlation(self):
         """Checks that the Langevin noise is uncorrelated"""

@@ -34,8 +34,10 @@ class ParticleSliceTest(ut.TestCase):
 
         if has_features(["EXTERNAL_FORCES"]):
             self.system.part[1].fix = self.state[1]
-            np.testing.assert_array_equal(self.system.part[0].fix, self.state[0])
-            np.testing.assert_array_equal(self.system.part[1].fix, self.state[1])
+            np.testing.assert_array_equal(
+                self.system.part[0].fix, self.state[0])
+            np.testing.assert_array_equal(
+                self.system.part[1].fix, self.state[1])
             np.testing.assert_array_equal(self.system.part[:2].fix, self.state)
         xs = self.system.part[:].pos
         for i in range(len(xs)):
