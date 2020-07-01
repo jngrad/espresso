@@ -68,12 +68,13 @@ Similarly, the position can be set::
 Vectorial properties
 ~~~~~~~~~~~~~~~~~~~~
 
-For vectorial particle properties, component-wise manipulation like ``system.part[0].pos[0]
-= 1`` or in-place operators like ``+=`` or ``*=`` are not allowed and result in an error.
-This behavior is inherited, so the same applies to ``a`` after ``a =
-system.part[0].pos``. If you want to use a vectorial property for further
-calculations, you should explicitly make a copy e.g. via
-``a = numpy.copy(system.part[0].pos)``.
+For vectorial particle properties, component-wise manipulation such as
+``system.part[0].pos[0] = 1`` or in-place operators like ``+=`` or ``*=``
+are not allowed and raise an error. This behavior is inherited, so
+the same applies to ``a`` after ``a = system.part[0].pos`` but not to
+``b`` after ``b = np.array([1. ,1. , 1.]); b *= system.part[0].pos``.
+If you want to use a vectorial property for further calculations, you
+should explicitly make a copy e.g. via ``a = numpy.copy(system.part[0].pos)``.
 
 .. _Interacting with groups of particles:
 

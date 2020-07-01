@@ -87,11 +87,27 @@ class ArrayLockedTest(ArrayCommon):
         array = [4, 5, 6]
         np.testing.assert_array_equal(array, [4, 5, 6])
 
+    def test_in_place_operations(self):
+        array1 = espressomd.utils.array_locked([1, 2, 3])
+        array2 = espressomd.utils.array_locked([1, 2, 3])
+        # in-place operations on a regular numpy array should not raise
+        lhs = np.array([1, 2, 3])
+        lhs += array1
+        lhs -= array1
+        lhs *= array1
+        lhs //= array1
+        np.testing.assert_array_equal(lhs, [1, 2, 3])
+        # numpy testing should not fail (involves in-place logical operations)
+        lhs = np.array([True, True, False])
+        lhs &= espressomd.utils.array_locked([True, False, False])
+        np.testing.assert_array_almost_equal(lhs, [True, False, False])
+        np.testing.assert_array_almost_equal(array1, array2)
+
 
 def check_array_writable(array):
     value = np.random.random(array.shape[0]).astype(type(array[0]))
     array = value
-    np.testing.assert_array_almost_equal(np.copy(array), value)
+    np.testing.assert_array_almost_equal(array, value)
 
 
 class ArrayPropertyTest(ArrayCommon):
@@ -111,6 +127,21 @@ class ArrayPropertyTest(ArrayCommon):
         cpy = np.copy(array)
         self.assertTrue(cpy.flags.writeable)
 
+    def assert_immutable(self, array):
+        original_value = array[0]
+        # check a simple operation
+        mutable_copy = 1 * array
+        self.assertTrue(mutable_copy.flags.writeable)
+        mutable_copy[0] = original_value + 1
+        self.assertEqual(mutable_copy[0], original_value + 1)
+        self.assertEqual(array[0], original_value)
+        # check an in-place operation
+        mutable_array = np.core.float_(0.)
+        mutable_array += array
+        mutable_array[0] = original_value + 1
+        self.assertEqual(mutable_array[0], original_value + 1)
+        self.assertEqual(array[0], original_value)
+
     def test_common(self):
         self.assert_operator_usage_raises(self.system.part[0].pos)
         self.assert_operator_usage_raises(self.system.part[0].v)
@@ -118,6 +149,8 @@ class ArrayPropertyTest(ArrayCommon):
         self.assert_operator_usage_raises(self.system.part[0].pos_folded)
 
         self.assert_operator_usage_raises(self.system.box_l)
+
+        self.assert_immutable(self.system.box_l)
 
         check_array_writable(self.system.part[0].pos)
         check_array_writable(self.system.part[0].v)
@@ -130,6 +163,10 @@ class ArrayPropertyTest(ArrayCommon):
         self.assert_copy_is_writable(self.system.part[0].pos_folded)
 
         self.assert_copy_is_writable(self.system.box_l)
+
+        original_box_l = self.system.box_l
+        self.system.box_l = original_box_l + 1
+        np.testing.assert_array_equal(self.system.box_l, original_box_l + 1)
 
     @utx.skipIfMissingFeatures(["ROTATION"])
     def test_rotation(self):

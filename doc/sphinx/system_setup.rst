@@ -12,11 +12,10 @@ The global variables in Python are controlled via the
 :class:`espressomd.system.System` class.
 Global system variables can be read and set in Python simply by accessing the
 attribute of the corresponding Python object. Those variables that are already
-available in the Python interface are listed in the following. Note that for the
-vectorial properties ``box_l`` and ``periodicity``, component-wise manipulation
-like ``system.box_l[0] = 1`` or in-place operators like ``+=`` or ``*=`` are not
-allowed and result in an error. This behavior is inherited, so the same applies
-to ``a`` after ``a = system.box_l``. If you want to use a vectorial property
+available in the Python interface are listed in the following. Note that for
+vectorial properties such as ``box_l`` and ``periodicity``, component-wise
+manipulation and in-place operations are disabled
+(see :ref:`Vectorial properties`). If you want to use a vectorial property
 for further calculations, you should explicitly make a copy e.g. via
 ``a = numpy.copy(system.box_l)``.
 
