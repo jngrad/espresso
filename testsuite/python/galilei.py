@@ -43,13 +43,13 @@ class Galilei(ut.TestCase):
         g = GalileiTransform()
         g.kill_particle_motion()
 
-        np.testing.assert_array_equal(np.copy(self.system.part[:].v), 0)
+        np.testing.assert_array_equal(self.system.part[:].v, 0)
 
     def test_kill_particle_forces(self):
         g = GalileiTransform()
         g.kill_particle_forces()
 
-        np.testing.assert_array_equal(np.copy(self.system.part[:].f), 0)
+        np.testing.assert_array_equal(self.system.part[:].f, 0)
 
     def test_cms(self):
         parts = self.system.part[:]
@@ -59,7 +59,7 @@ class Galilei(ut.TestCase):
         com = np.sum(
             np.multiply(parts.mass.reshape((-1, 1)), parts.pos), axis=0) / total_mass
 
-        np.testing.assert_allclose(np.copy(g.system_CMS()), com)
+        np.testing.assert_allclose(g.system_CMS(), com)
 
     def test_cms_velocity(self):
         parts = self.system.part[:]
@@ -68,14 +68,13 @@ class Galilei(ut.TestCase):
         com_v = np.sum(
             np.multiply(parts.mass.reshape((-1, 1)), parts.v), axis=0) / total_mass
 
-        np.testing.assert_allclose(np.copy(g.system_CMS_velocity()), com_v)
+        np.testing.assert_allclose(g.system_CMS_velocity(), com_v)
 
     def test_galilei_transform(self):
         g = GalileiTransform()
         g.galilei_transform()
 
-        np.testing.assert_allclose(
-            np.copy(g.system_CMS_velocity()), np.zeros((3,)), atol=1e-15)
+        np.testing.assert_allclose(g.system_CMS_velocity(), 0, atol=1e-15)
 
 
 if __name__ == "__main__":

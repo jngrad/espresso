@@ -110,7 +110,7 @@ class LBPoiseuilleCommon:
             for y in range(int(self.system.box_l[1] + 1)):
                 for z in range(int(self.system.box_l[2] + 1)):
                     v_tmp.append(self.lbf[x, y, z].velocity[2])
-            velocities[x, 1] = np.mean(np.array(v_tmp))
+            velocities[x, 1] = np.mean(v_tmp)
             velocities[x, 0] = (x + 0.5) * AGRID
 
         v_measured = velocities[1:-1, 1]
@@ -172,7 +172,7 @@ class LBGPUPoiseuilleInterpolation(ut.TestCase, LBPoiseuilleCommon):
                 for z in range(int(self.system.box_l[2] + 1)):
                     v_tmp.append(
                         self.lbf.get_interpolated_velocity([x, y * AGRID, z * AGRID])[2])
-            velocities[cnt, 1] = np.mean(np.array(v_tmp))
+            velocities[cnt, 1] = np.mean(v_tmp)
             velocities[cnt, 0] = x
             cnt += 1
 

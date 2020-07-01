@@ -30,7 +30,7 @@ class AnalyzeGyration(ut.TestCase):
     def setUpClass(cls):
         box_l = 20.0
         cube_centre = 0.5 * (cls.cube_len - 1)
-        cls.system.box_l = np.array([box_l, box_l, box_l])
+        cls.system.box_l = [box_l, box_l, box_l]
         cls.system.cell_system.set_n_square(use_verlet_lists=False)
         # 4x4 cube
         for x, y, z in np.ndindex((cls.cube_len, cls.cube_len, cls.cube_len)):

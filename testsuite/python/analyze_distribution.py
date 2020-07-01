@@ -30,7 +30,7 @@ class AnalyzeDistributions(ut.TestCase):
     def setUpClass(cls):
         box_l = 20.0
         # start with a small box
-        cls.system.box_l = np.array([box_l, box_l, box_l])
+        cls.system.box_l = [box_l, box_l, box_l]
         cls.system.cell_system.set_n_square(use_verlet_lists=False)
         for p in range(cls.num_part):
             cls.system.part.add(
@@ -48,7 +48,7 @@ class AnalyzeDistributions(ut.TestCase):
     # test system.analysis.distribution(), all the same particle types
     def test_distribution_lin(self):
         # increase PBC to remove mirror images
-        old_pos = self.system.part[:].pos.copy()
+        old_pos = self.system.part[:].pos
         self.system.box_l = self.system.box_l * 2.
         self.system.part[:].pos = old_pos
         r_min = 0.0

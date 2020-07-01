@@ -154,8 +154,8 @@ class InteractionsBondedTest(ut.TestCase):
             E_ref = energy_func(dist)
 
             # Calculate forces
-            f0_sim = np.copy(self.system.part[0].f)
-            f1_sim = np.copy(self.system.part[1].f)
+            f0_sim = self.system.part[0].f
+            f1_sim = self.system.part[1].f
             f1_ref = self.axis * force_func(dist)
 
             # Check that energies match, ...

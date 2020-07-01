@@ -50,9 +50,9 @@ class LBSwitchActor(ut.TestCase):
 
         system.integrator.run(1)
 
-        force_on_part = -friction_1 * np.copy(system.part[0].v)
+        force_on_part = -friction_1 * system.part[0].v
 
-        np.testing.assert_allclose(np.copy(system.part[0].f), force_on_part)
+        np.testing.assert_allclose(system.part[0].f, force_on_part)
 
         system.integrator.run(100)
         self.assertNotAlmostEqual(lb_fluid_1[3, 3, 3].velocity[0], 0.0)
@@ -62,21 +62,19 @@ class LBSwitchActor(ut.TestCase):
         system.part[0].v = [1, 0, 0]
         system.integrator.run(0)
 
-        np.testing.assert_allclose(np.copy(system.part[0].f), 0.0)
+        np.testing.assert_allclose(system.part[0].f, 0.0)
 
         system.actors.add(lb_fluid_2)
         system.thermostat.set_lb(LB_fluid=lb_fluid_2, gamma=friction_2)
 
         for p in product(range(5), range(5), range(5)):
-            np.testing.assert_allclose(
-                np.copy(lb_fluid_2[p].velocity), np.zeros((3,)))
+            np.testing.assert_allclose(lb_fluid_2[p].velocity, 0)
 
         system.part[0].v = [1, 0, 0]
 
         system.integrator.run(1)
 
-        np.testing.assert_allclose(
-            np.copy(system.part[0].f), [-friction_2, 0.0, 0.0])
+        np.testing.assert_allclose(system.part[0].f, [-friction_2, 0.0, 0.0])
 
     def test_CPU_LB(self):
         self.switch_test()

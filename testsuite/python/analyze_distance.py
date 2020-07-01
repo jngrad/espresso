@@ -35,7 +35,7 @@ class AnalyzeDistance(ut.TestCase):
 
     # python version of the espresso core function
     def min_dist(self):
-        r = np.array(self.system.part[:].pos)
+        r = self.system.part[:].pos
         # this generates indices for all i<j combinations
         ij = np.triu_indices(len(r), k=1)
         r_ij = np.fabs(r[ij[0]] - r[ij[1]])
@@ -47,7 +47,7 @@ class AnalyzeDistance(ut.TestCase):
 
     # python version of the espresso core function
     def nbhood(self, pos, r_catch):
-        dist = np.fabs(np.array(self.system.part[:].pos) - pos)
+        dist = np.fabs(self.system.part[:].pos - pos)
         # check smaller distances via PBC
         dist = np.where(
             dist > 0.5 * self.system.box_l, self.system.box_l - dist, dist)

@@ -202,7 +202,7 @@ class Observables(ut.TestCase):
             self.system.part[:].v)
         self.assertEqual(obs_data.shape, part_data.shape)
         np.testing.assert_array_almost_equal(
-            obs_data, np.copy(part_data), err_msg="Data did not agree for observable 'Current'", decimal=9)
+            obs_data, part_data, err_msg="Data did not agree for observable 'Current'", decimal=9)
 
     @utx.skipIfMissingFeatures('ELECTROSTATICS')
     def test_dipolemoment(self):

@@ -35,38 +35,33 @@ class ParticleSliceTest(ut.TestCase):
         if has_features(["EXTERNAL_FORCES"]):
             self.system.part[1].fix = self.state[1]
             np.testing.assert_array_equal(
-                np.copy(self.system.part[0].fix), self.state[0])
+                self.system.part[0].fix, self.state[0])
             np.testing.assert_array_equal(
-                np.copy(self.system.part[1].fix), self.state[1])
-            np.testing.assert_array_equal(
-                np.copy(self.system.part[:2].fix), self.state)
+                self.system.part[1].fix, self.state[1])
+            np.testing.assert_array_equal(self.system.part[:2].fix, self.state)
         xs = self.system.part[:].pos
         for i in range(len(xs)):
-            np.testing.assert_array_equal(
-                xs[i], np.copy(self.system.part[i].pos))
+            np.testing.assert_array_equal(xs[i], self.system.part[i].pos)
 
     @utx.skipIfMissingFeatures(["EXTERNAL_FORCES"])
     def test_1_set_different_values(self):
         self.state[0] = [1, 0, 0]
         self.state[1] = [1, 0, 0]
         self.system.part[:2].fix = self.state
-        np.testing.assert_array_equal(
-            np.copy(self.system.part[:2].fix), self.state)
+        np.testing.assert_array_equal(self.system.part[:2].fix, self.state)
 
     @utx.skipIfMissingFeatures(["EXTERNAL_FORCES"])
     def test_2_set_same_value(self):
         self.state[0] = [0, 1, 0]
         self.state[1] = [0, 1, 0]
         self.system.part[:2].fix = self.state[1]
-        np.testing.assert_array_equal(
-            np.copy(self.system.part[:2].fix), self.state)
+        np.testing.assert_array_equal(self.system.part[:2].fix, self.state)
 
     @utx.skipIfMissingFeatures(["EXTERNAL_FORCES"])
     def test_3_set_one_value(self):
         self.state[1] = [0, 0, 1]
         self.system.part[1:2].fix = self.state[1]
-        np.testing.assert_array_equal(
-            np.copy(self.system.part[:2].fix), self.state)
+        np.testing.assert_array_equal(self.system.part[:2].fix, self.state)
 
     @utx.skipIfMissingFeatures(["EXTERNAL_FORCES"])
     def test_4_str(self):
@@ -361,7 +356,7 @@ class ParticleSliceTest(ut.TestCase):
         for p in positions:
             self.system.part.add(pos=p)
         np.testing.assert_allclose(
-            np.copy(self.system.part[:3].pos), np.copy(self.system.part[3:6].pos))
+            self.system.part[:3].pos, self.system.part[3:6].pos)
 
         with self.assertRaises(ValueError):
             self.system.part.add(pos=([1, 1, 1], [2, 2, 2]), type=0)

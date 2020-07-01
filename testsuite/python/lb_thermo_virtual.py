@@ -58,8 +58,8 @@ class LBBoundaryThermoVirtualTest(ut.TestCase):
 
         s.integrator.run(1)
 
-        np.testing.assert_almost_equal(np.copy(virtual.f), [0, 0, 0])
-        np.testing.assert_almost_equal(np.copy(physical.f), [-1, 0, 0])
+        np.testing.assert_almost_equal(virtual.f, [0, 0, 0])
+        np.testing.assert_almost_equal(physical.f, [-1, 0, 0])
 
         s.thermostat.set_lb(LB_fluid=lb_fluid, act_on_virtual=True)
 
@@ -78,9 +78,9 @@ class LBBoundaryThermoVirtualTest(ut.TestCase):
 
         # The forces are not exactly -1 because the fluid is not at
         # rest anymore because of the previous check.
-        np.testing.assert_almost_equal(np.copy(physical.f), np.copy(virtual.f))
-        np.testing.assert_almost_equal(np.copy(physical.f), [-1, 0, 0])
-        np.testing.assert_almost_equal(np.copy(virtual.f), [-1, 0, 0])
+        np.testing.assert_almost_equal(physical.f, virtual.f)
+        np.testing.assert_almost_equal(physical.f, [-1, 0, 0])
+        np.testing.assert_almost_equal(virtual.f, [-1, 0, 0])
 
     def test_lb_cpu(self):
         self.check_virtual(espressomd.lb.LBFluid)

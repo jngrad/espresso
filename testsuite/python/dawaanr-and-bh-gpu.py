@@ -62,7 +62,7 @@ class BHGPUTest(ut.TestCase):
             if n > 1000:
                 l *= (n / 541) ** (1 / 3.0)
             for i in range(n):
-                part_pos = np.array(np.random.random(3)) * l
+                part_pos = np.random.random(3) * l
                 costheta = 2 * np.random.random() - 1
                 sintheta = np.sin(np.arcsin(costheta))
                 phi = 2 * np.pi * np.random.random()
@@ -70,7 +70,7 @@ class BHGPUTest(ut.TestCase):
                 part_dip[1] = sintheta * np.sin(phi) * dipole_modulus
                 part_dip[2] = costheta * dipole_modulus
                 self.system.part.add(id=i, type=0, pos=part_pos, dip=part_dip,
-                                     v=np.array([0, 0, 0]), omega_body=np.array([0, 0, 0]))
+                                     v=[0, 0, 0], omega_body=[0, 0, 0])
 
             self.system.non_bonded_inter[0, 0].lennard_jones.set_params(
                 epsilon=10.0, sigma=0.5, cutoff=0.55, shift="auto")
@@ -125,20 +125,16 @@ class BHGPUTest(ut.TestCase):
             for i in range(n):
                 self.assertTrue(
                     self.vectorsTheSame(
-                        np.array(dawaanr_t[i]),
-                        ratio_dawaanr_bh_gpu * np.array(bhgpu_t[i])),
+                        dawaanr_t[i], ratio_dawaanr_bh_gpu * bhgpu_t[i]),
                     msg='Torques on particle do not match. i={0} dawaanr_t={1} '
                         'ratio_dawaanr_bh_gpu*bhgpu_t={2}'.format(
-                            i, np.array(dawaanr_t[i]),
-                            ratio_dawaanr_bh_gpu * np.array(bhgpu_t[i])))
+                            i, dawaanr_t[i], ratio_dawaanr_bh_gpu * bhgpu_t[i]))
                 self.assertTrue(
                     self.vectorsTheSame(
-                        np.array(dawaanr_f[i]),
-                        ratio_dawaanr_bh_gpu * np.array(bhgpu_f[i])),
+                        dawaanr_f[i], ratio_dawaanr_bh_gpu * bhgpu_f[i]),
                     msg='Forces on particle do not match: i={0} dawaanr_f={1} '
                         'ratio_dawaanr_bh_gpu*bhgpu_f={2}'.format(
-                            i, np.array(dawaanr_f[i]),
-                            ratio_dawaanr_bh_gpu * np.array(bhgpu_f[i])))
+                            i, dawaanr_f[i], ratio_dawaanr_bh_gpu * bhgpu_f[i]))
             self.assertLessEqual(
                 abs(dawaanr_e - bhgpu_e * ratio_dawaanr_bh_gpu),
                 abs(1E-3 * dawaanr_e),

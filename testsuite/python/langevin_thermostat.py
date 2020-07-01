@@ -77,16 +77,16 @@ class LangevinThermostat(ut.TestCase):
 
         #'integrate 0' does not increase the philox counter and should give the same force
         system.integrator.run(0)
-        force0 = np.copy(system.part[0].f)
+        force0 = system.part[0].f
         system.integrator.run(0)
-        force1 = np.copy(system.part[0].f)
+        force1 = system.part[0].f
         np.testing.assert_almost_equal(force0, force1)
 
         #'integrate 1' should give a different force
         system.part.clear()
         system.part.add(pos=[0, 0, 0])
         system.integrator.run(1)
-        force2 = np.copy(system.part[0].f)
+        force2 = system.part[0].f
         np.testing.assert_equal(np.any(np.not_equal(force1, force2)), True)
 
         # Different seed should give a different force
@@ -94,7 +94,7 @@ class LangevinThermostat(ut.TestCase):
         system.part.add(pos=[0, 0, 0])
         system.thermostat.set_langevin(kT=kT, gamma=gamma, seed=42)
         system.integrator.run(1)
-        force3 = np.copy(system.part[0].f)
+        force3 = system.part[0].f
         np.testing.assert_equal(np.any(np.not_equal(force2, force3)), True)
 
         # Same seed should give the same force
@@ -102,12 +102,12 @@ class LangevinThermostat(ut.TestCase):
         system.part.add(pos=[0, 0, 0])
         system.thermostat.set_langevin(kT=kT, gamma=gamma, seed=41)
         system.integrator.run(1)
-        force4 = np.copy(system.part[0].f)
+        force4 = system.part[0].f
         system.part.clear()
         system.part.add(pos=[0, 0, 0])
         system.thermostat.set_langevin(kT=kT, gamma=gamma, seed=41)
         system.integrator.run(1)
-        force5 = np.copy(system.part[0].f)
+        force5 = system.part[0].f
         np.testing.assert_almost_equal(force4, force5)
 
     def test_02__friction_trans(self):
@@ -134,13 +134,13 @@ class LangevinThermostat(ut.TestCase):
             system.integrator.run(10)
             if espressomd.has_features("PARTICLE_ANISOTROPY"):
                 np.testing.assert_allclose(
-                    np.copy(system.part[0].v),
+                    system.part[0].v,
                     v0 * np.exp(-gamma_t_a /
                                 system.part[0].mass * system.time),
                     atol=4E-4)
             else:
                 np.testing.assert_allclose(
-                    np.copy(system.part[0].v),
+                    system.part[0].v,
                     v0 * np.exp(-gamma_t_i /
                                 system.part[0].mass * system.time),
                     atol=45E-4)
@@ -171,18 +171,18 @@ class LangevinThermostat(ut.TestCase):
 
         system.time = 0
         if espressomd.has_features("ROTATIONAL_INERTIA"):
-            rinertia = np.copy(system.part[0].rinertia)
+            rinertia = system.part[0].rinertia
         else:
             rinertia = np.array((1, 1, 1))
         for _ in range(100):
             system.integrator.run(10)
             if espressomd.has_features("PARTICLE_ANISOTROPY"):
                 np.testing.assert_allclose(
-                    np.copy(system.part[0].omega_body),
+                    system.part[0].omega_body,
                     o0 * np.exp(-gamma_r_a / rinertia * system.time), atol=5E-4)
             else:
                 np.testing.assert_allclose(
-                    np.copy(system.part[0].omega_body),
+                    system.part[0].omega_body,
                     o0 * np.exp(-gamma_r_i / rinertia * system.time), atol=5E-4)
 
     def check_global_langevin(self, recalc_forces, loops):
@@ -488,15 +488,15 @@ class LangevinThermostat(ut.TestCase):
 
         system.integrator.run(0)
 
-        np.testing.assert_almost_equal(np.copy(virtual.f), [0, 0, 0])
-        np.testing.assert_almost_equal(np.copy(physical.f), [-1, 0, 0])
+        np.testing.assert_almost_equal(virtual.f, [0, 0, 0])
+        np.testing.assert_almost_equal(physical.f, [-1, 0, 0])
 
         system.thermostat.set_langevin(
             kT=0, gamma=1, gamma_rotation=1., act_on_virtual=True, seed=41)
         system.integrator.run(0)
 
-        np.testing.assert_almost_equal(np.copy(virtual.f), [-1, 0, 0])
-        np.testing.assert_almost_equal(np.copy(physical.f), [-1, 0, 0])
+        np.testing.assert_almost_equal(virtual.f, [-1, 0, 0])
+        np.testing.assert_almost_equal(physical.f, [-1, 0, 0])
 
     def test_08__noise_correlation(self):
         """Checks that the Langevin noise is uncorrelated"""
@@ -521,7 +521,7 @@ class LangevinThermostat(ut.TestCase):
         system.integrator.run(steps)
 
         # test translational noise correlation
-        vel = np.array(vel_series.time_series())
+        vel = vel_series.time_series()
         for ind in range(2):
             for i in range(3):
                 for j in range(i, 3):
@@ -534,7 +534,7 @@ class LangevinThermostat(ut.TestCase):
 
         # test rotational noise correlation
         if espressomd.has_features("ROTATION"):
-            omega = np.array(omega_series.time_series())
+            omega = omega_series.time_series()
             for ind in range(2):
                 for i in range(3):
                     for j in range(3):

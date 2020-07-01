@@ -161,8 +161,7 @@ class InteractionsBondedTest(ut.TestCase):
             # Check that energies match, ...
             np.testing.assert_almost_equal(E_sim, E_ref)
             # and has correct value.
-            f2_sim_copy = np.copy(f2_sim)
-            np.testing.assert_almost_equal(f2_sim_copy, f2_ref)
+            np.testing.assert_almost_equal(f2_sim, f2_ref)
 
     # Test Tabulated Dihedral Angle
     def test_tabulated_dihedral(self):

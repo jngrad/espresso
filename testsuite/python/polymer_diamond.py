@@ -125,7 +125,7 @@ class DiamondPolymer(ut.TestCase):
         E = self.system.analysis.energy()['total']
         self.assertAlmostEqual(E, 0., delta=1e-13)
 
-        node_pos_scaled = np.array(self.node_parts.pos) / self.system.box_l[0]
+        node_pos_scaled = self.node_parts.pos / self.system.box_l[0]
         node_pos_shouldbe = 0.25 * np.array([[0, 0, 0], [1, 1, 1],
                                              [2, 2, 0], [0, 2, 2],
                                              [2, 0, 2], [3, 3, 1],

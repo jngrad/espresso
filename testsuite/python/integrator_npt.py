@@ -66,7 +66,7 @@ class IntegratorNPT(ut.TestCase):
             ls[t] = self.S.box_l[0]
 
         avp /= (n / skip_p)
-        Vs = np.array(ls)**3
+        Vs = ls**3
         compressibility = np.var(Vs) / np.average(Vs)
 
         self.assertAlmostEqual(avp, 2.0, delta=0.02)

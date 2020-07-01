@@ -93,7 +93,7 @@ class Rotation(ut.TestCase):
 
         # Space and body frame co-incide?
         np.testing.assert_allclose(
-            np.copy(p.director), p.convert_vector_body_to_space((0, 0, 1)), atol=1E-10)
+            p.director, p.convert_vector_body_to_space((0, 0, 1)), atol=1E-10)
 
         # Random vector should still co-incide
         v = (1., 5.5, 17)
@@ -133,13 +133,11 @@ class Rotation(ut.TestCase):
         # place particle in cell with MPI rank 0
         p = s.part.add(pos=0.01 * self.s.box_l, rotation=(1, 1, 1))
         p.rotate((1, 0, 0), -np.pi / 2)
-        np.testing.assert_array_almost_equal(
-            np.copy(p.director), [0, 1, 0], decimal=10)
+        np.testing.assert_array_almost_equal(p.director, [0, 1, 0], decimal=10)
         # place particle in cell with MPI rank N-1
         p = s.part.add(pos=0.99 * self.s.box_l, rotation=(1, 1, 1))
         p.rotate((1, 0, 0), -np.pi / 2)
-        np.testing.assert_array_almost_equal(
-            np.copy(p.director), [0, 1, 0], decimal=10)
+        np.testing.assert_array_almost_equal(p.director, [0, 1, 0], decimal=10)
 
 
 if __name__ == "__main__":

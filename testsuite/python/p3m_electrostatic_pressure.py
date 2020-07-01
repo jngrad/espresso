@@ -30,7 +30,7 @@ class pressureViaVolumeScaling:
     def __init__(self, system, kbT):
         self.system = system
         self.kbT = kbT
-        self.old_box_lengths = np.copy(system.box_l)
+        self.old_box_lengths = system.box_l
         self.old_volume = np.prod(self.old_box_lengths)
         dV_div_old_volume = 0.001
         self.dV = -dV_div_old_volume * self.old_volume

@@ -123,7 +123,7 @@ class InteractionsAngleBondTest(ut.TestCase):
 
             # Total force =0?
             np.testing.assert_allclose(
-                np.sum(np.copy(self.system.part[0:3].f), 0), [0, 0, 0], atol=1E-12)
+                np.sum(self.system.part[0:3].f, 0), [0, 0, 0], atol=1E-12)
 
             # No pressure (isotropic compression preserves angles)
             self.assertAlmostEqual(

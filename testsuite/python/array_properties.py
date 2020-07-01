@@ -74,8 +74,7 @@ class ArrayLockedTest(ArrayCommon):
         np.testing.assert_array_equal(
             add, np.add(np.copy(array), np.copy(array2)))
         np.testing.assert_array_equal(
-            sub, np.subtract(
-                np.copy(array), np.copy(array2)))
+            sub, np.subtract(np.copy(array), np.copy(array2)))
         np.testing.assert_array_equal(sub, -(array2 - array))
 
     def test_copy_is_writeable(self):

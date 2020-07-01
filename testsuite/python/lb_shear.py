@@ -133,8 +133,7 @@ class LBShearCommon:
                 ind = np.array(ind, dtype=int)
                 v_measured = self.lbf[ind[0], ind[1], ind[2]].velocity
                 np.testing.assert_allclose(
-                    np.copy(v_measured),
-                    -np.copy(v_expected[j]) * shear_direction, atol=8E-4)
+                    v_measured, -v_expected[j] * shear_direction, atol=8E-4)
 
         # speed of sound of the LB fluid in MD units (agrid/tau is due to
         # LB->MD unit conversion)
@@ -154,16 +153,13 @@ class LBShearCommon:
         p_expected = p_eq * np.identity(3) - dynamic_viscosity * shear_rate * (
             np.outer(shear_plane_normal, shear_direction) + np.transpose(np.outer(shear_plane_normal, shear_direction)))
         for n in (2, 3, 4), (3, 4, 2), (5, 4, 3):
-            node_pressure_tensor = np.copy(
-                self.lbf[n[0], n[1], n[2]].pressure_tensor)
-            np.testing.assert_allclose(node_pressure_tensor,
-                                       p_expected, atol=1E-5, rtol=5E-3)
+            np.testing.assert_allclose(
+                self.lbf[n[0], n[1], n[2]].pressure_tensor,
+                p_expected, atol=1E-5, rtol=5E-3)
 
-        np.testing.assert_allclose(
-            np.copy(wall1.get_force()),
-            -np.copy(wall2.get_force()),
-            atol=1E-4)
-        np.testing.assert_allclose(np.dot(np.copy(wall1.get_force()), shear_direction),
+        np.testing.assert_allclose(wall1.get_force(), -wall2.get_force(),
+                                   atol=1E-4)
+        np.testing.assert_allclose(np.dot(wall1.get_force(), shear_direction),
                                    SHEAR_VELOCITY / H * W**2 * dynamic_viscosity, atol=2E-4)
 
     def test(self):

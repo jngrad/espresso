@@ -132,21 +132,16 @@ class PressureLJ(ut.TestCase):
         vel = system.part[:].v
 
         sim_pressure_tensor = system.analysis.pressure_tensor()
-        sim_pressure_tensor_kinetic = np.copy(sim_pressure_tensor['kinetic'])
-        sim_pressure_tensor_bonded = np.copy(sim_pressure_tensor['bonded'])
-        sim_pressure_tensor_bonded_harmonic = np.copy(
-            sim_pressure_tensor['bonded', len(system.bonded_inter) - 1])
-        sim_pressure_tensor_nonbonded = np.copy(
-            sim_pressure_tensor['non_bonded'])
-        sim_pressure_tensor_nonbonded_inter = np.copy(
-            sim_pressure_tensor['non_bonded_inter'])
-        sim_pressure_tensor_nonbonded_inter12 = np.copy(
-            sim_pressure_tensor['non_bonded_inter', 1, 2])
-        sim_pressure_tensor_nonbonded_intra = np.copy(
-            sim_pressure_tensor['non_bonded_intra'])
-        sim_pressure_tensor_nonbonded_intra00 = np.copy(
-            sim_pressure_tensor['non_bonded_intra', 0, 0])
-        sim_pressure_tensor_total = np.copy(sim_pressure_tensor['total'])
+        sim_pressure_tensor_kinetic = sim_pressure_tensor['kinetic']
+        sim_pressure_tensor_bonded = sim_pressure_tensor['bonded']
+        sim_pressure_tensor_bonded_harmonic = sim_pressure_tensor['bonded', len(
+            system.bonded_inter) - 1]
+        sim_pressure_tensor_nonbonded = sim_pressure_tensor['non_bonded']
+        sim_pressure_tensor_nonbonded_inter = sim_pressure_tensor['non_bonded_inter']
+        sim_pressure_tensor_nonbonded_inter12 = sim_pressure_tensor['non_bonded_inter', 1, 2]
+        sim_pressure_tensor_nonbonded_intra = sim_pressure_tensor['non_bonded_intra']
+        sim_pressure_tensor_nonbonded_intra00 = sim_pressure_tensor['non_bonded_intra', 0, 0]
+        sim_pressure_tensor_total = sim_pressure_tensor['total']
 
         sim_pressure = system.analysis.pressure()
         sim_pressure_kinetic = sim_pressure['kinetic']

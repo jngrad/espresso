@@ -60,7 +60,7 @@ class Momentum(object):
 
         # Reach steady state
         self.system.integrator.run(500)
-        v_final = np.copy(p.v)
+        v_final = p.v
         momentum = self.system.analysis.linear_momentum()
 
         for _ in range(10):
@@ -71,14 +71,11 @@ class Momentum(object):
 
             # Check that particle velocity is stationary
             # up to the acceleration of 1/2 time step
-            np.testing.assert_allclose(np.copy(p.v), v_final, atol=2.2E-3)
+            np.testing.assert_allclose(p.v, v_final, atol=2.2E-3)
 
         # Make sure, the particle has crossed the periodic boundaries
-        self.assertGreater(
-            np.amax(
-                np.abs(v_final) *
-                self.system.time),
-            BOX_SIZE)
+        self.assertGreater(np.amax(np.abs(v_final) * self.system.time),
+                           BOX_SIZE)
 
 
 @ut.skipIf(not espressomd.gpu_available() or not espressomd.has_features(

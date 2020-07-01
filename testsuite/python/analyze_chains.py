@@ -34,7 +34,7 @@ class AnalyzeChain(ut.TestCase):
     def setUpClass(cls):
         box_l = 20.0
         # start with a small box
-        cls.system.box_l = np.array([box_l, box_l, box_l])
+        cls.system.box_l = [box_l, box_l, box_l]
         cls.system.cell_system.set_n_square(use_verlet_lists=False)
         fene = FeneBond(k=30, d_r_max=2)
         cls.system.bonded_inter.add(fene)
@@ -79,7 +79,6 @@ class AnalyzeChain(ut.TestCase):
         for p in range(self.num_poly):
             rg2.append(
                 np.var(self.system.part[head_id[p]:tail_id[p] + 1].pos, axis=0))
-        rg2 = np.array(rg2)
         rg2 = np.sum(rg2, axis=1)
         return np.mean(np.sqrt(rg2)), np.std(
             np.sqrt(rg2)), np.mean(rg2), np.std(rg2)
@@ -91,7 +90,7 @@ class AnalyzeChain(ut.TestCase):
         tail_id = head_id + self.num_mono - 1
         rh = []
         for p in range(self.num_poly):
-            r = np.array(self.system.part[head_id[p]:tail_id[p] + 1].pos)
+            r = self.system.part[head_id[p]:tail_id[p] + 1].pos
             # this generates indices for all i<j combinations
             ij = np.triu_indices(len(r), k=1)
             r_ij = r[ij[0]] - r[ij[1]]
@@ -99,7 +98,6 @@ class AnalyzeChain(ut.TestCase):
             # rh.append(self.num_mono*self.num_mono*0.5/(np.sum(1./dist)))
             # the other way do it, with the proper prefactor of N(N-1)
             rh.append(1. / np.mean(1. / dist))
-        rh = np.array(rh)
         return np.mean(rh), np.std(rh)
 
     # python version of the espresso core function,
@@ -107,7 +105,7 @@ class AnalyzeChain(ut.TestCase):
     # test core results versus python variants (no PBC)
     def test_radii(self):
         # increase PBC for remove mirror images
-        old_pos = self.system.part[:].pos.copy()
+        old_pos = self.system.part[:].pos
         self.system.box_l = self.system.box_l * 2.
         self.system.part[:].pos = old_pos
         # compare calc_re()

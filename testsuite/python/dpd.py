@@ -208,19 +208,16 @@ class DPDThermostat(ut.TestCase):
         # Only trans, so x component should be zero
         self.assertLess(abs(s.part[0].f[0]), 1e-16)
         np.testing.assert_allclose(
-            np.copy(s.part[0].f[1:2]), gamma * v[1:2], rtol=0, atol=1e-11)
-        np.testing.assert_array_equal(
-            np.copy(s.part[0].f), -np.copy(s.part[1].f))
+            s.part[0].f[1:2], gamma * v[1:2], rtol=0, atol=1e-11)
+        np.testing.assert_array_equal(s.part[0].f, -s.part[1].f)
 
         # Trans and parallel
         s.part[1].pos = [5. - 1.1, 5, 5]
 
         s.integrator.run(0)
 
-        np.testing.assert_allclose(
-            np.copy(s.part[0].f), gamma * v, rtol=0, atol=1e-11)
-        np.testing.assert_array_equal(
-            np.copy(s.part[0].f), -np.copy(s.part[1].f))
+        np.testing.assert_allclose(s.part[0].f, gamma * v, rtol=0, atol=1e-11)
+        np.testing.assert_array_equal(s.part[0].f, -s.part[1].f)
 
     def test_linear_weight_function(self):
         s = self.s
@@ -253,9 +250,8 @@ class DPDThermostat(ut.TestCase):
         self.assertLess(abs(s.part[0].f[0]), 1e-16)
         omega = calc_omega(1.3, 1.4)**2
         np.testing.assert_allclose(
-            np.copy(s.part[0].f[1:2]), omega * gamma * v[1:2], rtol=0, atol=1e-11)
-        np.testing.assert_array_equal(
-            np.copy(s.part[0].f), -np.copy(s.part[1].f))
+            s.part[0].f[1:2], omega * gamma * v[1:2], rtol=0, atol=1e-11)
+        np.testing.assert_array_equal(s.part[0].f, -s.part[1].f)
 
         # Trans and parallel
         s.part[1].pos = [5. - 1.1, 5, 5]
@@ -264,9 +260,8 @@ class DPDThermostat(ut.TestCase):
 
         omega = np.array([calc_omega(1.1, x)**2 for x in [1.2, 1.4, 1.4]])
         np.testing.assert_allclose(
-            np.copy(s.part[0].f), omega * gamma * v, rtol=0, atol=1e-11)
-        np.testing.assert_array_equal(
-            np.copy(s.part[0].f), -np.copy(s.part[1].f))
+            s.part[0].f, omega * gamma * v, rtol=0, atol=1e-11)
+        np.testing.assert_array_equal(s.part[0].f, -s.part[1].f)
 
         # Trans and parallel 2nd point
         s.part[1].pos = [5. - 0.5, 5, 5]
@@ -275,9 +270,8 @@ class DPDThermostat(ut.TestCase):
 
         omega = np.array([calc_omega(0.5, x)**2 for x in [1.2, 1.4, 1.4]])
         np.testing.assert_allclose(
-            np.copy(s.part[0].f), omega * gamma * v, rtol=0, atol=1e-11)
-        np.testing.assert_array_equal(
-            np.copy(s.part[0].f), -np.copy(s.part[1].f))
+            s.part[0].f, omega * gamma * v, rtol=0, atol=1e-11)
+        np.testing.assert_array_equal(s.part[0].f, -s.part[1].f)
 
     def test_parabolic_weight_function(self):
         s = self.s
@@ -312,9 +306,8 @@ class DPDThermostat(ut.TestCase):
             # The particle is moved along the x-direction. Hence, we are
             # testing the x element.
             np.testing.assert_allclose(
-                np.copy(s.part[0].f), omega * gamma * v, rtol=0, atol=1e-11)
-            np.testing.assert_array_equal(
-                np.copy(s.part[0].f), -np.copy(s.part[1].f))
+                s.part[0].f, omega * gamma * v, rtol=0, atol=1e-11)
+            np.testing.assert_array_equal(s.part[0].f, -s.part[1].f)
 
     def test_ghosts_have_v(self):
         s = self.s
@@ -457,8 +450,8 @@ class DPDThermostat(ut.TestCase):
             dpd_obs = DPDStress()
             obs_stress = dpd_obs.calculate()
 
-            np.testing.assert_array_almost_equal(np.copy(dpd_stress), stress)
-            np.testing.assert_array_almost_equal(np.copy(obs_stress), stress)
+            np.testing.assert_array_almost_equal(dpd_stress, stress)
+            np.testing.assert_array_almost_equal(obs_stress, stress)
 
     def test_momentum_conservation(self):
         r_cut = 1.0

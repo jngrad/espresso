@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import unittest as ut
 import unittest_decorators as utx
-from numpy.random import random
 import numpy as np
 
 import espressomd
@@ -33,8 +32,8 @@ class DDSGPUTest(ut.TestCase):
 
     def stopAll(self):
         for i in range(len(self.es.part)):
-            self.es.part[i].v = np.array([0.0, 0.0, 0.0])
-            self.es.part[i].omega_body = np.array([0.0, 0.0, 0.0])
+            self.es.part[i].v = [0.0, 0.0, 0.0]
+            self.es.part[i].omega_body = [0.0, 0.0, 0.0]
 
     @ut.skipIf(es.cell_system.get_state()["n_nodes"] > 1,
                "Skipping test: only runs for n_nodes == 1")
@@ -53,15 +52,15 @@ class DDSGPUTest(ut.TestCase):
         for n in [128, 541]:
             dipole_modulus = 1.3
             for i in range(n):
-                part_pos = np.array(random(3)) * l
-                costheta = 2 * random() - 1
+                part_pos = np.random.random(3) * l
+                costheta = 2 * np.random.random() - 1
                 sintheta = np.sin(np.arcsin(costheta))
-                phi = 2 * np.pi * random()
+                phi = 2 * np.pi * np.random.random()
                 part_dip[0] = sintheta * np.cos(phi) * dipole_modulus
                 part_dip[1] = sintheta * np.sin(phi) * dipole_modulus
                 part_dip[2] = costheta * dipole_modulus
                 self.es.part.add(id=i, type=0, pos=part_pos, dip=part_dip,
-                                 v=np.array([0, 0, 0]), omega_body=np.array([0, 0, 0]))
+                                 v=[0, 0, 0], omega_body=[0, 0, 0])
 
             self.es.non_bonded_inter[0, 0].lennard_jones.set_params(
                 epsilon=10.0, sigma=0.5, cutoff=0.55, shift="auto")
@@ -117,13 +116,11 @@ class DDSGPUTest(ut.TestCase):
             # compare
             for i in range(n):
                 np.testing.assert_allclose(
-                    np.array(dawaanr_t[i]),
-                    ratio_dawaanr_dds_gpu * np.array(ddsgpu_t[i]),
+                    dawaanr_t[i], ratio_dawaanr_dds_gpu * ddsgpu_t[i],
                     err_msg='Torques on particle do not match for particle {}'
                     .format(i), atol=3e-3)
                 np.testing.assert_allclose(
-                    np.array(dawaanr_f[i]),
-                    ratio_dawaanr_dds_gpu * np.array(ddsgpu_f[i]),
+                    dawaanr_f[i], ratio_dawaanr_dds_gpu * ddsgpu_f[i],
                     err_msg='Forces on particle do not match for particle i={}'
                     .format(i), atol=3e-3)
             self.assertAlmostEqual(

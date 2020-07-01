@@ -118,8 +118,7 @@ class SwimmerTest():
                 f_swim * director + self.gamma * v_swim * director
 
             self.system.integrator.run(1, reuse_forces=True)
-            np.testing.assert_allclose(
-                np.copy(swimmer.f), force, atol=self.tol)
+            np.testing.assert_allclose(swimmer.f, force, atol=self.tol)
 
     def check_fluid_force(self, swimmer):
         pass

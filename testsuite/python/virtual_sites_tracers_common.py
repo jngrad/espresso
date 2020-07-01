@@ -199,24 +199,16 @@ class VirtualSitesTracersCommon:
         if isinstance(self.lbf, lb.LBFluid):  # as opposed to LBFluidGPU
             for p in system.part:
                 np.testing.assert_allclose(
-                    np.copy(p.v), np.copy(
-                        self.lbf.get_interpolated_velocity(p.pos)),
-                    atol=2E-2)
+                    p.v, self.lbf.get_interpolated_velocity(p.pos), atol=2E-2)
         # get new shapes
-        dist1non = np.linalg.norm(
-            np.array(system.part[1].pos - system.part[0].pos))
-        dist2non = np.linalg.norm(
-            np.array(system.part[2].pos - system.part[0].pos))
+        dist1non = np.linalg.norm(system.part[1].pos - system.part[0].pos)
+        dist2non = np.linalg.norm(system.part[2].pos - system.part[0].pos)
 
-        dist1weak = np.linalg.norm(
-            np.array(system.part[3].pos - system.part[4].pos))
-        dist2weak = np.linalg.norm(
-            np.array(system.part[3].pos - system.part[5].pos))
+        dist1weak = np.linalg.norm(system.part[3].pos - system.part[4].pos)
+        dist2weak = np.linalg.norm(system.part[3].pos - system.part[5].pos)
 
-        dist1strong = np.linalg.norm(
-            np.array(system.part[6].pos - system.part[7].pos))
-        dist2strong = np.linalg.norm(
-            np.array(system.part[6].pos - system.part[8].pos))
+        dist1strong = np.linalg.norm(system.part[6].pos - system.part[7].pos)
+        dist2strong = np.linalg.norm(system.part[6].pos - system.part[8].pos)
 
         print("** Distances: non-bonded, weak, strong, expected")
         print(str(dist1non) + "    " + str(dist1weak)

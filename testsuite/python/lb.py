@@ -229,7 +229,7 @@ class TestLB:
             obs_pressure_tensor,
             atol=1E-10)
         np.testing.assert_allclose(
-            np.copy(self.lbf.pressure_tensor),
+            self.lbf.pressure_tensor,
             obs_pressure_tensor,
             atol=1E-10)
 
@@ -251,7 +251,7 @@ class TestLB:
         v_fluid = np.array([1.2, 4.3, 0.2])
         self.lbf[0, 0, 0].velocity = v_fluid
         np.testing.assert_allclose(
-            np.copy(self.lbf[0, 0, 0].velocity), v_fluid, atol=1e-4)
+            self.lbf[0, 0, 0].velocity, v_fluid, atol=1e-4)
         density = 0.234
         self.lbf[0, 0, 0].density = density
         self.assertAlmostEqual(self.lbf[0, 0, 0].density, density, delta=1e-4)
@@ -261,11 +261,11 @@ class TestLB:
         self.lbf.ext_force_density = ext_force_density
         self.lbf[1, 2, 3].velocity = v_fluid
         np.testing.assert_allclose(
-            np.copy(self.lbf[1, 2, 3].velocity),
+            self.lbf[1, 2, 3].velocity,
             v_fluid,
             atol=1e-4)
         np.testing.assert_allclose(
-            np.copy(self.lbf.ext_force_density),
+            self.lbf.ext_force_density,
             ext_force_density,
             atol=1e-4)
 
@@ -359,7 +359,9 @@ class TestLB:
                 self.system.part[0].pos)
         self.system.integrator.run(1)
         np.testing.assert_allclose(
-            np.copy(self.system.part[0].f), -self.params['friction'] * (v_part - v_fluid), atol=1E-6)
+            self.system.part[0].f,
+            -self.params['friction'] * (v_part - v_fluid),
+            atol=1E-6)
 
     @utx.skipIfMissingFeatures("EXTERNAL_FORCES")
     def test_ext_force_density(self):
@@ -379,7 +381,8 @@ class TestLB:
             n_time_steps + 0.5) / self.params['dens']
         for n in self.lbf.nodes():
             np.testing.assert_allclose(
-                np.copy(n.velocity), fluid_velocity, atol=1E-6, err_msg="Fluid node velocity not as expected on node {}".format(n.index))
+                n.velocity, fluid_velocity, atol=1E-6,
+                err_msg="Fluid node velocity not as expected on node {}".format(n.index))
 
     @utx.skipIfMissingFeatures("EXTERNAL_FORCES")
     def test_unequal_time_step(self):
@@ -403,9 +406,9 @@ class TestLB:
         self.system.thermostat.set_lb(LB_fluid=lbf, gamma=0.1)
         self.system.integrator.run(
             int(round(sim_time / self.system.time_step)))
-        probe_pos = np.array(self.system.box_l) / 2.
-        v1 = np.copy(lbf.get_interpolated_velocity(probe_pos))
-        f1 = np.copy(self.system.part[0].f)
+        probe_pos = self.system.box_l / 2.
+        v1 = lbf.get_interpolated_velocity(probe_pos)
+        f1 = self.system.part[0].f
         self.system.actors.clear()
         # get fresh LBfluid and change time steps
         lbf = self.lb_class(
@@ -430,8 +433,8 @@ class TestLB:
         self.system.integrator.run(
             int(round(sim_time / self.system.time_step)))
         self.system.time_step = self.params['time_step']
-        v2 = np.copy(lbf.get_interpolated_velocity(probe_pos))
-        f2 = np.copy(self.system.part[0].f)
+        v2 = lbf.get_interpolated_velocity(probe_pos)
+        f2 = self.system.part[0].f
         np.testing.assert_allclose(v1, v2, rtol=1e-5)
         np.testing.assert_allclose(f1, f2, rtol=1e-5)
 

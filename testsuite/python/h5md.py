@@ -195,7 +195,7 @@ class H5mdTestOrdered(CommonTests):
 
     def test_ids(self):
         """Test if ids have been written properly."""
-        np.testing.assert_allclose(np.array(range(npart)), self.py_id,
+        np.testing.assert_allclose(np.arange(npart), self.py_id,
                                    err_msg="ids incorrectly ordered and written by H5md!")
 
 

@@ -101,7 +101,7 @@ class Stokes:
                 break
             last_force = force
 
-        force = np.copy(sphere.get_force())
+        force = sphere.get_force()
         np.testing.assert_allclose(
             force,
             [0, 0, stokes_force],

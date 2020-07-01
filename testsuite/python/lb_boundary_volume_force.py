@@ -79,10 +79,8 @@ class LBBoundaryForceCommon:
             diff = abs(new_val - old_val)
             old_val = new_val
 
-        expected_force = fluid_nodes * AGRID**3 * \
-            np.copy(self.lbf.ext_force_density)
-        measured_force = np.array(wall1.get_force()) + \
-            np.array(wall2.get_force())
+        expected_force = fluid_nodes * AGRID**3 * self.lbf.ext_force_density
+        measured_force = wall1.get_force() + wall2.get_force()
         np.testing.assert_allclose(measured_force, expected_force, atol=2E-2)
 
 

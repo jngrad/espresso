@@ -47,7 +47,7 @@ class FieldTest(ut.TestCase):
         g_const = np.array([1, 2, 3])
         gravity = constraints.Gravity(g=g_const)
 
-        np.testing.assert_almost_equal(g_const, np.copy(gravity.g))
+        np.testing.assert_almost_equal(gravity.g, g_const)
 
         self.system.constraints.add(gravity)
 
@@ -58,14 +58,14 @@ class FieldTest(ut.TestCase):
 
         self.system.integrator.run(0)
 
-        np.testing.assert_almost_equal(g_const, np.copy(p.f) / p.mass)
+        np.testing.assert_almost_equal(p.f / p.mass, g_const)
         self.assertAlmostEqual(self.system.analysis.energy()['total'], 0.)
 
         # Virtual sites don't feel gravity
         if espressomd.has_features("VIRTUAL_SITES"):
             self.system.part[0].virtual = True
             self.system.integrator.run(0)
-            np.testing.assert_allclose(np.copy(self.system.part[0].f), 0)
+            np.testing.assert_allclose(self.system.part[0].f, 0)
 
     @utx.skipIfMissingFeatures("ELECTROSTATICS")
     def test_linear_electric_potential(self):
@@ -82,7 +82,7 @@ class FieldTest(ut.TestCase):
         p.q = -3.1
 
         self.system.integrator.run(0)
-        np.testing.assert_almost_equal(p.q * E, np.copy(p.f))
+        np.testing.assert_almost_equal(p.f, p.q * E)
 
         self.assertAlmostEqual(self.system.analysis.energy()['total'],
                                p.q * (- np.dot(E, p.pos) + phi0))
@@ -111,28 +111,28 @@ class FieldTest(ut.TestCase):
         self.system.integrator.run(0)
 
         np.testing.assert_almost_equal(
-            np.copy(p.f), p.q * E0 * np.sin(np.dot(k, p.pos_folded)
-                                            - omega * self.system.time + phi))
+            p.f, p.q * E0 * np.sin(np.dot(k, p.pos_folded)
+                                   - omega * self.system.time + phi))
 
         self.system.integrator.run(10)
 
         np.testing.assert_almost_equal(
-            np.copy(p.f), p.q * E0 * np.sin(np.dot(k, p.pos_folded)
-                                            - omega * self.system.time + phi))
+            p.f, p.q * E0 * np.sin(np.dot(k, p.pos_folded)
+                                   - omega * self.system.time + phi))
 
     def test_homogeneous_flow_field(self):
         u = np.array([1., 2., 3.])
         gamma = 2.3
 
         flow_field = constraints.HomogeneousFlowField(u=u, gamma=gamma)
-        np.testing.assert_almost_equal(u, np.copy(flow_field.u))
+        np.testing.assert_almost_equal(flow_field.u, u)
 
         self.system.constraints.add(flow_field)
 
         p = self.system.part.add(pos=[0.5, 0.5, 0.5], v=[3., 4., 5.])
 
         self.system.integrator.run(0)
-        np.testing.assert_almost_equal(gamma * (u - p.v), np.copy(p.f))
+        np.testing.assert_almost_equal(p.f, gamma * (u - p.v))
 
         self.assertAlmostEqual(self.system.analysis.energy()['total'],
                                self.system.analysis.energy()['kinetic'])
@@ -160,8 +160,7 @@ class FieldTest(ut.TestCase):
             self.system.integrator.run(0)
             self.assertAlmostEqual(self.system.analysis.energy()['total'],
                                    scaling * f_val, places=5)
-            np.testing.assert_allclose(
-                np.copy(p.f), scaling * self.force(x), rtol=1e-5)
+            np.testing.assert_allclose(p.f, scaling * self.force(x), rtol=1e-5)
 
     @utx.skipIfMissingFeatures("ELECTROSTATICS")
     def test_electric_potential_field(self):
@@ -187,8 +186,7 @@ class FieldTest(ut.TestCase):
             self.system.integrator.run(0)
             self.assertAlmostEqual(self.system.analysis.energy()['total'],
                                    p.q * f_val, places=5)
-            np.testing.assert_allclose(
-                np.copy(p.f), p.q * self.force(x), rtol=1e-5)
+            np.testing.assert_allclose(p.f, p.q * self.force(x), rtol=1e-5)
 
     def test_force_field(self):
         h = np.array([.8, .8, .8])
@@ -210,7 +208,7 @@ class FieldTest(ut.TestCase):
 
             p.pos = x
             self.system.integrator.run(0)
-            np.testing.assert_allclose(scaling * f_val, np.copy(p.f))
+            np.testing.assert_allclose(p.f, scaling * f_val)
 
     def test_flow_field(self):
         h = np.array([.8, .8, .8])
@@ -234,8 +232,7 @@ class FieldTest(ut.TestCase):
 
             p.pos = x
             self.system.integrator.run(0)
-            np.testing.assert_allclose(
-                -gamma * (p.v - f_val), np.copy(p.f), atol=1e-12)
+            np.testing.assert_allclose(p.f, -gamma * (p.v - f_val), atol=1e-12)
 
 
 if __name__ == "__main__":

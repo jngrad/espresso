@@ -81,9 +81,9 @@ class IntegratorSteepestDescent(ut.TestCase):
         # Check
         self.assertAlmostEqual(
             self.system.analysis.energy()["total"], 0, places=10)
-        np.testing.assert_allclose(np.copy(self.system.part[:].f), 0.)
+        np.testing.assert_allclose(self.system.part[:].f, 0.)
         if self.test_rotation:
-            np.testing.assert_allclose(np.copy(self.system.part[:].dip),
+            np.testing.assert_allclose(self.system.part[:].dip,
                                        np.hstack((-np.ones((self.n_part, 1)), np.zeros((self.n_part, 1)), np.zeros((self.n_part, 1)))), atol=1E-9)
 
     def test_relaxation_integrator(self):
@@ -99,10 +99,10 @@ class IntegratorSteepestDescent(ut.TestCase):
         sd_params = {"f_max": 1e-6, "gamma": 0.1, "max_displacement": max_disp}
         self.system.integrator.set_steepest_descent(**sd_params)
         # no displacement if max_steps = 0
-        positions = np.copy(self.system.part[:].pos)
+        positions = self.system.part[:].pos
         steps = self.system.integrator.run(0)
-        np.testing.assert_allclose(np.copy(self.system.part[:].pos), positions)
-        np.testing.assert_allclose(np.copy(self.system.part[:].v), 0.)
+        np.testing.assert_allclose(self.system.part[:].pos, positions)
+        np.testing.assert_allclose(self.system.part[:].v, 0.)
         np.testing.assert_allclose(self.system.part[:].f[:, 0:2], 0.)
         self.assertAlmostEqual(np.sum(self.system.part[:].f[:, 2]), 0.)
         self.assertLess(self.system.part[:].f[0, 2], -1.)
@@ -110,15 +110,15 @@ class IntegratorSteepestDescent(ut.TestCase):
         # displacement = max_disp if max_steps = 1
         positions[:, 2] += [-max_disp, max_disp]
         steps = self.system.integrator.run(1)
-        np.testing.assert_allclose(np.copy(self.system.part[:].pos), positions)
-        np.testing.assert_allclose(np.copy(self.system.part[:].v), 0.)
-        np.testing.assert_allclose(np.copy(self.system.part[:].f), 0.)
+        np.testing.assert_allclose(self.system.part[:].pos, positions)
+        np.testing.assert_allclose(self.system.part[:].v, 0.)
+        np.testing.assert_allclose(self.system.part[:].f, 0.)
         self.assertEqual(steps, 1)
         # no displacement after convergence
         steps = self.system.integrator.run(1)
-        np.testing.assert_allclose(np.copy(self.system.part[:].pos), positions)
-        np.testing.assert_allclose(np.copy(self.system.part[:].v), 0.)
-        np.testing.assert_allclose(np.copy(self.system.part[:].f), 0.)
+        np.testing.assert_allclose(self.system.part[:].pos, positions)
+        np.testing.assert_allclose(self.system.part[:].v, 0.)
+        np.testing.assert_allclose(self.system.part[:].f, 0.)
         self.assertEqual(steps, 0)
 
     def test_convergence(self):
@@ -152,7 +152,7 @@ class IntegratorSteepestDescent(ut.TestCase):
             cutoff=self.lj_cut, shift="auto")
 
         self.system.integrator.run(0)
-        f_old = np.copy(self.system.part[:].f)
+        f_old = self.system.part[:].f
 
         # No-op, because gamma = 0.
         sd_params = {"f_max": 0.0, "gamma": 0.0, "max_displacement": 0.001}
@@ -160,12 +160,12 @@ class IntegratorSteepestDescent(ut.TestCase):
         self.system.integrator.set_steepest_descent(**sd_params)
         self.system.integrator.run(1)
 
-        np.testing.assert_allclose(f_old, np.copy(self.system.part[:].f))
+        np.testing.assert_allclose(f_old, self.system.part[:].f)
 
         espressomd.minimize_energy.steepest_descent(
             self.system, max_steps=1, **sd_params)
 
-        np.testing.assert_allclose(f_old, np.copy(self.system.part[:].f))
+        np.testing.assert_allclose(f_old, self.system.part[:].f)
 
 
 if __name__ == "__main__":

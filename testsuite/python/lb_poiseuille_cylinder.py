@@ -127,7 +127,7 @@ class LBPoiseuilleCommon:
                                 np.nonzero(self.params['axis'])[0] + 1)
                 v_tmp.append(
                     self.lbf[index].velocity[np.nonzero(self.params['axis'])[0]])
-            velocities[y] = np.mean(np.array(v_tmp))
+            velocities[y] = np.mean(v_tmp)
             positions[y] = (y + 0.5) * AGRID
 
         v_measured = velocities[1:-1]
@@ -159,11 +159,7 @@ class LBPoiseuilleCommon:
         self.prepare_obs()
         # gather some statistics for the observable accumulator
         self.system.integrator.run(1)
-        obs_result = np.array(
-            self.accumulator.get_mean()).reshape(OBS_PARAMS['n_r_bins'],
-                                                 OBS_PARAMS['n_phi_bins'],
-                                                 OBS_PARAMS['n_z_bins'],
-                                                 3)
+        obs_result = self.accumulator.get_mean()
         x = np.linspace(
             OBS_PARAMS['min_r'],
             OBS_PARAMS['max_r'],
