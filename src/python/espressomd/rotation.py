@@ -109,8 +109,7 @@ def diagonalized_inertia_tensor(positions, masses):
 
     def center_of_mass(positions, masses): return np.average(
         positions, axis=0, weights=masses)
-    positions = np.array(np.copy(positions)) - \
-        center_of_mass(positions, masses)
+    positions = positions - center_of_mass(positions, masses)
     inertia = inertia_tensor(positions, masses)
     eig, eigv = np.linalg.eig(inertia)
     eigv = np.transpose(eigv)

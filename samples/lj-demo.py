@@ -452,7 +452,7 @@ def main_loop():
         controls.pressure = pressure['total']
 
         new_box = np.ones(3) * controls.volume**(1. / 3.)
-        if np.any(np.array(system.box_l) != new_box):
+        if np.any(system.box_l != new_box):
             for i in range(len(system.part)):
                 system.part[i].pos = system.part[i].pos * \
                     new_box / system.box_l[0]

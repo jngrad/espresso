@@ -440,7 +440,7 @@ def main():
             0.005 * np.linalg.norm(system.part[0].v)
         zoom_v += zoom_a * zoom_dt
         zoom += zoom_v * zoom_dt + zoom_a * zoom_dt * zoom_dt
-        camPos = np.copy(system.part[0].pos) - box * 0.5
+        camPos = system.part[0].pos - box * 0.5
         camPos[2] = box[2] * zoom
         camTarget = system.part[0].pos - box * 0.5
         t = camPos - camTarget

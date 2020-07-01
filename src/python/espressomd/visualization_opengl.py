@@ -655,7 +655,7 @@ class openGLLive():
 
                     # BOX_L CHANGED
                     if not (self.last_box_l == self.system.box_l).all():
-                        self.last_box_l = np.copy(self.system.box_l)
+                        self.last_box_l = self.system.box_l
                         self._box_size_dependence()
 
                 # KEYBOARD CALLBACKS MAY CHANGE ESPRESSO SYSTEM PROPERTIES,
@@ -735,10 +735,10 @@ class openGLLive():
         ng = self.specs['LB_plane_ngrid']
         for xi in range(ng):
             for xj in range(ng):
-                pp = np.copy((self.lb_plane_p + xi * 1.0 / ng * self.lb_plane_b1 +
-                              xj * 1.0 / ng * self.lb_plane_b2) % self.system.box_l)
+                pp = (self.lb_plane_p + xi * 1.0 / ng * self.lb_plane_b1 +
+                      xj * 1.0 / ng * self.lb_plane_b2) % self.system.box_l
                 i, j, k = (int(ppp / agrid) for ppp in pp)
-                lb_vel = np.copy(self.lb[i, j, k].velocity)
+                lb_vel = self.lb[i, j, k].velocity
                 self.lb_plane_vel.append([pp, lb_vel])
 
     def _update_lb_velocity_plane_gpu(self):
@@ -746,8 +746,8 @@ class openGLLive():
         col_pos = []
         for xi in range(ng):
             for xj in range(ng):
-                p = np.array((self.lb_plane_p + xi * 1.0 / ng * self.lb_plane_b1 +
-                              xj * 1.0 / ng * self.lb_plane_b2) % self.system.box_l)
+                p = (self.lb_plane_p + xi * 1.0 / ng * self.lb_plane_b1 +
+                     xj * 1.0 / ng * self.lb_plane_b2) % self.system.box_l
                 col_pos.append(p)
 
         lb_vels = self.lb.get_interpolated_fluid_velocity_at_positions(
@@ -929,7 +929,7 @@ class openGLLive():
     def _draw_lb_grid(self):
         a = self.lb_params['agrid']
         cell_size = np.array([a] * 3)
-        dims = np.rint(np.array(self.system.box_l) / a)
+        dims = np.rint(self.system.box_l / a)
         for i in range(int(dims[0])):
             for j in range(int(dims[1])):
                 for k in range(int(dims[2])):
@@ -1207,8 +1207,8 @@ class openGLLive():
             p = lbl[0]
             v = lbl[1]
             draw_arrow(
-                p, v *
-                self.specs['LB_vel_scale'],
+                p,
+                v * self.specs['LB_vel_scale'],
                 self.lb_arrow_radius,
                 self.specs['LB_arrow_color'],
                 self.materials[self.specs['LB_arrow_material']],
@@ -1618,7 +1618,7 @@ class openGLLive():
         self.box_eqn[:3, 3] = 0.001 * self.system.box_l
         self.box_eqn[3:, 3] = 1.001 * self.system.box_l
 
-        self.camera.center = np.array(self.system.box_l) * 0.5
+        self.camera.center = 0.5 * self.system.box_l
         self.camera.update_modelview()
 
     # DEFAULT CONTROLS
@@ -1712,7 +1712,7 @@ class openGLLive():
                 self.camera.state_target)
 
     def _init_camera(self):
-        b = np.array(self.system.box_l)
+        b = self.system.box_l
         box_diag = np.linalg.norm(b)
         box_center = b * 0.5
         if self.specs['camera_position'] == 'auto':
@@ -1776,7 +1776,7 @@ class openGLLive():
                                 np.array(self.specs['light_pos']).tolist())
         else:
             OpenGL.GL.glLightfv(OpenGL.GL.GL_LIGHT0, OpenGL.GL.GL_POSITION,
-                                (np.array(self.system.box_l) * 1.1).tolist())
+                                (self.system.box_l * 1.1).tolist())
 
         OpenGL.GL.glLightfv(
             OpenGL.GL.GL_LIGHT0,
@@ -1886,7 +1886,7 @@ class Shape():
     def _rasterize_shape(self):
         # rasterize brute force
         spacing = max(self.box_l) / self.rasterize_resolution
-        resolution = np.array(self.box_l) / spacing
+        resolution = self.box_l / spacing
 
         points = []
         for i in range(int(resolution[0])):

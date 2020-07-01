@@ -214,12 +214,9 @@ class ESPReader(SingleFrameReaderBase):
                 elif pos == -2:
                     n_atoms = int(line)
                     self.n_atoms = n_atoms
-                    positions = np.zeros(
-                        self.n_atoms * 3, dtype=np.float32).reshape(self.n_atoms, 3)
-                    velocities = np.zeros(
-                        self.n_atoms * 3, dtype=np.float32).reshape(self.n_atoms, 3)
-                    forces = np.zeros(
-                        self.n_atoms * 3, dtype=np.float32).reshape(self.n_atoms, 3)
+                    positions = np.zeros((self.n_atoms, 3), dtype=np.float32)
+                    velocities = np.zeros((self.n_atoms, 3), dtype=np.float32)
+                    forces = np.zeros((self.n_atoms, 3), dtype=np.float32)
                     self.ts = ts = self._Timestep(
                         self.n_atoms, **self._ts_kwargs)
                     self.ts.time = time
@@ -228,13 +225,13 @@ class ESPReader(SingleFrameReaderBase):
                         list(map(float, line[1:-2].split())))
                 elif pos < n_atoms:
                     positions[pos] = np.array(
-                        list(map(float, line[1:-2].split())))
+                        line[1:-2].split(), dtype=float)
                 elif pos < 2 * n_atoms:
                     velocities[pos - n_atoms] = np.array(
-                        list(map(float, line[1:-2].split())))
+                        line[1:-2].split(), dtype=float)
                 else:
                     forces[pos - 2 * n_atoms] = np.array(
-                        list(map(float, line[1:-2].split())))
+                        line[1:-2].split(), dtype=float)
 
             ts.positions = np.copy(positions)
             ts.velocities = np.copy(velocities)
