@@ -71,6 +71,10 @@ case "$1" in
         shift
         exec cuda-memcheck "@PYTHON_FRONTEND@" "$@"
         ;;
+    --coverage)
+        shift
+        exec coverage run $@
+        ;;
     --gdb=*)
         options="${1#*=}"
         shift
@@ -96,6 +100,11 @@ case "$1" in
         options="${1#*=}"
         shift
         exec cuda-memcheck ${options} "@PYTHON_FRONTEND@" "$@"
+        ;;
+    --coverage=*)
+        options="${1#*=}"
+        shift
+        exec coverage run ${options} $@
         ;;
     *)
         exec "@PYTHON_FRONTEND@" "$@"
