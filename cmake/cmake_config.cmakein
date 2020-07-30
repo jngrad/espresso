@@ -17,9 +17,9 @@
 
 #cmakedefine LAPACK
 
-#cmakedefine STOKESIAN_DYNAMICS
+#cmakedefine STOKESIAN_DYNAMICS_LIB_CPU
 
-#cmakedefine STOKESIAN_DYNAMICS_GPU
+#cmakedefine STOKESIAN_DYNAMICS_LIB_GPU
 
 #cmakedefine VALGRIND_INSTRUMENTATION
 

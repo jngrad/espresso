@@ -480,8 +480,9 @@ Stokesian thermostat
 
 .. note::
 
-    Requires ``STOKESIAN_DYNAMICS`` external feature, enabled with
-    ``-DWITH_STOKESIAN_DYNAMICS=ON``.
+    Requires ``STOKESIAN_DYNAMICS_LIB_*`` external features, enabled with
+    ``-DWITH_STOKESIAN_DYNAMICS_CPU=ON`` or ``-DWITH_STOKESIAN_DYNAMICS_GPU=ON``,
+    and features ``STOKESIAN_DYNAMICS`` or ``STOKESIAN_DYNAMICS_GPU``.
 
 In order to thermalize a Stokesian Dynamics simulation, the SD thermostat
 needs to be activated via::

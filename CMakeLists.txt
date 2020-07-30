@@ -74,7 +74,10 @@ option(WITH_CUDA "Build with GPU support" OFF)
 option_if_available(WITH_HDF5 "Build with HDF5 support" ON)
 option(WITH_TESTS "Enable tests" ON)
 option_if_available(WITH_SCAFACOS "Build with ScaFaCoS support" OFF)
-option_if_available(WITH_STOKESIAN_DYNAMICS "Build with Stokesian Dynamics" ON)
+option_if_available(WITH_STOKESIAN_DYNAMICS_CPU
+                    "Build with Stokesian Dynamics on CPU" ON)
+option_if_available(WITH_STOKESIAN_DYNAMICS_GPU
+                    "Build with Stokesian Dynamics on GPU" ON)
 option(WITH_BENCHMARKS "Enable benchmarks" OFF)
 option(WITH_VALGRIND_INSTRUMENTATION
        "Build with valgrind instrumentation markers" OFF)
@@ -254,21 +257,30 @@ if(WITH_GSL)
   endif(GSL_FOUND)
 endif(WITH_GSL)
 
-find_package(BLAS)
-if(BLAS_FOUND)
-  set(BLAS 1)
-endif()
-find_package(LAPACK)
-if(LAPACK_FOUND)
-  set(LAPACK 1)
-endif()
-
-if(WITH_STOKESIAN_DYNAMICS)
-  if(BLAS AND LAPACK)
-    set(STOKESIAN_DYNAMICS 1)
+if(WITH_STOKESIAN_DYNAMICS_CPU)
+  find_package(BLAS)
+  if(BLAS_FOUND)
+    set(BLAS 1)
   endif()
+  find_package(LAPACK)
+  if(LAPACK_FOUND)
+    set(LAPACK 1)
+  endif()
+  if(BLAS AND LAPACK)
+    set(STOKESIAN_DYNAMICS_LIB_CPU 1)
+  endif()
+  if(NOT STOKESIAN_DYNAMICS_LIB_CPU
+     AND NOT WITH_STOKESIAN_DYNAMICS_CPU_IS_DEFAULT_VALUE)
+    message(
+      FATAL_ERROR
+        "Optional feature Stokesian Dynamics on CPU explicitly requested, but dependencies not found."
+    )
+  endif()
+endif(WITH_STOKESIAN_DYNAMICS_CPU)
+
+if(WITH_STOKESIAN_DYNAMICS_GPU)
   if(CUDA)
-    set(STOKESIAN_DYNAMICS_GPU 1)
+    set(STOKESIAN_DYNAMICS_LIB_GPU 1)
     if(HIP)
       find_gpu_library(VARNAME CUDA_CUBLAS_LIBRARIES NAMES rocblas)
       find_gpu_library(VARNAME CUDA_cusolver_LIBRARY NAMES rocsolver)
@@ -278,22 +290,32 @@ if(WITH_STOKESIAN_DYNAMICS)
         # look for a library cublas_device that no longer exists in CUDA 10
         cmake_minimum_required(VERSION 3.12.2)
       endif()
+      if(CUDA_VERSION VERSION_LESS 9)
+        set(STOKESIAN_DYNAMICS_LIB_GPU 0)
+      endif()
       find_gpu_library(VARNAME CUDA_CUBLAS_LIBRARIES NAMES cublas)
       find_gpu_library(VARNAME CUDA_cusolver_LIBRARY NAMES cusolver)
     endif()
+    if(NOT CUDA_CUBLAS_LIBRARIES OR NOT CUDA_cusolver_LIBRARY)
+      set(STOKESIAN_DYNAMICS_LIB_GPU 0)
+    endif()
   endif(CUDA)
-  if(NOT (STOKESIAN_DYNAMICS
-          OR (STOKESIAN_DYNAMICS_GPU AND CUDA_CUBLAS_LIBRARIES
-              AND CUDA_cusolver_LIBRARY))
-     AND NOT WITH_STOKESIAN_DYNAMICS_IS_DEFAULT_VALUE)
+  if(NOT STOKESIAN_DYNAMICS_LIB_GPU
+     AND NOT WITH_STOKESIAN_DYNAMICS_GPU_IS_DEFAULT_VALUE)
     message(
       FATAL_ERROR
-        "Optional feature Stokesian Dynamics explicitly requested, but dependencies not found."
+        "Optional feature Stokesian Dynamics on GPU explicitly requested, but dependencies not found."
     )
   endif()
-endif(WITH_STOKESIAN_DYNAMICS)
+endif(WITH_STOKESIAN_DYNAMICS_GPU)
 
-if(WITH_STOKESIAN_DYNAMICS)
+if(STOKESIAN_DYNAMICS_LIB_CPU OR STOKESIAN_DYNAMICS_LIB_GPU)
+  if(STOKESIAN_DYNAMICS_LIB_CPU)
+    set(STOKESIAN_DYNAMICS 1)
+  endif()
+  if(STOKESIAN_DYNAMICS_LIB_GPU)
+    set(STOKESIAN_DYNAMICS_GPU 1)
+  endif()
   set(CMAKE_INSTALL_LIBDIR
       "${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTDIR}/espressomd")
   cmake_minimum_required(VERSION 3.11)
@@ -308,7 +330,7 @@ if(WITH_STOKESIAN_DYNAMICS)
     add_subdirectory(${stokesian_dynamics_SOURCE_DIR}
                      ${stokesian_dynamics_BINARY_DIR})
   endif()
-endif(WITH_STOKESIAN_DYNAMICS)
+endif()
 
 if(WITH_VALGRIND_INSTRUMENTATION)
   find_package(PkgConfig)

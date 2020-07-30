@@ -380,6 +380,11 @@ integrator or thermostat:
 
 -  ``PARTICLE_ANISOTROPY``
 
+- ``STOKESIAN_DYNAMICS`` Enables the Stokesian Dynamics feature for CPU
+  (see :ref:`Stokesian Dynamics`). Requires ``STOKESIAN_DYNAMICS_LIB_CPU``.
+
+- ``STOKESIAN_DYNAMICS_GPU`` Enables the Stokesian Dynamics feature for GPU
+  (see :ref:`Stokesian Dynamics`). Requires ``STOKESIAN_DYNAMICS_LIB_GPU``.
 
 .. _Fluid dynamics and fluid structure interaction:
 
@@ -510,10 +515,10 @@ using a CMake flag (see :ref:`Options and Variables`).
 - ``GSL`` Enables features relying on the GNU Scientific Library, e.g.
   :meth:`espressomd.cluster_analysis.Cluster.fractal_dimension`.
 
-- ``STOKESIAN_DYNAMICS`` Enables the Stokesian Dynamics feature for CPU
+- ``STOKESIAN_DYNAMICS_LIB_CPU`` Enables the Stokesian Dynamics feature for CPU
   (see :ref:`Stokesian Dynamics`). Requires BLAS and LAPACK.
 
-- ``STOKESIAN_DYNAMICS_GPU`` Enables the Stokesian Dynamics feature for GPU
+- ``STOKESIAN_DYNAMICS_LIB_GPU`` Enables the Stokesian Dynamics feature for GPU
   (see :ref:`Stokesian Dynamics`). Requires thrust/cuBLAS/cuSolver for NVIDIA
   GPUs or rocrand/rocthrust/rocblas/rocsolver for AMD GPUs.
   Requires ``EXPERIMENTAL_FEATURES``.
@@ -680,7 +685,9 @@ options are available:
 
 * ``WITH_SCAFACOS``: Build with ScaFaCoS support
 
-* ``WITH_STOKESIAN_DYNAMICS`` Build with Stokesian Dynamics support
+* ``WITH_STOKESIAN_DYNAMICS_CPU`` Build with Stokesian Dynamics support on CPU
+
+* ``WITH_STOKESIAN_DYNAMICS_GPU`` Build with Stokesian Dynamics support on GPU
 
 * ``WITH_VALGRIND_INSTRUMENTATION``: Build with valgrind instrumentation
   markers
@@ -730,7 +737,8 @@ the CMake logic needs editing:
   When installing a release version of |es|, no network communication
   is needed for HDF5.
 
-* ``WITH_STOKESIAN_DYNAMICS``: this library is installed using `FetchContent
+* ``WITH_STOKESIAN_DYNAMICS_CPU`` and ``WITH_STOKESIAN_DYNAMICS_GPU``:
+  these install the Stokesian Dynamics library using `FetchContent
   <https://cmake.org/cmake/help/latest/module/FetchContent.html>`_.
   The repository URL can be found in the ``GIT_REPOSITORY`` field of the
   corresponding ``FetchContent_Declare()`` command. The ``GIT_TAG`` field

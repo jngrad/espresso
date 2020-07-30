@@ -35,6 +35,8 @@
 #define LANGEVIN_PER_PARTICLE
 #define BROWNIAN_PER_PARTICLE
 
+#define STOKESIAN_DYNAMICS
+
 #define NPT
 
 #define DPD
@@ -49,6 +51,7 @@
 #define ELECTROKINETICS
 #define EK_BOUNDARIES
 #define MMM1D_GPU
+#define STOKESIAN_DYNAMICS_GPU
 #endif
 
 #define TABULATED
