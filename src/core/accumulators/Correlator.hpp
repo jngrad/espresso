@@ -102,6 +102,7 @@
 
 #include <boost/multi_array.hpp>
 #include <boost/serialization/access.hpp>
+#include <boost/variant.hpp>
 
 #include <memory>
 #include <utility>
@@ -163,6 +164,8 @@ private:
   void initialize();
 
 public:
+  using ArgType = boost::variant<Utils::Vector3d, size_t>;
+
   /** The function to process a new datapoint of A and B
    *
    *  First the function finds out if it is necessary to make some space for
@@ -197,10 +200,8 @@ public:
   double last_update() const { return m_last_update; }
   double dt() const { return m_dt; }
 
-  Utils::Vector3d const &correlation_args() const { return m_correlation_args; }
-  void set_correlation_args(Utils::Vector3d const &args) {
-    m_correlation_args = args;
-  }
+  ArgType const &correlation_args() const { return m_correlation_args; }
+  void set_correlation_args(ArgType const &args) { m_correlation_args = args; }
 
   std::string const &compress1() const { return compressA_name; }
   std::string const &compress2() const { return compressB_name; }
@@ -217,9 +218,7 @@ private:
   bool finalized; ///< whether the correlation is finalized
   unsigned int t; ///< global time in number of frames
 
-  Utils::Vector3d m_correlation_args; ///< additional arguments, which the
-                                      ///< correlation may need (currently
-                                      ///< only used by fcs_acf)
+  ArgType m_correlation_args; ///< additional correlation argument
 
   int hierarchy_depth; ///< maximum level of data compression
   int m_tau_lin;       ///< number of frames in the linear correlation
@@ -260,9 +259,9 @@ private:
   size_t dim_B;                ///< dimensionality of B
   std::vector<size_t> m_shape; ///< dimensionality of the correlation
 
-  using correlation_operation_type = std::vector<double> (*)(
-      std::vector<double> const &, std::vector<double> const &,
-      Utils::Vector3d const &);
+  using correlation_operation_type =
+      std::vector<double> (*)(std::vector<double> const &,
+                              std::vector<double> const &, ArgType const &);
 
   correlation_operation_type corr_operation;
 

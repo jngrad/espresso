@@ -69,7 +69,7 @@ std::vector<double> compress_discard2(std::vector<double> const &A1,
 
 std::vector<double> scalar_product(std::vector<double> const &A,
                                    std::vector<double> const &B,
-                                   Utils::Vector3d const &) {
+                                   Correlator::ArgType const &) {
   if (A.size() != B.size()) {
     throw std::runtime_error(
         "Error in scalar product: The vector sizes do not match");
@@ -79,9 +79,36 @@ std::vector<double> scalar_product(std::vector<double> const &A,
       1, std::inner_product(A.begin(), A.end(), B.begin(), 0.0));
 }
 
+std::vector<double> scalar_product_last_axis(std::vector<double> const &A,
+                                             std::vector<double> const &B,
+                                             Correlator::ArgType const &arg) {
+  if (A.size() != B.size()) {
+    throw std::runtime_error(
+        "Error in scalar_product_last_axis: The vector sizes do not match.");
+  }
+
+  auto const size_last_dim = boost::get<size_t>(arg);
+  auto const C_size = A.size() / size_last_dim;
+  if (size_last_dim * C_size != A.size()) {
+    throw std::runtime_error("Invalid dimensions.");
+  }
+
+  std::vector<double> C(C_size, 0);
+
+  for (size_t i = 0; i < C_size; i++) {
+    for (size_t j = 0; j < size_last_dim; j++) {
+      auto const &a = A[size_last_dim * i + j];
+      auto const &b = B[size_last_dim * i + j];
+      C[i] = a * b;
+    }
+  }
+
+  return C;
+}
+
 std::vector<double> componentwise_product(std::vector<double> const &A,
                                           std::vector<double> const &B,
-                                          Utils::Vector3d const &) {
+                                          Correlator::ArgType const &) {
   std::vector<double> C(A.size());
   if (A.size() != B.size()) {
     throw std::runtime_error(
@@ -95,7 +122,7 @@ std::vector<double> componentwise_product(std::vector<double> const &A,
 
 std::vector<double> tensor_product(std::vector<double> const &A,
                                    std::vector<double> const &B,
-                                   Utils::Vector3d const &) {
+                                   Correlator::ArgType const &) {
   std::vector<double> C(A.size() * B.size());
   auto C_it = C.begin();
 
@@ -110,7 +137,7 @@ std::vector<double> tensor_product(std::vector<double> const &A,
 
 std::vector<double> square_distance_componentwise(std::vector<double> const &A,
                                                   std::vector<double> const &B,
-                                                  Utils::Vector3d const &) {
+                                                  Correlator::ArgType const &) {
   if (A.size() != B.size()) {
     throw std::runtime_error(
         "Error in square distance componentwise: The vector sizes do not "
@@ -130,7 +157,7 @@ std::vector<double> square_distance_componentwise(std::vector<double> const &A,
 // sets w
 std::vector<double> fcs_acf(std::vector<double> const &A,
                             std::vector<double> const &B,
-                            Utils::Vector3d const &wsquare) {
+                            Correlator::ArgType const &arg) {
   if (A.size() != B.size()) {
     throw std::runtime_error(
         "Error in fcs_acf: The vector sizes do not match.");
@@ -142,6 +169,7 @@ std::vector<double> fcs_acf(std::vector<double> const &A,
   }
 
   std::vector<double> C(C_size, 0);
+  auto const wsquare = boost::get<Utils::Vector3d>(arg);
 
   for (size_t i = 0; i < C_size; i++) {
     for (int j = 0; j < 3; j++) {
@@ -236,12 +264,11 @@ void Correlator::initialize() {
   } else if (corr_operation_name == "fcs_acf") {
     // note: user provides w=(wx,wy,wz) but we want to use
     // wsquare=(wx^2,wy^2,wz^2)
-    if (m_correlation_args[0] <= 0 || m_correlation_args[1] <= 0 ||
-        m_correlation_args[2] <= 0) {
+    auto const w = boost::get<Utils::Vector3d>(m_correlation_args);
+    if (w[0] <= 0 || w[1] <= 0 || w[2] <= 0) {
       throw std::runtime_error("missing parameter for fcs_acf: w_x w_y w_z");
     }
-    m_correlation_args =
-        Utils::hadamard_product(m_correlation_args, m_correlation_args);
+    m_correlation_args = Utils::hadamard_product(w, w);
     if (dim_A % 3)
       throw std::runtime_error("dimA must be divisible by 3 for fcs_acf");
     m_dim_corr = dim_A / 3;
@@ -251,7 +278,7 @@ void Correlator::initialize() {
           "the last dimension of dimA must be 3 for fcs_acf");
     m_shape.pop_back();
     corr_operation = &fcs_acf;
-  } else if (corr_operation_name == "scalar_product") {
+  } else if (corr_operation_name == "scalar_product_flat") {
     m_dim_corr = 1;
     auto const shape_A = A_obs->shape();
     auto const shape_B = B_obs->shape();
@@ -266,6 +293,22 @@ void Correlator::initialize() {
     m_shape = {1};
     corr_operation = &scalar_product;
     m_correlation_args = Utils::Vector3d{0, 0, 0};
+  } else if (corr_operation_name == "scalar_product") {
+    m_dim_corr = 1;
+    auto const shape_A = A_obs->shape();
+    auto const shape_B = B_obs->shape();
+    if (shape_A.size() > 2) {
+      throw std::runtime_error("scalar_product requires 2D matrices, but "
+                               "observable A is a matrix of higher order");
+    }
+    if (shape_B.size() > 2) {
+      throw std::runtime_error("scalar_product requires 2D matrices, but "
+                               "observable B is a matrix of higher order");
+    }
+    m_shape = shape_A;
+    m_shape.back() = 1;
+    corr_operation = &scalar_product_last_axis;
+    m_correlation_args = shape_A.back();
   } else {
     throw std::runtime_error(
         "no proper function for correlation operation given");
