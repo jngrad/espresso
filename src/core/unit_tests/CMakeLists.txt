@@ -61,3 +61,7 @@ unit_test(NAME random_test SRC random_test.cpp DEPENDS EspressoUtils Random123)
 unit_test(NAME BondList_test SRC BondList_test.cpp DEPENDS EspressoCore)
 unit_test(NAME reaction_ensemble_utils_test SRC
           reaction_ensemble_utils_test.cpp DEPENDS EspressoCore)
+if(${FFTW3_FOUND})
+  unit_test(NAME fft_test SRC fft_test.cpp DEPENDS EspressoCore EspressoUtils
+            ${FFTW3_LIBRARIES} Boost::mpi MPI::MPI_CXX NUM_PROC 1)
+endif()
