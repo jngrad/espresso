@@ -28,6 +28,7 @@ jobs:
         wsl bash -c "sudo adduser --uid 1000 --home /home/espresso --shell /bin/bash --disabled-password --gecos \"\" espresso"
         wsl bash -c "pwd"
         wsl bash -c "cd /home/espresso"
+        wsl bash -c "pwd"
     - name: Build and test ESPResSo
       shell: bash
       run: |
