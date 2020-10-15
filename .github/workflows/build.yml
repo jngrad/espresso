@@ -1,11 +1,11 @@
-name: run tests on mac
+name: run tests
 
 on:
   push:
   pull_request:
 
 jobs:
-  tests:
+  test-macos:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@main
@@ -16,3 +16,25 @@ jobs:
     - run: |
         export myconfig=maxset with_cuda=false test_timeout=600
         bash maintainer/CI/build_cmake.sh
+  test-wsl:
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: wsl-bash {0}
+    steps:
+    - uses: Vampire/setup-wsl@v1
+      with:
+        distribution: Debian
+    - uses: actions/checkout@v2
+    - name: Configure WSL for ESPResSo
+      run: >
+          sudo apt-get -y install
+            build-essential cmake cython3 libboost-dev
+            libboost-serialization-dev libboost-mpi-dev libboost-filesystem-dev
+            libboost-test-dev libfftw3-dev libhdf5-openmpi-dev libpython3-dev
+            openmpi-bin python3 python3-numpy python3-scipy python3-h5py
+            python3-setuptools python3-vtk7
+    - name: Build and test ESPResSo
+      run: |
+        export myconfig=maxset with_cuda=false test_timeout=600
+        wsl bash maintainer/CI/build_cmake.sh
