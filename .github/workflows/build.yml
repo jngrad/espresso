@@ -26,10 +26,7 @@ jobs:
       shell: bash
       run: |
         wsl bash -c "sudo adduser --uid 1000 --home /home/espresso --shell /bin/bash --disabled-password --gecos \"\" espresso"
-        wsl bash -c "pwd"
-        wsl bash -c "cd /home/espresso; pwd"
-        wsl bash -c "pwd"
     - name: Build and test ESPResSo
       shell: bash
       run: |
-        wsl --user espresso bash -c "export srcdir=$(pwd); cd "${HOME}"; myconfig=maxset with_cuda=false test_timeout=600 bash maintainer/CI/build_cmake.sh"
+        wsl --user espresso bash -c "export srcdir=$(pwd); cd /home/espresso; myconfig=maxset with_cuda=false test_timeout=600 bash maintainer/CI/build_cmake.sh"
