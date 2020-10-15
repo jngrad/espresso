@@ -29,4 +29,4 @@ jobs:
     - name: Build and test ESPResSo
       shell: bash
       run: |
-        wsl --user espresso bash -c "export srcdir=$(pwd); cd /home/espresso; myconfig=maxset with_cuda=false test_timeout=600 bash maintainer/CI/build_cmake.sh"
+        wsl --user espresso bash -c "export srcdir=$(pwd); cd /home/espresso; myconfig=maxset with_cuda=false test_timeout=600 bash ${srcdir}/maintainer/CI/build_cmake.sh"
