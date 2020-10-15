@@ -31,4 +31,4 @@ jobs:
       shell: bash
       run: |
         wsl bash -c "mkdir build; cd build; cp ../maintainer/configs/maxset.hpp myconfig.hpp; cmake .. -DCMAKE_BUILD_TYPE=RelWithAssert; make -j2; make python_test_data; cd ..; chown espresso:espresso build; chmod 777 build"
-        wsl --user espresso bash -c "cd build; make -j2 check_unit_tests"
+        wsl --user espresso bash -c "cd build; make -j2 check_python"
