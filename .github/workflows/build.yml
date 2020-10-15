@@ -30,4 +30,4 @@ jobs:
     - name: Build and test ESPResSo
       shell: bash
       run: |
-        wsl --user espresso bash -c "myconfig=maxset with_cuda=false test_timeout=600 bash maintainer/CI/build_cmake.sh"
+        wsl --user espresso bash -c "mkdir build; echo 5 > build/log.txt"
