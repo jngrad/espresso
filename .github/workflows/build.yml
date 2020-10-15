@@ -31,4 +31,4 @@ jobs:
       shell: bash
       run: |
         wsl bash -c "mkdir build; cd build; cp ../maintainer/configs/maxset.hpp myconfig.hpp; cmake .. -DCMAKE_BUILD_TYPE=RelWithAssert; make -j2; make python_test_data; chown espresso:espresso ../build; chmod 777 ../build; cd .."
-        wsl --user espresso bash -c "cd build/testsuite/python && /usr/bin/ctest --timeout 300 -j2 --output-on-failure"
+        wsl --user espresso bash -c "cd build/testsuite/python && /usr/bin/ctest --timeout 300 -j2 --output-on-failure -E checkpoint"
