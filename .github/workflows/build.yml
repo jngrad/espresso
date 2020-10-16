@@ -32,8 +32,9 @@ jobs:
       run: |
         wsl bash -c "sed -i '/make check_cmake_install/d' maintainer/CI/build_cmake.sh"
         wsl bash -c "cmake_params='-DCTEST_ARGS=-L;skip_all_tests' bash maintainer/CI/build_cmake.sh"
-        wsl bash -c "cd build; cmake . -DCTEST_ARGS='-E;checkpoint'; cd .."
+        wsl bash -c "cd build; cmake . -DCTEST_ARGS='-E;checkpoint'"
     - name: Test ESPResSo
       shell: bash
       run: |
-        wsl --user espresso bash -c "cd build; make -j2 check_unit_tests; make -j2 check_python"
+        wsl --user espresso bash -c "cd build; make -j2 check_unit_tests"
+        wsl --user espresso bash -c "cd build; make -j2 check_python"
