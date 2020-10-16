@@ -31,6 +31,7 @@ jobs:
       shell: bash
       run: |
         wsl bash -c "sed -i '/make check_cmake_install/d' maintainer/CI/build_cmake.sh"
+        wsl bash -c "sed -i '/Found calls to exit() function in shared libraries/,+1d' maintainer/CI/build_cmake.sh"
         wsl bash -c "myconfig=maxset-walberla with_walberla=true with_cuda=false test_timeout=600 cmake_params='-DCTEST_ARGS=-L;skip_all_tests' bash maintainer/CI/build_cmake.sh"
         wsl bash -c "cd build && cmake . -DCTEST_ARGS='' && make python_test_data"
     - name: Test ESPResSo
