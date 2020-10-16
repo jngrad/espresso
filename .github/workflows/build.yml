@@ -8,11 +8,14 @@ jobs:
   tests:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@main
-    - run: |
+    - name: Clone repository
+      uses: actions/checkout@main
+    - name: Install ESPResSo dependencies
+      run: |
        brew install boost boost-mpi fftw
        brew install hdf5-mpi
        pip3 install numpy cython vtk h5py scipy
-    - run: |
+    - name: Build and test ESPResSo
+      run: |
         export myconfig=maxset with_cuda=false test_timeout=600
         bash maintainer/CI/build_cmake.sh
