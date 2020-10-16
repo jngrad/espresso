@@ -37,4 +37,4 @@ jobs:
       shell: bash
       run: |
         wsl --user espresso bash -c "cd build && make -j2 check_unit_tests"
-        wsl --user espresso bash -c "cd build/testsuite/python && /usr/bin/ctest --timeout 300 -j2 --output-on-failure"
+        wsl --user espresso bash -c "cd build/testsuite/python && /usr/bin/ctest --timeout 300 -j2 --output-on-failure -E checkpoint"
