@@ -36,5 +36,6 @@ jobs:
     - name: Test ESPResSo
       shell: bash
       run: |
-        wsl --user espresso bash -c "cd build; make -j2 check_unit_tests"
-        wsl --user espresso bash -c "cd build; make -j2 check_python"
+        wsl --user espresso bash -c "cd build"
+        wsl --user espresso bash -c "make -j2 check_unit_tests"
+        wsl --user espresso bash -c "make -j2 check_python"
