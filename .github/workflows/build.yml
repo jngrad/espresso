@@ -30,8 +30,8 @@ jobs:
     - name: Build ESPResSo
       shell: bash
       run: |
-        wsl bash -c "sed -i '/make check_cmake_install/d' maintainer/CI/build_cmake.sh; cmake_params='-DCTEST_ARGS=-L;skip_all_tests' bash maintainer/CI/build_cmake.sh; cd build; cmake . -DCTEST_ARGS=''; cd .."
+        wsl bash -c "sed -i '/make check_cmake_install/d' maintainer/CI/build_cmake.sh; cmake_params='-DCTEST_ARGS=-L;skip_all_tests' bash maintainer/CI/build_cmake.sh"
     - name: Test ESPResSo
       shell: bash
       run: |
-        wsl --user espresso bash -c "cd build; make -j2 check_unit_tests; cd testsuite/python && /usr/bin/ctest --timeout 300 -j2 --output-on-failure -E checkpoint"
+        wsl --user espresso bash -c "cd build; cmake . -DCTEST_ARGS=''; make -j2 check_unit_tests; cd testsuite/python && /usr/bin/ctest --timeout 300 -j2 --output-on-failure -E checkpoint"
