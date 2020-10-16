@@ -34,7 +34,6 @@
 #include "errorhandling.hpp"
 #include "global.hpp"
 #include "grid.hpp"
-#include "grid_based_algorithms/electrokinetics.hpp"
 #include "grid_based_algorithms/lb_boundaries.hpp"
 #include "grid_based_algorithms/lb_interface.hpp"
 #include "immersed_boundaries.hpp"
@@ -167,12 +166,6 @@ void on_observable_calc() {
   }
 #endif /*ifdef ELECTROSTATICS */
 
-#ifdef ELECTROKINETICS
-  if (ek_initialized) {
-    ek_integrate_electrostatics();
-  }
-#endif
-
   clear_particle_node();
 }
 
@@ -264,9 +257,19 @@ void on_cell_structure_change() {
 #ifdef DIPOLES
   Dipole::init();
 #endif /* ifdef DIPOLES */
+  if (lattice_switch == ActiveLB::WALBERLA) {
+    runtimeErrorMsg()
+        << "LB does not currently support handling changes of the MD "
+           "cell geometry. Setup the cell system, skin and interactions before "
+           "activating the CPU LB.";
+  }
 }
 
-void on_temperature_change() { lb_lbfluid_reinit_parameters(); }
+void on_temperature_change() {
+  if (lattice_switch != ActiveLB::NONE) {
+    throw std::runtime_error("Temperature change not supported by LB");
+  }
+}
 
 void on_parameter_change(int field) {
   switch (field) {
@@ -310,7 +313,9 @@ void on_parameter_change(int field) {
     reinit_thermo = true;
     break;
   case FIELD_TIMESTEP:
-    lb_lbfluid_reinit_parameters();
+    if (lattice_switch != ActiveLB::NONE) {
+      throw std::runtime_error("Time step change not supported by LB");
+    }
   case FIELD_LANGEVIN_GAMMA:
   case FIELD_LANGEVIN_GAMMA_ROTATION:
   case FIELD_NPTISO_G0:
@@ -342,7 +347,7 @@ unsigned global_ghost_flags() {
   /* Position and Properties are always requested. */
   unsigned data_parts = Cells::DATA_PART_POSITION | Cells::DATA_PART_PROPERTIES;
 
-  if (lattice_switch == ActiveLB::CPU)
+  if (lattice_switch == ActiveLB::WALBERLA)
     data_parts |= Cells::DATA_PART_MOMENTUM;
 
   if (thermo_switch & THERMO_DPD)

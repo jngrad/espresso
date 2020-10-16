@@ -41,7 +41,6 @@
 #include "galilei.hpp"
 #include "global.hpp"
 #include "grid.hpp"
-#include "grid_based_algorithms/lb.hpp"
 #include "grid_based_algorithms/lb_interface.hpp"
 #include "integrate.hpp"
 #include "integrators/steepest_descent.hpp"
@@ -122,6 +121,8 @@ int mpi_check_runtime_errors();
  * procedures
  **********************************************/
 
+void walberla_mpi_init();
+
 #if defined(OPEN_MPI)
 namespace {
 /** Workaround for "Read -1, expected XXXXXXX, errno = 14" that sometimes
@@ -144,10 +145,10 @@ void openmpi_fix_vader() {
  *
  * This was originally inspired by mpi4py
  * (https://github.com/mpi4py/mpi4py/blob/4e3f47b6691c8f5a038e73f84b8d43b03f16627f/src/lib-mpi/compat/openmpi.h).
- * It's needed because OpenMPI dlopens its submodules. These are unable to find
- * the top-level OpenMPI library if that was dlopened itself, i.e. when the
- * Python interpreter dlopens a module that is linked against OpenMPI. It's
- * about some weird two-level symbol namespace thing.
+ * It's needed because OpenMPI dlopens its submodules. These are unable to
+ * find the top-level OpenMPI library if that was dlopened itself, i.e. when
+ * the Python interpreter dlopens a module that is linked against OpenMPI.
+ * It's about some weird two-level symbol namespace thing.
  */
 void openmpi_global_namespace() {
   if (OMPI_MAJOR_VERSION >= 3)
@@ -198,6 +199,10 @@ void init(std::shared_ptr<boost::mpi::environment> mpi_env) {
 #undef CB
 
   ErrorHandling::init_error_handling(mpiCallbacks());
+
+#ifdef LB_WALBERLA
+  walberla_mpi_init();
+#endif
 
   on_program_start();
 }
@@ -357,7 +362,7 @@ void mpi_bcast_max_seen_particle_type(int ns) {
 }
 
 /*************** GATHER ************/
-void mpi_gather_stats(GatherStats job, double *result) {
+void mpi_gather_stats(GatherStats job) {
   auto job_slave = static_cast<int>(job);
   switch (job) {
   case GatherStats::energy:
@@ -368,16 +373,6 @@ void mpi_gather_stats(GatherStats job, double *result) {
     mpi_call(mpi_gather_stats_slave, -1, job_slave);
     pressure_calc();
     break;
-  case GatherStats::lb_fluid_momentum:
-    mpi_call(mpi_gather_stats_slave, -1, job_slave);
-    lb_calc_fluid_momentum(result, lbpar, lbfields, lblattice);
-    break;
-#ifdef LB_BOUNDARIES
-  case GatherStats::lb_boundary_forces:
-    mpi_call(mpi_gather_stats_slave, -1, job_slave);
-    lb_collect_boundary_forces(result);
-    break;
-#endif
   default:
     fprintf(
         stderr,
@@ -396,14 +391,6 @@ void mpi_gather_stats_slave(int, int job_slave) {
   case GatherStats::pressure:
     pressure_calc();
     break;
-  case GatherStats::lb_fluid_momentum:
-    lb_calc_fluid_momentum(nullptr, lbpar, lbfields, lblattice);
-    break;
-#ifdef LB_BOUNDARIES
-  case GatherStats::lb_boundary_forces:
-    lb_collect_boundary_forces(nullptr);
-    break;
-#endif
   default:
     fprintf(
         stderr,

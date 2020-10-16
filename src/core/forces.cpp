@@ -36,7 +36,6 @@
 #include "electrostatics_magnetostatics/p3m_gpu.hpp"
 #include "forcecap.hpp"
 #include "forces_inline.hpp"
-#include "grid_based_algorithms/electrokinetics.hpp"
 #include "grid_based_algorithms/lb_interface.hpp"
 #include "grid_based_algorithms/lb_particle_coupling.hpp"
 #include "immersed_boundaries.hpp"
@@ -150,8 +149,10 @@ void force_calc(CellStructure &cell_structure, double time_step) {
   // Must be done here. Forces need to be ghost-communicated
   immersed_boundaries.volume_conservation(cell_structure);
 
-  lb_lbcoupling_calc_particle_lattice_ia(thermo_virtual, particles,
-                                         ghost_particles);
+  if (lattice_switch != ActiveLB::NONE) {
+    lb_lbcoupling_calc_particle_lattice_ia(thermo_virtual, particles,
+                                           ghost_particles);
+  }
 
 #ifdef CUDA
   copy_forces_from_GPU(particles);

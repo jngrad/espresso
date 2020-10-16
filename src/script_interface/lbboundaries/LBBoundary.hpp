@@ -63,14 +63,10 @@ public:
 
   Variant do_call_method(const std::string &name, const VariantMap &) override {
     if (name == "get_force") {
-      // The get force method uses mpi callbacks on lb cpu
-      if (this_node == 0) {
-        const auto agrid = lb_lbfluid_get_agrid();
-        const auto tau = lb_lbfluid_get_tau();
-        const double unit_conversion = agrid / tau / tau;
-        return m_lbboundary->get_force() * unit_conversion;
-      }
-      return none;
+      const auto agrid = lb_lbfluid_get_agrid();
+      const auto tau = lb_lbfluid_get_tau();
+      const double unit_conversion = agrid / tau / tau;
+      return m_lbboundary->get_force() * unit_conversion;
     }
     return none;
   }

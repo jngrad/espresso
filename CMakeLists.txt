@@ -78,6 +78,7 @@ option_if_available(WITH_STOKESIAN_DYNAMICS "Build with Stokesian Dynamics" ON)
 option(WITH_BENCHMARKS "Enable benchmarks" OFF)
 option(WITH_VALGRIND_INSTRUMENTATION
        "Build with valgrind instrumentation markers" OFF)
+option(WITH_WALBERLA "Build with WALBERLA Lattice-Boltzmann support" OFF)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   option(WITH_CLANG_TIDY "Run Clang-Tidy during compilation" OFF)
 endif()
@@ -494,6 +495,36 @@ if(WITH_BENCHMARKS)
   add_subdirectory(maintainer/benchmarks)
 endif(WITH_BENCHMARKS)
 
+
+# Walberla 
+if (WITH_WALBERLA)
+  cmake_minimum_required(VERSION 3.11)
+  include(FetchContent)
+  FetchContent_Declare(
+    walberla
+    GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla
+    GIT_TAG        64a4d68
+    PATCH_COMMAND  patch -p0 --ignore-whitespace -i
+                   ${PROJECT_SOURCE_DIR}/cmake/waLBerlaFunctions.patch
+  )
+  FetchContent_Populate(walberla)
+  set(WALBERLA_BUILD_TESTS off CACHE BOOL "")
+  set(WALBERLA_BUILD_BENCHMARKS off CACHE BOOL "")
+  set(WALBERLA_BUILD_TOOLS off CACHE BOOL "")
+  set(WALBERLA_BUILD_TUTORIALS off CACHE BOOL "")
+  set(WALBERLA_BUILD_SHOWCASES off CACHE BOOL "")
+  set(WALBERLA_BUILD_DOC off CACHE BOOL "")
+  set(CMAKE_POSITION_INDEPENDENT_CODE on CACHE BOOL "")
+  add_subdirectory("${walberla_SOURCE_DIR}" "${walberla_BINARY_DIR}")
+  set(WALBERLA 1)
+  # TODO WALBERLA: remove -lmpi_cxx -lmpi (required to find symbol MPI::Datatype::Free() in VTK code) and -lstdc++fs
+  set(WALBERLA_LIBS walberla::core walberla::domain_decomposition walberla::blockforest walberla::boundary walberla::core walberla::domain_decomposition walberla::field walberla::lbm walberla::timeloop walberla::vtk)
+  if(NOT CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+    set(WALBERLA_LIBS ${WALBERLA_LIBS} stdc++fs -lmpi_cxx -lmpi)
+  endif()
+endif(WITH_WALBERLA)
+
+#######################################################################
 #
 # Subdirectories
 #

@@ -23,16 +23,15 @@
 #include "errorhandling.hpp"
 #include "global.hpp"
 #include "grid.hpp"
-#include "grid_based_algorithms/lattice.hpp"
 #include "integrate.hpp"
 #include "lb_interface.hpp"
 #include "lb_interpolation.hpp"
-#include "lbgpu.hpp"
 #include "particle_data.hpp"
 #include "random.hpp"
 
 #include <profiler/profiler.hpp>
 #include <utils/Counter.hpp>
+#include <utils/math/sqr.hpp>
 #include <utils/u32_to_u64.hpp>
 #include <utils/uniform.hpp>
 
@@ -75,14 +74,9 @@ void lb_lbcoupling_set_gamma(double gamma) {
 double lb_lbcoupling_get_gamma() { return lb_particle_coupling.gamma; }
 
 bool lb_lbcoupling_is_seed_required() {
-  if (lattice_switch == ActiveLB::CPU) {
+  if (lattice_switch == ActiveLB::WALBERLA) {
     return not lb_particle_coupling.rng_counter_coupling.is_initialized();
   }
-#ifdef CUDA
-  if (lattice_switch == ActiveLB::GPU) {
-    return not rng_counter_coupling_gpu.is_initialized();
-  }
-#endif
   return false;
 }
 
@@ -91,30 +85,20 @@ uint64_t lb_coupling_get_rng_state_cpu() {
 }
 
 uint64_t lb_lbcoupling_get_rng_state() {
-  if (lattice_switch == ActiveLB::CPU) {
+  if (lattice_switch == ActiveLB::WALBERLA) {
     return lb_coupling_get_rng_state_cpu();
-  }
-  if (lattice_switch == ActiveLB::GPU) {
-#ifdef CUDA
-    return lb_coupling_get_rng_state_gpu();
-#endif
   }
   return {};
 }
 
 void lb_lbcoupling_set_rng_state(uint64_t counter) {
-  if (lattice_switch == ActiveLB::CPU) {
+  if (lattice_switch == ActiveLB::WALBERLA) {
     lb_particle_coupling.rng_counter_coupling =
         Utils::Counter<uint64_t>(counter);
     mpi_bcast_lb_particle_coupling();
-  } else if (lattice_switch == ActiveLB::GPU) {
-#ifdef CUDA
-    lb_coupling_set_rng_state_gpu(counter);
-#endif
   }
 }
 
-namespace {
 /**
  * @brief Add a force to the lattice force density.
  * @param pos Position of the force
@@ -126,7 +110,6 @@ void add_md_force(Utils::Vector3d const &pos, Utils::Vector3d const &force) {
   auto const delta_j = -(time_step / lb_lbfluid_get_lattice_speed()) * force;
   lb_lbinterpolation_add_force_density(pos, delta_j);
 }
-} // namespace
 
 /** Coupling of a single particle to viscous fluid with Stokesian friction.
  *
@@ -156,6 +139,8 @@ Utils::Vector3d lb_viscous_coupling(Particle const &p,
   v_drift += p.p.mu_E;
 #endif
 
+  //  printf("v_p %g %g %g v_d %g %g
+  //  %g\n",v_drift[0],v_drift[1],v_drift[2],p.m.v[0],p.m.v[1],p.m.v[2]);
   /* calculate viscous force (eq. (9) @cite ahlrichs99a) */
   auto const force = -lb_lbcoupling_get_gamma() * (p.m.v - v_drift) + f_random;
 
@@ -164,9 +149,9 @@ Utils::Vector3d lb_viscous_coupling(Particle const &p,
   return force;
 }
 
-namespace {
 using Utils::Vector;
 using Utils::Vector3d;
+using Utils::Vector3i;
 
 template <class T, size_t N> using Box = std::pair<Vector<T, N>, Vector<T, N>>;
 
@@ -228,44 +213,27 @@ void add_swimmer_force(Particle &p) {
     auto const director = p.r.calc_director();
     auto const source_position = p.r.p + direction * director;
 
-    if (not in_local_halo(source_position)) {
-      return;
+    if (in_local_halo(source_position)) {
+      add_md_force(source_position, p.p.swim.f_swim * director);
     }
-
-    add_md_force(source_position, p.p.swim.f_swim * director);
   }
 }
 #endif
-
-} // namespace
 
 void lb_lbcoupling_calc_particle_lattice_ia(
     bool couple_virtual, const ParticleRange &particles,
     const ParticleRange &more_particles) {
   ESPRESSO_PROFILER_CXX_MARK_FUNCTION;
-  if (lattice_switch == ActiveLB::GPU) {
-#ifdef CUDA
-    if (lb_particle_coupling.couple_to_md && this_node == 0) {
-      switch (lb_lbinterpolation_get_interpolation_order()) {
-      case (InterpolationOrder::linear):
-        lb_calc_particle_lattice_ia_gpu<8>(couple_virtual,
-                                           lb_lbcoupling_get_gamma());
-        break;
-      case (InterpolationOrder::quadratic):
-        lb_calc_particle_lattice_ia_gpu<27>(couple_virtual,
-                                            lb_lbcoupling_get_gamma());
-        break;
-      }
-    }
-#endif
-  } else if (lattice_switch == ActiveLB::CPU) {
+  if (lattice_switch == ActiveLB::WALBERLA) {
     if (lb_particle_coupling.couple_to_md) {
       switch (lb_lbinterpolation_get_interpolation_order()) {
       case (InterpolationOrder::quadratic):
         throw std::runtime_error("The non-linear interpolation scheme is not "
                                  "implemented for the CPU LB.");
       case (InterpolationOrder::linear): {
-        auto const kT = lb_lbfluid_get_kT();
+        using Utils::sqr;
+        auto const kT = lb_lbfluid_get_kT() * sqr(lb_lbfluid_get_agrid()) /
+                        sqr(lb_lbfluid_get_tau());
         /* Eq. (16) @cite ahlrichs99a.
          * The factor 12 comes from the fact that we use random numbers
          * from -0.5 to 0.5 (equally distributed) which have variance 1/12.
@@ -285,6 +253,15 @@ void lb_lbcoupling_calc_particle_lattice_ia(
         };
 
         auto couple_particle = [&](Particle &p) -> void {
+          // We only couple ghosts, if the physical particle is not on the node
+          //          if (p.l.ghost and
+          //              not
+          //              cell_structure.get_local_particle(p.p.identity)->l.ghost)
+          //            return;
+
+          //                            printf("%d: coupling at %g %g %g, ghost
+          //                            %d\n",this_node,
+          //                             p.r.p[0],p.r.p[1],p.r.p[2],p.l.ghost);
           if (p.p.is_virtual and !couple_virtual)
             return;
 
@@ -326,12 +303,8 @@ void lb_lbcoupling_calc_particle_lattice_ia(
 void lb_lbcoupling_propagate() {
   if (lattice_switch != ActiveLB::NONE) {
     if (lb_lbfluid_get_kT() > 0.0) {
-      if (lattice_switch == ActiveLB::CPU) {
+      if (lattice_switch == ActiveLB::WALBERLA) {
         lb_particle_coupling.rng_counter_coupling->increment();
-      } else if (lattice_switch == ActiveLB::GPU) {
-#ifdef CUDA
-        rng_counter_coupling_gpu->increment();
-#endif
       }
     }
   }

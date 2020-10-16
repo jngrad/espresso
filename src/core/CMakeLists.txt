@@ -58,12 +58,7 @@ if(CUDA)
       electrostatics_magnetostatics/p3m_gpu_cuda.cu
       electrostatics_magnetostatics/p3m_gpu_error_cuda.cu
       EspressoSystemInterface_cuda.cu
-      grid_based_algorithms/electrokinetics_cuda.cu
-      grid_based_algorithms/lbgpu_cuda.cu
-      grid_based_algorithms/fd-electrostatics_cuda.cu
-      grid_based_algorithms/electrokinetics.cpp
-      grid_based_algorithms/lbgpu.cpp
-      virtual_sites/lb_inertialess_tracers_cuda.cu)
+      grid_based_algorithms/fd-electrostatics_cuda.cu)
 
   add_gpu_library(EspressoCore SHARED ${EspressoCore_SRC} ${EspressoCuda_SRC})
 else(CUDA)
@@ -106,6 +101,12 @@ add_subdirectory(virtual_sites)
 if(WITH_UNIT_TESTS)
   add_subdirectory(unit_tests)
 endif(WITH_UNIT_TESTS)
+
+IF(WALBERLA)
+target_link_libraries(EspressoCore PUBLIC ${WALBERLA_LIBS})
+target_include_directories(EspressoCore PUBLIC "${WALBERLA_INCLUDE_DIRS}")
+target_include_directories(EspressoCore PUBLIC "${walberla_BINARY_DIR}/src")
+endif(WALBERLA)
 
 if(STOKESIAN_DYNAMICS OR STOKESIAN_DYNAMICS_GPU)
   add_subdirectory(stokesian_dynamics)

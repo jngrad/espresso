@@ -21,7 +21,7 @@ import unittest as ut
 import unittest_decorators as utx
 
 
-@utx.skipIfMissingFeatures(["LB_BOUNDARIES"])
+@utx.skipIfMissingFeatures(["LB_BOUNDARIES", "LB_WALBERLA"])
 class LBBoundaryVelocityTest(ut.TestCase):
 
     """Test slip velocity of boundaries.
@@ -37,20 +37,20 @@ class LBBoundaryVelocityTest(ut.TestCase):
     def test(self):
         system = self.system
 
-        lb_fluid = espressomd.lb.LBFluid(
+        lb_fluid = espressomd.lb.LBFluidWalberla(
             agrid=2.0, dens=.5, visc=3.0, tau=0.5)
         system.actors.add(lb_fluid)
 
         v_boundary = [0.03, 0.02, 0.01]
 
-        wall_shape = espressomd.shapes.Wall(normal=[1, 2, 3], dist=0.5)
+        wall_shape = espressomd.shapes.Wall(normal=[1, 2, 3], dist=0)
         wall = espressomd.lbboundaries.LBBoundary(
             shape=wall_shape, velocity=v_boundary)
         system.lbboundaries.add(wall)
 
         system.integrator.run(2000)
 
-        v_fluid = lb_fluid[1, 0, 0].velocity
+        v_fluid = lb_fluid[3, 0, 0].velocity
         self.assertAlmostEqual(v_fluid[0], v_boundary[0], places=3)
         self.assertAlmostEqual(v_fluid[1], v_boundary[1], places=3)
         self.assertAlmostEqual(v_fluid[2], v_boundary[2], places=3)

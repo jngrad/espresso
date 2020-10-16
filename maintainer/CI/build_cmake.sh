@@ -97,6 +97,7 @@ set_default_value with_cuda_compiler "nvcc"
 set_default_value build_type "RelWithAssert"
 set_default_value with_ccache false
 set_default_value with_scafacos false
+set_default_value with_walberla false
 set_default_value with_stokesian_dynamics false
 set_default_value test_timeout 300
 set_default_value hide_gpu false
@@ -128,6 +129,10 @@ if [ "${with_stokesian_dynamics}" = true ]; then
     cmake_params="${cmake_params} -DWITH_STOKESIAN_DYNAMICS=ON"
 else
     cmake_params="${cmake_params} -DWITH_STOKESIAN_DYNAMICS=OFF"
+fi
+
+if [ "${with_walberla}" = true ]; then
+  cmake_params="$cmake_params -DWITH_WALBERLA=ON"
 fi
 
 if [ "${with_fftw}" = true ]; then
@@ -173,7 +178,7 @@ outp srcdir builddir \
     with_ubsan with_asan \
     check_odd_only \
     with_static_analysis myconfig \
-    build_procs check_procs \
+    build_procs check_procs with_walberla \
     with_cuda with_cuda_compiler with_ccache
 
 echo "Creating ${builddir}..."

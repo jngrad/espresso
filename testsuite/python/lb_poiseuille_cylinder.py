@@ -36,7 +36,7 @@ AGRID = .5
 EXT_FORCE = .1
 VISC = 2.7
 DENS = 1.7
-TIME_STEP = 0.1
+TIME_STEP = 0.05
 BOX_L = 8.0
 LB_PARAMS = {'agrid': AGRID,
              'dens': DENS,
@@ -104,8 +104,8 @@ class LBPoiseuilleCommon:
         mid_indices = 3 * [int((BOX_L / AGRID) / 2)]
         diff = float("inf")
         old_val = self.lbf[mid_indices].velocity[2]
-        while diff > 0.001:
-            self.system.integrator.run(1)
+        while diff > 1E-5:
+            self.system.integrator.run(5)
             new_val = self.lbf[mid_indices].velocity[
                 np.nonzero(self.params['axis'])[0]]
             diff = abs(new_val - old_val)
@@ -136,8 +136,9 @@ class LBPoiseuilleCommon:
             BOX_L / 2.0 - 1.0,
             EXT_FORCE,
             VISC * DENS)
-        rmsd = np.linalg.norm(v_expected - v_measured)
-        self.assertLess(rmsd, 0.02 * AGRID / TIME_STEP)
+        f_half_correction = 0.5 * self.system.time_step * EXT_FORCE
+        np.testing.assert_allclose(
+            v_measured[1:-1] - f_half_correction, v_expected[1:-1], atol=0.0032)
 
     def prepare_obs(self):
         if self.params['axis'] == [1, 0, 0]:
@@ -158,7 +159,7 @@ class LBPoiseuilleCommon:
     def check_observable(self):
         self.prepare_obs()
         # gather some statistics for the observable accumulator
-        self.system.integrator.run(1)
+        self.system.integrator.run(5)
         obs_result = np.array(
             self.accumulator.get_mean()).reshape(OBS_PARAMS['n_r_bins'],
                                                  OBS_PARAMS['n_phi_bins'],
@@ -174,8 +175,9 @@ class LBPoiseuilleCommon:
             EXT_FORCE,
             VISC * DENS)
         v_measured = obs_result[:, 0, 0, 2]
-        rmsd = np.sqrt(np.sum(np.square(v_expected - v_measured)))
-        self.assertLess(rmsd, 0.004 * AGRID / TIME_STEP)
+        f_half_correction = 0.5 * self.system.time_step * EXT_FORCE
+        np.testing.assert_allclose(
+            v_measured[1:-1] - f_half_correction, v_expected[1:-1], atol=0.0037)
 
     def test_x(self):
         self.params['axis'] = [1, 0, 0]
@@ -193,32 +195,18 @@ class LBPoiseuilleCommon:
         self.check_observable()
 
 
-@utx.skipIfMissingFeatures(['LB_BOUNDARIES'])
-class LBCPUPoiseuille(ut.TestCase, LBPoiseuilleCommon):
+@utx.skipIfMissingFeatures(['LB_WALBERLA'])
+class LBWalberlaPoiseuille(ut.TestCase, LBPoiseuilleCommon):
 
-    """Test for the CPU implementation of the LB."""
+    """Test for the Walberla implementation of the LB."""
 
     def setUp(self):
-        self.lbf = espressomd.lb.LBFluid
+        self.lbf = espressomd.lb.LBFluidWalberla
 
     def tearDown(self):
         self.system.actors.clear()
         self.system.lbboundaries.clear()
 
 
-@utx.skipIfMissingGPU()
-@utx.skipIfMissingFeatures(['LB_BOUNDARIES_GPU'])
-class LBGPUPoiseuille(ut.TestCase, LBPoiseuilleCommon):
-
-    """Test for the GPU implementation of the LB."""
-
-    def setUp(self):
-        self.lbf = espressomd.lb.LBFluidGPU
-
-    def tearDown(self):
-        self.system.actors.clear()
-        self.system.lbboundaries.clear()
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     ut.main()

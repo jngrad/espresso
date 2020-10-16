@@ -61,7 +61,7 @@ endfunction(PYTHON_TEST)
 # Separate features with hyphens, use a period to add an optional flag.
 foreach(
   TEST_COMBINATION
-  lb.cpu-p3m.cpu-lj-therm.lb;lb.gpu-p3m.cpu-lj-therm.lb;ek.gpu;lb.off-therm.npt-int.npt;lb.off-int.sd;lb.off-therm.langevin-int.nvt;lb.off-therm.dpd-int.nvt;lb.off-therm.bd-int.bd;lb.off-therm.sdm-int.sdm.cpu
+  lb.walberla-p3m.cpu-lj-therm.lb;lb.off-therm.npt-int.npt;lb.off-int.sd;lb.off-therm.langevin-int.nvt;lb.off-therm.dpd-int.nvt;lb.off-therm.bd-int.bd;lb.off-therm.sdm-int.sdm.cpu
 )
   if(${TEST_COMBINATION} MATCHES "\\.gpu")
     set(TEST_LABELS "gpu")
@@ -74,10 +74,10 @@ foreach(
     set(TEST_BINARY_LIST "1;0")
   endif()
   foreach(TEST_BINARY ${TEST_BINARY_LIST})
-    python_test(FILE save_checkpoint.py MAX_NUM_PROC 4 LABELS ${TEST_LABELS}
+    python_test(FILE save_checkpoint.py MAX_NUM_PROC 2 LABELS ${TEST_LABELS}
                 SUFFIX ${TEST_COMBINATION}_${TEST_BINARY})
     python_test(
-      FILE test_checkpoint.py MAX_NUM_PROC 4 LABELS ${TEST_LABELS} SUFFIX
+      FILE test_checkpoint.py MAX_NUM_PROC 2 LABELS ${TEST_LABELS} SUFFIX
       ${TEST_COMBINATION}_${TEST_BINARY} DEPENDS
       save_checkpoint_${TEST_COMBINATION}_${TEST_BINARY})
   endforeach(TEST_BINARY)
@@ -123,27 +123,27 @@ python_test(FILE reaction_ensemble.py MAX_NUM_PROC 4)
 python_test(FILE widom_insertion.py MAX_NUM_PROC 1)
 python_test(FILE constant_pH.py MAX_NUM_PROC 4)
 python_test(FILE writevtf.py MAX_NUM_PROC 4)
-python_test(FILE lb_stokes_sphere.py MAX_NUM_PROC 4 LABELS gpu long)
-if(NOT WITH_COVERAGE AND NOT WITH_ASAN AND NOT WITH_UBSAN)
-  python_test(FILE lb_pressure_tensor.py MAX_NUM_PROC 1 LABELS gpu long)
-endif()
-python_test(FILE ek_fluctuations.py MAX_NUM_PROC 1 LABELS gpu)
-python_test(FILE ek_charged_plate.py MAX_NUM_PROC 1 LABELS gpu)
-python_test(FILE ek_eof_one_species_x.py MAX_NUM_PROC 1 LABELS gpu)
-python_test(FILE ek_eof_one_species_y.py MAX_NUM_PROC 1 LABELS gpu)
-python_test(FILE ek_eof_one_species_z.py MAX_NUM_PROC 1 LABELS gpu)
+#python_test(FILE lb_stokes_sphere.py MAX_NUM_PROC 8 LABELS gpu long) # TODO WALBERLA
+#if(NOT WITH_COVERAGE AND NOT WITH_ASAN AND NOT WITH_UBSAN) # TODO WALBERLA
+#  python_test(FILE lb_pressure_tensor.py MAX_NUM_PROC 1 LABELS gpu long)
+#endif()
+#python_test(FILE ek_fluctuations.py MAX_NUM_PROC 1 LABELS gpu) # TODO WALBERLA
+#python_test(FILE ek_charged_plate.py MAX_NUM_PROC 1 LABELS gpu) TODO WALBERLA
+#python_test(FILE ek_eof_one_species_x.py MAX_NUM_PROC 1 LABELS gpu) # TODO WALBERLA
+#python_test(FILE ek_eof_one_species_y.py MAX_NUM_PROC 1 LABELS gpu) TODO WALBERLA
+#python_test(FILE ek_eof_one_species_z.py MAX_NUM_PROC 1 LABELS gpu) TODO WALBERLA
 python_test(FILE exclusions.py MAX_NUM_PROC 2)
 python_test(FILE langevin_thermostat.py MAX_NUM_PROC 1)
 python_test(FILE brownian_dynamics.py MAX_NUM_PROC 1)
 python_test(FILE nsquare.py MAX_NUM_PROC 4)
 python_test(FILE virtual_sites_relative.py MAX_NUM_PROC 2)
-python_test(FILE virtual_sites_tracers.py MAX_NUM_PROC 2)
-python_test(FILE virtual_sites_tracers_gpu.py MAX_NUM_PROC 2 LABELS gpu)
+python_test(FILE virtual_sites_tracers_walberla.py MAX_NUM_PROC 1 LABELS gpu) #TODO WALBERLA 
 python_test(FILE domain_decomposition.py MAX_NUM_PROC 4)
 python_test(FILE integrator_npt.py MAX_NUM_PROC 4)
 python_test(FILE integrator_steepest_descent.py MAX_NUM_PROC 4)
 python_test(FILE dipolar_mdlc_p3m_scafacos_p2nfft.py MAX_NUM_PROC 1 LABELS long)
 python_test(FILE lb.py MAX_NUM_PROC 2 LABELS gpu)
+python_test(FILE lb_walberla.py MAX_NUM_PROC 2)
 python_test(FILE force_cap.py MAX_NUM_PROC 2)
 python_test(FILE dpd.py MAX_NUM_PROC 4)
 python_test(FILE hat.py MAX_NUM_PROC 4)
@@ -154,7 +154,6 @@ python_test(FILE coulomb_mixed_periodicity.py MAX_NUM_PROC 4 LABELS long)
 python_test(FILE coulomb_cloud_wall_duplicated.py MAX_NUM_PROC 4 LABELS gpu
             LABELS long)
 python_test(FILE collision_detection.py MAX_NUM_PROC 4)
-python_test(FILE lb_get_u_at_pos.py MAX_NUM_PROC 4 LABELS gpu)
 python_test(FILE lj.py MAX_NUM_PROC 4)
 python_test(FILE pairs.py MAX_NUM_PROC 4)
 python_test(FILE polymer_linear.py MAX_NUM_PROC 4)
@@ -176,33 +175,33 @@ python_test(FILE observable_profile.py MAX_NUM_PROC 4)
 python_test(FILE observable_profileLB.py MAX_NUM_PROC 1 LABELS gpu)
 python_test(FILE rotate_system.py MAX_NUM_PROC 4)
 python_test(FILE random_pairs.py MAX_NUM_PROC 4)
-python_test(FILE lb_electrohydrodynamics.py MAX_NUM_PROC 4 LABELS gpu)
+python_test(FILE lb_electrohydrodynamics.py MAX_NUM_PROC 2 LABELS gpu)
 python_test(FILE cluster_analysis.py MAX_NUM_PROC 4)
 python_test(FILE pair_criteria.py MAX_NUM_PROC 4)
 python_test(FILE actor.py MAX_NUM_PROC 1)
 python_test(FILE drude.py MAX_NUM_PROC 2)
 python_test(FILE thermalized_bond.py MAX_NUM_PROC 4)
 python_test(FILE thole.py MAX_NUM_PROC 4)
-python_test(FILE lb_switch.py MAX_NUM_PROC 1 LABELS gpu)
 python_test(FILE lb_boundary_velocity.py MAX_NUM_PROC 1)
-python_test(FILE lb_boundary_volume_force.py MAX_NUM_PROC 4)
-python_test(FILE lb_thermo_virtual.py MAX_NUM_PROC 2 LABELS gpu)
-python_test(FILE lb_poiseuille.py MAX_NUM_PROC 4 LABELS gpu)
+python_test(FILE lb_boundary_volume_force.py MAX_NUM_PROC 2)
+python_test(FILE lb_thermo_virtual.py MAX_NUM_PROC 2)
+python_test(FILE lb_poiseuille.py MAX_NUM_PROC 2 LABELS gpu)
 python_test(FILE lb_poiseuille_cylinder.py MAX_NUM_PROC 2 LABELS gpu)
-python_test(FILE lb_interpolation.py MAX_NUM_PROC 4 LABELS gpu)
+python_test(FILE lb_interpolation.py MAX_NUM_PROC 2 LABELS gpu)
 python_test(FILE analyze_gyration_tensor.py MAX_NUM_PROC 1)
 python_test(FILE oif_volume_conservation.py MAX_NUM_PROC 2)
 python_test(FILE simple_pore.py MAX_NUM_PROC 1)
 python_test(FILE field_test.py MAX_NUM_PROC 1)
 python_test(FILE lb_boundary.py MAX_NUM_PROC 2 LABELS gpu)
-python_test(FILE lb_streaming.py MAX_NUM_PROC 4 LABELS gpu)
+# python_test(FILE lb_streaming.py MAX_NUM_PROC 4 LABELS gpu) TODO WALBERLA
 python_test(FILE lb_shear.py MAX_NUM_PROC 2 LABELS gpu)
-python_test(FILE lb_thermostat.py MAX_NUM_PROC 2 LABELS gpu)
-python_test(FILE lb_buoyancy_force.py MAX_NUM_PROC 4 LABELS gpu)
+# python_test(FILE lb_thermostat.py MAX_NUM_PROC 1 LABELS gpu) TODO WALBERLA
+python_test(FILE lb_buoyancy_force.py MAX_NUM_PROC 2 LABELS gpu)
 python_test(FILE lb_momentum_conservation.py MAX_NUM_PROC 4 LABELS gpu)
+python_test(FILE lb_vtk.py MAX_NUM_PROC 1)
 python_test(FILE p3m_electrostatic_pressure.py MAX_NUM_PROC 2)
 python_test(FILE sigint.py DEPENDENCIES sigint_child.py MAX_NUM_PROC 1)
-python_test(FILE lb_density.py MAX_NUM_PROC 1)
+python_test(FILE lb_density.py MAX_NUM_PROC 2)
 python_test(FILE observable_chain.py MAX_NUM_PROC 4)
 python_test(FILE mpiio.py MAX_NUM_PROC 4)
 python_test(FILE gpu_availability.py MAX_NUM_PROC 1 LABELS gpu)

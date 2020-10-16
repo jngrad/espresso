@@ -66,12 +66,7 @@ extern int n_nodes;
 /** The communicator */
 extern boost::mpi::communicator comm_cart;
 /** Statistics to calculate */
-enum class GatherStats : int {
-  energy,
-  pressure,
-  lb_fluid_momentum,
-  lb_boundary_forces
-};
+enum class GatherStats : int { energy, pressure };
 
 /**
  * Default MPI tag used by callbacks.
@@ -231,15 +226,8 @@ void mpi_bcast_max_seen_particle_type(int s);
  *           energies, using \ref energy_calc.
  *      \arg for \ref GatherStats::pressure, calculate and reduce (sum up)
  *           pressure, using \ref pressure_calc.
- *      \arg for \ref GatherStats::lb_fluid_momentum, use
- *           \ref lb_calc_fluid_momentum.
- *      \arg for \ref GatherStats::lb_boundary_forces, use
- *           \ref lb_collect_boundary_forces.
- *  \param[out] result where to store values gathered by
- *      \ref GatherStats::lb_fluid_momentum,
- *      \ref GatherStats::lb_boundary_forces
  */
-void mpi_gather_stats(GatherStats job, double *result = nullptr);
+void mpi_gather_stats(GatherStats job);
 
 /** Send new \ref time_step and rescale the velocities accordingly. */
 void mpi_set_time_step(double time_step);

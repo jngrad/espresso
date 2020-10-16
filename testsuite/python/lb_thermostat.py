@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2019 The ESPResSo project
+# Copyright (C) 2010-2020 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -28,11 +28,12 @@ distribution.
 
 """
 
-KT = 0.25
-AGRID = 2.5
-VISC = 2.7
+KT = 0.9 
+AGRID = 0.8
+VISC = 6 
 DENS = 1.7
-TIME_STEP = 0.05
+TIME_STEP = 0.008
+GAMMA = 2
 LB_PARAMS = {'agrid': AGRID,
              'dens': DENS,
              'visc': VISC,
@@ -45,55 +46,64 @@ class LBThermostatCommon:
 
     """Base class of the test that holds the test logic."""
     lbf = None
-    system = espressomd.System(box_l=[10.0, 10.0, 10.0])
+    system = espressomd.System(box_l=[AGRID * 12] * 3)
     system.time_step = TIME_STEP
     system.cell_system.skin = 0.4 * AGRID
+
+    def test_fluid(self):
+        self.prepare()
+        self.system.integrator.run(100)
+        vs = []
+        for _ in range(100):
+            for n in self.lbf.nodes():
+                vs.append(n.velocity)
+            self.system.integrator.run(3)
+
+        self.assertAlmostEqual(np.var(vs), KT, delta=0.05)
 
     def prepare(self):
         self.system.actors.clear()
         self.system.actors.add(self.lbf)
+        self.system.thermostat.set_lb(LB_fluid=self.lbf, seed=5, gamma=GAMMA)
+
+    def test_with_particles(self):
+        self.prepare()
         self.system.part.add(
             pos=np.random.random((100, 3)) * self.system.box_l)
-        self.system.thermostat.set_lb(LB_fluid=self.lbf, seed=5, gamma=5.0)
-
-    def test_velocity_distribution(self):
-        self.prepare()
-        self.system.integrator.run(20)
+        self.system.integrator.run(500)
         N = len(self.system.part)
-        loops = 250
-        v_stored = np.zeros((N * loops, 3))
+        loops = 500
+        v_particles = np.zeros((N * loops, 3))
+        v_nodes = []
         for i in range(loops):
             self.system.integrator.run(3)
-            v_stored[i * N:(i + 1) * N, :] = self.system.part[:].v
-        minmax = 5
+            if i % 10 == 0:
+                for n in self.lbf.nodes():
+                    v_nodes.append(n.velocity)
+            v_particles[i * N:(i + 1) * N, :] = self.system.part[:].v
+        self.assertAlmostEqual(np.var(v_nodes), KT, delta=0.01)
+        np.testing.assert_allclose(np.average(v_particles), 0, atol=0.02)
+        np.testing.assert_allclose(np.var(v_particles), KT, rtol=0.03)
+
+        minmax = 3
         n_bins = 7
-        error_tol = 0.01
         for i in range(3):
-            hist = np.histogram(v_stored[:, i], range=(-minmax, minmax),
+            hist = np.histogram(v_particles[:, i], range=(-minmax, minmax),
                                 bins=n_bins, density=False)
-            data = hist[0] / float(v_stored.shape[0])
+            data = hist[0] / float(v_particles.shape[0])
             bins = hist[1]
-            for j in range(n_bins):
-                found = data[j]
-                expected = single_component_maxwell(bins[j], bins[j + 1], KT)
-                self.assertAlmostEqual(found, expected, delta=error_tol)
+            expected = [single_component_maxwell(
+                bins[j], bins[j + 1], KT) for j in range(n_bins)]
+            np.testing.assert_allclose(data, expected, atol=0.015)
 
 
-class LBCPUThermostat(ut.TestCase, LBThermostatCommon):
+@utx.skipIfMissingFeatures("LB_WALBERLA")
+class LBWalberlaThermostat(ut.TestCase, LBThermostatCommon):
 
     """Test for the CPU implementation of the LB."""
 
     def setUp(self):
-        self.lbf = espressomd.lb.LBFluid(**LB_PARAMS)
-
-
-@utx.skipIfMissingGPU()
-class LBGPUThermostat(ut.TestCase, LBThermostatCommon):
-
-    """Test for the GPU implementation of the LB."""
-
-    def setUp(self):
-        self.lbf = espressomd.lb.LBFluidGPU(**LB_PARAMS)
+        self.lbf = espressomd.lb.LBFluidWalberla(**LB_PARAMS)
 
 
 if __name__ == '__main__':

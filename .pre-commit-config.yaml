@@ -20,13 +20,14 @@ repos:
         exclude: '\.pylintrc|.*.\.py\.in'
         args: ["--ignore=E266,E701,W291,W293", "--in-place", "--aggressive"]
 
-    -   id: cmake-format
-        name: cmake-format
-        entry: sh maintainer/format/cmake-format.sh
-        language: system
-        always_run: false
-        files: 'CMakeLists.txt'
-        args: ["-i"]
+# TODO WALBERLA
+#    -   id: cmake-format
+#        name: cmake-format
+#        entry: sh maintainer/format/cmake-format.sh
+#        language: system
+#        always_run: false
+#        files: 'CMakeLists.txt'
+#        args: ["-i"]
 
     -   id: ex-flags
         name: executable flags

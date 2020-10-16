@@ -29,7 +29,6 @@
 namespace LBBoundaries {
 #if defined(LB_BOUNDARIES) || defined(LB_BOUNDARIES_GPU)
 class LBBoundary;
-Utils::Vector3d lbboundary_get_force(LBBoundary const *lbb);
 void lb_init_boundaries();
 #endif
 class LBBoundary {
@@ -50,6 +49,13 @@ public:
     m_shape->calculate_dist(pos, dist, vec);
   }
 
+  double calc_dist(const Utils::Vector3d &pos) const {
+    double dist;
+    Utils::Vector3d tmp;
+    calc_dist(pos, dist, tmp);
+    return dist;
+  }
+
   void set_shape(std::shared_ptr<Shapes::Shape> const &shape) {
     m_shape = shape;
   }
@@ -65,13 +71,7 @@ public:
   Shapes::Shape const &shape() const { return *m_shape; }
   Utils::Vector3d &velocity() { return m_velocity; }
   Utils::Vector3d &force() { return m_force; }
-  Utils::Vector3d get_force() const {
-#if defined(LB_BOUNDARIES) || defined(LB_BOUNDARIES_GPU)
-    return lbboundary_get_force(this);
-#else
-    throw std::runtime_error("Needs LB_BOUNDARIES or LB_BOUNDARIES_GPU.");
-#endif
-  }
+  Utils::Vector3d get_force() const;
 
 #ifdef EK_BOUNDARIES // TODO: ugly. Better would be a class EKBoundaries,
                      // deriving from LBBoundaries, but that requires completely
