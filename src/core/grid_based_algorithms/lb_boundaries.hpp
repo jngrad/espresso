@@ -45,7 +45,6 @@
 #include <array>
 
 namespace LBBoundaries {
-using LB_Fluid = std::array<Utils::Span<double>, 19>;
 
 extern std::vector<std::shared_ptr<LBBoundary>> lbboundaries;
 #if defined(LB_BOUNDARIES) || defined(LB_BOUNDARIES_GPU)

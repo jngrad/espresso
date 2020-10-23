@@ -24,7 +24,6 @@
 #include "global.hpp"
 #include "grid.hpp"
 #include "integrate.hpp"
-#include "lb-d3q19.hpp"
 #include "lb_boundaries.hpp"
 #include "lb_interpolation.hpp"
 #include "lb_walberla_instance.hpp"
