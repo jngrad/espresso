@@ -56,22 +56,22 @@ static FUNC_PREFIX void kernel_streamCollide(
     int64_t const _stride_pdfs_2, int64_t const _stride_pdfs_3,
     int64_t const _stride_pdfs_tmp_0, int64_t const _stride_pdfs_tmp_1,
     int64_t const _stride_pdfs_tmp_2, int64_t const _stride_pdfs_tmp_3,
-    double omega_bulk, double omega_even, double omega_odd,
-    double omega_shear) {
-  const double xi_35 = -omega_shear + 2.0;
-  const double xi_36 = xi_35 * 0.5;
-  const double xi_41 = xi_35 * 0.0833333333333333;
-  const double xi_46 = xi_35 * 0.166666666666667;
-  const double xi_56 = xi_35 * 0.25;
-  const double xi_61 = xi_35 * 0.0416666666666667;
-  const double xi_106 = omega_odd * 0.25;
-  const double xi_112 = omega_odd * 0.0833333333333333;
-  const double xi_148 = omega_shear * 0.25;
-  const double xi_170 = omega_odd * 0.0416666666666667;
-  const double xi_172 = omega_odd * 0.125;
-  const int64_t rr_0 = 0.0;
-  const double xi_118 = rr_0 * 0.166666666666667;
-  const double xi_153 = rr_0 * 0.0833333333333333;
+    real_t omega_bulk, real_t omega_even, real_t omega_odd,
+    real_t omega_shear) {
+  const real_t xi_35 = -omega_shear + real_t(2.0);
+  const real_t xi_36 = xi_35 * real_t(0.5);
+  const real_t xi_41 = xi_35 * real_t(0.0833333333333333);
+  const real_t xi_46 = xi_35 * real_t(0.166666666666667);
+  const real_t xi_56 = xi_35 * real_t(0.25);
+  const real_t xi_61 = xi_35 * real_t(0.0416666666666667);
+  const real_t xi_106 = omega_odd * real_t(0.25);
+  const real_t xi_112 = omega_odd * real_t(0.0833333333333333);
+  const real_t xi_148 = omega_shear * real_t(0.25);
+  const real_t xi_170 = omega_odd * real_t(0.0416666666666667);
+  const real_t xi_172 = omega_odd * real_t(0.125);
+  const int64_t rr_0 = 0;
+  const real_t xi_118 = real_c(rr_0) * real_t(0.166666666666667);
+  const real_t xi_153 = real_c(rr_0) * real_t(0.0833333333333333);
   for (int ctr_2 = 1; ctr_2 < _size_force_2 - 1; ctr_2 += 1) {
     real_t *RESTRICT _data_pdfs_2m1_314 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
                                           _stride_pdfs_2 + 14 * _stride_pdfs_3;
@@ -237,371 +237,371 @@ static FUNC_PREFIX void kernel_streamCollide(
       real_t *RESTRICT _data_pdfs_tmp_20_318_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_318;
       for (int ctr_0 = 1; ctr_0 < _size_force_0 - 1; ctr_0 += 1) {
-        const double xi_0 =
+        const real_t xi_0 =
             _data_pdfs_21_318_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0] +
             _data_pdfs_2m1_314_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double xi_1 =
+        const real_t xi_1 =
             xi_0 + _data_pdfs_20_34_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double xi_2 = _data_pdfs_20_31_1m1[_stride_pdfs_0 * ctr_0] +
+        const real_t xi_2 = _data_pdfs_20_31_1m1[_stride_pdfs_0 * ctr_0] +
                             _data_pdfs_21_315_1m1[_stride_pdfs_0 * ctr_0] +
                             _data_pdfs_2m1_311_1m1[_stride_pdfs_0 * ctr_0];
-        const double xi_3 = _data_pdfs_2m1_312_11[_stride_pdfs_0 * ctr_0] +
+        const real_t xi_3 = _data_pdfs_2m1_312_11[_stride_pdfs_0 * ctr_0] +
                             _data_pdfs_2m1_35_10[_stride_pdfs_0 * ctr_0];
-        const double xi_4 =
+        const real_t xi_4 =
             _data_pdfs_20_33_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0] +
             _data_pdfs_20_39_11[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_5 = _data_pdfs_20_32_11[_stride_pdfs_0 * ctr_0] +
+        const real_t xi_5 = _data_pdfs_20_32_11[_stride_pdfs_0 * ctr_0] +
                             _data_pdfs_21_316_11[_stride_pdfs_0 * ctr_0];
-        const double xi_6 =
+        const real_t xi_6 =
             _data_pdfs_21_317_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0] +
             _data_pdfs_21_36_10[_stride_pdfs_0 * ctr_0];
-        const double xi_8 =
+        const real_t xi_8 =
             -_data_pdfs_20_39_11[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_9 =
+        const real_t xi_9 =
             xi_8 -
             _data_pdfs_20_37_1m1[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_10 =
+        const real_t xi_10 =
             -_data_pdfs_21_317_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_11 =
+        const real_t xi_11 =
             -_data_pdfs_2m1_313_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_12 =
+        const real_t xi_12 =
             -_data_pdfs_20_33_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_13 = xi_10 + xi_11 + xi_12;
-        const double xi_14 = -_data_pdfs_20_32_11[_stride_pdfs_0 * ctr_0];
-        const double xi_15 =
+        const real_t xi_13 = xi_10 + xi_11 + xi_12;
+        const real_t xi_14 = -_data_pdfs_20_32_11[_stride_pdfs_0 * ctr_0];
+        const real_t xi_15 =
             -_data_pdfs_20_310_11[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double xi_16 = xi_14 + xi_15;
-        const double xi_17 = -_data_pdfs_21_316_11[_stride_pdfs_0 * ctr_0];
-        const double xi_18 = -_data_pdfs_2m1_312_11[_stride_pdfs_0 * ctr_0];
-        const double xi_19 = xi_17 + xi_18;
-        const double xi_20 =
+        const real_t xi_16 = xi_14 + xi_15;
+        const real_t xi_17 = -_data_pdfs_21_316_11[_stride_pdfs_0 * ctr_0];
+        const real_t xi_18 = -_data_pdfs_2m1_312_11[_stride_pdfs_0 * ctr_0];
+        const real_t xi_19 = xi_17 + xi_18;
+        const real_t xi_20 =
             -_data_pdfs_21_318_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double xi_21 = xi_10 + xi_20;
-        const double xi_22 = -_data_pdfs_21_315_1m1[_stride_pdfs_0 * ctr_0];
-        const double xi_23 = -_data_pdfs_21_36_10[_stride_pdfs_0 * ctr_0];
-        const double xi_24 = xi_17 + xi_22 + xi_23 +
+        const real_t xi_21 = xi_10 + xi_20;
+        const real_t xi_22 = -_data_pdfs_21_315_1m1[_stride_pdfs_0 * ctr_0];
+        const real_t xi_23 = -_data_pdfs_21_36_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_24 = xi_17 + xi_22 + xi_23 +
                              _data_pdfs_2m1_311_1m1[_stride_pdfs_0 * ctr_0];
-        const double xi_40 =
-            0.166666666666667 * _data_force_20_31_10[_stride_force_0 * ctr_0];
-        const double xi_48 =
-            0.166666666666667 * _data_force_20_30_10[_stride_force_0 * ctr_0];
-        const double xi_52 =
-            0.166666666666667 * _data_force_20_32_10[_stride_force_0 * ctr_0];
-        const double xi_55 =
-            0.5 * _data_force_20_31_10[_stride_force_0 * ctr_0];
-        const double xi_59 =
-            0.0833333333333333 * _data_force_20_30_10[_stride_force_0 * ctr_0];
-        const double xi_63 =
-            0.0833333333333333 * _data_force_20_31_10[_stride_force_0 * ctr_0];
-        const double xi_73 =
-            0.0833333333333333 * _data_force_20_32_10[_stride_force_0 * ctr_0];
-        const double xi_84 = -_data_pdfs_20_30_10[_stride_pdfs_0 * ctr_0];
-        const double xi_85 = xi_84 +
-                             3.0 * _data_pdfs_21_36_10[_stride_pdfs_0 * ctr_0] +
-                             3.0 * _data_pdfs_2m1_35_10[_stride_pdfs_0 * ctr_0];
-        const double xi_86 =
+        const real_t xi_40 =
+            real_t(0.166666666666667) * _data_force_20_31_10[_stride_force_0 * ctr_0];
+        const real_t xi_48 =
+            real_t(0.166666666666667) * _data_force_20_30_10[_stride_force_0 * ctr_0];
+        const real_t xi_52 =
+            real_t(0.166666666666667) * _data_force_20_32_10[_stride_force_0 * ctr_0];
+        const real_t xi_55 =
+            real_t(0.5) * _data_force_20_31_10[_stride_force_0 * ctr_0];
+        const real_t xi_59 =
+            real_t(0.0833333333333333) * _data_force_20_30_10[_stride_force_0 * ctr_0];
+        const real_t xi_63 =
+            real_t(0.0833333333333333) * _data_force_20_31_10[_stride_force_0 * ctr_0];
+        const real_t xi_73 =
+            real_t(0.0833333333333333) * _data_force_20_32_10[_stride_force_0 * ctr_0];
+        const real_t xi_84 = -_data_pdfs_20_30_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_85 = xi_84 +
+                             real_t(3.0) * _data_pdfs_21_36_10[_stride_pdfs_0 * ctr_0] +
+                             real_t(3.0) * _data_pdfs_2m1_35_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_86 =
             omega_even *
-            (xi_85 - 3.0 * _data_pdfs_21_315_1m1[_stride_pdfs_0 * ctr_0] -
-             3.0 * _data_pdfs_21_316_11[_stride_pdfs_0 * ctr_0] -
-             3.0 * _data_pdfs_2m1_311_1m1[_stride_pdfs_0 * ctr_0] -
-             3.0 * _data_pdfs_2m1_312_11[_stride_pdfs_0 * ctr_0] +
-             3.0 * _data_pdfs_20_31_1m1[_stride_pdfs_0 * ctr_0] +
-             3.0 * _data_pdfs_20_32_11[_stride_pdfs_0 * ctr_0]);
-        const double xi_87 =
-            2.0 * _data_pdfs_21_315_1m1[_stride_pdfs_0 * ctr_0] +
-            2.0 * _data_pdfs_21_316_11[_stride_pdfs_0 * ctr_0] +
-            2.0 * _data_pdfs_2m1_311_1m1[_stride_pdfs_0 * ctr_0] +
-            2.0 * _data_pdfs_2m1_312_11[_stride_pdfs_0 * ctr_0];
-        const double xi_88 =
+            (xi_85 - real_t(3.0) * _data_pdfs_21_315_1m1[_stride_pdfs_0 * ctr_0] -
+             real_t(3.0) * _data_pdfs_21_316_11[_stride_pdfs_0 * ctr_0] -
+             real_t(3.0) * _data_pdfs_2m1_311_1m1[_stride_pdfs_0 * ctr_0] -
+             real_t(3.0) * _data_pdfs_2m1_312_11[_stride_pdfs_0 * ctr_0] +
+             real_t(3.0) * _data_pdfs_20_31_1m1[_stride_pdfs_0 * ctr_0] +
+             real_t(3.0) * _data_pdfs_20_32_11[_stride_pdfs_0 * ctr_0]);
+        const real_t xi_87 =
+            real_t(2.0) * _data_pdfs_21_315_1m1[_stride_pdfs_0 * ctr_0] +
+            real_t(2.0) * _data_pdfs_21_316_11[_stride_pdfs_0 * ctr_0] +
+            real_t(2.0) * _data_pdfs_2m1_311_1m1[_stride_pdfs_0 * ctr_0] +
+            real_t(2.0) * _data_pdfs_2m1_312_11[_stride_pdfs_0 * ctr_0];
+        const real_t xi_88 =
             xi_87 +
-            5.0 * _data_pdfs_20_33_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0] +
-            5.0 * _data_pdfs_20_34_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double xi_89 =
+            real_t(5.0) * _data_pdfs_20_33_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0] +
+            real_t(5.0) * _data_pdfs_20_34_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
+        const real_t xi_89 =
             omega_even *
             (xi_85 + xi_88 -
-             2.0 * _data_pdfs_20_31_1m1[_stride_pdfs_0 * ctr_0] -
-             2.0 * _data_pdfs_20_32_11[_stride_pdfs_0 * ctr_0] -
-             5.0 *
+             real_t(2.0) * _data_pdfs_20_31_1m1[_stride_pdfs_0 * ctr_0] -
+             real_t(2.0) * _data_pdfs_20_32_11[_stride_pdfs_0 * ctr_0] -
+             real_t(5.0) *
                  _data_pdfs_21_317_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0] -
-             5.0 *
+             real_t(5.0) *
                  _data_pdfs_21_318_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0] -
-             5.0 * _data_pdfs_2m1_313_10[_stride_pdfs_0 * ctr_0 +
+             real_t(5.0) * _data_pdfs_2m1_313_10[_stride_pdfs_0 * ctr_0 +
                                          _stride_pdfs_0] -
-             5.0 * _data_pdfs_2m1_314_10[_stride_pdfs_0 * ctr_0 -
+             real_t(5.0) * _data_pdfs_2m1_314_10[_stride_pdfs_0 * ctr_0 -
                                          _stride_pdfs_0]);
-        const double xi_92 = -_data_pdfs_2m1_311_1m1[_stride_pdfs_0 * ctr_0];
-        const double xi_93 = xi_18 + xi_92;
-        const double xi_94 =
+        const real_t xi_92 = -_data_pdfs_2m1_311_1m1[_stride_pdfs_0 * ctr_0];
+        const real_t xi_93 = xi_18 + xi_92;
+        const real_t xi_94 =
             -_data_pdfs_20_38_1m1[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double xi_97 =
+        const real_t xi_97 =
             -_data_pdfs_2m1_314_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double xi_98 = xi_11 + xi_15 + xi_21 + xi_97;
-        const double xi_100 =
-            2.0 *
+        const real_t xi_98 = xi_11 + xi_15 + xi_21 + xi_97;
+        const real_t xi_100 =
+            real_t(2.0) *
             _data_pdfs_2m1_313_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_101 =
-            2.0 *
+        const real_t xi_101 =
+            real_t(2.0) *
             _data_pdfs_2m1_314_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double xi_102 =
-            2.0 *
+        const real_t xi_102 =
+            real_t(2.0) *
                 _data_pdfs_21_317_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0] +
-            2.0 * _data_pdfs_21_318_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double xi_103 =
+            real_t(2.0) * _data_pdfs_21_318_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
+        const real_t xi_103 =
             omega_even *
             (xi_100 + xi_101 + xi_102 + xi_84 + xi_88 -
-             4.0 * _data_pdfs_21_36_10[_stride_pdfs_0 * ctr_0] -
-             4.0 * _data_pdfs_2m1_35_10[_stride_pdfs_0 * ctr_0] -
-             7.0 *
+             real_t(4.0) * _data_pdfs_21_36_10[_stride_pdfs_0 * ctr_0] -
+             real_t(4.0) * _data_pdfs_2m1_35_10[_stride_pdfs_0 * ctr_0] -
+             real_t(7.0) *
                  _data_pdfs_20_310_11[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0] -
-             7.0 *
+             real_t(7.0) *
                  _data_pdfs_20_37_1m1[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0] -
-             7.0 *
+             real_t(7.0) *
                  _data_pdfs_20_38_1m1[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0] -
-             7.0 *
+             real_t(7.0) *
                  _data_pdfs_20_39_11[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0] +
-             5.0 * _data_pdfs_20_31_1m1[_stride_pdfs_0 * ctr_0] +
-             5.0 * _data_pdfs_20_32_11[_stride_pdfs_0 * ctr_0]);
-        const double xi_104 =
+             real_t(5.0) * _data_pdfs_20_31_1m1[_stride_pdfs_0 * ctr_0] +
+             real_t(5.0) * _data_pdfs_20_32_11[_stride_pdfs_0 * ctr_0]);
+        const real_t xi_104 =
             xi_92 + _data_pdfs_2m1_312_11[_stride_pdfs_0 * ctr_0];
-        const double xi_105 = xi_104 + xi_14 + xi_22 +
+        const real_t xi_105 = xi_104 + xi_14 + xi_22 +
                               _data_pdfs_20_31_1m1[_stride_pdfs_0 * ctr_0] +
                               _data_pdfs_21_316_11[_stride_pdfs_0 * ctr_0];
-        const double xi_107 = xi_105 * xi_106;
-        const double xi_108 =
-            2.0 * _data_pdfs_20_37_1m1[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_109 =
-            2.0 * _data_pdfs_20_310_11[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double xi_110 =
-            -2.0 *
+        const real_t xi_107 = xi_105 * xi_106;
+        const real_t xi_108 =
+            real_t(2.0) * _data_pdfs_20_37_1m1[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
+        const real_t xi_109 =
+            real_t(2.0) * _data_pdfs_20_310_11[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
+        const real_t xi_110 =
+            -real_t(2.0) *
                 _data_pdfs_20_38_1m1[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0] +
-            2.0 * _data_pdfs_20_39_11[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_111 = -xi_108 + xi_109 + xi_110 + xi_14 + xi_19 + xi_2;
-        const double xi_113 = xi_111 * xi_112;
-        const double xi_114 = -xi_113;
-        const double xi_116 =
+            real_t(2.0) * _data_pdfs_20_39_11[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
+        const real_t xi_111 = -xi_108 + xi_109 + xi_110 + xi_14 + xi_19 + xi_2;
+        const real_t xi_113 = xi_111 * xi_112;
+        const real_t xi_114 = -xi_113;
+        const real_t xi_116 =
             xi_94 +
             _data_pdfs_20_310_11[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double xi_120 = xi_103 * -0.0198412698412698;
-        const double xi_121 =
+        const real_t xi_120 = xi_103 * -real_t(0.0198412698412698);
+        const real_t xi_121 =
             _data_pdfs_21_317_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0] +
             _data_pdfs_2m1_313_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_132 =
+        const real_t xi_132 =
             xi_97 +
             _data_pdfs_2m1_313_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_133 =
+        const real_t xi_133 =
             xi_12 + xi_132 + xi_20 +
             _data_pdfs_20_34_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0] +
             _data_pdfs_21_317_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_134 = xi_106 * xi_133;
-        const double xi_135 = xi_1 + xi_108 - xi_109 + xi_110 + xi_13;
-        const double xi_136 = xi_112 * xi_135;
-        const double xi_138 = -xi_136;
-        const double xi_139 = _data_pdfs_21_315_1m1[_stride_pdfs_0 * ctr_0] +
+        const real_t xi_134 = xi_106 * xi_133;
+        const real_t xi_135 = xi_1 + xi_108 - xi_109 + xi_110 + xi_13;
+        const real_t xi_136 = xi_112 * xi_135;
+        const real_t xi_138 = -xi_136;
+        const real_t xi_139 = _data_pdfs_21_315_1m1[_stride_pdfs_0 * ctr_0] +
                               _data_pdfs_21_316_11[_stride_pdfs_0 * ctr_0];
-        const double xi_140 = xi_139 + xi_23 + xi_93 +
+        const real_t xi_140 = xi_139 + xi_23 + xi_93 +
                               _data_pdfs_2m1_35_10[_stride_pdfs_0 * ctr_0];
-        const double xi_141 = xi_106 * xi_140;
-        const double xi_142 = -xi_100 - xi_101 + xi_102 + xi_24 + xi_3;
-        const double xi_143 = xi_112 * xi_142;
-        const double xi_144 = -xi_143;
-        const double xi_151 = xi_103 * 0.0138888888888889;
-        const double xi_166 = xi_89 * -0.00714285714285714;
-        const double xi_168 = xi_86 * 0.025;
-        const double xi_171 = xi_142 * xi_170;
-        const double xi_173 = xi_140 * xi_172;
-        const double xi_174 = xi_103 * -0.00396825396825397;
-        const double xi_178 = xi_111 * xi_170;
-        const double xi_179 = xi_105 * xi_172;
-        const double xi_185 = xi_89 * 0.0178571428571429;
-        const double xi_188 = xi_133 * xi_172;
-        const double xi_189 = xi_135 * xi_170;
-        const double vel0Term =
+        const real_t xi_141 = xi_106 * xi_140;
+        const real_t xi_142 = -xi_100 - xi_101 + xi_102 + xi_24 + xi_3;
+        const real_t xi_143 = xi_112 * xi_142;
+        const real_t xi_144 = -xi_143;
+        const real_t xi_151 = xi_103 * real_t(0.0138888888888889);
+        const real_t xi_166 = xi_89 * -real_t(0.00714285714285714);
+        const real_t xi_168 = xi_86 * real_t(0.025);
+        const real_t xi_171 = xi_142 * xi_170;
+        const real_t xi_173 = xi_140 * xi_172;
+        const real_t xi_174 = xi_103 * -real_t(0.00396825396825397);
+        const real_t xi_178 = xi_111 * xi_170;
+        const real_t xi_179 = xi_105 * xi_172;
+        const real_t xi_185 = xi_89 * real_t(0.0178571428571429);
+        const real_t xi_188 = xi_133 * xi_172;
+        const real_t xi_189 = xi_135 * xi_170;
+        const real_t vel0Term =
             xi_1 +
             _data_pdfs_20_310_11[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0] +
             _data_pdfs_20_38_1m1[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double vel1Term =
+        const real_t vel1Term =
             xi_2 +
             _data_pdfs_20_37_1m1[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double vel2Term =
+        const real_t vel2Term =
             xi_3 +
             _data_pdfs_2m1_313_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double rho = vel0Term + vel1Term + vel2Term + xi_4 + xi_5 + xi_6 +
+        const real_t rho = vel0Term + vel1Term + vel2Term + xi_4 + xi_5 + xi_6 +
                            _data_pdfs_20_30_10[_stride_pdfs_0 * ctr_0];
-        const double xi_7 = 1 / (rho);
-        const double u_0 = xi_7 * (vel0Term + xi_13 + xi_9);
-        const double xi_25 =
+        const real_t xi_7 = 1 / (rho);
+        const real_t u_0 = xi_7 * (vel0Term + xi_13 + xi_9);
+        const real_t xi_25 =
             u_0 * _data_force_20_30_10[_stride_force_0 * ctr_0];
-        const double xi_26 = xi_25 * 0.333333333333333;
-        const double xi_32 = -xi_26;
-        const double xi_90 = rho * (u_0 * u_0);
-        const double xi_129 = rho * u_0;
-        const double xi_130 =
+        const real_t xi_26 = xi_25 * real_t(0.333333333333333);
+        const real_t xi_32 = -xi_26;
+        const real_t xi_90 = rho * (u_0 * u_0);
+        const real_t xi_129 = rho * u_0;
+        const real_t xi_130 =
             -vel0Term + xi_121 + xi_129 + xi_4 +
             _data_pdfs_20_37_1m1[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
-        const double xi_131 = xi_118 * xi_130;
-        const double xi_156 = xi_130 * xi_153;
-        const double u_1 =
+        const real_t xi_131 = xi_118 * xi_130;
+        const real_t xi_156 = xi_130 * xi_153;
+        const real_t u_1 =
             xi_7 *
             (vel1Term + xi_16 + xi_19 + xi_8 +
              _data_pdfs_20_38_1m1[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0]);
-        const double xi_27 =
+        const real_t xi_27 =
             u_1 * _data_force_20_31_10[_stride_force_0 * ctr_0];
-        const double xi_28 = xi_27 * 0.333333333333333;
-        const double xi_33 = -xi_28;
-        const double xi_54 = u_1 * 0.5;
-        const double xi_57 =
+        const real_t xi_28 = xi_27 * real_t(0.333333333333333);
+        const real_t xi_33 = -xi_28;
+        const real_t xi_54 = u_1 * real_t(0.5);
+        const real_t xi_57 =
             xi_56 * (u_0 * xi_55 +
                      xi_54 * _data_force_20_30_10[_stride_force_0 * ctr_0]);
-        const double xi_58 = -xi_57;
-        const double xi_95 = rho * (u_1 * u_1);
-        const double xi_96 = xi_9 + xi_94 + xi_95;
-        const double xi_115 = rho * u_1;
-        const double xi_117 =
+        const real_t xi_58 = -xi_57;
+        const real_t xi_95 = rho * (u_1 * u_1);
+        const real_t xi_96 = xi_9 + xi_94 + xi_95;
+        const real_t xi_115 = rho * u_1;
+        const real_t xi_117 =
             -vel1Term + xi_115 + xi_116 + xi_5 +
             _data_pdfs_20_39_11[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0] +
             _data_pdfs_2m1_312_11[_stride_pdfs_0 * ctr_0];
-        const double xi_119 = xi_117 * xi_118;
-        const double xi_149 =
+        const real_t xi_119 = xi_117 * xi_118;
+        const real_t xi_149 =
             xi_148 *
             (u_0 * xi_115 + xi_116 + xi_8 +
              _data_pdfs_20_37_1m1[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0]);
-        const double xi_154 = xi_117 * xi_153;
-        const double xi_155 = xi_113 + xi_154;
-        const double xi_164 = -xi_154;
-        const double xi_165 = xi_114 + xi_164;
-        const double xi_180 = xi_154 - xi_178 + xi_179;
-        const double xi_181 = xi_164 + xi_178 - xi_179;
-        const double u_2 =
+        const real_t xi_154 = xi_117 * xi_153;
+        const real_t xi_155 = xi_113 + xi_154;
+        const real_t xi_164 = -xi_154;
+        const real_t xi_165 = xi_114 + xi_164;
+        const real_t xi_180 = xi_154 - xi_178 + xi_179;
+        const real_t xi_181 = xi_164 + xi_178 - xi_179;
+        const real_t u_2 =
             xi_7 *
             (vel2Term + xi_21 + xi_24 +
              _data_pdfs_2m1_314_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0]);
-        const double xi_29 =
+        const real_t xi_29 =
             u_2 * _data_force_20_32_10[_stride_force_0 * ctr_0];
-        const double xi_30 = xi_29 * 0.333333333333333;
-        const double xi_31 = (-omega_bulk + 2.0) * (xi_26 + xi_28 + xi_30);
-        const double xi_34 = xi_29 * 0.666666666666667 + xi_32 + xi_33;
-        const double xi_37 = -xi_30;
-        const double xi_38 = xi_27 * 0.666666666666667 + xi_32 + xi_37;
-        const double xi_39 = xi_25 * 0.666666666666667 + xi_33 + xi_37;
-        const double xi_42 = xi_34 * xi_41;
-        const double xi_43 = -xi_42;
-        const double xi_44 = xi_39 * xi_41;
-        const double xi_45 = -xi_44;
-        const double xi_47 = xi_38 * xi_46 + xi_43 + xi_45;
-        const double xi_49 = xi_38 * xi_41;
-        const double xi_50 = -xi_49;
-        const double xi_51 = xi_39 * xi_46 + xi_43 + xi_50;
-        const double xi_53 = xi_34 * xi_46 + xi_45 + xi_50;
-        const double xi_60 = xi_44 - xi_59;
-        const double xi_62 = -xi_34 * xi_61;
-        const double xi_64 = xi_31 * 0.125;
-        const double xi_65 = xi_49 + xi_64;
-        const double xi_66 = xi_63 + xi_65;
-        const double xi_67 = xi_62 + xi_66;
-        const double xi_68 = xi_44 + xi_59;
-        const double xi_69 = -xi_63 + xi_65;
-        const double xi_70 = xi_62 + xi_69;
-        const double xi_71 =
+        const real_t xi_30 = xi_29 * real_t(0.333333333333333);
+        const real_t xi_31 = (-omega_bulk + real_t(2.0)) * (xi_26 + xi_28 + xi_30);
+        const real_t xi_34 = xi_29 * real_t(0.666666666666667) + xi_32 + xi_33;
+        const real_t xi_37 = -xi_30;
+        const real_t xi_38 = xi_27 * real_t(0.666666666666667) + xi_32 + xi_37;
+        const real_t xi_39 = xi_25 * real_t(0.666666666666667) + xi_33 + xi_37;
+        const real_t xi_42 = xi_34 * xi_41;
+        const real_t xi_43 = -xi_42;
+        const real_t xi_44 = xi_39 * xi_41;
+        const real_t xi_45 = -xi_44;
+        const real_t xi_47 = xi_38 * xi_46 + xi_43 + xi_45;
+        const real_t xi_49 = xi_38 * xi_41;
+        const real_t xi_50 = -xi_49;
+        const real_t xi_51 = xi_39 * xi_46 + xi_43 + xi_50;
+        const real_t xi_53 = xi_34 * xi_46 + xi_45 + xi_50;
+        const real_t xi_60 = xi_44 - xi_59;
+        const real_t xi_62 = -xi_34 * xi_61;
+        const real_t xi_64 = xi_31 * real_t(0.125);
+        const real_t xi_65 = xi_49 + xi_64;
+        const real_t xi_66 = xi_63 + xi_65;
+        const real_t xi_67 = xi_62 + xi_66;
+        const real_t xi_68 = xi_44 + xi_59;
+        const real_t xi_69 = -xi_63 + xi_65;
+        const real_t xi_70 = xi_62 + xi_69;
+        const real_t xi_71 =
             xi_56 * (u_2 * xi_55 +
                      xi_54 * _data_force_20_32_10[_stride_force_0 * ctr_0]);
-        const double xi_72 = -xi_39 * xi_61;
-        const double xi_74 = xi_42 + xi_73;
-        const double xi_75 = xi_72 + xi_74;
-        const double xi_76 = -xi_71;
-        const double xi_77 =
-            xi_56 * (u_0 * 0.5 * _data_force_20_32_10[_stride_force_0 * ctr_0] +
-                     u_2 * 0.5 * _data_force_20_30_10[_stride_force_0 * ctr_0]);
-        const double xi_78 = -xi_77;
-        const double xi_79 = -xi_38 * xi_61;
-        const double xi_80 = xi_64 + xi_74 + xi_79;
-        const double xi_81 = xi_42 - xi_73;
-        const double xi_82 = xi_72 + xi_81;
-        const double xi_83 = xi_64 + xi_79 + xi_81;
-        const double xi_91 = rho * (u_2 * u_2);
-        const double xi_99 =
+        const real_t xi_72 = -xi_39 * xi_61;
+        const real_t xi_74 = xi_42 + xi_73;
+        const real_t xi_75 = xi_72 + xi_74;
+        const real_t xi_76 = -xi_71;
+        const real_t xi_77 =
+            xi_56 * (u_0 * real_t(0.5) * _data_force_20_32_10[_stride_force_0 * ctr_0] +
+                     u_2 * real_t(0.5) * _data_force_20_30_10[_stride_force_0 * ctr_0]);
+        const real_t xi_78 = -xi_77;
+        const real_t xi_79 = -xi_38 * xi_61;
+        const real_t xi_80 = xi_64 + xi_74 + xi_79;
+        const real_t xi_81 = xi_42 - xi_73;
+        const real_t xi_82 = xi_72 + xi_81;
+        const real_t xi_83 = xi_64 + xi_79 + xi_81;
+        const real_t xi_91 = rho * (u_2 * u_2);
+        const real_t xi_99 =
             omega_bulk * (xi_17 + xi_22 + xi_90 + xi_91 + xi_93 + xi_96 +
                           xi_98 + _data_pdfs_20_30_10[_stride_pdfs_0 * ctr_0]);
-        const double xi_122 = -xi_91 +
+        const real_t xi_122 = -xi_91 +
                               _data_pdfs_21_36_10[_stride_pdfs_0 * ctr_0] +
                               _data_pdfs_2m1_35_10[_stride_pdfs_0 * ctr_0];
-        const double xi_123 =
+        const real_t xi_123 =
             omega_shear * (xi_0 + xi_121 + xi_122 + xi_16 + xi_96 -
                            _data_pdfs_20_31_1m1[_stride_pdfs_0 * ctr_0]);
-        const double xi_124 = xi_123 * 0.125;
-        const double xi_125 =
+        const real_t xi_124 = xi_123 * real_t(0.125);
+        const real_t xi_125 =
             omega_shear *
-            (xi_122 + xi_87 + xi_9 + xi_90 * 2.0 + xi_94 - xi_95 + xi_98 -
-             2.0 *
+            (xi_122 + xi_87 + xi_9 + xi_90 * real_t(2.0) + xi_94 - xi_95 + xi_98 -
+             real_t(2.0) *
                  _data_pdfs_20_33_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0] -
-             2.0 *
+             real_t(2.0) *
                  _data_pdfs_20_34_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0] +
              _data_pdfs_20_31_1m1[_stride_pdfs_0 * ctr_0] +
              _data_pdfs_20_32_11[_stride_pdfs_0 * ctr_0]);
-        const double xi_126 = xi_125 * -0.0416666666666667;
-        const double xi_127 = xi_126 + xi_86 * -0.05;
-        const double xi_128 =
-            xi_120 + xi_124 + xi_127 + xi_89 * 0.0142857142857143;
-        const double xi_137 =
-            xi_120 + xi_125 * 0.0833333333333333 + xi_89 * -0.0357142857142857;
-        const double xi_145 =
+        const real_t xi_126 = xi_125 * -real_t(0.0416666666666667);
+        const real_t xi_127 = xi_126 + xi_86 * -real_t(0.05);
+        const real_t xi_128 =
+            xi_120 + xi_124 + xi_127 + xi_89 * real_t(0.0142857142857143);
+        const real_t xi_137 =
+            xi_120 + xi_125 * real_t(0.0833333333333333) + xi_89 * -real_t(0.0357142857142857);
+        const real_t xi_145 =
             rho * u_2 - vel2Term + xi_139 + xi_6 + xi_92 + xi_97 +
             _data_pdfs_21_318_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
-        const double xi_146 = xi_118 * xi_145;
-        const double xi_147 = xi_103 * 0.0158730158730159 - xi_124 + xi_127 +
-                              xi_89 * -0.0214285714285714;
-        const double xi_150 = xi_123 * 0.0625;
-        const double xi_152 = -xi_149 + xi_150 + xi_151;
-        const double xi_157 = xi_99 * 0.0416666666666667;
-        const double xi_158 = xi_125 * 0.0208333333333333 + xi_157;
-        const double xi_159 = -xi_156 + xi_158;
-        const double xi_160 = xi_138 + xi_159;
-        const double xi_161 = xi_149 + xi_150 + xi_151;
-        const double xi_162 = xi_156 + xi_158;
-        const double xi_163 = xi_136 + xi_162;
-        const double xi_167 =
+        const real_t xi_146 = xi_118 * xi_145;
+        const real_t xi_147 = xi_103 * real_t(0.0158730158730159) - xi_124 + xi_127 +
+                              xi_89 * -real_t(0.0214285714285714);
+        const real_t xi_150 = xi_123 * real_t(0.0625);
+        const real_t xi_152 = -xi_149 + xi_150 + xi_151;
+        const real_t xi_157 = xi_99 * real_t(0.0416666666666667);
+        const real_t xi_158 = xi_125 * real_t(0.0208333333333333) + xi_157;
+        const real_t xi_159 = -xi_156 + xi_158;
+        const real_t xi_160 = xi_138 + xi_159;
+        const real_t xi_161 = xi_149 + xi_150 + xi_151;
+        const real_t xi_162 = xi_156 + xi_158;
+        const real_t xi_163 = xi_136 + xi_162;
+        const real_t xi_167 =
             xi_148 * (u_2 * xi_115 + xi_104 + xi_17 +
                       _data_pdfs_21_315_1m1[_stride_pdfs_0 * ctr_0]);
-        const double xi_169 = xi_126 + xi_157 + xi_166 + xi_167 + xi_168;
-        const double xi_175 = xi_145 * xi_153;
-        const double xi_176 = xi_174 + xi_175;
-        const double xi_177 = -xi_171 + xi_173 + xi_176;
-        const double xi_182 = xi_126 + xi_157 + xi_166 - xi_167 + xi_168;
-        const double xi_183 =
+        const real_t xi_169 = xi_126 + xi_157 + xi_166 + xi_167 + xi_168;
+        const real_t xi_175 = xi_145 * xi_153;
+        const real_t xi_176 = xi_174 + xi_175;
+        const real_t xi_177 = -xi_171 + xi_173 + xi_176;
+        const real_t xi_182 = xi_126 + xi_157 + xi_166 - xi_167 + xi_168;
+        const real_t xi_183 =
             xi_148 *
             (u_2 * xi_129 + xi_10 + xi_132 +
              _data_pdfs_21_318_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0]);
-        const double xi_184 = -xi_150;
-        const double xi_186 = -xi_183 + xi_184 + xi_185;
-        const double xi_187 = xi_143 + xi_176;
-        const double xi_190 = xi_159 - xi_188 + xi_189;
-        const double xi_191 = xi_183 + xi_184 + xi_185;
-        const double xi_192 = xi_162 + xi_188 - xi_189;
-        const double xi_193 = xi_174 - xi_175;
-        const double xi_194 = xi_171 - xi_173 + xi_193;
-        const double xi_195 = xi_144 + xi_193;
-        const double forceTerm_0 =
-            xi_31 * -1.5 - xi_34 * xi_36 - xi_36 * xi_38 - xi_36 * xi_39;
-        const double forceTerm_1 = xi_40 + xi_47;
-        const double forceTerm_2 = -xi_40 + xi_47;
-        const double forceTerm_3 = -xi_48 + xi_51;
-        const double forceTerm_4 = xi_48 + xi_51;
-        const double forceTerm_5 = xi_52 + xi_53;
-        const double forceTerm_6 = -xi_52 + xi_53;
-        const double forceTerm_7 = xi_58 + xi_60 + xi_67;
-        const double forceTerm_8 = xi_57 + xi_67 + xi_68;
-        const double forceTerm_9 = xi_57 + xi_60 + xi_70;
-        const double forceTerm_10 = xi_58 + xi_68 + xi_70;
-        const double forceTerm_11 = xi_66 + xi_71 + xi_75;
-        const double forceTerm_12 = xi_69 + xi_75 + xi_76;
-        const double forceTerm_13 = xi_60 + xi_78 + xi_80;
-        const double forceTerm_14 = xi_68 + xi_77 + xi_80;
-        const double forceTerm_15 = xi_66 + xi_76 + xi_82;
-        const double forceTerm_16 = xi_69 + xi_71 + xi_82;
-        const double forceTerm_17 = xi_60 + xi_77 + xi_83;
-        const double forceTerm_18 = xi_68 + xi_78 + xi_83;
+        const real_t xi_184 = -xi_150;
+        const real_t xi_186 = -xi_183 + xi_184 + xi_185;
+        const real_t xi_187 = xi_143 + xi_176;
+        const real_t xi_190 = xi_159 - xi_188 + xi_189;
+        const real_t xi_191 = xi_183 + xi_184 + xi_185;
+        const real_t xi_192 = xi_162 + xi_188 - xi_189;
+        const real_t xi_193 = xi_174 - xi_175;
+        const real_t xi_194 = xi_171 - xi_173 + xi_193;
+        const real_t xi_195 = xi_144 + xi_193;
+        const real_t forceTerm_0 =
+            xi_31 * -real_t(1.5) - xi_34 * xi_36 - xi_36 * xi_38 - xi_36 * xi_39;
+        const real_t forceTerm_1 = xi_40 + xi_47;
+        const real_t forceTerm_2 = -xi_40 + xi_47;
+        const real_t forceTerm_3 = -xi_48 + xi_51;
+        const real_t forceTerm_4 = xi_48 + xi_51;
+        const real_t forceTerm_5 = xi_52 + xi_53;
+        const real_t forceTerm_6 = -xi_52 + xi_53;
+        const real_t forceTerm_7 = xi_58 + xi_60 + xi_67;
+        const real_t forceTerm_8 = xi_57 + xi_67 + xi_68;
+        const real_t forceTerm_9 = xi_57 + xi_60 + xi_70;
+        const real_t forceTerm_10 = xi_58 + xi_68 + xi_70;
+        const real_t forceTerm_11 = xi_66 + xi_71 + xi_75;
+        const real_t forceTerm_12 = xi_69 + xi_75 + xi_76;
+        const real_t forceTerm_13 = xi_60 + xi_78 + xi_80;
+        const real_t forceTerm_14 = xi_68 + xi_77 + xi_80;
+        const real_t forceTerm_15 = xi_66 + xi_76 + xi_82;
+        const real_t forceTerm_16 = xi_69 + xi_71 + xi_82;
+        const real_t forceTerm_17 = xi_60 + xi_77 + xi_83;
+        const real_t forceTerm_18 = xi_68 + xi_78 + xi_83;
         _data_pdfs_tmp_20_30_10[_stride_pdfs_tmp_0 * ctr_0] =
-            real_c(forceTerm_0 + xi_103 * 0.0238095238095238 + xi_86 * 0.1 +
-            xi_89 * 0.0428571428571429 + xi_99 * -0.5) +
+            real_c(forceTerm_0 + xi_103 * real_t(0.0238095238095238) + xi_86 * real_t(0.1) +
+            xi_89 * real_t(0.0428571428571429) + xi_99 * -0.5) +
             _data_pdfs_20_30_10[_stride_pdfs_0 * ctr_0];
         _data_pdfs_tmp_20_31_10[_stride_pdfs_tmp_0 * ctr_0] =
             real_c(forceTerm_1 - xi_107 + xi_114 + xi_119 + xi_128) +
@@ -670,22 +670,22 @@ kernel_collide(real_t *RESTRICT const _data_force, real_t *RESTRICT _data_pdfs,
                int64_t const _stride_force_1, int64_t const _stride_force_2,
                int64_t const _stride_force_3, int64_t const _stride_pdfs_0,
                int64_t const _stride_pdfs_1, int64_t const _stride_pdfs_2,
-               int64_t const _stride_pdfs_3, double omega_bulk,
-               double omega_even, double omega_odd, double omega_shear) {
-  const double xi_35 = -omega_shear + 2.0;
-  const double xi_36 = xi_35 * 0.5;
-  const double xi_41 = xi_35 * 0.0833333333333333;
-  const double xi_46 = xi_35 * 0.166666666666667;
-  const double xi_56 = xi_35 * 0.25;
-  const double xi_61 = xi_35 * 0.0416666666666667;
-  const double xi_106 = omega_odd * 0.25;
-  const double xi_112 = omega_odd * 0.0833333333333333;
-  const double xi_148 = omega_shear * 0.25;
-  const double xi_170 = omega_odd * 0.0416666666666667;
-  const double xi_172 = omega_odd * 0.125;
-  const int64_t rr_0 = 0.0;
-  const double xi_118 = rr_0 * 0.166666666666667;
-  const double xi_153 = rr_0 * 0.0833333333333333;
+               int64_t const _stride_pdfs_3, real_t omega_bulk,
+               real_t omega_even, real_t omega_odd, real_t omega_shear) {
+  const real_t xi_35 = -real_c(omega_shear) + real_t(2.0);
+  const real_t xi_36 = xi_35 * real_t(0.5);
+  const real_t xi_41 = xi_35 * real_t(0.0833333333333333);
+  const real_t xi_46 = xi_35 * real_t(0.166666666666667);
+  const real_t xi_56 = xi_35 * real_t(0.25);
+  const real_t xi_61 = xi_35 * real_t(0.0416666666666667);
+  const real_t xi_106 = omega_odd * real_t(0.25);
+  const real_t xi_112 = omega_odd * real_t(0.0833333333333333);
+  const real_t xi_148 = omega_shear * real_t(0.25);
+  const real_t xi_170 = omega_odd * real_t(0.0416666666666667);
+  const real_t xi_172 = omega_odd * real_t(0.125);
+  const int64_t rr_0 = 0;
+  const real_t xi_118 = real_c(rr_0) * real_t(0.166666666666667);
+  const real_t xi_153 = real_c(rr_0) * real_t(0.0833333333333333);
   for (int ctr_2 = 0; ctr_2 < _size_force_2; ctr_2 += 1) {
     real_t *RESTRICT _data_pdfs_20_34 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 4 * _stride_pdfs_3;
@@ -775,262 +775,262 @@ kernel_collide(real_t *RESTRICT const _data_force, real_t *RESTRICT _data_pdfs,
       real_t *RESTRICT _data_pdfs_20_30_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_30;
       for (int ctr_0 = 0; ctr_0 < _size_force_0; ctr_0 += 1) {
-        const double xi_196 = _data_pdfs_20_34_10[_stride_pdfs_0 * ctr_0];
-        const double xi_197 = _data_pdfs_20_33_10[_stride_pdfs_0 * ctr_0];
-        const double xi_198 = _data_pdfs_20_311_10[_stride_pdfs_0 * ctr_0];
-        const double xi_199 = _data_force_20_30_10[_stride_force_0 * ctr_0];
-        const double xi_200 = _data_pdfs_20_32_10[_stride_pdfs_0 * ctr_0];
-        const double xi_201 = _data_pdfs_20_312_10[_stride_pdfs_0 * ctr_0];
-        const double xi_202 = _data_pdfs_20_317_10[_stride_pdfs_0 * ctr_0];
-        const double xi_203 = _data_pdfs_20_313_10[_stride_pdfs_0 * ctr_0];
-        const double xi_204 = _data_force_20_32_10[_stride_force_0 * ctr_0];
-        const double xi_205 = _data_pdfs_20_31_10[_stride_pdfs_0 * ctr_0];
-        const double xi_206 = _data_pdfs_20_35_10[_stride_pdfs_0 * ctr_0];
-        const double xi_207 = _data_pdfs_20_39_10[_stride_pdfs_0 * ctr_0];
-        const double xi_208 = _data_pdfs_20_37_10[_stride_pdfs_0 * ctr_0];
-        const double xi_209 = _data_pdfs_20_38_10[_stride_pdfs_0 * ctr_0];
-        const double xi_210 = _data_pdfs_20_315_10[_stride_pdfs_0 * ctr_0];
-        const double xi_211 = _data_pdfs_20_36_10[_stride_pdfs_0 * ctr_0];
-        const double xi_212 = _data_pdfs_20_318_10[_stride_pdfs_0 * ctr_0];
-        const double xi_213 = _data_force_20_31_10[_stride_force_0 * ctr_0];
-        const double xi_214 = _data_pdfs_20_316_10[_stride_pdfs_0 * ctr_0];
-        const double xi_215 = _data_pdfs_20_314_10[_stride_pdfs_0 * ctr_0];
-        const double xi_216 = _data_pdfs_20_310_10[_stride_pdfs_0 * ctr_0];
-        const double xi_217 = _data_pdfs_20_30_10[_stride_pdfs_0 * ctr_0];
-        const double xi_0 = xi_212 + xi_215;
-        const double xi_1 = xi_0 + xi_196;
-        const double xi_2 = xi_198 + xi_205 + xi_210;
-        const double xi_3 = xi_201 + xi_206;
-        const double xi_4 = xi_197 + xi_207;
-        const double xi_5 = xi_200 + xi_214;
-        const double xi_6 = xi_202 + xi_211;
-        const double xi_8 = -xi_207;
-        const double xi_9 = -xi_208 + xi_8;
-        const double xi_10 = -xi_202;
-        const double xi_11 = -xi_203;
-        const double xi_12 = -xi_197;
-        const double xi_13 = xi_10 + xi_11 + xi_12;
-        const double xi_14 = -xi_200;
-        const double xi_15 = -xi_216;
-        const double xi_16 = xi_14 + xi_15;
-        const double xi_17 = -xi_214;
-        const double xi_18 = -xi_201;
-        const double xi_19 = xi_17 + xi_18;
-        const double xi_20 = -xi_212;
-        const double xi_21 = xi_10 + xi_20;
-        const double xi_22 = -xi_210;
-        const double xi_23 = -xi_211;
-        const double xi_24 = xi_17 + xi_198 + xi_22 + xi_23;
-        const double xi_40 = xi_213 * 0.166666666666667;
-        const double xi_48 = xi_199 * 0.166666666666667;
-        const double xi_52 = xi_204 * 0.166666666666667;
-        const double xi_55 = xi_213 * 0.5;
-        const double xi_59 = xi_199 * 0.0833333333333333;
-        const double xi_63 = xi_213 * 0.0833333333333333;
-        const double xi_73 = xi_204 * 0.0833333333333333;
-        const double xi_84 = -xi_217;
-        const double xi_85 = xi_206 * 3.0 + xi_211 * 3.0 + xi_84;
-        const double xi_86 =
-            omega_even * (xi_198 * -3.0 + xi_200 * 3.0 + xi_201 * -3.0 +
-                          xi_205 * 3.0 + xi_210 * -3.0 + xi_214 * -3.0 + xi_85);
-        const double xi_87 =
-            xi_198 * 2.0 + xi_201 * 2.0 + xi_210 * 2.0 + xi_214 * 2.0;
-        const double xi_88 = xi_196 * 5.0 + xi_197 * 5.0 + xi_87;
-        const double xi_89 =
+        const real_t xi_196 = _data_pdfs_20_34_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_197 = _data_pdfs_20_33_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_198 = _data_pdfs_20_311_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_199 = _data_force_20_30_10[_stride_force_0 * ctr_0];
+        const real_t xi_200 = _data_pdfs_20_32_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_201 = _data_pdfs_20_312_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_202 = _data_pdfs_20_317_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_203 = _data_pdfs_20_313_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_204 = _data_force_20_32_10[_stride_force_0 * ctr_0];
+        const real_t xi_205 = _data_pdfs_20_31_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_206 = _data_pdfs_20_35_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_207 = _data_pdfs_20_39_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_208 = _data_pdfs_20_37_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_209 = _data_pdfs_20_38_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_210 = _data_pdfs_20_315_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_211 = _data_pdfs_20_36_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_212 = _data_pdfs_20_318_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_213 = _data_force_20_31_10[_stride_force_0 * ctr_0];
+        const real_t xi_214 = _data_pdfs_20_316_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_215 = _data_pdfs_20_314_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_216 = _data_pdfs_20_310_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_217 = _data_pdfs_20_30_10[_stride_pdfs_0 * ctr_0];
+        const real_t xi_0 = xi_212 + xi_215;
+        const real_t xi_1 = xi_0 + xi_196;
+        const real_t xi_2 = xi_198 + xi_205 + xi_210;
+        const real_t xi_3 = xi_201 + xi_206;
+        const real_t xi_4 = xi_197 + xi_207;
+        const real_t xi_5 = xi_200 + xi_214;
+        const real_t xi_6 = xi_202 + xi_211;
+        const real_t xi_8 = -xi_207;
+        const real_t xi_9 = -xi_208 + xi_8;
+        const real_t xi_10 = -xi_202;
+        const real_t xi_11 = -xi_203;
+        const real_t xi_12 = -xi_197;
+        const real_t xi_13 = xi_10 + xi_11 + xi_12;
+        const real_t xi_14 = -xi_200;
+        const real_t xi_15 = -xi_216;
+        const real_t xi_16 = xi_14 + xi_15;
+        const real_t xi_17 = -xi_214;
+        const real_t xi_18 = -xi_201;
+        const real_t xi_19 = xi_17 + xi_18;
+        const real_t xi_20 = -xi_212;
+        const real_t xi_21 = xi_10 + xi_20;
+        const real_t xi_22 = -xi_210;
+        const real_t xi_23 = -xi_211;
+        const real_t xi_24 = xi_17 + xi_198 + xi_22 + xi_23;
+        const real_t xi_40 = xi_213 * real_t(0.166666666666667);
+        const real_t xi_48 = xi_199 * real_t(0.166666666666667);
+        const real_t xi_52 = xi_204 * real_t(0.166666666666667);
+        const real_t xi_55 = xi_213 * real_t(0.5);
+        const real_t xi_59 = xi_199 * real_t(0.0833333333333333);
+        const real_t xi_63 = xi_213 * real_t(0.0833333333333333);
+        const real_t xi_73 = xi_204 * real_t(0.0833333333333333);
+        const real_t xi_84 = -xi_217;
+        const real_t xi_85 = xi_206 * real_t(3.0) + xi_211 * real_t(3.0) + xi_84;
+        const real_t xi_86 =
+            omega_even * (xi_198 * -real_t(3.0) + xi_200 * real_t(3.0) + xi_201 * -real_t(3.0) +
+                          xi_205 * real_t(3.0) + xi_210 * -real_t(3.0) + xi_214 * -real_t(3.0) + xi_85);
+        const real_t xi_87 =
+            xi_198 * real_t(2.0) + xi_201 * real_t(2.0) + xi_210 * real_t(2.0) + xi_214 * real_t(2.0);
+        const real_t xi_88 = xi_196 * real_t(5.0) + xi_197 * real_t(5.0) + xi_87;
+        const real_t xi_89 =
             omega_even *
-            (xi_200 * -2.0 + xi_202 * -5.0 + xi_203 * -5.0 + xi_205 * -2.0 +
-             xi_212 * -5.0 + xi_215 * -5.0 + xi_85 + xi_88);
-        const double xi_92 = -xi_198;
-        const double xi_93 = xi_18 + xi_92;
-        const double xi_94 = -xi_209;
-        const double xi_97 = -xi_215;
-        const double xi_98 = xi_11 + xi_15 + xi_21 + xi_97;
-        const double xi_100 = xi_203 * 2.0;
-        const double xi_101 = xi_215 * 2.0;
-        const double xi_102 = xi_202 * 2.0 + xi_212 * 2.0;
-        const double xi_103 =
+            (xi_200 * -real_t(2.0) + xi_202 * -real_t(5.0) + xi_203 * -real_t(5.0) + xi_205 * -real_t(2.0) +
+             xi_212 * -real_t(5.0) + xi_215 * -real_t(5.0) + xi_85 + xi_88);
+        const real_t xi_92 = -xi_198;
+        const real_t xi_93 = xi_18 + xi_92;
+        const real_t xi_94 = -xi_209;
+        const real_t xi_97 = -xi_215;
+        const real_t xi_98 = xi_11 + xi_15 + xi_21 + xi_97;
+        const real_t xi_100 = xi_203 * real_t(2.0);
+        const real_t xi_101 = xi_215 * real_t(2.0);
+        const real_t xi_102 = xi_202 * real_t(2.0) + xi_212 * real_t(2.0);
+        const real_t xi_103 =
             omega_even *
-            (xi_100 + xi_101 + xi_102 + xi_200 * 5.0 + xi_205 * 5.0 +
-             xi_206 * -4.0 + xi_207 * -7.0 + xi_208 * -7.0 + xi_209 * -7.0 +
-             xi_211 * -4.0 + xi_216 * -7.0 + xi_84 + xi_88);
-        const double xi_104 = xi_201 + xi_92;
-        const double xi_105 = xi_104 + xi_14 + xi_205 + xi_214 + xi_22;
-        const double xi_107 = xi_105 * xi_106;
-        const double xi_108 = xi_208 * 2.0;
-        const double xi_109 = xi_216 * 2.0;
-        const double xi_110 = xi_207 * 2.0 + xi_209 * -2.0;
-        const double xi_111 = -xi_108 + xi_109 + xi_110 + xi_14 + xi_19 + xi_2;
-        const double xi_113 = xi_111 * xi_112;
-        const double xi_114 = -xi_113;
-        const double xi_116 = xi_216 + xi_94;
-        const double xi_120 = xi_103 * -0.0198412698412698;
-        const double xi_121 = xi_202 + xi_203;
-        const double xi_132 = xi_203 + xi_97;
-        const double xi_133 = xi_12 + xi_132 + xi_196 + xi_20 + xi_202;
-        const double xi_134 = xi_106 * xi_133;
-        const double xi_135 = xi_1 + xi_108 - xi_109 + xi_110 + xi_13;
-        const double xi_136 = xi_112 * xi_135;
-        const double xi_138 = -xi_136;
-        const double xi_139 = xi_210 + xi_214;
-        const double xi_140 = xi_139 + xi_206 + xi_23 + xi_93;
-        const double xi_141 = xi_106 * xi_140;
-        const double xi_142 = -xi_100 - xi_101 + xi_102 + xi_24 + xi_3;
-        const double xi_143 = xi_112 * xi_142;
-        const double xi_144 = -xi_143;
-        const double xi_151 = xi_103 * 0.0138888888888889;
-        const double xi_166 = xi_89 * -0.00714285714285714;
-        const double xi_168 = xi_86 * 0.025;
-        const double xi_171 = xi_142 * xi_170;
-        const double xi_173 = xi_140 * xi_172;
-        const double xi_174 = xi_103 * -0.00396825396825397;
-        const double xi_178 = xi_111 * xi_170;
-        const double xi_179 = xi_105 * xi_172;
-        const double xi_185 = xi_89 * 0.0178571428571429;
-        const double xi_188 = xi_133 * xi_172;
-        const double xi_189 = xi_135 * xi_170;
-        const double vel0Term = xi_1 + xi_209 + xi_216;
-        const double vel1Term = xi_2 + xi_208;
-        const double vel2Term = xi_203 + xi_3;
-        const double rho =
+            (xi_100 + xi_101 + xi_102 + xi_200 * real_t(5.0) + xi_205 * real_t(5.0) +
+             xi_206 * -real_t(4.0) + xi_207 * -real_t(7.0) + xi_208 * -real_t(7.0) + xi_209 * -real_t(7.0) +
+             xi_211 * -real_t(4.0) + xi_216 * -real_t(7.0) + xi_84 + xi_88);
+        const real_t xi_104 = xi_201 + xi_92;
+        const real_t xi_105 = xi_104 + xi_14 + xi_205 + xi_214 + xi_22;
+        const real_t xi_107 = xi_105 * xi_106;
+        const real_t xi_108 = xi_208 * real_t(2.0);
+        const real_t xi_109 = xi_216 * real_t(2.0);
+        const real_t xi_110 = xi_207 * real_t(2.0) + xi_209 * -real_t(2.0);
+        const real_t xi_111 = -xi_108 + xi_109 + xi_110 + xi_14 + xi_19 + xi_2;
+        const real_t xi_113 = xi_111 * xi_112;
+        const real_t xi_114 = -xi_113;
+        const real_t xi_116 = xi_216 + xi_94;
+        const real_t xi_120 = xi_103 * -real_t(0.0198412698412698);
+        const real_t xi_121 = xi_202 + xi_203;
+        const real_t xi_132 = xi_203 + xi_97;
+        const real_t xi_133 = xi_12 + xi_132 + xi_196 + xi_20 + xi_202;
+        const real_t xi_134 = xi_106 * xi_133;
+        const real_t xi_135 = xi_1 + xi_108 - xi_109 + xi_110 + xi_13;
+        const real_t xi_136 = xi_112 * xi_135;
+        const real_t xi_138 = -xi_136;
+        const real_t xi_139 = xi_210 + xi_214;
+        const real_t xi_140 = xi_139 + xi_206 + xi_23 + xi_93;
+        const real_t xi_141 = xi_106 * xi_140;
+        const real_t xi_142 = -xi_100 - xi_101 + xi_102 + xi_24 + xi_3;
+        const real_t xi_143 = xi_112 * xi_142;
+        const real_t xi_144 = -xi_143;
+        const real_t xi_151 = xi_103 * real_t(0.0138888888888889);
+        const real_t xi_166 = xi_89 * -real_t(0.00714285714285714);
+        const real_t xi_168 = xi_86 * real_t(0.025);
+        const real_t xi_171 = xi_142 * xi_170;
+        const real_t xi_173 = xi_140 * xi_172;
+        const real_t xi_174 = xi_103 * -real_t(0.00396825396825397);
+        const real_t xi_178 = xi_111 * xi_170;
+        const real_t xi_179 = xi_105 * xi_172;
+        const real_t xi_185 = xi_89 * real_t(0.0178571428571429);
+        const real_t xi_188 = xi_133 * xi_172;
+        const real_t xi_189 = xi_135 * xi_170;
+        const real_t vel0Term = xi_1 + xi_209 + xi_216;
+        const real_t vel1Term = xi_2 + xi_208;
+        const real_t vel2Term = xi_203 + xi_3;
+        const real_t rho =
             vel0Term + vel1Term + vel2Term + xi_217 + xi_4 + xi_5 + xi_6;
-        const double xi_7 = 1 / (rho);
-        const double u_0 = xi_7 * (vel0Term + xi_13 + xi_9);
-        const double xi_25 = u_0 * xi_199;
-        const double xi_26 = xi_25 * 0.333333333333333;
-        const double xi_32 = -xi_26;
-        const double xi_90 = rho * (u_0 * u_0);
-        const double xi_129 = rho * u_0;
-        const double xi_130 = -vel0Term + xi_121 + xi_129 + xi_208 + xi_4;
-        const double xi_131 = xi_118 * xi_130;
-        const double xi_156 = xi_130 * xi_153;
-        const double u_1 = xi_7 * (vel1Term + xi_16 + xi_19 + xi_209 + xi_8);
-        const double xi_27 = u_1 * xi_213;
-        const double xi_28 = xi_27 * 0.333333333333333;
-        const double xi_33 = -xi_28;
-        const double xi_54 = u_1 * 0.5;
-        const double xi_57 = xi_56 * (u_0 * xi_55 + xi_199 * xi_54);
-        const double xi_58 = -xi_57;
-        const double xi_95 = rho * (u_1 * u_1);
-        const double xi_96 = xi_9 + xi_94 + xi_95;
-        const double xi_115 = rho * u_1;
-        const double xi_117 =
+        const real_t xi_7 = 1 / (rho);
+        const real_t u_0 = xi_7 * (vel0Term + xi_13 + xi_9);
+        const real_t xi_25 = u_0 * xi_199;
+        const real_t xi_26 = xi_25 * real_t(0.333333333333333);
+        const real_t xi_32 = -xi_26;
+        const real_t xi_90 = rho * (u_0 * u_0);
+        const real_t xi_129 = rho * u_0;
+        const real_t xi_130 = -vel0Term + xi_121 + xi_129 + xi_208 + xi_4;
+        const real_t xi_131 = xi_118 * xi_130;
+        const real_t xi_156 = xi_130 * xi_153;
+        const real_t u_1 = xi_7 * (vel1Term + xi_16 + xi_19 + xi_209 + xi_8);
+        const real_t xi_27 = u_1 * xi_213;
+        const real_t xi_28 = xi_27 * real_t(0.333333333333333);
+        const real_t xi_33 = -xi_28;
+        const real_t xi_54 = u_1 * real_t(0.5);
+        const real_t xi_57 = xi_56 * (u_0 * xi_55 + xi_199 * xi_54);
+        const real_t xi_58 = -xi_57;
+        const real_t xi_95 = rho * (u_1 * u_1);
+        const real_t xi_96 = xi_9 + xi_94 + xi_95;
+        const real_t xi_115 = rho * u_1;
+        const real_t xi_117 =
             -vel1Term + xi_115 + xi_116 + xi_201 + xi_207 + xi_5;
-        const double xi_119 = xi_117 * xi_118;
-        const double xi_149 = xi_148 * (u_0 * xi_115 + xi_116 + xi_208 + xi_8);
-        const double xi_154 = xi_117 * xi_153;
-        const double xi_155 = xi_113 + xi_154;
-        const double xi_164 = -xi_154;
-        const double xi_165 = xi_114 + xi_164;
-        const double xi_180 = xi_154 - xi_178 + xi_179;
-        const double xi_181 = xi_164 + xi_178 - xi_179;
-        const double u_2 = xi_7 * (vel2Term + xi_21 + xi_215 + xi_24);
-        const double xi_29 = u_2 * xi_204;
-        const double xi_30 = xi_29 * 0.333333333333333;
-        const double xi_31 = (-omega_bulk + 2.0) * (xi_26 + xi_28 + xi_30);
-        const double xi_34 = xi_29 * 0.666666666666667 + xi_32 + xi_33;
-        const double xi_37 = -xi_30;
-        const double xi_38 = xi_27 * 0.666666666666667 + xi_32 + xi_37;
-        const double xi_39 = xi_25 * 0.666666666666667 + xi_33 + xi_37;
-        const double xi_42 = xi_34 * xi_41;
-        const double xi_43 = -xi_42;
-        const double xi_44 = xi_39 * xi_41;
-        const double xi_45 = -xi_44;
-        const double xi_47 = xi_38 * xi_46 + xi_43 + xi_45;
-        const double xi_49 = xi_38 * xi_41;
-        const double xi_50 = -xi_49;
-        const double xi_51 = xi_39 * xi_46 + xi_43 + xi_50;
-        const double xi_53 = xi_34 * xi_46 + xi_45 + xi_50;
-        const double xi_60 = xi_44 - xi_59;
-        const double xi_62 = -xi_34 * xi_61;
-        const double xi_64 = xi_31 * 0.125;
-        const double xi_65 = xi_49 + xi_64;
-        const double xi_66 = xi_63 + xi_65;
-        const double xi_67 = xi_62 + xi_66;
-        const double xi_68 = xi_44 + xi_59;
-        const double xi_69 = -xi_63 + xi_65;
-        const double xi_70 = xi_62 + xi_69;
-        const double xi_71 = xi_56 * (u_2 * xi_55 + xi_204 * xi_54);
-        const double xi_72 = -xi_39 * xi_61;
-        const double xi_74 = xi_42 + xi_73;
-        const double xi_75 = xi_72 + xi_74;
-        const double xi_76 = -xi_71;
-        const double xi_77 = xi_56 * (u_0 * xi_204 * 0.5 + u_2 * xi_199 * 0.5);
-        const double xi_78 = -xi_77;
-        const double xi_79 = -xi_38 * xi_61;
-        const double xi_80 = xi_64 + xi_74 + xi_79;
-        const double xi_81 = xi_42 - xi_73;
-        const double xi_82 = xi_72 + xi_81;
-        const double xi_83 = xi_64 + xi_79 + xi_81;
-        const double xi_91 = rho * (u_2 * u_2);
-        const double xi_99 = omega_bulk * (xi_17 + xi_217 + xi_22 + xi_90 +
+        const real_t xi_119 = xi_117 * xi_118;
+        const real_t xi_149 = xi_148 * (u_0 * xi_115 + xi_116 + xi_208 + xi_8);
+        const real_t xi_154 = xi_117 * xi_153;
+        const real_t xi_155 = xi_113 + xi_154;
+        const real_t xi_164 = -xi_154;
+        const real_t xi_165 = xi_114 + xi_164;
+        const real_t xi_180 = xi_154 - xi_178 + xi_179;
+        const real_t xi_181 = xi_164 + xi_178 - xi_179;
+        const real_t u_2 = xi_7 * (vel2Term + xi_21 + xi_215 + xi_24);
+        const real_t xi_29 = u_2 * xi_204;
+        const real_t xi_30 = xi_29 * real_t(0.333333333333333);
+        const real_t xi_31 = (-omega_bulk + real_t(2.0)) * (xi_26 + xi_28 + xi_30);
+        const real_t xi_34 = xi_29 * real_t(0.666666666666667) + xi_32 + xi_33;
+        const real_t xi_37 = -xi_30;
+        const real_t xi_38 = xi_27 * real_t(0.666666666666667) + xi_32 + xi_37;
+        const real_t xi_39 = xi_25 * real_t(0.666666666666667) + xi_33 + xi_37;
+        const real_t xi_42 = xi_34 * xi_41;
+        const real_t xi_43 = -xi_42;
+        const real_t xi_44 = xi_39 * xi_41;
+        const real_t xi_45 = -xi_44;
+        const real_t xi_47 = xi_38 * xi_46 + xi_43 + xi_45;
+        const real_t xi_49 = xi_38 * xi_41;
+        const real_t xi_50 = -xi_49;
+        const real_t xi_51 = xi_39 * xi_46 + xi_43 + xi_50;
+        const real_t xi_53 = xi_34 * xi_46 + xi_45 + xi_50;
+        const real_t xi_60 = xi_44 - xi_59;
+        const real_t xi_62 = -xi_34 * xi_61;
+        const real_t xi_64 = xi_31 * real_t(0.125);
+        const real_t xi_65 = xi_49 + xi_64;
+        const real_t xi_66 = xi_63 + xi_65;
+        const real_t xi_67 = xi_62 + xi_66;
+        const real_t xi_68 = xi_44 + xi_59;
+        const real_t xi_69 = -xi_63 + xi_65;
+        const real_t xi_70 = xi_62 + xi_69;
+        const real_t xi_71 = xi_56 * (u_2 * xi_55 + xi_204 * xi_54);
+        const real_t xi_72 = -xi_39 * xi_61;
+        const real_t xi_74 = xi_42 + xi_73;
+        const real_t xi_75 = xi_72 + xi_74;
+        const real_t xi_76 = -xi_71;
+        const real_t xi_77 = xi_56 * (u_0 * xi_204 * real_t(0.5) + u_2 * xi_199 * real_t(0.5));
+        const real_t xi_78 = -xi_77;
+        const real_t xi_79 = -xi_38 * xi_61;
+        const real_t xi_80 = xi_64 + xi_74 + xi_79;
+        const real_t xi_81 = xi_42 - xi_73;
+        const real_t xi_82 = xi_72 + xi_81;
+        const real_t xi_83 = xi_64 + xi_79 + xi_81;
+        const real_t xi_91 = rho * (u_2 * u_2);
+        const real_t xi_99 = omega_bulk * (xi_17 + xi_217 + xi_22 + xi_90 +
                                            xi_91 + xi_93 + xi_96 + xi_98);
-        const double xi_122 = xi_206 + xi_211 - xi_91;
-        const double xi_123 =
+        const real_t xi_122 = xi_206 + xi_211 - xi_91;
+        const real_t xi_123 =
             omega_shear * (xi_0 + xi_121 + xi_122 + xi_16 - xi_205 + xi_96);
-        const double xi_124 = xi_123 * 0.125;
-        const double xi_125 =
+        const real_t xi_124 = xi_123 * real_t(0.125);
+        const real_t xi_125 =
             omega_shear *
-            (xi_122 + xi_196 * -2.0 + xi_197 * -2.0 + xi_200 + xi_205 + xi_87 +
-             xi_9 + xi_90 * 2.0 + xi_94 - xi_95 + xi_98);
-        const double xi_126 = xi_125 * -0.0416666666666667;
-        const double xi_127 = xi_126 + xi_86 * -0.05;
-        const double xi_128 =
-            xi_120 + xi_124 + xi_127 + xi_89 * 0.0142857142857143;
-        const double xi_137 =
-            xi_120 + xi_125 * 0.0833333333333333 + xi_89 * -0.0357142857142857;
-        const double xi_145 =
+            (xi_122 + xi_196 * -real_t(2.0) + xi_197 * -real_t(2.0) + xi_200 + xi_205 + xi_87 +
+             xi_9 + xi_90 * real_t(2.0) + xi_94 - xi_95 + xi_98);
+        const real_t xi_126 = xi_125 * -real_t(0.0416666666666667);
+        const real_t xi_127 = xi_126 + xi_86 * -real_t(0.05);
+        const real_t xi_128 =
+            xi_120 + xi_124 + xi_127 + xi_89 * real_t(0.0142857142857143);
+        const real_t xi_137 =
+            xi_120 + xi_125 * real_t(0.0833333333333333) + xi_89 * -real_t(0.0357142857142857);
+        const real_t xi_145 =
             rho * u_2 - vel2Term + xi_139 + xi_212 + xi_6 + xi_92 + xi_97;
-        const double xi_146 = xi_118 * xi_145;
-        const double xi_147 = xi_103 * 0.0158730158730159 - xi_124 + xi_127 +
-                              xi_89 * -0.0214285714285714;
-        const double xi_150 = xi_123 * 0.0625;
-        const double xi_152 = -xi_149 + xi_150 + xi_151;
-        const double xi_157 = xi_99 * 0.0416666666666667;
-        const double xi_158 = xi_125 * 0.0208333333333333 + xi_157;
-        const double xi_159 = -xi_156 + xi_158;
-        const double xi_160 = xi_138 + xi_159;
-        const double xi_161 = xi_149 + xi_150 + xi_151;
-        const double xi_162 = xi_156 + xi_158;
-        const double xi_163 = xi_136 + xi_162;
-        const double xi_167 = xi_148 * (u_2 * xi_115 + xi_104 + xi_17 + xi_210);
-        const double xi_169 = xi_126 + xi_157 + xi_166 + xi_167 + xi_168;
-        const double xi_175 = xi_145 * xi_153;
-        const double xi_176 = xi_174 + xi_175;
-        const double xi_177 = -xi_171 + xi_173 + xi_176;
-        const double xi_182 = xi_126 + xi_157 + xi_166 - xi_167 + xi_168;
-        const double xi_183 = xi_148 * (u_2 * xi_129 + xi_10 + xi_132 + xi_212);
-        const double xi_184 = -xi_150;
-        const double xi_186 = -xi_183 + xi_184 + xi_185;
-        const double xi_187 = xi_143 + xi_176;
-        const double xi_190 = xi_159 - xi_188 + xi_189;
-        const double xi_191 = xi_183 + xi_184 + xi_185;
-        const double xi_192 = xi_162 + xi_188 - xi_189;
-        const double xi_193 = xi_174 - xi_175;
-        const double xi_194 = xi_171 - xi_173 + xi_193;
-        const double xi_195 = xi_144 + xi_193;
-        const double forceTerm_0 =
-            xi_31 * -1.5 - xi_34 * xi_36 - xi_36 * xi_38 - xi_36 * xi_39;
-        const double forceTerm_1 = xi_40 + xi_47;
-        const double forceTerm_2 = -xi_40 + xi_47;
-        const double forceTerm_3 = -xi_48 + xi_51;
-        const double forceTerm_4 = xi_48 + xi_51;
-        const double forceTerm_5 = xi_52 + xi_53;
-        const double forceTerm_6 = -xi_52 + xi_53;
-        const double forceTerm_7 = xi_58 + xi_60 + xi_67;
-        const double forceTerm_8 = xi_57 + xi_67 + xi_68;
-        const double forceTerm_9 = xi_57 + xi_60 + xi_70;
-        const double forceTerm_10 = xi_58 + xi_68 + xi_70;
-        const double forceTerm_11 = xi_66 + xi_71 + xi_75;
-        const double forceTerm_12 = xi_69 + xi_75 + xi_76;
-        const double forceTerm_13 = xi_60 + xi_78 + xi_80;
-        const double forceTerm_14 = xi_68 + xi_77 + xi_80;
-        const double forceTerm_15 = xi_66 + xi_76 + xi_82;
-        const double forceTerm_16 = xi_69 + xi_71 + xi_82;
-        const double forceTerm_17 = xi_60 + xi_77 + xi_83;
-        const double forceTerm_18 = xi_68 + xi_78 + xi_83;
+        const real_t xi_146 = xi_118 * xi_145;
+        const real_t xi_147 = xi_103 * real_t(0.0158730158730159) - xi_124 + xi_127 +
+                              xi_89 * -real_t(0.0214285714285714);
+        const real_t xi_150 = xi_123 * real_t(0.0625);
+        const real_t xi_152 = -xi_149 + xi_150 + xi_151;
+        const real_t xi_157 = xi_99 * real_t(0.0416666666666667);
+        const real_t xi_158 = xi_125 * real_t(0.0208333333333333) + xi_157;
+        const real_t xi_159 = -xi_156 + xi_158;
+        const real_t xi_160 = xi_138 + xi_159;
+        const real_t xi_161 = xi_149 + xi_150 + xi_151;
+        const real_t xi_162 = xi_156 + xi_158;
+        const real_t xi_163 = xi_136 + xi_162;
+        const real_t xi_167 = xi_148 * (u_2 * xi_115 + xi_104 + xi_17 + xi_210);
+        const real_t xi_169 = xi_126 + xi_157 + xi_166 + xi_167 + xi_168;
+        const real_t xi_175 = xi_145 * xi_153;
+        const real_t xi_176 = xi_174 + xi_175;
+        const real_t xi_177 = -xi_171 + xi_173 + xi_176;
+        const real_t xi_182 = xi_126 + xi_157 + xi_166 - xi_167 + xi_168;
+        const real_t xi_183 = xi_148 * (u_2 * xi_129 + xi_10 + xi_132 + xi_212);
+        const real_t xi_184 = -xi_150;
+        const real_t xi_186 = -xi_183 + xi_184 + xi_185;
+        const real_t xi_187 = xi_143 + xi_176;
+        const real_t xi_190 = xi_159 - xi_188 + xi_189;
+        const real_t xi_191 = xi_183 + xi_184 + xi_185;
+        const real_t xi_192 = xi_162 + xi_188 - xi_189;
+        const real_t xi_193 = xi_174 - xi_175;
+        const real_t xi_194 = xi_171 - xi_173 + xi_193;
+        const real_t xi_195 = xi_144 + xi_193;
+        const real_t forceTerm_0 =
+            xi_31 * -real_t(1.5) - xi_34 * xi_36 - xi_36 * xi_38 - xi_36 * xi_39;
+        const real_t forceTerm_1 = xi_40 + xi_47;
+        const real_t forceTerm_2 = -xi_40 + xi_47;
+        const real_t forceTerm_3 = -xi_48 + xi_51;
+        const real_t forceTerm_4 = xi_48 + xi_51;
+        const real_t forceTerm_5 = xi_52 + xi_53;
+        const real_t forceTerm_6 = -xi_52 + xi_53;
+        const real_t forceTerm_7 = xi_58 + xi_60 + xi_67;
+        const real_t forceTerm_8 = xi_57 + xi_67 + xi_68;
+        const real_t forceTerm_9 = xi_57 + xi_60 + xi_70;
+        const real_t forceTerm_10 = xi_58 + xi_68 + xi_70;
+        const real_t forceTerm_11 = xi_66 + xi_71 + xi_75;
+        const real_t forceTerm_12 = xi_69 + xi_75 + xi_76;
+        const real_t forceTerm_13 = xi_60 + xi_78 + xi_80;
+        const real_t forceTerm_14 = xi_68 + xi_77 + xi_80;
+        const real_t forceTerm_15 = xi_66 + xi_76 + xi_82;
+        const real_t forceTerm_16 = xi_69 + xi_71 + xi_82;
+        const real_t forceTerm_17 = xi_60 + xi_77 + xi_83;
+        const real_t forceTerm_18 = xi_68 + xi_78 + xi_83;
         _data_pdfs_20_30_10[_stride_pdfs_0 * ctr_0] =
-            real_c(forceTerm_0 + xi_103 * 0.0238095238095238 + xi_217 + xi_86 * 0.1 +
-            xi_89 * 0.0428571428571429 + xi_99 * -0.5);
+            real_c(forceTerm_0 + xi_103 * real_t(0.0238095238095238) + xi_217 + xi_86 * real_t(0.1) +
+            xi_89 * real_t(0.0428571428571429) + xi_99 * -0.5);
         _data_pdfs_20_31_10[_stride_pdfs_0 * ctr_0] =
             real_c(forceTerm_1 - xi_107 + xi_114 + xi_119 + xi_128 + xi_205);
         _data_pdfs_20_32_10[_stride_pdfs_0 * ctr_0] =

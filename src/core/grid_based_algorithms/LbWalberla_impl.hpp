@@ -436,7 +436,7 @@ public:
     auto pdf_field = (*bc).block->template getData<PdfField>(m_pdf_field_id);
     const real_t density = pdf_field->getDensity((*bc).cell);
     pdf_field->setDensityAndVelocity(
-        (*bc).cell, Vector3<double>{v[0], v[1], v[2]}, density);
+        (*bc).cell, Vector3<real_t>{real_c(v[0]), real_c(v[1]), real_c(v[2])}, density);
     return true;
   };
 
