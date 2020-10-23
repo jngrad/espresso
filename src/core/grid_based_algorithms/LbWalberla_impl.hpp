@@ -63,13 +63,13 @@ const FlagUID UBB_flag("velocity bounce back");
 
 // Vector conversion helpers
 inline Utils::Vector3d to_vector3d(const Vector3<real_t> v) {
-  return Utils::Vector3d{v[0], v[1], v[2]};
+  return Utils::Vector3d{double_c(v[0]), double_c(v[1]), double_c(v[2])};
 }
 inline Vector3<real_t> to_vector3(const Utils::Vector3d v) {
-  return Vector3<real_t>{v[0], v[1], v[2]};
+  return Vector3<real_t>{real_c(v[0]), real_c(v[1]), real_c(v[2])};
 }
 inline Utils::Vector6d to_vector6d(const Matrix3<real_t> m) {
-  return Utils::Vector6d{m[0], m[3], m[4], m[6], m[7], m[8]};
+  return Utils::Vector6d{double_c(m[0]), double_c(m[3]), double_c(m[4]), double_c(m[6]), double_c(m[7]), double_c(m[8])};
 }
 inline Utils::Vector3i to_vector3i(const std::array<int, 3> v) {
   return Utils::Vector3i{v[0], v[1], v[2]};
