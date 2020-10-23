@@ -86,7 +86,8 @@ get_cylindrical_sampling_positions(std::pair<double, double> const &r_limits,
   auto phis = [n_phi_samples, n_phi_bins, phi_limits](int r_bin) {
     auto const phis_range =
         make_lin_space(phi_limits.first, phi_limits.second,
-                       n_phi_bins * n_phi_samples(r_bin), /*endpoint */ false);
+                       static_cast<size_t>(n_phi_bins * n_phi_samples(r_bin)),
+                       /*endpoint */ false);
     return phis_range;
   };
   // Calculate the sampling positions
