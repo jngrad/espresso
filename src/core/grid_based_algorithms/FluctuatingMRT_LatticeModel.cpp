@@ -49,8 +49,8 @@ namespace lbm {
 
 namespace internal_kernel_streamCollide {
 static FUNC_PREFIX void kernel_streamCollide(
-    double *RESTRICT const _data_force, double *RESTRICT const _data_pdfs,
-    double *RESTRICT _data_pdfs_tmp, int64_t const _size_force_0,
+    real_t *RESTRICT const _data_force, real_t *RESTRICT const _data_pdfs,
+    real_t *RESTRICT _data_pdfs_tmp, int64_t const _size_force_0,
     int64_t const _size_force_1, int64_t const _size_force_2,
     int64_t const _stride_force_0, int64_t const _stride_force_1,
     int64_t const _stride_force_2, int64_t const _stride_force_3,
@@ -79,168 +79,168 @@ static FUNC_PREFIX void kernel_streamCollide(
   const double xi_120 = rr_0 * 0.166666666666667;
   const double xi_186 = rr_0 * 0.0833333333333333;
   for (int ctr_2 = 1; ctr_2 < _size_force_2 - 1; ctr_2 += 1) {
-    double *RESTRICT _data_pdfs_2m1_314 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
+    real_t *RESTRICT _data_pdfs_2m1_314 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
                                           _stride_pdfs_2 + 14 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_21_318 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
+    real_t *RESTRICT _data_pdfs_21_318 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
                                          _stride_pdfs_2 + 18 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_34 =
+    real_t *RESTRICT _data_pdfs_20_34 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 4 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_2m1_311 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
+    real_t *RESTRICT _data_pdfs_2m1_311 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
                                           _stride_pdfs_2 + 11 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_31 =
+    real_t *RESTRICT _data_pdfs_20_31 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_21_315 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
+    real_t *RESTRICT _data_pdfs_21_315 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
                                          _stride_pdfs_2 + 15 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_2m1_312 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
+    real_t *RESTRICT _data_pdfs_2m1_312 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
                                           _stride_pdfs_2 + 12 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_2m1_35 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
+    real_t *RESTRICT _data_pdfs_2m1_35 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
                                          _stride_pdfs_2 + 5 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_33 =
+    real_t *RESTRICT _data_pdfs_20_33 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 3 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_39 =
+    real_t *RESTRICT _data_pdfs_20_39 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 9 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_32 =
+    real_t *RESTRICT _data_pdfs_20_32 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 2 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_21_316 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
+    real_t *RESTRICT _data_pdfs_21_316 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
                                          _stride_pdfs_2 + 16 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_21_317 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
+    real_t *RESTRICT _data_pdfs_21_317 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
                                          _stride_pdfs_2 + 17 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_21_36 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
+    real_t *RESTRICT _data_pdfs_21_36 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
                                         _stride_pdfs_2 + 6 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_37 =
+    real_t *RESTRICT _data_pdfs_20_37 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 7 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_2m1_313 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
+    real_t *RESTRICT _data_pdfs_2m1_313 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
                                           _stride_pdfs_2 + 13 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_310 =
+    real_t *RESTRICT _data_pdfs_20_310 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 10 * _stride_pdfs_3;
-    double *RESTRICT _data_force_20_31 =
+    real_t *RESTRICT _data_force_20_31 =
         _data_force + _stride_force_2 * ctr_2 + _stride_force_3;
-    double *RESTRICT _data_force_20_30 = _data_force + _stride_force_2 * ctr_2;
-    double *RESTRICT _data_force_20_32 =
+    real_t *RESTRICT _data_force_20_30 = _data_force + _stride_force_2 * ctr_2;
+    real_t *RESTRICT _data_force_20_32 =
         _data_force + _stride_force_2 * ctr_2 + 2 * _stride_force_3;
-    double *RESTRICT _data_pdfs_20_30 = _data_pdfs + _stride_pdfs_2 * ctr_2;
-    double *RESTRICT _data_pdfs_20_38 =
+    real_t *RESTRICT _data_pdfs_20_30 = _data_pdfs + _stride_pdfs_2 * ctr_2;
+    real_t *RESTRICT _data_pdfs_20_38 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 8 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_30 =
+    real_t *RESTRICT _data_pdfs_tmp_20_30 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2;
-    double *RESTRICT _data_pdfs_tmp_20_31 =
+    real_t *RESTRICT _data_pdfs_tmp_20_31 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_32 =
+    real_t *RESTRICT _data_pdfs_tmp_20_32 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 2 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_33 =
+    real_t *RESTRICT _data_pdfs_tmp_20_33 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 3 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_34 =
+    real_t *RESTRICT _data_pdfs_tmp_20_34 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 4 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_35 =
+    real_t *RESTRICT _data_pdfs_tmp_20_35 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 5 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_36 =
+    real_t *RESTRICT _data_pdfs_tmp_20_36 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 6 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_37 =
+    real_t *RESTRICT _data_pdfs_tmp_20_37 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 7 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_38 =
+    real_t *RESTRICT _data_pdfs_tmp_20_38 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 8 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_39 =
+    real_t *RESTRICT _data_pdfs_tmp_20_39 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 9 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_310 =
+    real_t *RESTRICT _data_pdfs_tmp_20_310 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 10 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_311 =
+    real_t *RESTRICT _data_pdfs_tmp_20_311 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 11 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_312 =
+    real_t *RESTRICT _data_pdfs_tmp_20_312 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 12 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_313 =
+    real_t *RESTRICT _data_pdfs_tmp_20_313 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 13 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_314 =
+    real_t *RESTRICT _data_pdfs_tmp_20_314 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 14 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_315 =
+    real_t *RESTRICT _data_pdfs_tmp_20_315 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 15 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_316 =
+    real_t *RESTRICT _data_pdfs_tmp_20_316 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 16 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_317 =
+    real_t *RESTRICT _data_pdfs_tmp_20_317 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 17 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_tmp_20_318 =
+    real_t *RESTRICT _data_pdfs_tmp_20_318 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 18 * _stride_pdfs_tmp_3;
     for (int ctr_1 = 1; ctr_1 < _size_force_1 - 1; ctr_1 += 1) {
-      double *RESTRICT _data_pdfs_2m1_314_10 =
+      real_t *RESTRICT _data_pdfs_2m1_314_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_2m1_314;
-      double *RESTRICT _data_pdfs_21_318_10 =
+      real_t *RESTRICT _data_pdfs_21_318_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_21_318;
-      double *RESTRICT _data_pdfs_20_34_10 =
+      real_t *RESTRICT _data_pdfs_20_34_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_34;
-      double *RESTRICT _data_pdfs_2m1_311_1m1 =
+      real_t *RESTRICT _data_pdfs_2m1_311_1m1 =
           _stride_pdfs_1 * ctr_1 - _stride_pdfs_1 + _data_pdfs_2m1_311;
-      double *RESTRICT _data_pdfs_20_31_1m1 =
+      real_t *RESTRICT _data_pdfs_20_31_1m1 =
           _stride_pdfs_1 * ctr_1 - _stride_pdfs_1 + _data_pdfs_20_31;
-      double *RESTRICT _data_pdfs_21_315_1m1 =
+      real_t *RESTRICT _data_pdfs_21_315_1m1 =
           _stride_pdfs_1 * ctr_1 - _stride_pdfs_1 + _data_pdfs_21_315;
-      double *RESTRICT _data_pdfs_2m1_312_11 =
+      real_t *RESTRICT _data_pdfs_2m1_312_11 =
           _stride_pdfs_1 * ctr_1 + _stride_pdfs_1 + _data_pdfs_2m1_312;
-      double *RESTRICT _data_pdfs_2m1_35_10 =
+      real_t *RESTRICT _data_pdfs_2m1_35_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_2m1_35;
-      double *RESTRICT _data_pdfs_20_33_10 =
+      real_t *RESTRICT _data_pdfs_20_33_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_33;
-      double *RESTRICT _data_pdfs_20_39_11 =
+      real_t *RESTRICT _data_pdfs_20_39_11 =
           _stride_pdfs_1 * ctr_1 + _stride_pdfs_1 + _data_pdfs_20_39;
-      double *RESTRICT _data_pdfs_20_32_11 =
+      real_t *RESTRICT _data_pdfs_20_32_11 =
           _stride_pdfs_1 * ctr_1 + _stride_pdfs_1 + _data_pdfs_20_32;
-      double *RESTRICT _data_pdfs_21_316_11 =
+      real_t *RESTRICT _data_pdfs_21_316_11 =
           _stride_pdfs_1 * ctr_1 + _stride_pdfs_1 + _data_pdfs_21_316;
-      double *RESTRICT _data_pdfs_21_317_10 =
+      real_t *RESTRICT _data_pdfs_21_317_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_21_317;
-      double *RESTRICT _data_pdfs_21_36_10 =
+      real_t *RESTRICT _data_pdfs_21_36_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_21_36;
-      double *RESTRICT _data_pdfs_20_37_1m1 =
+      real_t *RESTRICT _data_pdfs_20_37_1m1 =
           _stride_pdfs_1 * ctr_1 - _stride_pdfs_1 + _data_pdfs_20_37;
-      double *RESTRICT _data_pdfs_2m1_313_10 =
+      real_t *RESTRICT _data_pdfs_2m1_313_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_2m1_313;
-      double *RESTRICT _data_pdfs_20_310_11 =
+      real_t *RESTRICT _data_pdfs_20_310_11 =
           _stride_pdfs_1 * ctr_1 + _stride_pdfs_1 + _data_pdfs_20_310;
-      double *RESTRICT _data_force_20_31_10 =
+      real_t *RESTRICT _data_force_20_31_10 =
           _stride_force_1 * ctr_1 + _data_force_20_31;
-      double *RESTRICT _data_force_20_30_10 =
+      real_t *RESTRICT _data_force_20_30_10 =
           _stride_force_1 * ctr_1 + _data_force_20_30;
-      double *RESTRICT _data_force_20_32_10 =
+      real_t *RESTRICT _data_force_20_32_10 =
           _stride_force_1 * ctr_1 + _data_force_20_32;
-      double *RESTRICT _data_pdfs_20_30_10 =
+      real_t *RESTRICT _data_pdfs_20_30_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_30;
-      double *RESTRICT _data_pdfs_20_38_1m1 =
+      real_t *RESTRICT _data_pdfs_20_38_1m1 =
           _stride_pdfs_1 * ctr_1 - _stride_pdfs_1 + _data_pdfs_20_38;
-      double *RESTRICT _data_pdfs_tmp_20_30_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_30_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_30;
-      double *RESTRICT _data_pdfs_tmp_20_31_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_31_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_31;
-      double *RESTRICT _data_pdfs_tmp_20_32_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_32_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_32;
-      double *RESTRICT _data_pdfs_tmp_20_33_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_33_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_33;
-      double *RESTRICT _data_pdfs_tmp_20_34_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_34_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_34;
-      double *RESTRICT _data_pdfs_tmp_20_35_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_35_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_35;
-      double *RESTRICT _data_pdfs_tmp_20_36_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_36_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_36;
-      double *RESTRICT _data_pdfs_tmp_20_37_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_37_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_37;
-      double *RESTRICT _data_pdfs_tmp_20_38_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_38_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_38;
-      double *RESTRICT _data_pdfs_tmp_20_39_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_39_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_39;
-      double *RESTRICT _data_pdfs_tmp_20_310_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_310_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_310;
-      double *RESTRICT _data_pdfs_tmp_20_311_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_311_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_311;
-      double *RESTRICT _data_pdfs_tmp_20_312_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_312_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_312;
-      double *RESTRICT _data_pdfs_tmp_20_313_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_313_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_313;
-      double *RESTRICT _data_pdfs_tmp_20_314_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_314_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_314;
-      double *RESTRICT _data_pdfs_tmp_20_315_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_315_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_315;
-      double *RESTRICT _data_pdfs_tmp_20_316_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_316_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_316;
-      double *RESTRICT _data_pdfs_tmp_20_317_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_317_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_317;
-      double *RESTRICT _data_pdfs_tmp_20_318_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_318_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_318;
       for (int ctr_0 = 1; ctr_0 < _size_force_0 - 1; ctr_0 += 1) {
 
@@ -708,64 +708,64 @@ static FUNC_PREFIX void kernel_streamCollide(
         const double forceTerm_17 = xi_62 + xi_79 + xi_85;
         const double forceTerm_18 = xi_70 + xi_80 + xi_85;
         _data_pdfs_tmp_20_30_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_0 + xi_108 * -0.5 + xi_112 * 0.0238095238095238 +
+            real_c(forceTerm_0 + xi_108 * -0.5 + xi_112 * 0.0238095238095238 +
             xi_88 * 0.142857142857143 + xi_89 * 0.2 - xi_91 +
             xi_92 * 0.0857142857142857 + xi_95 * 0.1 +
-            xi_98 * 0.0428571428571429 +
+            xi_98 * 0.0428571428571429) +
             _data_pdfs_20_30_10[_stride_pdfs_0 * ctr_0];
         _data_pdfs_tmp_20_31_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_1 - xi_116 + xi_121 - xi_126 + xi_137 + xi_151 +
+            real_c(forceTerm_1 - xi_116 + xi_121 - xi_126 + xi_137 + xi_151) +
             _data_pdfs_20_31_1m1[_stride_pdfs_0 * ctr_0];
         _data_pdfs_tmp_20_32_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_2 + xi_116 - xi_121 + xi_126 + xi_151 + xi_152 +
+            real_c(forceTerm_2 + xi_116 - xi_121 + xi_126 + xi_151 + xi_152) +
             _data_pdfs_20_32_11[_stride_pdfs_0 * ctr_0];
         _data_pdfs_tmp_20_33_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_3 - xi_155 + xi_158 + xi_160 + xi_165 + xi_166 +
+            real_c(forceTerm_3 - xi_155 + xi_158 + xi_160 + xi_165 + xi_166) +
             _data_pdfs_20_33_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
         _data_pdfs_tmp_20_34_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_4 + xi_155 - xi_158 - xi_160 + xi_166 + xi_167 +
+            real_c(forceTerm_4 + xi_155 - xi_158 - xi_160 + xi_166 + xi_167) +
             _data_pdfs_20_34_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
         _data_pdfs_tmp_20_35_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_5 - xi_170 + xi_172 - xi_174 + xi_179 + xi_180 +
+            real_c(forceTerm_5 - xi_170 + xi_172 - xi_174 + xi_179 + xi_180) +
             _data_pdfs_2m1_35_10[_stride_pdfs_0 * ctr_0];
         _data_pdfs_tmp_20_36_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_6 + xi_170 - xi_172 + xi_174 + xi_180 + xi_181 +
+            real_c(forceTerm_6 + xi_170 - xi_172 + xi_174 + xi_180 + xi_181) +
             _data_pdfs_21_36_10[_stride_pdfs_0 * ctr_0];
         _data_pdfs_tmp_20_37_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_7 + xi_190 + xi_194 + xi_198 +
+            real_c(forceTerm_7 + xi_190 + xi_194 + xi_198) +
             _data_pdfs_20_37_1m1[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
         _data_pdfs_tmp_20_38_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_8 + xi_190 + xi_199 + xi_201 +
+            real_c(forceTerm_8 + xi_190 + xi_199 + xi_201) +
             _data_pdfs_20_38_1m1[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
         _data_pdfs_tmp_20_39_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_9 + xi_194 + xi_199 + xi_203 +
+            real_c(forceTerm_9 + xi_194 + xi_199 + xi_203) +
             _data_pdfs_20_39_11[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
         _data_pdfs_tmp_20_310_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_10 + xi_198 + xi_201 + xi_203 +
+            real_c(forceTerm_10 + xi_198 + xi_201 + xi_203) +
             _data_pdfs_20_310_11[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
         _data_pdfs_tmp_20_311_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_11 + xi_210 + xi_222 + xi_227 +
+            real_c(forceTerm_11 + xi_210 + xi_222 + xi_227) +
             _data_pdfs_2m1_311_1m1[_stride_pdfs_0 * ctr_0];
         _data_pdfs_tmp_20_312_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_12 + xi_222 + xi_228 + xi_229 +
+            real_c(forceTerm_12 + xi_222 + xi_228 + xi_229) +
             _data_pdfs_2m1_312_11[_stride_pdfs_0 * ctr_0];
         _data_pdfs_tmp_20_313_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_13 + xi_234 + xi_237 + xi_242 +
+            real_c(forceTerm_13 + xi_234 + xi_237 + xi_242) +
             _data_pdfs_2m1_313_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
         _data_pdfs_tmp_20_314_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_14 + xi_234 + xi_243 + xi_244 +
+            real_c(forceTerm_14 + xi_234 + xi_243 + xi_244) +
             _data_pdfs_2m1_314_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
         _data_pdfs_tmp_20_315_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_15 + xi_227 + xi_229 + xi_246 +
+            real_c(forceTerm_15 + xi_227 + xi_229 + xi_246) +
             _data_pdfs_21_315_1m1[_stride_pdfs_0 * ctr_0];
         _data_pdfs_tmp_20_316_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_16 + xi_210 + xi_228 + xi_246 +
+            real_c(forceTerm_16 + xi_210 + xi_228 + xi_246) +
             _data_pdfs_21_316_11[_stride_pdfs_0 * ctr_0];
         _data_pdfs_tmp_20_317_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_17 + xi_242 + xi_243 + xi_247 +
+            real_c(forceTerm_17 + xi_242 + xi_243 + xi_247) +
             _data_pdfs_21_317_10[_stride_pdfs_0 * ctr_0 + _stride_pdfs_0];
         _data_pdfs_tmp_20_318_10[_stride_pdfs_tmp_0 * ctr_0] =
-            forceTerm_18 + xi_237 + xi_244 + xi_247 +
+            real_c(forceTerm_18 + xi_237 + xi_244 + xi_247) +
             _data_pdfs_21_318_10[_stride_pdfs_0 * ctr_0 - _stride_pdfs_0];
       }
     }
@@ -774,7 +774,7 @@ static FUNC_PREFIX void kernel_streamCollide(
 } // namespace internal_kernel_streamCollide
 namespace internal_kernel_collide {
 static FUNC_PREFIX void
-kernel_collide(double *RESTRICT const _data_force, double *RESTRICT _data_pdfs,
+kernel_collide(real_t *RESTRICT const _data_force, real_t *RESTRICT _data_pdfs,
                int64_t const _size_force_0, int64_t const _size_force_1,
                int64_t const _size_force_2, int64_t const _stride_force_0,
                int64_t const _stride_force_1, int64_t const _stride_force_2,
@@ -803,92 +803,92 @@ kernel_collide(double *RESTRICT const _data_force, double *RESTRICT _data_pdfs,
   const double xi_120 = rr_0 * 0.166666666666667;
   const double xi_186 = rr_0 * 0.0833333333333333;
   for (int ctr_2 = 0; ctr_2 < _size_force_2; ctr_2 += 1) {
-    double *RESTRICT _data_pdfs_20_316 =
+    real_t *RESTRICT _data_pdfs_20_316 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 16 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_310 =
+    real_t *RESTRICT _data_pdfs_20_310 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 10 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_35 =
+    real_t *RESTRICT _data_pdfs_20_35 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 5 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_37 =
+    real_t *RESTRICT _data_pdfs_20_37 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 7 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_33 =
+    real_t *RESTRICT _data_pdfs_20_33 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 3 * _stride_pdfs_3;
-    double *RESTRICT _data_force_20_31 =
+    real_t *RESTRICT _data_force_20_31 =
         _data_force + _stride_force_2 * ctr_2 + _stride_force_3;
-    double *RESTRICT _data_pdfs_20_34 =
+    real_t *RESTRICT _data_pdfs_20_34 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 4 * _stride_pdfs_3;
-    double *RESTRICT _data_force_20_30 = _data_force + _stride_force_2 * ctr_2;
-    double *RESTRICT _data_pdfs_20_30 = _data_pdfs + _stride_pdfs_2 * ctr_2;
-    double *RESTRICT _data_pdfs_20_317 =
+    real_t *RESTRICT _data_force_20_30 = _data_force + _stride_force_2 * ctr_2;
+    real_t *RESTRICT _data_pdfs_20_30 = _data_pdfs + _stride_pdfs_2 * ctr_2;
+    real_t *RESTRICT _data_pdfs_20_317 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 17 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_38 =
+    real_t *RESTRICT _data_pdfs_20_38 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 8 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_313 =
+    real_t *RESTRICT _data_pdfs_20_313 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 13 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_39 =
+    real_t *RESTRICT _data_pdfs_20_39 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 9 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_36 =
+    real_t *RESTRICT _data_pdfs_20_36 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 6 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_312 =
+    real_t *RESTRICT _data_pdfs_20_312 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 12 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_31 =
+    real_t *RESTRICT _data_pdfs_20_31 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_314 =
+    real_t *RESTRICT _data_pdfs_20_314 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 14 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_318 =
+    real_t *RESTRICT _data_pdfs_20_318 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 18 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_32 =
+    real_t *RESTRICT _data_pdfs_20_32 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 2 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_20_311 =
+    real_t *RESTRICT _data_pdfs_20_311 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 11 * _stride_pdfs_3;
-    double *RESTRICT _data_force_20_32 =
+    real_t *RESTRICT _data_force_20_32 =
         _data_force + _stride_force_2 * ctr_2 + 2 * _stride_force_3;
-    double *RESTRICT _data_pdfs_20_315 =
+    real_t *RESTRICT _data_pdfs_20_315 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 15 * _stride_pdfs_3;
     for (int ctr_1 = 0; ctr_1 < _size_force_1; ctr_1 += 1) {
-      double *RESTRICT _data_pdfs_20_316_10 =
+      real_t *RESTRICT _data_pdfs_20_316_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_316;
-      double *RESTRICT _data_pdfs_20_310_10 =
+      real_t *RESTRICT _data_pdfs_20_310_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_310;
-      double *RESTRICT _data_pdfs_20_35_10 =
+      real_t *RESTRICT _data_pdfs_20_35_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_35;
-      double *RESTRICT _data_pdfs_20_37_10 =
+      real_t *RESTRICT _data_pdfs_20_37_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_37;
-      double *RESTRICT _data_pdfs_20_33_10 =
+      real_t *RESTRICT _data_pdfs_20_33_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_33;
-      double *RESTRICT _data_force_20_31_10 =
+      real_t *RESTRICT _data_force_20_31_10 =
           _stride_force_1 * ctr_1 + _data_force_20_31;
-      double *RESTRICT _data_pdfs_20_34_10 =
+      real_t *RESTRICT _data_pdfs_20_34_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_34;
-      double *RESTRICT _data_force_20_30_10 =
+      real_t *RESTRICT _data_force_20_30_10 =
           _stride_force_1 * ctr_1 + _data_force_20_30;
-      double *RESTRICT _data_pdfs_20_30_10 =
+      real_t *RESTRICT _data_pdfs_20_30_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_30;
-      double *RESTRICT _data_pdfs_20_317_10 =
+      real_t *RESTRICT _data_pdfs_20_317_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_317;
-      double *RESTRICT _data_pdfs_20_38_10 =
+      real_t *RESTRICT _data_pdfs_20_38_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_38;
-      double *RESTRICT _data_pdfs_20_313_10 =
+      real_t *RESTRICT _data_pdfs_20_313_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_313;
-      double *RESTRICT _data_pdfs_20_39_10 =
+      real_t *RESTRICT _data_pdfs_20_39_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_39;
-      double *RESTRICT _data_pdfs_20_36_10 =
+      real_t *RESTRICT _data_pdfs_20_36_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_36;
-      double *RESTRICT _data_pdfs_20_312_10 =
+      real_t *RESTRICT _data_pdfs_20_312_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_312;
-      double *RESTRICT _data_pdfs_20_31_10 =
+      real_t *RESTRICT _data_pdfs_20_31_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_31;
-      double *RESTRICT _data_pdfs_20_314_10 =
+      real_t *RESTRICT _data_pdfs_20_314_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_314;
-      double *RESTRICT _data_pdfs_20_318_10 =
+      real_t *RESTRICT _data_pdfs_20_318_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_318;
-      double *RESTRICT _data_pdfs_20_32_10 =
+      real_t *RESTRICT _data_pdfs_20_32_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_32;
-      double *RESTRICT _data_pdfs_20_311_10 =
+      real_t *RESTRICT _data_pdfs_20_311_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_311;
-      double *RESTRICT _data_force_20_32_10 =
+      real_t *RESTRICT _data_force_20_32_10 =
           _stride_force_1 * ctr_1 + _data_force_20_32;
-      double *RESTRICT _data_pdfs_20_315_10 =
+      real_t *RESTRICT _data_pdfs_20_315_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_315;
       for (int ctr_0 = 0; ctr_0 < _size_force_0; ctr_0 += 1) {
         const double xi_248 = _data_pdfs_20_316_10[_stride_pdfs_0 * ctr_0];
@@ -1247,46 +1247,46 @@ kernel_collide(double *RESTRICT const _data_force, double *RESTRICT _data_pdfs,
         const double forceTerm_17 = xi_62 + xi_79 + xi_85;
         const double forceTerm_18 = xi_70 + xi_80 + xi_85;
         _data_pdfs_20_30_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_0 + xi_108 * -0.5 + xi_112 * 0.0238095238095238 + xi_256 +
+            real_c(forceTerm_0 + xi_108 * -0.5 + xi_112 * 0.0238095238095238 + xi_256 +
             xi_88 * 0.142857142857143 + xi_89 * 0.2 - xi_91 +
             xi_92 * 0.0857142857142857 + xi_95 * 0.1 +
-            xi_98 * 0.0428571428571429;
+            xi_98 * 0.0428571428571429);
         _data_pdfs_20_31_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_1 - xi_116 + xi_121 - xi_126 + xi_137 + xi_151 + xi_263;
+            real_c(forceTerm_1 - xi_116 + xi_121 - xi_126 + xi_137 + xi_151 + xi_263);
         _data_pdfs_20_32_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_2 + xi_116 - xi_121 + xi_126 + xi_151 + xi_152 + xi_266;
+            real_c(forceTerm_2 + xi_116 - xi_121 + xi_126 + xi_151 + xi_152 + xi_266);
         _data_pdfs_20_33_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_3 - xi_155 + xi_158 + xi_160 + xi_165 + xi_166 + xi_252;
+            real_c(forceTerm_3 - xi_155 + xi_158 + xi_160 + xi_165 + xi_166 + xi_252);
         _data_pdfs_20_34_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_4 + xi_155 - xi_158 - xi_160 + xi_166 + xi_167 + xi_254;
+            real_c(forceTerm_4 + xi_155 - xi_158 - xi_160 + xi_166 + xi_167 + xi_254);
         _data_pdfs_20_35_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_5 - xi_170 + xi_172 - xi_174 + xi_179 + xi_180 + xi_250;
+            real_c(forceTerm_5 - xi_170 + xi_172 - xi_174 + xi_179 + xi_180 + xi_250);
         _data_pdfs_20_36_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_6 + xi_170 - xi_172 + xi_174 + xi_180 + xi_181 + xi_261;
+            real_c(forceTerm_6 + xi_170 - xi_172 + xi_174 + xi_180 + xi_181 + xi_261);
         _data_pdfs_20_37_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_7 + xi_190 + xi_194 + xi_198 + xi_251;
+            real_c(forceTerm_7 + xi_190 + xi_194 + xi_198 + xi_251);
         _data_pdfs_20_38_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_8 + xi_190 + xi_199 + xi_201 + xi_258;
+            real_c(forceTerm_8 + xi_190 + xi_199 + xi_201 + xi_258);
         _data_pdfs_20_39_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_9 + xi_194 + xi_199 + xi_203 + xi_260;
+            real_c(forceTerm_9 + xi_194 + xi_199 + xi_203 + xi_260);
         _data_pdfs_20_310_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_10 + xi_198 + xi_201 + xi_203 + xi_249;
+            real_c(forceTerm_10 + xi_198 + xi_201 + xi_203 + xi_249);
         _data_pdfs_20_311_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_11 + xi_210 + xi_222 + xi_227 + xi_267;
+            real_c(forceTerm_11 + xi_210 + xi_222 + xi_227 + xi_267);
         _data_pdfs_20_312_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_12 + xi_222 + xi_228 + xi_229 + xi_262;
+            real_c(forceTerm_12 + xi_222 + xi_228 + xi_229 + xi_262);
         _data_pdfs_20_313_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_13 + xi_234 + xi_237 + xi_242 + xi_259;
+            real_c(forceTerm_13 + xi_234 + xi_237 + xi_242 + xi_259);
         _data_pdfs_20_314_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_14 + xi_234 + xi_243 + xi_244 + xi_264;
+            real_c(forceTerm_14 + xi_234 + xi_243 + xi_244 + xi_264);
         _data_pdfs_20_315_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_15 + xi_227 + xi_229 + xi_246 + xi_269;
+            real_c(forceTerm_15 + xi_227 + xi_229 + xi_246 + xi_269);
         _data_pdfs_20_316_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_16 + xi_210 + xi_228 + xi_246 + xi_248;
+            real_c(forceTerm_16 + xi_210 + xi_228 + xi_246 + xi_248);
         _data_pdfs_20_317_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_17 + xi_242 + xi_243 + xi_247 + xi_257;
+            real_c(forceTerm_17 + xi_242 + xi_243 + xi_247 + xi_257);
         _data_pdfs_20_318_10[_stride_pdfs_0 * ctr_0] =
-            forceTerm_18 + xi_237 + xi_244 + xi_247 + xi_265;
+            real_c(forceTerm_18 + xi_237 + xi_244 + xi_247 + xi_265);
       }
     }
   }
@@ -1294,7 +1294,7 @@ kernel_collide(double *RESTRICT const _data_force, double *RESTRICT _data_pdfs,
 } // namespace internal_kernel_collide
 namespace internal_kernel_stream {
 static FUNC_PREFIX void kernel_stream(
-    double *RESTRICT const _data_pdfs, double *RESTRICT _data_pdfs_tmp,
+    real_t *RESTRICT const _data_pdfs, real_t *RESTRICT _data_pdfs_tmp,
     int64_t const _size_pdfs_0, int64_t const _size_pdfs_1,
     int64_t const _size_pdfs_2, int64_t const _stride_pdfs_0,
     int64_t const _stride_pdfs_1, int64_t const _stride_pdfs_2,
@@ -1302,157 +1302,157 @@ static FUNC_PREFIX void kernel_stream(
     int64_t const _stride_pdfs_tmp_1, int64_t const _stride_pdfs_tmp_2,
     int64_t const _stride_pdfs_tmp_3) {
   for (int ctr_2 = 1; ctr_2 < _size_pdfs_2 - 1; ctr_2 += 1) {
-    double *RESTRICT _data_pdfs_tmp_20_30 =
+    real_t *RESTRICT _data_pdfs_tmp_20_30 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2;
-    double *RESTRICT _data_pdfs_20_30 = _data_pdfs + _stride_pdfs_2 * ctr_2;
-    double *RESTRICT _data_pdfs_tmp_20_31 =
+    real_t *RESTRICT _data_pdfs_20_30 = _data_pdfs + _stride_pdfs_2 * ctr_2;
+    real_t *RESTRICT _data_pdfs_tmp_20_31 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_20_31 =
+    real_t *RESTRICT _data_pdfs_20_31 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_32 =
+    real_t *RESTRICT _data_pdfs_tmp_20_32 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 2 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_20_32 =
+    real_t *RESTRICT _data_pdfs_20_32 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 2 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_33 =
+    real_t *RESTRICT _data_pdfs_tmp_20_33 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 3 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_20_33 =
+    real_t *RESTRICT _data_pdfs_20_33 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 3 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_34 =
+    real_t *RESTRICT _data_pdfs_tmp_20_34 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 4 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_20_34 =
+    real_t *RESTRICT _data_pdfs_20_34 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 4 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_35 =
+    real_t *RESTRICT _data_pdfs_tmp_20_35 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 5 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_2m1_35 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
+    real_t *RESTRICT _data_pdfs_2m1_35 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
                                          _stride_pdfs_2 + 5 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_36 =
+    real_t *RESTRICT _data_pdfs_tmp_20_36 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 6 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_21_36 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
+    real_t *RESTRICT _data_pdfs_21_36 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
                                         _stride_pdfs_2 + 6 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_37 =
+    real_t *RESTRICT _data_pdfs_tmp_20_37 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 7 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_20_37 =
+    real_t *RESTRICT _data_pdfs_20_37 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 7 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_38 =
+    real_t *RESTRICT _data_pdfs_tmp_20_38 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 8 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_20_38 =
+    real_t *RESTRICT _data_pdfs_20_38 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 8 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_39 =
+    real_t *RESTRICT _data_pdfs_tmp_20_39 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 9 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_20_39 =
+    real_t *RESTRICT _data_pdfs_20_39 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 9 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_310 =
+    real_t *RESTRICT _data_pdfs_tmp_20_310 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 10 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_20_310 =
+    real_t *RESTRICT _data_pdfs_20_310 =
         _data_pdfs + _stride_pdfs_2 * ctr_2 + 10 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_311 =
+    real_t *RESTRICT _data_pdfs_tmp_20_311 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 11 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_2m1_311 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
+    real_t *RESTRICT _data_pdfs_2m1_311 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
                                           _stride_pdfs_2 + 11 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_312 =
+    real_t *RESTRICT _data_pdfs_tmp_20_312 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 12 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_2m1_312 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
+    real_t *RESTRICT _data_pdfs_2m1_312 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
                                           _stride_pdfs_2 + 12 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_313 =
+    real_t *RESTRICT _data_pdfs_tmp_20_313 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 13 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_2m1_313 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
+    real_t *RESTRICT _data_pdfs_2m1_313 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
                                           _stride_pdfs_2 + 13 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_314 =
+    real_t *RESTRICT _data_pdfs_tmp_20_314 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 14 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_2m1_314 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
+    real_t *RESTRICT _data_pdfs_2m1_314 = _data_pdfs + _stride_pdfs_2 * ctr_2 -
                                           _stride_pdfs_2 + 14 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_315 =
+    real_t *RESTRICT _data_pdfs_tmp_20_315 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 15 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_21_315 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
+    real_t *RESTRICT _data_pdfs_21_315 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
                                          _stride_pdfs_2 + 15 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_316 =
+    real_t *RESTRICT _data_pdfs_tmp_20_316 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 16 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_21_316 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
+    real_t *RESTRICT _data_pdfs_21_316 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
                                          _stride_pdfs_2 + 16 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_317 =
+    real_t *RESTRICT _data_pdfs_tmp_20_317 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 17 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_21_317 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
+    real_t *RESTRICT _data_pdfs_21_317 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
                                          _stride_pdfs_2 + 17 * _stride_pdfs_3;
-    double *RESTRICT _data_pdfs_tmp_20_318 =
+    real_t *RESTRICT _data_pdfs_tmp_20_318 =
         _data_pdfs_tmp + _stride_pdfs_tmp_2 * ctr_2 + 18 * _stride_pdfs_tmp_3;
-    double *RESTRICT _data_pdfs_21_318 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
+    real_t *RESTRICT _data_pdfs_21_318 = _data_pdfs + _stride_pdfs_2 * ctr_2 +
                                          _stride_pdfs_2 + 18 * _stride_pdfs_3;
     for (int ctr_1 = 1; ctr_1 < _size_pdfs_1 - 1; ctr_1 += 1) {
-      double *RESTRICT _data_pdfs_tmp_20_30_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_30_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_30;
-      double *RESTRICT _data_pdfs_20_30_10 =
+      real_t *RESTRICT _data_pdfs_20_30_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_30;
-      double *RESTRICT _data_pdfs_tmp_20_31_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_31_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_31;
-      double *RESTRICT _data_pdfs_20_31_1m1 =
+      real_t *RESTRICT _data_pdfs_20_31_1m1 =
           _stride_pdfs_1 * ctr_1 - _stride_pdfs_1 + _data_pdfs_20_31;
-      double *RESTRICT _data_pdfs_tmp_20_32_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_32_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_32;
-      double *RESTRICT _data_pdfs_20_32_11 =
+      real_t *RESTRICT _data_pdfs_20_32_11 =
           _stride_pdfs_1 * ctr_1 + _stride_pdfs_1 + _data_pdfs_20_32;
-      double *RESTRICT _data_pdfs_tmp_20_33_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_33_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_33;
-      double *RESTRICT _data_pdfs_20_33_10 =
+      real_t *RESTRICT _data_pdfs_20_33_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_33;
-      double *RESTRICT _data_pdfs_tmp_20_34_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_34_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_34;
-      double *RESTRICT _data_pdfs_20_34_10 =
+      real_t *RESTRICT _data_pdfs_20_34_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_20_34;
-      double *RESTRICT _data_pdfs_tmp_20_35_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_35_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_35;
-      double *RESTRICT _data_pdfs_2m1_35_10 =
+      real_t *RESTRICT _data_pdfs_2m1_35_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_2m1_35;
-      double *RESTRICT _data_pdfs_tmp_20_36_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_36_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_36;
-      double *RESTRICT _data_pdfs_21_36_10 =
+      real_t *RESTRICT _data_pdfs_21_36_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_21_36;
-      double *RESTRICT _data_pdfs_tmp_20_37_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_37_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_37;
-      double *RESTRICT _data_pdfs_20_37_1m1 =
+      real_t *RESTRICT _data_pdfs_20_37_1m1 =
           _stride_pdfs_1 * ctr_1 - _stride_pdfs_1 + _data_pdfs_20_37;
-      double *RESTRICT _data_pdfs_tmp_20_38_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_38_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_38;
-      double *RESTRICT _data_pdfs_20_38_1m1 =
+      real_t *RESTRICT _data_pdfs_20_38_1m1 =
           _stride_pdfs_1 * ctr_1 - _stride_pdfs_1 + _data_pdfs_20_38;
-      double *RESTRICT _data_pdfs_tmp_20_39_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_39_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_39;
-      double *RESTRICT _data_pdfs_20_39_11 =
+      real_t *RESTRICT _data_pdfs_20_39_11 =
           _stride_pdfs_1 * ctr_1 + _stride_pdfs_1 + _data_pdfs_20_39;
-      double *RESTRICT _data_pdfs_tmp_20_310_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_310_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_310;
-      double *RESTRICT _data_pdfs_20_310_11 =
+      real_t *RESTRICT _data_pdfs_20_310_11 =
           _stride_pdfs_1 * ctr_1 + _stride_pdfs_1 + _data_pdfs_20_310;
-      double *RESTRICT _data_pdfs_tmp_20_311_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_311_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_311;
-      double *RESTRICT _data_pdfs_2m1_311_1m1 =
+      real_t *RESTRICT _data_pdfs_2m1_311_1m1 =
           _stride_pdfs_1 * ctr_1 - _stride_pdfs_1 + _data_pdfs_2m1_311;
-      double *RESTRICT _data_pdfs_tmp_20_312_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_312_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_312;
-      double *RESTRICT _data_pdfs_2m1_312_11 =
+      real_t *RESTRICT _data_pdfs_2m1_312_11 =
           _stride_pdfs_1 * ctr_1 + _stride_pdfs_1 + _data_pdfs_2m1_312;
-      double *RESTRICT _data_pdfs_tmp_20_313_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_313_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_313;
-      double *RESTRICT _data_pdfs_2m1_313_10 =
+      real_t *RESTRICT _data_pdfs_2m1_313_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_2m1_313;
-      double *RESTRICT _data_pdfs_tmp_20_314_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_314_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_314;
-      double *RESTRICT _data_pdfs_2m1_314_10 =
+      real_t *RESTRICT _data_pdfs_2m1_314_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_2m1_314;
-      double *RESTRICT _data_pdfs_tmp_20_315_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_315_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_315;
-      double *RESTRICT _data_pdfs_21_315_1m1 =
+      real_t *RESTRICT _data_pdfs_21_315_1m1 =
           _stride_pdfs_1 * ctr_1 - _stride_pdfs_1 + _data_pdfs_21_315;
-      double *RESTRICT _data_pdfs_tmp_20_316_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_316_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_316;
-      double *RESTRICT _data_pdfs_21_316_11 =
+      real_t *RESTRICT _data_pdfs_21_316_11 =
           _stride_pdfs_1 * ctr_1 + _stride_pdfs_1 + _data_pdfs_21_316;
-      double *RESTRICT _data_pdfs_tmp_20_317_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_317_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_317;
-      double *RESTRICT _data_pdfs_21_317_10 =
+      real_t *RESTRICT _data_pdfs_21_317_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_21_317;
-      double *RESTRICT _data_pdfs_tmp_20_318_10 =
+      real_t *RESTRICT _data_pdfs_tmp_20_318_10 =
           _stride_pdfs_tmp_1 * ctr_1 + _data_pdfs_tmp_20_318;
-      double *RESTRICT _data_pdfs_21_318_10 =
+      real_t *RESTRICT _data_pdfs_21_318_10 =
           _stride_pdfs_1 * ctr_1 + _data_pdfs_21_318;
       for (int ctr_0 = 1; ctr_0 < _size_pdfs_0 - 1; ctr_0 += 1) {
         _data_pdfs_tmp_20_30_10[_stride_pdfs_tmp_0 * ctr_0] =
@@ -1546,19 +1546,19 @@ void FluctuatingMRT_LatticeModel::Sweep::streamCollide(
   auto &omega_shear = lm.omega_shear_;
   WALBERLA_ASSERT_GREATER_EQUAL(-cell_idx_c(numberOfGhostLayersToInclude) - 1,
                                 -int_c(force->nrOfGhostLayers()));
-  double *RESTRICT const _data_force =
+  real_t *RESTRICT const _data_force =
       force->dataAt(-cell_idx_c(numberOfGhostLayersToInclude) - 1,
                     -cell_idx_c(numberOfGhostLayersToInclude) - 1,
                     -cell_idx_c(numberOfGhostLayersToInclude) - 1, 0);
   WALBERLA_ASSERT_GREATER_EQUAL(-cell_idx_c(numberOfGhostLayersToInclude) - 1,
                                 -int_c(pdfs->nrOfGhostLayers()));
-  double *RESTRICT const _data_pdfs =
+  real_t *RESTRICT const _data_pdfs =
       pdfs->dataAt(-cell_idx_c(numberOfGhostLayersToInclude) - 1,
                    -cell_idx_c(numberOfGhostLayersToInclude) - 1,
                    -cell_idx_c(numberOfGhostLayersToInclude) - 1, 0);
   WALBERLA_ASSERT_GREATER_EQUAL(-cell_idx_c(numberOfGhostLayersToInclude) - 1,
                                 -int_c(pdfs_tmp->nrOfGhostLayers()));
-  double *RESTRICT _data_pdfs_tmp =
+  real_t *RESTRICT _data_pdfs_tmp =
       pdfs_tmp->dataAt(-cell_idx_c(numberOfGhostLayersToInclude) - 1,
                        -cell_idx_c(numberOfGhostLayersToInclude) - 1,
                        -cell_idx_c(numberOfGhostLayersToInclude) - 1, 0);
@@ -1627,13 +1627,13 @@ void FluctuatingMRT_LatticeModel::Sweep::collide(
   auto &omega_shear = lm.omega_shear_;
   WALBERLA_ASSERT_GREATER_EQUAL(-cell_idx_c(numberOfGhostLayersToInclude),
                                 -int_c(force->nrOfGhostLayers()));
-  double *RESTRICT const _data_force =
+  real_t *RESTRICT const _data_force =
       force->dataAt(-cell_idx_c(numberOfGhostLayersToInclude),
                     -cell_idx_c(numberOfGhostLayersToInclude),
                     -cell_idx_c(numberOfGhostLayersToInclude), 0);
   WALBERLA_ASSERT_GREATER_EQUAL(-cell_idx_c(numberOfGhostLayersToInclude),
                                 -int_c(pdfs->nrOfGhostLayers()));
-  double *RESTRICT _data_pdfs =
+  real_t *RESTRICT _data_pdfs =
       pdfs->dataAt(-cell_idx_c(numberOfGhostLayersToInclude),
                    -cell_idx_c(numberOfGhostLayersToInclude),
                    -cell_idx_c(numberOfGhostLayersToInclude), 0);
@@ -1691,13 +1691,13 @@ void FluctuatingMRT_LatticeModel::Sweep::stream(
 
   WALBERLA_ASSERT_GREATER_EQUAL(-cell_idx_c(numberOfGhostLayersToInclude) - 1,
                                 -int_c(pdfs->nrOfGhostLayers()));
-  double *RESTRICT const _data_pdfs =
+  real_t *RESTRICT const _data_pdfs =
       pdfs->dataAt(-cell_idx_c(numberOfGhostLayersToInclude) - 1,
                    -cell_idx_c(numberOfGhostLayersToInclude) - 1,
                    -cell_idx_c(numberOfGhostLayersToInclude) - 1, 0);
   WALBERLA_ASSERT_GREATER_EQUAL(-cell_idx_c(numberOfGhostLayersToInclude) - 1,
                                 -int_c(pdfs_tmp->nrOfGhostLayers()));
-  double *RESTRICT _data_pdfs_tmp =
+  real_t *RESTRICT _data_pdfs_tmp =
       pdfs_tmp->dataAt(-cell_idx_c(numberOfGhostLayersToInclude) - 1,
                        -cell_idx_c(numberOfGhostLayersToInclude) - 1,
                        -cell_idx_c(numberOfGhostLayersToInclude) - 1, 0);

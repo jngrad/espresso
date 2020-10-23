@@ -223,7 +223,7 @@ protected:
   IBlock *get_block_extended(const PosVector &pos) const {
     for (auto b = m_blocks->begin(); b != m_blocks->end(); ++b) {
       if (b->getAABB()
-              .getExtended(m_n_ghost_layers)
+              .getExtended(real_c(m_n_ghost_layers))
               .contains(real_c(pos[0]), real_c(pos[1]), real_c(pos[2]))) {
         return &(*b);
       }
