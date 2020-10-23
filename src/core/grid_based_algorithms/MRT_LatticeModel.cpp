@@ -1280,24 +1280,24 @@ static FUNC_PREFIX void kernel_stream(
 } // namespace internal_kernel_stream
 
 const real_t MRT_LatticeModel::w[19] = {
-    0.333333333333333,  0.0555555555555556, 0.0555555555555556,
-    0.0555555555555556, 0.0555555555555556, 0.0555555555555556,
-    0.0555555555555556, 0.0277777777777778, 0.0277777777777778,
-    0.0277777777777778, 0.0277777777777778, 0.0277777777777778,
-    0.0277777777777778, 0.0277777777777778, 0.0277777777777778,
-    0.0277777777777778, 0.0277777777777778, 0.0277777777777778,
-    0.0277777777777778};
+    real_t(0.333333333333333),  real_t(0.0555555555555556), real_t(0.0555555555555556),
+    real_t(0.0555555555555556), real_t(0.0555555555555556), real_t(0.0555555555555556),
+    real_t(0.0555555555555556), real_t(0.0277777777777778), real_t(0.0277777777777778),
+    real_t(0.0277777777777778), real_t(0.0277777777777778), real_t(0.0277777777777778),
+    real_t(0.0277777777777778), real_t(0.0277777777777778), real_t(0.0277777777777778),
+    real_t(0.0277777777777778), real_t(0.0277777777777778), real_t(0.0277777777777778),
+    real_t(0.0277777777777778)};
 const real_t MRT_LatticeModel::wInv[19] = {
-    3.00000000000000, 18.0000000000000, 18.0000000000000, 18.0000000000000,
-    18.0000000000000, 18.0000000000000, 18.0000000000000, 36.0000000000000,
-    36.0000000000000, 36.0000000000000, 36.0000000000000, 36.0000000000000,
-    36.0000000000000, 36.0000000000000, 36.0000000000000, 36.0000000000000,
-    36.0000000000000, 36.0000000000000, 36.0000000000000};
+    real_t(3.00000000000000), real_t(18.0000000000000), real_t(18.0000000000000), real_t(18.0000000000000),
+    real_t(18.0000000000000), real_t(18.0000000000000), real_t(18.0000000000000), real_t(36.0000000000000),
+    real_t(36.0000000000000), real_t(36.0000000000000), real_t(36.0000000000000), real_t(36.0000000000000),
+    real_t(36.0000000000000), real_t(36.0000000000000), real_t(36.0000000000000), real_t(36.0000000000000),
+    real_t(36.0000000000000), real_t(36.0000000000000), real_t(36.0000000000000)};
 
 void MRT_LatticeModel::Sweep::streamCollide(
     IBlock *block, const uint_t numberOfGhostLayersToInclude) {
-  auto pdfs = block->getData<field::GhostLayerField<double, 19>>(pdfsID);
-  field::GhostLayerField<double, 19> *pdfs_tmp;
+  auto pdfs = block->getData<field::GhostLayerField<real_t, 19>>(pdfsID);
+  field::GhostLayerField<real_t, 19> *pdfs_tmp;
   {
     // Getting temporary field pdfs_tmp
     auto it = cache_pdfs_.find(pdfs);
@@ -1381,7 +1381,7 @@ void MRT_LatticeModel::Sweep::streamCollide(
 
 void MRT_LatticeModel::Sweep::collide(
     IBlock *block, const uint_t numberOfGhostLayersToInclude) {
-  auto pdfs = block->getData<field::GhostLayerField<double, 19>>(pdfsID);
+  auto pdfs = block->getData<field::GhostLayerField<real_t, 19>>(pdfsID);
 
   auto &lm =
       dynamic_cast<lbm::PdfField<MRT_LatticeModel> *>(pdfs)->latticeModel();
@@ -1442,8 +1442,8 @@ void MRT_LatticeModel::Sweep::collide(
 
 void MRT_LatticeModel::Sweep::stream(
     IBlock *block, const uint_t numberOfGhostLayersToInclude) {
-  auto pdfs = block->getData<field::GhostLayerField<double, 19>>(pdfsID);
-  field::GhostLayerField<double, 19> *pdfs_tmp;
+  auto pdfs = block->getData<field::GhostLayerField<real_t, 19>>(pdfsID);
+  field::GhostLayerField<real_t, 19> *pdfs_tmp;
   {
     // Getting temporary field pdfs_tmp
     auto it = cache_pdfs_.find(pdfs);

@@ -479,7 +479,7 @@ public:
             m_force_to_be_applied_id);
         for (int i : {0, 1, 2})
           force_field->get((*bc).cell, i) +=
-              real_t{force[i] * weight / m_density};
+              real_c(force[i] * weight / m_density);
       }
     };
     interpolate_bspline_at_pos(pos, force_at_node);
@@ -524,10 +524,10 @@ public:
     auto pdf_field = (*bc).block->template getData<PdfField>(m_pdf_field_id);
     auto const &vel_adaptor =
         (*bc).block->template getData<VelocityAdaptor>(m_velocity_adaptor_id);
-    Vector3<double> v = vel_adaptor->get((*bc).cell);
+    Vector3<real_t> v = vel_adaptor->get((*bc).cell);
 
     pdf_field->setDensityAndVelocity(
-        (*bc).cell, Vector3<double>{v[0], v[1], v[2]}, density / m_density);
+        (*bc).cell, v, real_c(density / m_density));
 
     return true;
   };
@@ -620,7 +620,7 @@ public:
   void clear_boundaries() override {
     const CellInterval &domain_bb_in_global_cell_coordinates =
         m_blocks->getCellBBFromAABB(
-            m_blocks->begin()->getAABB().getExtended(1.0 * n_ghost_layers()));
+            m_blocks->begin()->getAABB().getExtended(real_c(n_ghost_layers())));
     for (auto block = m_blocks->begin(); block != m_blocks->end(); ++block) {
 
       Boundaries *boundary_handling =

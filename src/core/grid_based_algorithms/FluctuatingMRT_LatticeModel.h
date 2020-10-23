@@ -122,7 +122,7 @@ public:
         BlockDataID forceID;
         BlockDataID pdfsID;
 
-        private: std::set< field::GhostLayerField<double, 19> *, field::SwapableCompare< field::GhostLayerField<double, 19> * > > cache_pdfs_;
+        private: std::set< field::GhostLayerField<real_t, 19> *, field::SwapableCompare< field::GhostLayerField<real_t, 19> * > > cache_pdfs_;
     };
 
     FluctuatingMRT_LatticeModel( BlockDataID forceID_, double omega_bulk, double omega_even, double omega_odd, double omega_shear, uint32_t seed, double temperature, uint32_t time_step )
@@ -147,7 +147,7 @@ public:
 private:
     void configureBlock(IBlock * block, StructuredBlockStorage * storage)
     {
-        force_ = block->getData< field::GhostLayerField<double, 3> >(forceID);
+        force_ = block->getData< field::GhostLayerField<real_t, 3> >(forceID);
 
         block_offset_0_ = uint32_c(storage->getBlockCellBB(*block).xMin());
         block_offset_1_ = uint32_c(storage->getBlockCellBB(*block).yMin());
@@ -159,7 +159,7 @@ private:
     }
 
     // Updated by configureBlock:
-    field::GhostLayerField<double, 3> * force_;
+    field::GhostLayerField<real_t, 3> * force_;
 
     const IBlockID * blockId_;
     uint_t currentLevel;
@@ -324,16 +324,15 @@ struct AdaptVelocityToForce<FluctuatingMRT_LatticeModel, void>
       auto y = it.y();
       auto z = it.z();
       
-      return velocity - Vector3<real_t>((real_t(0.5))*lm.force_->get(x,y,z,0)/rho,(real_t(0.5))*lm.force_->get(x,y,z,1)/rho,(real_t(0.5))*lm.force_->get(x,y,z,2)/rho  );
+      return velocity - Vector3<real_t>(real_t(0.5)*lm.force_->get(x,y,z,0)/rho,real_t(0.5)*lm.force_->get(x,y,z,1)/rho,real_t(0.5)*lm.force_->get(x,y,z,2)/rho  );
       
    }
 
    static Vector3<real_t> get( const cell_idx_t x, const cell_idx_t y, const cell_idx_t z, const FluctuatingMRT_LatticeModel & lm,
                                const Vector3< real_t > & velocity, const real_t rho )
    {
-      
 
-      return velocity - Vector3<real_t>((real_t(0.5))*lm.force_->get(x,y,z,0)/rho,(real_t(0.5))*lm.force_->get(x,y,z,1)/rho,(real_t(0.5))*lm.force_->get(x,y,z,2)/rho  );
+      return velocity - Vector3<real_t>(real_t(0.5)*lm.force_->get(x,y,z,0)/rho,real_t(0.5)*lm.force_->get(x,y,z,1)/rho,real_t(0.5)*lm.force_->get(x,y,z,2)/rho  );
       
    }
 };
@@ -431,7 +430,7 @@ struct Density<FluctuatingMRT_LatticeModel, void>
         const double vel1Term = f_1 + f_11 + f_15 + f_7;
         const double vel2Term = f_12 + f_13 + f_5;
         const double rho = f_0 + f_16 + f_17 + f_2 + f_3 + f_6 + f_9 + vel0Term + vel1Term + vel2Term;
-        return rho;
+        return real_c(rho);
    }
 
    template< typename PdfField_T >
@@ -462,7 +461,7 @@ struct Density<FluctuatingMRT_LatticeModel, void>
         const double vel1Term = f_1 + f_11 + f_15 + f_7;
         const double vel2Term = f_12 + f_13 + f_5;
         const double rho = f_0 + f_16 + f_17 + f_2 + f_3 + f_6 + f_9 + vel0Term + vel1Term + vel2Term;
-        return rho;
+        return real_c(rho);
    }
 };
 
@@ -491,13 +490,12 @@ struct DensityAndVelocity<FluctuatingMRT_LatticeModel>
     static void set( PdfField_T & pdf, const cell_idx_t x, const cell_idx_t y, const cell_idx_t z, const FluctuatingMRT_LatticeModel & lm,
                      const Vector3< real_t > & u = Vector3< real_t >( real_t(0.0) ), const real_t rho_in = real_t(1.0) )
     {
-        const double rho = rho_in;
-        const double u_0 = -real_t(0.5)*lm.force_->get(x,y,z,0)/rho_in + u[0];
-        const double u_1 = -real_t(0.5)*lm.force_->get(x,y,z,1)/rho_in + u[1];
-        const double u_2 = -real_t(0.5)*lm.force_->get(x,y,z,2)/rho_in + u[2];
+        const real_t u_0 = -real_t(0.5)*lm.force_->get(x,y,z,0)/rho_in + u[0];
+        const real_t u_1 = -real_t(0.5)*lm.force_->get(x,y,z,1)/rho_in + u[1];
+        const real_t u_2 = -real_t(0.5)*lm.force_->get(x,y,z,2)/rho_in + u[2];
         
 
-        Equilibrium<FluctuatingMRT_LatticeModel>::set(pdf, x, y, z, Vector3<real_t>(u_0, u_1, u_2), rho );
+        Equilibrium<FluctuatingMRT_LatticeModel>::set(pdf, x, y, z, Vector3<real_t>(u_0, u_1, u_2), rho_in );
     }
 };
 
@@ -514,13 +512,12 @@ struct DensityAndVelocityRange<FluctuatingMRT_LatticeModel, FieldIteratorXYZ>
             const auto x = cellIt.x();
             const auto y = cellIt.y();
             const auto z = cellIt.z();
-            const double rho = rho_in;
-            const double u_0 = -real_t(0.5)*lm.force_->get(x,y,z,0)/rho_in + u[0];
-            const double u_1 = -real_t(0.5)*lm.force_->get(x,y,z,1)/rho_in + u[1];
-            const double u_2 = -real_t(0.5)*lm.force_->get(x,y,z,2)/rho_in + u[2];
+            const real_t u_0 = -real_t(0.5)*lm.force_->get(x,y,z,0)/rho_in + u[0];
+            const real_t u_1 = -real_t(0.5)*lm.force_->get(x,y,z,1)/rho_in + u[1];
+            const real_t u_2 = -real_t(0.5)*lm.force_->get(x,y,z,2)/rho_in + u[2];
             
 
-            Equilibrium<FluctuatingMRT_LatticeModel>::set(cellIt, Vector3<real_t>(u_0, u_1, u_2), rho);
+            Equilibrium<FluctuatingMRT_LatticeModel>::set(cellIt, Vector3<real_t>(u_0, u_1, u_2), rho_in);
         }
    }
 };
@@ -561,14 +558,14 @@ struct DensityAndMomentumDensity<FluctuatingMRT_LatticeModel>
         const double vel1Term = f_1 + f_11 + f_15 + f_7;
         const double vel2Term = f_12 + f_13 + f_5;
         const double rho = f_0 + f_16 + f_17 + f_2 + f_3 + f_6 + f_9 + vel0Term + vel1Term + vel2Term;
-        const double md_0 = -f_13 - f_17 - f_3 - f_7 - f_9 + (real_t(0.5))*lm.force_->get(x,y,z,0)/rho + vel0Term;
-        const double md_1 = -f_10 - f_12 - f_16 - f_2 + f_8 - f_9 + (real_t(0.5))*lm.force_->get(x,y,z,1)/rho + vel1Term;
-        const double md_2 = f_11 + f_14 - f_15 - f_16 - f_17 - f_18 - f_6 + (real_t(0.5))*lm.force_->get(x,y,z,2)/rho + vel2Term;
-        momentumDensity[0] = md_0;
-        momentumDensity[1] = md_1;
-        momentumDensity[2] = md_2;
+        const double md_0 = -f_13 - f_17 - f_3 - f_7 - f_9 + real_t(0.5)*lm.force_->get(x,y,z,0)/rho + vel0Term;
+        const double md_1 = -f_10 - f_12 - f_16 - f_2 + f_8 - f_9 + real_t(0.5)*lm.force_->get(x,y,z,1)/rho + vel1Term;
+        const double md_2 = f_11 + f_14 - f_15 - f_16 - f_17 - f_18 - f_6 + real_t(0.5)*lm.force_->get(x,y,z,2)/rho + vel2Term;
+        momentumDensity[0] = real_c(md_0);
+        momentumDensity[1] = real_c(md_1);
+        momentumDensity[2] = real_c(md_2);
         
-        return rho;
+        return real_c(rho);
    }
 
    template< typename PdfField_T >
@@ -599,14 +596,14 @@ struct DensityAndMomentumDensity<FluctuatingMRT_LatticeModel>
         const double vel1Term = f_1 + f_11 + f_15 + f_7;
         const double vel2Term = f_12 + f_13 + f_5;
         const double rho = f_0 + f_16 + f_17 + f_2 + f_3 + f_6 + f_9 + vel0Term + vel1Term + vel2Term;
-        const double md_0 = -f_13 - f_17 - f_3 - f_7 - f_9 + (real_t(0.5))*lm.force_->get(x,y,z,0)/rho + vel0Term;
-        const double md_1 = -f_10 - f_12 - f_16 - f_2 + f_8 - f_9 + (real_t(0.5))*lm.force_->get(x,y,z,1)/rho + vel1Term;
-        const double md_2 = f_11 + f_14 - f_15 - f_16 - f_17 - f_18 - f_6 + (real_t(0.5))*lm.force_->get(x,y,z,2)/rho + vel2Term;
-        momentumDensity[0] = md_0;
-        momentumDensity[1] = md_1;
-        momentumDensity[2] = md_2;
+        const double md_0 = -f_13 - f_17 - f_3 - f_7 - f_9 + real_t(0.5)*lm.force_->get(x,y,z,0)/rho + vel0Term;
+        const double md_1 = -f_10 - f_12 - f_16 - f_2 + f_8 - f_9 + real_t(0.5)*lm.force_->get(x,y,z,1)/rho + vel1Term;
+        const double md_2 = f_11 + f_14 - f_15 - f_16 - f_17 - f_18 - f_6 + real_t(0.5)*lm.force_->get(x,y,z,2)/rho + vel2Term;
+        momentumDensity[0] = real_c(md_0);
+        momentumDensity[1] = real_c(md_1);
+        momentumDensity[2] = real_c(md_2);
         
-       return rho;
+       return real_c(rho);
    }
 };
 
@@ -644,12 +641,12 @@ struct MomentumDensity< FluctuatingMRT_LatticeModel>
         const double vel1Term = f_1 + f_11 + f_15 + f_7;
         const double vel2Term = f_12 + f_13 + f_5;
         const double rho = f_0 + f_16 + f_17 + f_2 + f_3 + f_6 + f_9 + vel0Term + vel1Term + vel2Term;
-        const double md_0 = -f_13 - f_17 - f_3 - f_7 - f_9 + (real_t(0.5))*lm.force_->get(x,y,z,0)/rho + vel0Term;
-        const double md_1 = -f_10 - f_12 - f_16 - f_2 + f_8 - f_9 + (real_t(0.5))*lm.force_->get(x,y,z,1)/rho + vel1Term;
-        const double md_2 = f_11 + f_14 - f_15 - f_16 - f_17 - f_18 - f_6 + (real_t(0.5))*lm.force_->get(x,y,z,2)/rho + vel2Term;
-        momentumDensity[0] = md_0;
-        momentumDensity[1] = md_1;
-        momentumDensity[2] = md_2;
+        const double md_0 = -f_13 - f_17 - f_3 - f_7 - f_9 + real_t(0.5)*lm.force_->get(x,y,z,0)/rho + vel0Term;
+        const double md_1 = -f_10 - f_12 - f_16 - f_2 + f_8 - f_9 + real_t(0.5)*lm.force_->get(x,y,z,1)/rho + vel1Term;
+        const double md_2 = f_11 + f_14 - f_15 - f_16 - f_17 - f_18 - f_6 + real_t(0.5)*lm.force_->get(x,y,z,2)/rho + vel2Term;
+        momentumDensity[0] = real_c(md_0);
+        momentumDensity[1] = real_c(md_1);
+        momentumDensity[2] = real_c(md_2);
         
    }
 
@@ -681,12 +678,12 @@ struct MomentumDensity< FluctuatingMRT_LatticeModel>
         const double vel1Term = f_1 + f_11 + f_15 + f_7;
         const double vel2Term = f_12 + f_13 + f_5;
         const double rho = f_0 + f_16 + f_17 + f_2 + f_3 + f_6 + f_9 + vel0Term + vel1Term + vel2Term;
-        const double md_0 = -f_13 - f_17 - f_3 - f_7 - f_9 + (real_t(0.5))*lm.force_->get(x,y,z,0)/rho + vel0Term;
-        const double md_1 = -f_10 - f_12 - f_16 - f_2 + f_8 - f_9 + (real_t(0.5))*lm.force_->get(x,y,z,1)/rho + vel1Term;
-        const double md_2 = f_11 + f_14 - f_15 - f_16 - f_17 - f_18 - f_6 + (real_t(0.5))*lm.force_->get(x,y,z,2)/rho + vel2Term;
-        momentumDensity[0] = md_0;
-        momentumDensity[1] = md_1;
-        momentumDensity[2] = md_2;
+        const double md_0 = -f_13 - f_17 - f_3 - f_7 - f_9 + real_t(0.5)*lm.force_->get(x,y,z,0)/rho + vel0Term;
+        const double md_1 = -f_10 - f_12 - f_16 - f_2 + f_8 - f_9 + real_t(0.5)*lm.force_->get(x,y,z,1)/rho + vel1Term;
+        const double md_2 = f_11 + f_14 - f_15 - f_16 - f_17 - f_18 - f_6 + real_t(0.5)*lm.force_->get(x,y,z,2)/rho + vel2Term;
+        momentumDensity[0] = real_c(md_0);
+        momentumDensity[1] = real_c(md_1);
+        momentumDensity[2] = real_c(md_2);
         
    }
 };
