@@ -651,7 +651,7 @@ public:
       auto pdf_field = block_it->template getData<PdfField>(m_pdf_field_id);
       Vector3<real_t> local_v;
       WALBERLA_FOR_ALL_CELLS_XYZ(pdf_field, {
-        double local_dens = pdf_field->getDensityAndVelocity(local_v, x, y, z);
+        real_t local_dens = pdf_field->getDensityAndVelocity(local_v, x, y, z);
         mom += local_dens * local_v;
       });
     }
