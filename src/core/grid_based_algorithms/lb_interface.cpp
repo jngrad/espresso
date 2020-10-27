@@ -232,6 +232,22 @@ double lb_lbfluid_get_lattice_speed() {
   return lb_lbfluid_get_agrid() / lb_lbfluid_get_tau();
 }
 
+void lb_lbfluid_serialize(std::string const &filename) {
+#ifdef LB_WALBERLA
+  if (lattice_switch == ActiveLB::WALBERLA) {
+    lb_walberla()->serialize(filename);
+  }
+#endif
+}
+
+void lb_lbfluid_deserialize(std::string const &filename) {
+#ifdef LB_WALBERLA
+  if (lattice_switch == ActiveLB::WALBERLA) {
+    lb_walberla()->deserialize(filename);
+  }
+#endif
+}
+
 void lb_lbfluid_save_checkpoint(const std::string &filename, bool binary) {
 #ifdef LB_WALBERLA
   if (lattice_switch == ActiveLB::WALBERLA) {

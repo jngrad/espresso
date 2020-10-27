@@ -313,11 +313,13 @@ cdef class HydrodynamicInteraction(Actor):
 
     def save_checkpoint(self, path, binary):
         tmp_path = path + ".__tmp__"
-        lb_lbfluid_save_checkpoint(utils.to_char_pointer(tmp_path), binary)
+        lb_lbfluid_serialize(utils.to_char_pointer(tmp_path))
+        #lb_lbfluid_save_checkpoint(utils.to_char_pointer(tmp_path), binary)
         os.rename(tmp_path, path)
 
     def load_checkpoint(self, path, binary):
-        lb_lbfluid_load_checkpoint(utils.to_char_pointer(path), binary)
+        lb_lbfluid_deserialize(utils.to_char_pointer(path))
+        #lb_lbfluid_load_checkpoint(utils.to_char_pointer(path), binary)
 
     def _activate_method(self):
         raise Exception(

@@ -207,6 +207,9 @@ const std::vector<double> lb_lbnode_get_pop(const Utils::Vector3i &ind);
 void lb_lbfluid_save_checkpoint(const std::string &filename, bool binary);
 void lb_lbfluid_load_checkpoint(const std::string &filename, bool binary);
 
+void lb_lbfluid_serialize(std::string const &filename);
+void lb_lbfluid_deserialize(std::string const &filename);
+
 /**
  * @brief Checks whether the given node index is within the LB lattice.
  */

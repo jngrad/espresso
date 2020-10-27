@@ -82,6 +82,10 @@ public:
   virtual double get_tau() const = 0;
   virtual double get_kT() const = 0;
 
+  // Checkpointing
+  virtual void serialize(std::string const &filename) const = 0;
+  virtual void deserialize(std::string const &filename) = 0;
+
   // Grid, domain, halo
   virtual int n_ghost_layers() const = 0;
   virtual Utils::Vector3i get_grid_dimensions() const = 0;

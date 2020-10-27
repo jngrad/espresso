@@ -51,6 +51,11 @@
 #include <boost/optional.hpp>
 #include <boost/tuple/tuple.hpp>
 
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/vector.hpp>
+
+#include <fstream>
 #include <vector>
 
 namespace walberla {
@@ -718,6 +723,90 @@ public:
   Utils::Vector3d get_external_force() const override {
     return m_reset_force->get_ext_force() * m_density;
   };
+
+  // Checkpointing
+  void serialize(std::string const &filename) const override {
+    constexpr auto FSize = LatticeModel::Stencil::Size;
+    auto const grid_size = get_grid_dimensions();
+    std::ofstream ostream(filename, std::ios::binary);
+    boost::archive::binary_oarchive ar(ostream);
+    ar &grid_size;
+    ar &FSize;
+    for (auto block_it = m_blocks->begin(); block_it != m_blocks->end();
+         ++block_it) {
+      real_t populations[FSize];
+      real_t last_forces[3];
+      auto const pdf_field =
+          block_it->template getData<PdfField>(m_pdf_field_id);
+      assert(pdf_field->F_SIZE == FSize);
+      WALBERLA_FOR_ALL_CELLS_XYZ(pdf_field, {
+        for (uint_t f = 0u; f < FSize; ++f) {
+          populations[f] = pdf_field->get(x, y, z, f);
+        }
+        ar &populations;
+      });
+      auto const force_field = block_it->template getData<VectorField>(
+          m_last_applied_force_field_id);
+      WALBERLA_FOR_ALL_CELLS_XYZ(force_field, {
+        last_forces[0] = force_field->get(x, y, z, uint_t(0u));
+        last_forces[1] = force_field->get(x, y, z, uint_t(1u));
+        last_forces[2] = force_field->get(x, y, z, uint_t(2u));
+        ar &last_forces;
+      });
+    }
+  };
+
+  void deserialize(std::string const &filename) override {
+    constexpr auto FSize = LatticeModel::Stencil::Size;
+    auto const grid_size = get_grid_dimensions();
+    Utils::Vector3i saved_grid_size;
+    uint_t saved_FSize;
+    std::ifstream istream(filename, std::ios::binary);
+    boost::archive::binary_iarchive ar(istream);
+    ar &saved_grid_size;
+    ar &saved_FSize;
+    {
+      std::string err_msg = "Error while reading LB checkpoint: ";
+      if (saved_grid_size[0] != grid_size[0] ||
+          saved_grid_size[1] != grid_size[1] ||
+          saved_grid_size[2] != grid_size[2]) {
+        throw std::runtime_error(
+            err_msg + "grid dimensions mismatch, read [" +
+            std::to_string(saved_grid_size[0]) + ' ' +
+            std::to_string(saved_grid_size[1]) + ' ' +
+            std::to_string(saved_grid_size[2]) + "], expected [" +
+            std::to_string(grid_size[0]) + ' ' + std::to_string(grid_size[1]) +
+            ' ' + std::to_string(grid_size[2]) + "].");
+      }
+      if (saved_FSize != FSize) {
+        throw std::runtime_error(err_msg + "population size mismatch, read " +
+                                 std::to_string(saved_FSize) + ", expected " +
+                                 std::to_string(FSize) + ".");
+      }
+    }
+    for (auto block_it = m_blocks->begin(); block_it != m_blocks->end();
+         ++block_it) {
+      real_t populations[FSize];
+      real_t last_forces[3];
+      auto const pdf_field =
+          block_it->template getData<PdfField>(m_pdf_field_id);
+      assert(pdf_field->F_SIZE == FSize);
+      WALBERLA_FOR_ALL_CELLS_XYZ(pdf_field, {
+        ar &populations;
+        for (uint_t f = 0u; f < FSize; ++f) {
+          pdf_field->get(x, y, z, f) = populations[f];
+        }
+      });
+      auto const force_field = block_it->template getData<VectorField>(
+          m_last_applied_force_field_id);
+      WALBERLA_FOR_ALL_CELLS_XYZ(force_field, {
+        ar &last_forces;
+        force_field->get(x, y, z, uint_t(0u)) = last_forces[0];
+        force_field->get(x, y, z, uint_t(1u)) = last_forces[1];
+        force_field->get(x, y, z, uint_t(2u)) = last_forces[2];
+      });
+    }
+  }
 
   // Global parameters
   //  double get_viscosity() const override {

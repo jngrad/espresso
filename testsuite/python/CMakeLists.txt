@@ -74,10 +74,10 @@ foreach(
     set(TEST_BINARY_LIST "1;0")
   endif()
   foreach(TEST_BINARY ${TEST_BINARY_LIST})
-    python_test(FILE save_checkpoint.py MAX_NUM_PROC 2 LABELS ${TEST_LABELS}
+    python_test(FILE save_checkpoint.py MAX_NUM_PROC 1 LABELS ${TEST_LABELS}
                 SUFFIX ${TEST_COMBINATION}_${TEST_BINARY})
     python_test(
-      FILE test_checkpoint.py MAX_NUM_PROC 2 LABELS ${TEST_LABELS} SUFFIX
+      FILE test_checkpoint.py MAX_NUM_PROC 1 LABELS ${TEST_LABELS} SUFFIX
       ${TEST_COMBINATION}_${TEST_BINARY} DEPENDS
       save_checkpoint_${TEST_COMBINATION}_${TEST_BINARY})
   endforeach(TEST_BINARY)
