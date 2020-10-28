@@ -1,0 +1,15 @@
+name: run tests on mac
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@main
+    - run: |
+       brew install boost boost-mpi
+    - run: |
+       clang++ -std=c++14 -c mwe.cc
