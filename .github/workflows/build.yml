@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@main
     - run: |
-       brew install boost boost-mpi fftw
+       brew install boost@1.73 boost-mpi@1.73 fftw
        brew install hdf5-mpi
        pip3 install numpy cython vtk h5py scipy
     - run: |
