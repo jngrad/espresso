@@ -57,6 +57,60 @@ BOOST_AUTO_TEST_CASE(cartesian_to_cylinder_test) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(cartesian_to_cylinder_orientation_test) {
+  constexpr auto eps = 1e-15;
+  // tilted orthogonal basis
+  auto const x =
+      (Vector3d{{1, 0, 0}} - (1. / 3.) * Vector3d{{1, 1, 1}}).normalize();
+  auto const y = (Vector3d{{0, 1, -1}}).normalize();
+  auto const z = (Vector3d{{1, 1, 1}}).normalize();
+  // check simple transformation
+  {
+    auto const rot_x = transform_coordinate_cartesian_to_cylinder(x, z);
+    auto const rot_y = transform_coordinate_cartesian_to_cylinder(y, z);
+    auto const rot_z = transform_coordinate_cartesian_to_cylinder(z, z);
+    auto const ref_x = Vector3d{{1.0, 0.0, 0.0}};
+    auto const ref_y = Vector3d{{1.0, Utils::pi() / 2.0, 0.0}};
+    auto const ref_z = Vector3d{{0.0, rot_z[1], 1.0}};
+    for (int i = 0; i < 3; ++i) {
+      BOOST_CHECK_SMALL(rot_x[i] - ref_x[i], eps);
+      BOOST_CHECK_SMALL(rot_y[i] - ref_y[i], eps);
+      BOOST_CHECK_SMALL(rot_z[i] - ref_z[i], eps);
+    }
+  }
+  // check transformation with orientation
+  {
+    auto const rot_x = transform_coordinate_cartesian_to_cylinder(x, z, y);
+    auto const rot_y = transform_coordinate_cartesian_to_cylinder(y, z, y);
+    auto const rot_z = transform_coordinate_cartesian_to_cylinder(z, z, y);
+    auto const ref_x = Vector3d{{1.0, -Utils::pi() / 2.0, 0.0}};
+    auto const ref_y = Vector3d{{1.0, 0.0, 0.0}};
+    auto const ref_z = Vector3d{{0.0, rot_z[1], 1.0}};
+    for (int i = 0; i < 3; ++i) {
+      BOOST_CHECK_SMALL(rot_x[i] - ref_x[i], eps);
+      BOOST_CHECK_SMALL(rot_y[i] - ref_y[i], eps);
+      BOOST_CHECK_SMALL(rot_z[i] - ref_z[i], eps);
+    }
+  }
+  // check transformation with orientation for another angle
+  {
+    auto const rx = vec_rotate(z, Utils::pi() / 3.0, x);
+    auto const ry = vec_rotate(z, Utils::pi() / 3.0, y);
+    auto const rz = z;
+    auto const rot_rx = transform_coordinate_cartesian_to_cylinder(rx, z, y);
+    auto const rot_ry = transform_coordinate_cartesian_to_cylinder(ry, z, y);
+    auto const rot_rz = transform_coordinate_cartesian_to_cylinder(rz, z, y);
+    auto const ref_rx = Vector3d{{1.0, Utils::pi() * (1. / 3. - 1. / 2.), 0.0}};
+    auto const ref_ry = Vector3d{{1.0, Utils::pi() / 3.0, 0.0}};
+    auto const ref_rz = Vector3d{{0.0, rot_rz[1], 1.0}};
+    for (int i = 0; i < 3; ++i) {
+      BOOST_CHECK_SMALL(rot_rx[i] - ref_rx[i], eps);
+      BOOST_CHECK_SMALL(rot_ry[i] - ref_ry[i], eps);
+      BOOST_CHECK_SMALL(rot_rz[i] - ref_rz[i], eps);
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(cylinder_to_cartesian_test) {
   Vector3d const cylinder_coord{{1.2, 3.123, 42.0}};
   auto const transformed_x = transform_coordinate_cylinder_to_cartesian(

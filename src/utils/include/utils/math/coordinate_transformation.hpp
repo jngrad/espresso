@@ -30,7 +30,8 @@ namespace Utils {
  */
 inline Vector3d
 transform_coordinate_cartesian_to_cylinder(const Vector3d &pos,
-                                           const Vector3d &axis) {
+                                           const Vector3d &axis,
+                                           const Vector3d &orientation={1, 0, 0}) {
   static auto const z_axis = Vector3d{{0, 0, 1}};
   double theta;
   Vector3d rotation_axis;
@@ -39,7 +40,9 @@ transform_coordinate_cartesian_to_cylinder(const Vector3d &pos,
   auto const r = std::sqrt(rotated_pos[0] * rotated_pos[0] +
                            rotated_pos[1] * rotated_pos[1]);
   auto const phi = std::atan2(rotated_pos[1], rotated_pos[0]);
-  return Vector3d{r, phi, rotated_pos[2]};
+  auto const rotated_orientation = vec_rotate(rotation_axis, theta, orientation);
+  auto const phi0 = std::atan2(rotated_orientation[1], rotated_orientation[0]);
+  return Vector3d{r, phi - phi0, rotated_pos[2]};
 }
 
 /**
