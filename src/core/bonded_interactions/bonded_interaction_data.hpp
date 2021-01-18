@@ -107,6 +107,8 @@ struct Fene_bond_parameters {
 
   double cutoff() const { return r0 + drmax; }
 
+  static constexpr int num = 1;
+
 private:
   friend boost::serialization::access;
   template <typename Archive>
@@ -135,6 +137,8 @@ struct Oif_global_forces_bond_parameters {
   double kv;
 
   double cutoff() const { return -1.; }
+
+  static constexpr int num = 2;
 
 private:
   friend boost::serialization::access;
@@ -173,6 +177,8 @@ struct Oif_local_forces_bond_parameters {
 
   double cutoff() const { return -1.; }
 
+  static constexpr int num = 3;
+
 private:
   friend boost::serialization::access;
   template <typename Archive>
@@ -200,6 +206,8 @@ struct Harmonic_bond_parameters {
 
   double cutoff() const { return r_cut; }
 
+  static constexpr int num = 1;
+
 private:
   friend boost::serialization::access;
   template <typename Archive>
@@ -223,6 +231,8 @@ struct Thermalized_bond_parameters {
   double pref2_dist;
 
   double cutoff() const { return r_cut; }
+
+  static constexpr int num = 1;
 
 private:
   friend boost::serialization::access;
@@ -248,6 +258,8 @@ struct Quartic_bond_parameters {
 
   double cutoff() const { return r_cut; }
 
+  static constexpr int num = 1;
+
 private:
   friend boost::serialization::access;
   template <typename Archive>
@@ -266,6 +278,8 @@ struct Bonded_coulomb_bond_parameters {
 
   double cutoff() const { return -1.; }
 
+  static constexpr int num = 1;
+
 private:
   friend boost::serialization::access;
   template <typename Archive>
@@ -280,6 +294,8 @@ struct Bonded_coulomb_sr_bond_parameters {
   double q1q2;
 
   double cutoff() const { return -1.; }
+
+  static constexpr int num = 1;
 
 private:
   friend boost::serialization::access;
@@ -297,6 +313,8 @@ struct Angle_harmonic_bond_parameters {
   double phi0;
 
   double cutoff() const { return -1.; }
+
+  static constexpr int num = 2;
 
 private:
   friend boost::serialization::access;
@@ -320,6 +338,8 @@ struct Angle_cosine_bond_parameters {
 
   double cutoff() const { return -1.; }
 
+  static constexpr int num = 2;
+
 private:
   friend boost::serialization::access;
   template <typename Archive>
@@ -342,6 +362,8 @@ struct Angle_cossquare_bond_parameters {
 
   double cutoff() const { return -1.; }
 
+  static constexpr int num = 2;
+
 private:
   friend boost::serialization::access;
   template <typename Archive>
@@ -360,6 +382,8 @@ struct Dihedral_bond_parameters {
 
   double cutoff() const { return -1.; }
 
+  static constexpr int num = 3;
+
 private:
   friend boost::serialization::access;
   template <typename Archive>
@@ -374,6 +398,7 @@ private:
 struct Tabulated_bond_parameters {
   TabulatedBondedInteraction type;
   TabulatedPotential *pot;
+  int num;
 
   double cutoff() const {
     switch (type) {
@@ -407,6 +432,8 @@ struct Rigid_bond_parameters {
   double v_tol;
 
   double cutoff() const { return std::sqrt(d2); }
+
+  static constexpr int num = 1;
 
 private:
   friend boost::serialization::access;
@@ -445,6 +472,8 @@ struct IBM_Triel_Parameters {
 
   double cutoff() const { return maxDist; }
 
+  static constexpr int num = 2;
+
 private:
   friend boost::serialization::access;
   template <typename Archive>
@@ -476,6 +505,9 @@ struct IBM_VolCons_Parameters {
 
   double cutoff() const { return -1.; }
 
+  // Krüger always has three partners
+  static constexpr int num = 3;
+
 private:
   friend boost::serialization::access;
   template <typename Archive>
@@ -496,6 +528,8 @@ struct IBM_Tribend_Parameters {
 
   double cutoff() const { return -1.; }
 
+  static constexpr int num = 0;
+
 private:
   friend boost::serialization::access;
   template <typename Archive>
@@ -508,11 +542,24 @@ private:
 struct VirtualBond_Parameters {
   double cutoff() const { return -1.; }
 
+  static constexpr int num = 0;
+
 private:
   friend boost::serialization::access;
   template <typename Archive>
   void serialize(Archive &ar, long int /* version */) {}
 };
+
+class BondLength : public boost::static_visitor<int> {
+public:
+  template <typename T> int operator()(T const &) const { return T::num; }
+};
+
+template <>
+inline int BondLength::operator()<Tabulated_bond_parameters>(
+    Tabulated_bond_parameters const &t) const {
+  return t.num;
+}
 
 /** Union in which to store the parameters of an individual bonded interaction
  */
