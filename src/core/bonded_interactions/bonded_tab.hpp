@@ -62,6 +62,12 @@ int tabulated_bonded_set_params(int bond_type,
                                 double max, std::vector<double> const &energy,
                                 std::vector<double> const &force);
 
+/** Free the parameters of a bonded tabulated potential.
+ *
+ *  @param bond_type    Bond type for which the interaction is defined
+ */
+void tabulated_bonded_free_params(int bond_type);
+
 /** Compute a tabulated bond length force.
  *
  *  The force acts in the direction of the connecting vector between the

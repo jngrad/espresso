@@ -19,11 +19,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "bonded_interactions/bonded_tab.hpp"
+#include "bonded_interactions/bonded_interaction_data.hpp"
 
 #include "errorhandling.hpp"
 #include "interactions.hpp"
 
 #include <utils/constants.hpp>
+
+#include <boost/variant.hpp>
 
 #include <cassert>
 #include <vector>
@@ -41,12 +44,9 @@ int tabulated_bonded_set_params(int bond_type,
 
   make_bond_type_exist(bond_type);
 
+  tabulated_bonded_free_params(bond_type);
+
   /* set types */
-  if (bonded_ia_params[bond_type].type == BONDED_IA_TABULATED_DISTANCE or
-      bonded_ia_params[bond_type].type == BONDED_IA_TABULATED_ANGLE or
-      bonded_ia_params[bond_type].type == BONDED_IA_TABULATED_DIHEDRAL) {
-    delete bonded_ia_params[bond_type].p.tab.pot;
-  }
   auto tab_pot = bonded_ia_params[bond_type].p.tab.pot = new TabulatedPotential;
   bonded_ia_params[bond_type].p.tab.type = tab_type;
 
@@ -81,8 +81,27 @@ int tabulated_bonded_set_params(int bond_type,
   tab_pot->energy_tab = energy;
 
   bonded_ia_params_variant[bond_type] = bonded_ia_params[bond_type].p.tab;
+  boost::get<Tabulated_bond_parameters>(bonded_ia_params_variant[bond_type])
+      .pot = new TabulatedPotential(*(bonded_ia_params[bond_type].p.tab.pot));
 
   mpi_bcast_ia_params(bond_type, -1);
 
   return ES_OK;
+}
+
+void tabulated_bonded_free_params(int bond_type) {
+  if (bond_type < 0)
+    return;
+
+  if (bonded_ia_params[bond_type].type == BONDED_IA_TABULATED_DISTANCE or
+      bonded_ia_params[bond_type].type == BONDED_IA_TABULATED_ANGLE or
+      bonded_ia_params[bond_type].type == BONDED_IA_TABULATED_DIHEDRAL) {
+    delete bonded_ia_params[bond_type].p.tab.pot;
+    bonded_ia_params[bond_type].p.tab.pot = nullptr;
+  }
+  if (auto *ia = boost::get<Tabulated_bond_parameters>(
+          &bonded_ia_params_variant[bond_type])) {
+    delete ia->pot;
+    ia->pot = nullptr;
+  }
 }

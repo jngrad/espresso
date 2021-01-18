@@ -22,6 +22,7 @@
 
 #include "TabulatedPotential.hpp"
 #include "bonded_interactions/bonded_interaction_data.hpp"
+#include "bonded_interactions/bonded_tab.hpp"
 #include "event.hpp"
 
 #include "serialization/IA_parameters.hpp"
@@ -53,9 +54,7 @@ void mpi_bcast_ia_params_slave(int i, int j) {
     // bonded interaction parameters
     if (this_node) {
       make_bond_type_exist(i); // realloc bonded_ia_params on slave nodes!
-      if (is_tabulated_bond(bonded_ia_params[i].type)) {
-        delete bonded_ia_params[i].p.tab.pot;
-      }
+      tabulated_bonded_free_params(i);
     }
     MPI_Bcast(&(bonded_ia_params[i]), sizeof(Bonded_ia_parameters), MPI_BYTE, 0,
               comm_cart);
@@ -66,6 +65,7 @@ void mpi_bcast_ia_params_slave(int i, int j) {
       }
       boost::mpi::broadcast(comm_cart, *bonded_ia_params[i].p.tab.pot, 0);
     }
+    boost::mpi::broadcast(comm_cart, bonded_ia_params_variant[i], 0);
   }
 
   on_short_range_ia_change();

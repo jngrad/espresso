@@ -25,10 +25,13 @@
 
 #include "TabulatedPotential.hpp"
 
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/variant.hpp>
 #include <boost/variant.hpp>
 
 #include <cassert>
 #include <cmath>
+#include <stdexcept>
 #include <vector>
 
 /** Type codes of bonded interactions. */
@@ -103,6 +106,17 @@ struct Fene_bond_parameters {
   double drmax2i;
 
   double cutoff() const { return r0 + drmax; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &k;
+    ar &drmax;
+    ar &r0;
+    ar &drmax2;
+    ar &drmax2i;
+  }
 };
 
 /** Parameters for OIF global forces
@@ -121,6 +135,16 @@ struct Oif_global_forces_bond_parameters {
   double kv;
 
   double cutoff() const { return -1.; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &A0_g;
+    ar &ka_g;
+    ar &V0;
+    ar &kv;
+  }
 };
 
 /** Parameters for OIF local forces
@@ -148,6 +172,21 @@ struct Oif_local_forces_bond_parameters {
   double kvisc;
 
   double cutoff() const { return -1.; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &r0;
+    ar &ks;
+    ar &kslin;
+    ar &phi0;
+    ar &kb;
+    ar &A01;
+    ar &A02;
+    ar &kal;
+    ar &kvisc;
+  }
 };
 
 /** Parameters for harmonic bond Potential */
@@ -160,6 +199,15 @@ struct Harmonic_bond_parameters {
   double r_cut;
 
   double cutoff() const { return r_cut; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &k;
+    ar &r;
+    ar &r_cut;
+  }
 };
 
 /** Parameters for Thermalized bond */
@@ -175,6 +223,21 @@ struct Thermalized_bond_parameters {
   double pref2_dist;
 
   double cutoff() const { return r_cut; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &temp_com;
+    ar &gamma_com;
+    ar &temp_distance;
+    ar &gamma_distance;
+    ar &r_cut;
+    ar &pref1_com;
+    ar &pref2_com;
+    ar &pref1_dist;
+    ar &pref2_dist;
+  }
 };
 
 /** Parameters for quartic bond Potential */
@@ -184,6 +247,16 @@ struct Quartic_bond_parameters {
   double r_cut;
 
   double cutoff() const { return r_cut; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &k0;
+    ar &k1;
+    ar &r;
+    ar &r_cut;
+  }
 };
 
 /** Parameters for %Coulomb bond Potential */
@@ -192,6 +265,13 @@ struct Bonded_coulomb_bond_parameters {
   double prefactor;
 
   double cutoff() const { return -1.; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &prefactor;
+  }
 };
 
 /** Parameters for %Coulomb bond short-range Potential */
@@ -200,6 +280,13 @@ struct Bonded_coulomb_sr_bond_parameters {
   double q1q2;
 
   double cutoff() const { return -1.; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &q1q2;
+  }
 };
 
 /** Parameters for three-body angular potential (harmonic). */
@@ -210,6 +297,14 @@ struct Angle_harmonic_bond_parameters {
   double phi0;
 
   double cutoff() const { return -1.; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &bend;
+    ar &phi0;
+  }
 };
 
 /** Parameters for three-body angular potential (cosine). */
@@ -224,6 +319,16 @@ struct Angle_cosine_bond_parameters {
   double sin_phi0;
 
   double cutoff() const { return -1.; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &bend;
+    ar &phi0;
+    ar &cos_phi0;
+    ar &sin_phi0;
+  }
 };
 
 /** Parameters for three-body angular potential (cossquare). */
@@ -236,6 +341,15 @@ struct Angle_cossquare_bond_parameters {
   double cos_phi0;
 
   double cutoff() const { return -1.; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &bend;
+    ar &phi0;
+    ar &cos_phi0;
+  }
 };
 
 /** Parameters for four-body angular potential (dihedral-angle potentials). */
@@ -245,6 +359,15 @@ struct Dihedral_bond_parameters {
   double phase;
 
   double cutoff() const { return -1.; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &mult;
+    ar &bend;
+    ar &phase;
+  }
 };
 
 /** Parameters for n-body tabulated potential (n=2,3,4). */
@@ -259,6 +382,14 @@ struct Tabulated_bond_parameters {
     default:
       return -1.;
     };
+  }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &type;
+    ar &pot;
   }
 };
 
@@ -276,6 +407,15 @@ struct Rigid_bond_parameters {
   double v_tol;
 
   double cutoff() const { return std::sqrt(d2); }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &d2;
+    ar &p_tol;
+    ar &v_tol;
+  }
 };
 
 enum class tElasticLaw { NeoHookean, Skalak };
@@ -304,6 +444,25 @@ struct IBM_Triel_Parameters {
   double k2;
 
   double cutoff() const { return maxDist; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &l0;
+    ar &lp0;
+    ar &sinPhi0;
+    ar &cosPhi0;
+    ar &area0;
+    ar &a1;
+    ar &a2;
+    ar &b1;
+    ar &b2;
+    ar &maxDist;
+    ar &elasticLaw;
+    ar &k1;
+    ar &k2;
+  }
 };
 
 /** Parameters for IBM volume conservation bond */
@@ -316,6 +475,15 @@ struct IBM_VolCons_Parameters {
   double kappaV;
 
   double cutoff() const { return -1.; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &softID;
+    ar &volRef;
+    ar &kappaV;
+  }
 };
 
 /** Parameters for IBM tribend */
@@ -327,10 +495,23 @@ struct IBM_Tribend_Parameters {
   double theta0;
 
   double cutoff() const { return -1.; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {
+    ar &kb;
+    ar &theta0;
+  }
 };
 
 struct VirtualBond_Parameters {
   double cutoff() const { return -1.; }
+
+private:
+  friend boost::serialization::access;
+  template <typename Archive>
+  void serialize(Archive &ar, long int /* version */) {}
 };
 
 /** Union in which to store the parameters of an individual bonded interaction
