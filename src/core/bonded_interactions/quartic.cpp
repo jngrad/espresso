@@ -43,6 +43,8 @@ int quartic_set_params(int bond_type, double k0, double k1, double r,
   bonded_ia_params[bond_type].type = BONDED_IA_QUARTIC;
   bonded_ia_params[bond_type].num = 1;
 
+  bonded_ia_params_variant[bond_type] = bonded_ia_params[bond_type].p.quartic;
+
   /* broadcast interaction parameters */
   mpi_bcast_ia_params(bond_type, -1);
 

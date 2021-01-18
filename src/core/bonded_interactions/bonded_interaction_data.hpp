@@ -25,6 +25,8 @@
 
 #include "TabulatedPotential.hpp"
 
+#include <boost/variant.hpp>
+
 #include <cassert>
 #include <cmath>
 #include <vector>
@@ -364,8 +366,28 @@ struct Bonded_ia_parameters {
   Bond_parameters p;
 };
 
+using Bonded_ia_parameters_variant = boost::variant<
+    Fene_bond_parameters, Oif_global_forces_bond_parameters,
+    Oif_local_forces_bond_parameters, Harmonic_bond_parameters,
+    Quartic_bond_parameters, Bonded_coulomb_bond_parameters,
+    Bonded_coulomb_sr_bond_parameters, Angle_harmonic_bond_parameters,
+    Angle_cosine_bond_parameters, Angle_cossquare_bond_parameters,
+    Dihedral_bond_parameters, Tabulated_bond_parameters,
+    Thermalized_bond_parameters, Rigid_bond_parameters, IBM_Triel_Parameters,
+    IBM_VolCons_Parameters, IBM_Tribend_Parameters, VirtualBond_Parameters>;
+
 /** Field containing the parameters of the bonded ia types */
 extern std::vector<Bonded_ia_parameters> bonded_ia_params;
+
+/** Field containing the parameters of the bonded ia types */
+extern std::vector<Bonded_ia_parameters_variant> bonded_ia_params_variant;
+
+template <typename BondType> BondType bonded_ia_params_variant_at(int i) {
+  if (i < 0 or i >= bonded_ia_params_variant.size()) {
+    throw std::out_of_range("Access out of bounds");
+  }
+  return boost::get<BondType>(bonded_ia_params_variant[i]);
+}
 
 /** Makes sure that \ref bonded_ia_params is large enough to cover the
  *  parameters for the bonded interaction type.

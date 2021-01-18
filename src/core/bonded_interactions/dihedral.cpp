@@ -41,6 +41,8 @@ int dihedral_set_params(int bond_type, int mult, double bend, double phase) {
   bonded_ia_params[bond_type].p.dihedral.bend = bend;
   bonded_ia_params[bond_type].p.dihedral.phase = phase;
 
+  bonded_ia_params_variant[bond_type] = bonded_ia_params[bond_type].p.dihedral;
+
   mpi_bcast_ia_params(bond_type, -1);
 
   return ES_OK;

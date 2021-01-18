@@ -27,6 +27,7 @@
 #include <stdexcept>
 
 std::vector<Bonded_ia_parameters> bonded_ia_params;
+std::vector<Bonded_ia_parameters_variant> bonded_ia_params_variant;
 
 auto cutoff(int type, Bond_parameters const &bp) {
   switch (type) {
@@ -107,6 +108,7 @@ void make_bond_type_exist(int type) {
   }
   /* else allocate new memory */
   bonded_ia_params.resize(ns);
+  bonded_ia_params_variant.resize(ns);
   /* set bond types not used as undefined */
   for (i = old_size; i < ns; i++)
     bonded_ia_params[i].type = BONDED_IA_NONE;

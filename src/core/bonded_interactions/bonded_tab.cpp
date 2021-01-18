@@ -80,6 +80,8 @@ int tabulated_bonded_set_params(int bond_type,
   tab_pot->force_tab = force;
   tab_pot->energy_tab = energy;
 
+  bonded_ia_params_variant[bond_type] = bonded_ia_params[bond_type].p.tab;
+
   mpi_bcast_ia_params(bond_type, -1);
 
   return ES_OK;
