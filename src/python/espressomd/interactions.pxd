@@ -484,6 +484,8 @@ cdef extern from "bonded_interactions/bonded_interaction_data.hpp":
 
     vector[Bonded_ia_parameters] bonded_ia_params
 
+    Fene_bond_parameters get_bond_fene_at "bonded_ia_params_variant_at<Fene_bond_parameters>"(int bond_id) except +
+
 cdef extern from "bonded_interactions/bonded_interaction_data.hpp" namespace "tElasticLaw":
     cdef tElasticLaw NeoHookean
     cdef tElasticLaw Skalak

@@ -1905,10 +1905,11 @@ class FeneBond(BondedInteraction):
         self._params = {"r_0": 0.}
 
     def _get_params_from_es_core(self):
-        return \
-            {"k": bonded_ia_params[self._bond_id].p.fene.k,
-             "d_r_max": bonded_ia_params[self._bond_id].p.fene.drmax,
-             "r_0": bonded_ia_params[self._bond_id].p.fene.r0}
+        cdef Fene_bond_parameters fene = get_bond_fene_at(self._bond_id)
+        assert fene.k == bonded_ia_params[self._bond_id].p.fene.k, "bond union and bond variant disagree"
+        assert fene.drmax == bonded_ia_params[self._bond_id].p.fene.drmax, "bond union and bond variant disagree"
+        assert fene.r0 == bonded_ia_params[self._bond_id].p.fene.r0, "bond union and bond variant disagree"
+        return {"k": fene.k, "d_r_max": fene.drmax, "r_0": fene.r0}
 
     def _set_params_in_es_core(self):
         fene_set_params(

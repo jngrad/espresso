@@ -100,7 +100,8 @@ inline bool bind_centers() {
 }
 
 inline int get_bond_num_partners(int bond_id) {
-  return boost::apply_visitor(BondLength(), bonded_ia_params_variant[bond_id]);
+  return boost::apply_visitor(BondNumPartners(),
+                              bonded_ia_params_variant[bond_id]);
 }
 
 bool validate_collision_parameters() {

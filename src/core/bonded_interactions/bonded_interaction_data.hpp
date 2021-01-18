@@ -550,13 +550,13 @@ private:
   void serialize(Archive &ar, long int /* version */) {}
 };
 
-class BondLength : public boost::static_visitor<int> {
+class BondNumPartners : public boost::static_visitor<int> {
 public:
   template <typename T> int operator()(T const &) const { return T::num; }
 };
 
 template <>
-inline int BondLength::operator()<Tabulated_bond_parameters>(
+inline int BondNumPartners::operator()<Tabulated_bond_parameters>(
     Tabulated_bond_parameters const &t) const {
   return t.num;
 }
