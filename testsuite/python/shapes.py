@@ -57,7 +57,7 @@ class ShapeTests(ut.TestCase):
         print("position=[1, 2, 4.5])[0], 4.5)")
         self.assertAlmostEqual(union.calc_distance(
             position=[1, 2, 4.5])[0], 4.5)
-        print(position=[1, 2, 5.0])[0], 5.0)"")
+        print("position=[1, 2, 5.0])[0], 5.0)")
         self.assertAlmostEqual(union.calc_distance(
             position=[1, 2, 5.0])[0], 5.0)
         print("position=[1, 2, 6.5])[0], 3.5)")

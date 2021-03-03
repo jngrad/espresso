@@ -166,6 +166,7 @@ void Histogram<T, Dims>::update(Span<const T> data, Span<const T> weights) {
     if (weights.size() != m_n_dims_data)
       throw std::invalid_argument("Wrong dimensions of given weights!");
     for (size_t ind = 0; ind < m_n_dims_data; ++ind) {
+      if (flat_index + ind >= m_hist.size() or ind > weights.size()) {
       printf("flat_index + ind = %zu + %zu ; m_hist(%zu) ; weights(%zu) ; m_n_dims_data=%zu ; m_n_bins=[", flat_index, ind, m_hist.size(), weights.size(), m_n_dims_data);
       for (size_t i = 0; i < Dims; ++i) {
         printf("%zu,", m_n_bins[i]);
@@ -175,6 +176,7 @@ void Histogram<T, Dims>::update(Span<const T> data, Span<const T> weights) {
         printf("%zu,", index[i]);
       }
       printf("] ; m_tot_count(%zu)\n", m_tot_count.size());
+      }
       m_hist[flat_index + ind] += weights[ind];
       m_tot_count[flat_index + ind] += 1;
     }
