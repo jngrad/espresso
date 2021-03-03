@@ -333,6 +333,7 @@ target_compile_options(
             -Wno-unused-variable
             -Wno-unused-parameter
             -Wno-missing-braces
+            -D_GLIBCXX_ASSERTIONS
             $<$<CXX_COMPILER_ID:GNU>:-Wno-clobbered>
             $<$<CXX_COMPILER_ID:Intel>:-wd592>)
 
