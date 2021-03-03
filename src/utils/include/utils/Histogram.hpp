@@ -175,6 +175,10 @@ void Histogram<T, Dims>::update(Span<const T> data, Span<const T> weights) {
       for (size_t i = 0; i < Dims; ++i) {
         printf("%zu,", index[i]);
       }
+      printf("] ; m_bin_sizes=[");
+      for (size_t i = 0; i < Dims; ++i) {
+        printf("%f,", m_bin_sizes[i]);
+      }
       printf("] ; m_tot_count(%zu)\n", m_tot_count.size());
       }
       m_hist[flat_index + ind] += weights[ind];
