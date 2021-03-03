@@ -245,6 +245,10 @@ if [ "${run_checks}" = true ]; then
         make -j${build_procs} check_unit_tests ${make_params} || exit 1
     fi
 
+    echo "sleep 1 min"
+    sleep 60
+    echo "sleep 10 s"
+    sleep 10
     # integration tests
     if [ "${make_check_python}" = true ]; then
         if [ -z "${run_tests}" ]; then

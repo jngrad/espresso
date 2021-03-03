@@ -137,6 +137,7 @@ class CylindricalLBObservableCommon:
         return histogram
 
     def LB_fluxdensity_profile_test(self):
+        print("LB_fluxdensity_profile_test")
         self.set_fluid_velocity()
         self.set_particles()
         # Set up the Observable.
@@ -147,9 +148,12 @@ class CylindricalLBObservableCommon:
             local_params['axis'] = [0.0, 1.0, 0.0]
         else:
             local_params['axis'] = [0.0, 0.0, 1.0]
+        print("p = espressomd.observables.CylindricalLBFluxDensityProfileAtParticlePositions(")
         p = espressomd.observables.CylindricalLBFluxDensityProfileAtParticlePositions(
             **local_params)
+        print("core_hist = p.calculate()")
         core_hist = p.calculate()
+        print("core_hist_v_r = core_hist[:, :, :, 0]")
         core_hist_v_r = core_hist[:, :, :, 0]
         core_hist_v_phi = core_hist[:, :, :, 1]
         core_hist_v_z = core_hist[:, :, :, 2]
@@ -167,6 +171,7 @@ class CylindricalLBObservableCommon:
         self.assertEqual(np.prod(p.shape()), len(np_hist.flatten()) * 3)
 
     def LB_velocity_profile_at_particle_positions_test(self):
+        print("LB_velocity_profile_at_particle_positions_test")
         self.set_fluid_velocity()
         self.set_particles()
         # Set up the Observable.
@@ -177,9 +182,12 @@ class CylindricalLBObservableCommon:
             local_params['axis'] = [0.0, 1.0, 0.0]
         else:
             local_params['axis'] = [0.0, 0.0, 1.0]
+        print("p = espressomd.observables.CylindricalLBVelocityProfileAtParticlePositions(")
         p = espressomd.observables.CylindricalLBVelocityProfileAtParticlePositions(
             **local_params)
+        print("core_hist = p.calculate()")
         core_hist = p.calculate()
+        print("core_hist_v_r = core_hist[:, :, :, 0]")
         core_hist_v_r = core_hist[:, :, :, 0]
         core_hist_v_phi = core_hist[:, :, :, 1]
         core_hist_v_z = core_hist[:, :, :, 2]
@@ -209,18 +217,22 @@ class CylindricalLBObservableCommon:
         self.LB_velocity_profile_at_particle_positions_test()
 
     def test_x_axis(self):
+        print("test_x_axis")
         self.params['axis'] = 'x'
         self.perform_tests()
 
     def test_y_axis(self):
+        print("test_y_axis")
         self.params['axis'] = 'y'
         self.perform_tests()
 
     def test_z_axis(self):
+        print("test_z_axis")
         self.params['axis'] = 'z'
         self.perform_tests()
 
     def test_cylindrical_lb_profile_interface(self):
+        print("test_cylindrical_lb_profile_interface")
         # test setters and getters
         params = self.params.copy()
         params['n_r_bins'] = 4
@@ -235,6 +247,7 @@ class CylindricalLBObservableCommon:
         self.assertEqual(observable.n_r_bins, params['n_r_bins'])
         self.assertEqual(observable.n_phi_bins, params['n_phi_bins'])
         self.assertEqual(observable.n_z_bins, params['n_z_bins'])
+        print("obs_data = observable.calculate()")
         obs_data = observable.calculate()
         np.testing.assert_array_equal(obs_data.shape, [4, 6, 8, 3])
         observable.n_r_bins = 1
@@ -243,6 +256,7 @@ class CylindricalLBObservableCommon:
         self.assertEqual(observable.n_r_bins, 1)
         self.assertEqual(observable.n_phi_bins, 2)
         self.assertEqual(observable.n_z_bins, 3)
+        print("obs_data = observable.calculate()")
         obs_data = observable.calculate()
         np.testing.assert_array_equal(obs_data.shape, [1, 2, 3, 3])
         # check edges lower corner
