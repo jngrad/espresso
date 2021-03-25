@@ -266,18 +266,10 @@ struct ParticlePosition {
   };
 #endif
 
-#ifdef BOND_CONSTRAINT
-  /** particle position at the previous time step (RATTLE algorithm) */
-  Utils::Vector3d p_last_timestep = {0., 0., 0.};
-#endif
-
   template <class Archive> void serialize(Archive &ar, long int /* version */) {
     ar &p;
 #ifdef ROTATION
     ar &quat;
-#endif
-#ifdef BOND_CONSTRAINT
-    ar &p_last_timestep;
 #endif
   }
 };
@@ -357,11 +349,18 @@ struct ParticleLocal {
   Utils::Vector3d p_old = {0, 0, 0};
   /** index of the simulation box image where the particle really sits. */
   Utils::Vector3i i = {0, 0, 0};
+#ifdef BOND_CONSTRAINT
+  /** particle position at the previous time step (RATTLE algorithm) */
+  Utils::Vector3d p_last_timestep = {0., 0., 0.};
+#endif
 
   template <class Archive> void serialize(Archive &ar, long int /* version */) {
     ar &ghost;
     ar &p_old;
     ar &i;
+#ifdef BOND_CONSTRAINT
+    ar &p_last_timestep;
+#endif
   }
 };
 

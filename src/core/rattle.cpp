@@ -34,7 +34,7 @@
 
 void save_old_pos(const ParticleRange &particles,
                   const ParticleRange &ghost_particles) {
-  auto save_pos = [](Particle &p) { p.r.p_last_timestep = p.r.p; };
+  auto save_pos = [](Particle &p) { p.l.p_last_timestep = p.r.p; };
 
   boost::for_each(particles, save_pos);
   boost::for_each(ghost_particles, save_pos);
@@ -104,7 +104,7 @@ static bool add_pos_corr_vec(RigidBond const &ia_params, Particle &p1,
 
   if (std::abs(1.0 - r_ij2 / ia_params.d2) > ia_params.p_tol) {
     auto const r_ij_t =
-        get_mi_vector(p1.r.p_last_timestep, p2.r.p_last_timestep, box_geo);
+        get_mi_vector(p1.l.p_last_timestep, p2.l.p_last_timestep, box_geo);
     auto const r_ij_dot = r_ij_t * r_ij;
     auto const G =
         0.50 * (ia_params.d2 - r_ij2) / r_ij_dot / (p1.p.mass + p2.p.mass);
