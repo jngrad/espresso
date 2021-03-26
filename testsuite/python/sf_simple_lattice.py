@@ -58,6 +58,10 @@ class sfTest(ut.TestCase):
         self.assertTrue([np.any(np.isclose(element, self.sf_data, rtol=1e-02))
                          for element in self.diags])
 
+    def test_exceptions(self):
+        with self.assertRaisesRegex(ValueError, 'order has to be a strictly positive number'):
+            self.s.analysis.structure_factor(sf_types=[0], sf_order=0)
+
 
 if __name__ == "__main__":
     ut.main()
