@@ -20,7 +20,7 @@
 import unittest as ut
 import espressomd
 import numpy as np
-from itertools import product
+import itertools
 
 
 class sfTest(ut.TestCase):
@@ -31,24 +31,21 @@ class sfTest(ut.TestCase):
     s = espressomd.System(box_l=[box_l, box_l, box_l])
 
     def make_lattice(self):
-        xen, yen, zen = [
-            x for x in range(0, self.box_l, 1)], [
-            x for x in range(0, self.box_l, 2)], [
-            x for x in range(0, self.box_l, 4)]
-        for i, j, k in product(xen, yen, zen):
+        xen = range(0, self.box_l, 1)
+        yen = range(0, self.box_l, 2)
+        zen = range(0, self.box_l, 4)
+        for i, j, k in itertools.product(xen, yen, zen):
             self.s.part.add(type=self.part_ty, pos=(i, j, k))
 
     def peaks(self):
         a, b, c = [0, 2 * np.pi], [0, np.pi], [0, np.pi / 2]
-        self.diags = [np.sqrt(a**2 + b**2 + c**2)
-                      for (a, b, c) in product(a, b, c)]
+        self.diags = [np.linalg.norm(v) for v in itertools.product(a, b, c)]
         self.diags.remove(0)
 
     def scatter_lattice(self):
         sf_observable_x, sf_observable_y = self.s.analysis.structure_factor(
             sf_types=[self.part_ty], sf_order=self.sf_order)
-        self.sf_data = [(x, y)
-                        for (x, y) in zip(sf_observable_x, sf_observable_y)]
+        self.sf_data = list(zip(sf_observable_x, sf_observable_y))
         self.sf_data.sort(key=lambda tup: tup[1])
 
     def test(self):
