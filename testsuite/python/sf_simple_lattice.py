@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2017-2019 The ESPResSo project
+# Copyright (C) 2017-2021 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -23,41 +23,76 @@ import numpy as np
 import itertools
 
 
-class sfTest(ut.TestCase):
+class StructureFactorTest(ut.TestCase):
 
-    box_l = 20
+    box_l = 16
     part_ty = 0
-    sf_order = 20
-    s = espressomd.System(box_l=[box_l, box_l, box_l])
+    sf_order = 16
+    system = espressomd.System(box_l=[box_l, box_l, box_l])
 
-    def make_lattice(self):
-        xen = range(0, self.box_l, 1)
-        yen = range(0, self.box_l, 2)
-        zen = range(0, self.box_l, 4)
-        for i, j, k in itertools.product(xen, yen, zen):
-            self.s.part.add(type=self.part_ty, pos=(i, j, k))
+    def tearDown(self):
+        self.system.part.clear()
 
-    def peaks(self):
-        a, b, c = [0, 2 * np.pi], [0, np.pi], [0, np.pi / 2]
-        self.diags = [np.linalg.norm(v) for v in itertools.product(a, b, c)]
-        self.diags.remove(0)
-
-    def scatter_lattice(self):
-        sf_observable_x, sf_observable_y = self.s.analysis.structure_factor(
+    def test_sc(self):
+        """Check simple cubic lattice"""
+        xen = range(0, self.box_l, 4)
+        for i, j, k in itertools.product(xen, repeat=3):
+            self.system.part.add(type=self.part_ty, pos=(i, j, k))
+        wavevectors, intensities = self.system.analysis.structure_factor(
             sf_types=[self.part_ty], sf_order=self.sf_order)
-        self.sf_data = list(zip(sf_observable_x, sf_observable_y))
-        self.sf_data.sort(key=lambda tup: tup[1])
+        intensities_int = np.around(intensities).astype(int)
+        np.testing.assert_array_almost_equal(intensities, intensities_int)
+        intensities_ref = np.zeros(intensities.shape)
+        intensities_ref[np.nonzero(intensities_int)] = len(self.system.part)
+        np.testing.assert_array_equal(intensities_int, intensities_ref)
+        # F = f for all planes
+        peaks_ref = list(range(1, self.box_l + 1))
+        peaks_ref.remove(7)
+        peaks_ref.remove(15)
+        peaks = (wavevectors[np.nonzero(intensities_int)] * 2 / np.pi)**2
+        np.testing.assert_array_almost_equal(peaks, peaks_ref)
 
-    def test(self):
-        self.make_lattice()
-        self.peaks()
-        self.scatter_lattice()
-        self.assertTrue([np.any(np.isclose(element, self.sf_data, rtol=1e-02))
-                         for element in self.diags])
+    def test_bcc(self):
+        """Check body-centered cubic lattice"""
+        xen = range(0, self.box_l, 4)
+        for i, j, k in itertools.product(xen, repeat=3):
+            self.system.part.add(type=self.part_ty, pos=(i, j, k))
+            self.system.part.add(type=self.part_ty, pos=(i + 2, j + 2, k + 2))
+        wavevectors, intensities = self.system.analysis.structure_factor(
+            sf_types=[self.part_ty], sf_order=self.sf_order)
+        intensities_int = np.around(intensities).astype(int)
+        np.testing.assert_array_almost_equal(intensities, intensities_int)
+        intensities_ref = np.zeros(intensities.shape)
+        intensities_ref[np.nonzero(intensities_int)] = len(self.system.part)
+        np.testing.assert_array_equal(intensities_int, intensities_ref)
+        # (h+k+l) even => F = 2f, otherwise F = 0
+        peaks_ref = np.arange(2, self.box_l + 1, 2)
+        peaks = (wavevectors[np.nonzero(intensities_int)] * 2 / np.pi)**2
+        np.testing.assert_array_almost_equal(peaks, peaks_ref)
+
+    def test_fcc(self):
+        """Check face-centered cubic lattice"""
+        xen = range(0, self.box_l, 4)
+        for i, j, k in itertools.product(xen, repeat=3):
+            self.system.part.add(type=self.part_ty, pos=(i, j, k))
+            self.system.part.add(type=self.part_ty, pos=(i + 2, j + 2, k))
+            self.system.part.add(type=self.part_ty, pos=(i + 2, j, k + 2))
+            self.system.part.add(type=self.part_ty, pos=(i, j + 2, k + 2))
+        wavevectors, intensities = self.system.analysis.structure_factor(
+            sf_types=[self.part_ty], sf_order=self.sf_order)
+        intensities_int = np.around(intensities).astype(int)
+        np.testing.assert_array_almost_equal(intensities, intensities_int)
+        intensities_ref = np.zeros(intensities.shape)
+        intensities_ref[np.nonzero(intensities_int)] = len(self.system.part)
+        np.testing.assert_array_equal(intensities_int, intensities_ref)
+        # (h,k,l) all even or odd => F = 4f, otherwise F = 0
+        peaks_ref = [3, 4, 8, 11, 12, 16]
+        peaks = (wavevectors[np.nonzero(intensities_int)] * 2 / np.pi)**2
+        np.testing.assert_array_almost_equal(peaks, peaks_ref)
 
     def test_exceptions(self):
         with self.assertRaisesRegex(ValueError, 'order has to be a strictly positive number'):
-            self.s.analysis.structure_factor(sf_types=[0], sf_order=0)
+            self.system.analysis.structure_factor(sf_types=[0], sf_order=0)
 
 
 if __name__ == "__main__":
