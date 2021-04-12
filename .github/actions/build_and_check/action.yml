@@ -17,6 +17,7 @@ runs:
   using: "composite"
   steps:
     - run: |
+       brew update
        brew install boost boost-mpi fftw
        brew install hdf5-mpi
        pip3 install numpy cython h5py scipy
