@@ -6,8 +6,8 @@ runs:
     - run: |
         # checkout github pages
         cd "${HOME}"
-        git clone --quiet git@github.com:espressomd/espressomd.github.io.git
-        cd espressomd.github.io
+        git clone --quiet git@github.com:jngrad/jngrad.github.io.git
+        cd jngrad.github.io
         LAST_COMMIT=$(git log -1 --pretty=format:"%s" remotes/origin/main -- doc dox tutorials)
         NEXT_COMMIT="Documentation for ${GITHUB_SHA}"
         if [ "${NEXT_COMMIT}" = "${LAST_COMMIT}" ]; then
@@ -15,14 +15,15 @@ runs:
           exit 0;
         fi
         # download artifacts
-        curl https://gitlab.icp.uni-stuttgart.de/espressomd/espresso/-/jobs/artifacts/python/download?job=run_tutorials -L -o tutorials.zip
-        curl https://gitlab.icp.uni-stuttgart.de/espressomd/espresso/-/jobs/artifacts/python/download?job=run_doxygen   -L -o doxygen.zip
-        curl https://gitlab.icp.uni-stuttgart.de/espressomd/espresso/-/jobs/artifacts/python/download?job=check_sphinx  -L -o sphinx.zip
+        curl https://gitlab.icp.uni-stuttgart.de/espressomd/espresso/-/jobs/282059/artifacts/download -L -o tutorials.zip
+        curl https://gitlab.icp.uni-stuttgart.de/espressomd/espresso/-/jobs/282060/artifacts/download -L -o doxygen.zip
+        curl https://gitlab.icp.uni-stuttgart.de/espressomd/espresso/-/jobs/282058/artifacts/download -L -o sphinx.zip
         if grep -F '<!DOCTYPE html>' *.zip; then
           echo "The artifacts could not be downloaded.";
           exit 1;
         fi
         unzip -q '*.zip'
+        curl https://raw.githubusercontent.com/jngrad/espresso/deploy_documentation_local/doc/tutorials/Readme.md -L -o build/doc/tutorials/Readme.md
         # create a fresh main branch
         git config --global user.email "noreply@icp.uni-stuttgart.de"
         git config --global user.name "espresso-ci"
