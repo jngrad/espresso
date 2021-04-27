@@ -4,7 +4,7 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: '0 3 * * *'
+    - cron: '0 7 * * *'
 
 jobs:
   regular_check:
@@ -50,3 +50,18 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: Scheduled CI job has failed
           body: ${{ env.job_link }}
+
+  deploy_docs:
+    runs-on: ubuntu-20.04
+    if: github.event_name == 'schedule_deploy'
+    steps:
+      - name: Install pandoc
+        uses: r-lib/actions/setup-pandoc@v1
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.5.2
+        with:
+          ssh-private-key: ${{ secrets.GH_PAGES_SSH_PRIVATE_KEY }}
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Deploy documentation
+        uses: ./.github/actions/deploy_docs
