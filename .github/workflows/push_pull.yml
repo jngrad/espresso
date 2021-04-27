@@ -54,6 +54,7 @@ jobs:
   deploy_docs:
     runs-on: ubuntu-20.04
     if: github.event_name != 'schedule'
+    environment: deploy
     steps:
       - name: Install pandoc
         uses: r-lib/actions/setup-pandoc@v1
