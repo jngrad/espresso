@@ -63,11 +63,9 @@ class Tutorial(ut.TestCase):
         # (accessed June 2021)
         SIGMA_1 = np.sqrt(tutorial.EPS_1 ** 2 / (1 - tutorial.PHI_1 ** 2))
         TAU_EXP_1 = -1 / np.log(tutorial.PHI_1)
-
-        np.testing.assert_allclose(tutorial.an_acf_1,
-                                   SIGMA_1**2 * np.exp(-np.linspace(0,
-                                                                    tutorial.N_MAX - 1,
-                                                                    tutorial.N_MAX) / TAU_EXP_1))
+        ref_acf_1 = SIGMA_1**2 * \
+            np.exp(-np.arange(1, tutorial.N_MAX, dtype=float) / TAU_EXP_1)
+        np.testing.assert_allclose(tutorial.an_acf_1, ref_acf_1)
         # The autocorrelation is exponential, thus tau_exp = tau_int, and
         # therefore
         N_EFF_1 = tutorial.N_SAMPLES / (2 * TAU_EXP_1)

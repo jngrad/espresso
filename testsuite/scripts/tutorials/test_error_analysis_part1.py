@@ -72,11 +72,7 @@ class Tutorial(ut.TestCase):
             delta=1e-10)
         self.assertAlmostEqual(
             tutorial.sem,
-            np.std(
-                ref_bin_avgs,
-                ddof=1.5) /
-            np.sqrt(
-                tutorial.N_BINS),
+            np.std(ref_bin_avgs, ddof=1.5) / np.sqrt(tutorial.N_BINS),
             delta=1e-10)
 
         # Test binning analysis function
