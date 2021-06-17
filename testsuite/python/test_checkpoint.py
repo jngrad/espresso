@@ -332,6 +332,7 @@ class CheckpointTest(ut.TestCase):
         self.assertEqual(params1, reference1)
         self.assertEqual(params2, reference2)
 
+    @ut.skipIf(n_nodes > 1, "only runs for 1 MPI rank")
     def test_bonded_inter(self):
         state = system.part[1].bonds[0][0].params
         reference = {'r_0': 0.0, 'k': 1.0, 'r_cut': 0.0}
@@ -473,6 +474,7 @@ class CheckpointTest(ut.TestCase):
             self.assertEqual(state[key], reference[key], msg=f'for {key}')
 
     @utx.skipIfMissingFeatures('COLLISION_DETECTION')
+    @ut.skipIf(n_nodes > 1, "only runs for 1 MPI rank")
     def test_collision_detection(self):
         coldet = system.collision_detection
         self.assertEqual(coldet.mode, "bind_centers")

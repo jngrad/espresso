@@ -33,7 +33,7 @@
  *  if the type matches.
  */
 template <typename BondType> BondType bonded_ia_params_at(int bond_id) {
-  if (bond_id < 0 or bond_id >= bonded_ia_params.size()) {
+  if (!bonded_ia_params.contains(bond_id)) {
     throw std::out_of_range("Access out of bounds");
   }
   return boost::get<BondType>(bonded_ia_params[bond_id]);
@@ -41,7 +41,7 @@ template <typename BondType> BondType bonded_ia_params_at(int bond_id) {
 
 /** Check if the specified bond is of a specific type. */
 template <typename BondType> bool bonded_ia_params_is_type(int bond_id) {
-  if (bond_id < 0 or bond_id >= bonded_ia_params.size()) {
+  if (!bonded_ia_params.contains(bond_id)) {
     throw std::out_of_range("Access out of bounds");
   }
   return boost::get<BondType>(&bonded_ia_params[bond_id]) != nullptr;
@@ -49,7 +49,7 @@ template <typename BondType> bool bonded_ia_params_is_type(int bond_id) {
 
 /** Return the number of bonded partners for the specified bond. */
 inline int bonded_ia_params_num_partners(int bond_id) {
-  if (bond_id < 0 or bond_id >= bonded_ia_params.size()) {
+  if (!bonded_ia_params.contains(bond_id)) {
     throw std::out_of_range("Access out of bounds");
   }
   return number_of_partners(bonded_ia_params[bond_id]);

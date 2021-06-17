@@ -73,10 +73,9 @@ inline bool pair_bond_enum_exists_between(Particle const &p1,
  */
 template <typename BondType>
 void set_bonded_ia_params(int bond_id, BondType const &iaparams) {
-  make_bond_type_exist(bond_id);
-  bonded_ia_params[bond_id] = iaparams;
+  bonded_ia_params[bond_id] = Bonded_IA_Parameters(iaparams);
 
-  /* broadcast interaction parameters */
+  /* trigger event to invalidate forces */
   mpi_bcast_ia_params(bond_id, -1);
 }
 

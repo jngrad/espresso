@@ -394,14 +394,6 @@ cdef extern from "bonded_interactions/bonded_interaction_data.hpp":
         double kal
         double kvisc
 
-    # Parameters for harmonic bond Potential
-    cdef cppclass CoreHarmonicBond "HarmonicBond":
-        CoreHarmonicBond()
-        CoreHarmonicBond(double k, double r, double r_cut)
-        double k
-        double r
-        double r_cut
-
     # Parameters for thermalized  bond
     cdef cppclass CoreThermalizedBond "ThermalizedBond":
         CoreThermalizedBond()

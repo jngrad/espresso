@@ -22,6 +22,7 @@ import numpy as np
 
 import espressomd
 import espressomd.electrostatics
+import espressomd.interactions
 import tests_common
 
 
@@ -62,35 +63,6 @@ class InteractionsBondedTest(ut.TestCase):
                           scalar_r=r, k=hb_k, r_0=hb_r_0),
                       0.01, hb_r_cut, True)
 
-    # Test Fene Bond
-    def test_fene(self):
-        fene_k = 23.15
-        fene_d_r_max = 3.355
-        fene_r_0 = 1.1
-
-        fene = espressomd.interactions.FeneBond(
-            k=fene_k, d_r_max=fene_d_r_max, r_0=fene_r_0)
-        self.run_test(fene,
-                      lambda r: tests_common.fene_force(
-                          scalar_r=r, k=fene_k, d_r_max=fene_d_r_max, r_0=fene_r_0),
-                      lambda r: tests_common.fene_potential(
-                          scalar_r=r, k=fene_k, d_r_max=fene_d_r_max, r_0=fene_r_0),
-                      0.01, fene_r_0 + fene_d_r_max, True)
-
-    @utx.skipIfMissingFeatures(["ELECTROSTATICS"])
-    def test_coulomb(self):
-        coulomb_k = 1
-        q1 = 1
-        q2 = -1
-        p1, p2 = self.system.part[:]
-        p1.q = q1
-        p2.q = q2
-        self.run_test(
-            espressomd.interactions.BondedCoulomb(prefactor=coulomb_k),
-            lambda r: tests_common.coulomb_force(r, coulomb_k, q1, q2),
-            lambda r: tests_common.coulomb_potential(r, coulomb_k, q1, q2),
-            0.01, self.system.box_l[0] / 3)
-
     @utx.skipIfMissingFeatures(["ELECTROSTATICS"])
     def test_coulomb_sr(self):
         # with negated actual charges and only short range int: cancels out all
@@ -117,27 +89,6 @@ class InteractionsBondedTest(ut.TestCase):
             0.01,
             r_cut,
             test_breakage=False)
-
-    def test_quartic(self):
-        """Tests the Quartic bonded interaction by comparing the potential and
-           force against the analytic values"""
-
-        quartic_k0 = 2.
-        quartic_k1 = 5.
-        quartic_r = 0.5
-        quartic_r_cut = self.system.box_l[0] / 3.
-
-        quartic = espressomd.interactions.QuarticBond(k0=quartic_k0,
-                                                      k1=quartic_k1,
-                                                      r=quartic_r,
-                                                      r_cut=quartic_r_cut)
-
-        self.run_test(quartic,
-                      lambda r: tests_common.quartic_force(
-                          k0=quartic_k0, k1=quartic_k1, r=quartic_r, r_cut=quartic_r_cut, scalar_r=r),
-                      lambda r: tests_common.quartic_potential(
-                          k0=quartic_k0, k1=quartic_k1, r=quartic_r, r_cut=quartic_r_cut, scalar_r=r),
-                      0.01, quartic_r_cut, True)
 
     def run_test(self, bond_instance, force_func, energy_func, min_dist,
                  cutoff, test_breakage=False):

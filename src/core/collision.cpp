@@ -145,14 +145,14 @@ bool validate_collision_parameters() {
 
   // Check if bonded ia exist
   if ((collision_params.mode & COLLISION_MODE_BOND) &&
-      (collision_params.bond_centers >= bonded_ia_params.size())) {
+      !bonded_ia_params.contains(collision_params.bond_centers)) {
     runtimeErrorMsg() << "The bond type to be used for binding particle "
                          "centers does not exist";
     return false;
   }
 
   if ((collision_params.mode & COLLISION_MODE_VS) &&
-      (collision_params.bond_vs >= bonded_ia_params.size())) {
+      !bonded_ia_params.contains(collision_params.bond_vs)) {
     runtimeErrorMsg()
         << "The bond type to be used for binding virtual sites does not exist";
     return false;
