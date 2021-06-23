@@ -34,6 +34,10 @@ using namespace ScriptInterface;
 
 struct ObjectListImpl : ObjectList<ObjectHandle> {
   std::vector<ObjectRef> mock_core;
+  void add(ObjectRef const &e) { do_call_method("add", {{"object", e}}); }
+  void remove(ObjectRef const &e) { do_call_method("remove", {{"object", e}}); }
+  int size() { return get_value<int>(do_call_method("size", {})); }
+  bool empty() { return get_value<bool>(do_call_method("empty", {})); }
 
 private:
   void add_in_core(const ObjectRef &obj_ptr) override {
@@ -47,27 +51,29 @@ private:
 
 BOOST_AUTO_TEST_CASE(default_construction) {
   // A defaulted ObjectList has no elements.
-  BOOST_CHECK(ObjectListImpl{}.elements().empty());
+  BOOST_CHECK(ObjectListImpl{}.empty());
 }
 
 BOOST_AUTO_TEST_CASE(adding_elements) {
   // Added elements are on the back of the list of elements.
-  auto e = ObjectRef{};
+  ObjectRef e = std::make_shared<ObjectHandle>();
   ObjectListImpl list;
   list.add(e);
-  BOOST_CHECK(list.elements().back() == e);
   // And is added to the core
-  BOOST_CHECK(boost::find(list.mock_core, e) != list.mock_core.end());
+  BOOST_CHECK(list.mock_core.back() == e);
+  BOOST_CHECK(e.use_count() == 3);
 }
 
 BOOST_AUTO_TEST_CASE(removing_elements) {
   // An element that is removed from the list is
   // no longer an element of the list.
-  auto e = ObjectRef{};
+  ObjectRef e = std::make_shared<ObjectHandle>();
   ObjectListImpl list;
   list.add(e);
+  BOOST_CHECK(list.size() == 1);
   list.remove(e);
-  BOOST_CHECK(boost::find(list.elements(), e) == list.elements().end());
+  BOOST_CHECK(list.size() == 0);
+  BOOST_CHECK(e.use_count() == 1);
   // And is removed from the core
   BOOST_CHECK(boost::find(list.mock_core, e) == list.mock_core.end());
 }
@@ -75,10 +81,10 @@ BOOST_AUTO_TEST_CASE(removing_elements) {
 BOOST_AUTO_TEST_CASE(clearing_elements) {
   // A cleared list is empty.
   ObjectListImpl list;
-  list.add(ObjectRef{});
-  list.add(ObjectRef{});
-  list.clear();
-  BOOST_CHECK(list.elements().empty());
+  list.add(std::make_shared<ObjectHandle>());
+  list.add(std::make_shared<ObjectHandle>());
+  list.do_call_method("clear", {});
+  BOOST_CHECK(list.empty());
   BOOST_CHECK(list.mock_core.empty());
 }
 
@@ -92,19 +98,14 @@ BOOST_AUTO_TEST_CASE(serialization) {
   auto list = std::dynamic_pointer_cast<ObjectListImpl>(
       ctx->make_shared("ObjectList", {}));
   // with a bunch of elements
-
-  list->add(ctx->make_shared("ObjectHandle", {}));
-  list->add(ctx->make_shared("ObjectHandle", {}));
-  // can be serialized to a string
+  list->add(std::make_shared<ObjectHandle>());
+  list->add(std::make_shared<ObjectHandle>());
+  // can be partially serialized to a string
   auto const s = list->serialize();
-  // and can be restored to a list with the same elements
+  // and is restored to an empty list
   auto const list2 = std::dynamic_pointer_cast<ObjectListImpl>(
       ObjectHandle::deserialize(s, *ctx));
-  BOOST_CHECK(list2->elements().size() == list->elements().size());
-  BOOST_CHECK(list2->elements().front()->name() == "ObjectHandle");
-  BOOST_CHECK(list2->elements().back()->name() == "ObjectHandle");
-  // and the elements are restored to the core
-  BOOST_CHECK(list2->mock_core.size() == 2);
-  BOOST_CHECK(list2->mock_core.front()->name() == "ObjectHandle");
-  BOOST_CHECK(list2->mock_core.back()->name() == "ObjectHandle");
+  BOOST_CHECK_EQUAL(list2->size(), 0);
+  // and the elements are not restored to the core
+  BOOST_CHECK_EQUAL(list2->mock_core.size(), 0);
 }
