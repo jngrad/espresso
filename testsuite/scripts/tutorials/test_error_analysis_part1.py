@@ -21,9 +21,7 @@ import numpy as np
 import scipy.signal
 
 tutorial, skipIfMissingFeatures = importlib_wrapper.configure_and_import(
-    filepath="@TUTORIALS_DIR@/error_analysis/error_analysis_part1.py",
-    gpu=False,
-    random_seeds=True)
+    filepath="@TUTORIALS_DIR@/error_analysis/error_analysis_part1.py")
 
 
 @skipIfMissingFeatures
