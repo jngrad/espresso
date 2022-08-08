@@ -21,22 +21,16 @@
 
 #include "grid_based_algorithms/lb_constants.hpp"
 
-#include <boost/optional.hpp>
 #include <utils/Vector.hpp>
 
 /* collective getter functions */
-boost::optional<Utils::Vector3d>
-mpi_lb_get_interpolated_velocity(Utils::Vector3d const &pos);
-boost::optional<double>
-mpi_lb_get_interpolated_density(Utils::Vector3d const &pos);
-boost::optional<double> mpi_lb_get_density(Utils::Vector3i const &index);
-boost::optional<Utils::Vector19d>
-mpi_lb_get_populations(Utils::Vector3i const &index);
-boost::optional<int> mpi_lb_get_boundary_flag(Utils::Vector3i const &index);
-boost::optional<Utils::Vector3d>
-mpi_lb_get_momentum_density(Utils::Vector3i const &index);
-boost::optional<Utils::Vector6d>
-mpi_lb_get_pressure_tensor(Utils::Vector3i const &index);
+Utils::Vector3d mpi_lb_get_interpolated_velocity(Utils::Vector3d const &pos);
+double mpi_lb_get_interpolated_density(Utils::Vector3d const &pos);
+double mpi_lb_get_density(Utils::Vector3i const &index);
+Utils::Vector19d mpi_lb_get_populations(Utils::Vector3i const &index);
+int mpi_lb_get_boundary_flag(Utils::Vector3i const &index);
+Utils::Vector3d mpi_lb_get_momentum_density(Utils::Vector3i const &index);
+Utils::Vector6d mpi_lb_get_pressure_tensor(Utils::Vector3i const &index);
 
 /* collective setter functions */
 void mpi_lb_set_population(Utils::Vector3i const &index,

@@ -29,6 +29,8 @@
 #include "MpiCallbacks.hpp"
 
 #include <boost/mpi.hpp>
+#include <boost/mpi/packed_iarchive.hpp>
+#include <boost/mpi/packed_oarchive.hpp>
 #include <boost/optional.hpp>
 
 #include <algorithm>
@@ -171,31 +173,6 @@ BOOST_AUTO_TEST_CASE(CallbackHandle) {
   } else {
     cbs.loop();
     BOOST_CHECK(called);
-  }
-}
-
-BOOST_AUTO_TEST_CASE(one_rank_callback) {
-  auto cb = []() -> boost::optional<int> {
-    boost::mpi::communicator world;
-    if (world.rank() == (world.size() - 1)) {
-      return world.rank();
-    }
-
-    return {};
-  };
-
-  auto const fp = static_cast<boost::optional<int> (*)()>(cb);
-
-  Communication::MpiCallbacks::add_static(Communication::Result::one_rank, fp);
-
-  boost::mpi::communicator world;
-  Communication::MpiCallbacks cbs(world);
-
-  if (0 == world.rank()) {
-    BOOST_CHECK_EQUAL(cbs.call(Communication::Result::one_rank, fp),
-                      world.size() - 1);
-  } else {
-    cbs.loop();
   }
 }
 

@@ -178,7 +178,9 @@ REGISTER_CALLBACK_MAIN_RANK(mpi_dpd_viscous_stress_local)
  * sum over all pair virials as
  * \f[
  *    \sigma^{\nu\mu} = V^{-1}\sum_i \sum_{j < i} r_{i,j}^{\nu} (- \gamma_{i,j}
- * v_{i,j})^{\mu} \f] where \f$\gamma_{i,j}\f$ is the (in general tensor valued)
+ *    v_{i,j})^{\mu}
+ * \f]
+ * where \f$\gamma_{i,j}\f$ is the (in general tensor valued)
  * DPD friction coefficient for particles i and j, \f$v_{i,j}\f$, \f$r_{i,j}\f$
  * are their relative velocity and distance and \f$V\f$ is the box volume.
  *
@@ -191,4 +193,4 @@ Utils::Vector9d mpi_dpd_stress() {
 
   return Utils::flatten(stress) / volume;
 }
-#endif
+#endif // DPD

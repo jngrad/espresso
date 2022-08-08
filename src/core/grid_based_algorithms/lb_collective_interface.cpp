@@ -72,45 +72,43 @@ auto lb_calc_fluid_kernel(Utils::Vector3i const &index, Kernel kernel) {
 }
 } // namespace detail
 
-boost::optional<Utils::Vector3d>
-mpi_lb_get_interpolated_velocity(Utils::Vector3d const &pos) {
-  return detail::lb_calc_for_pos(pos, [&](auto pos) {
+auto mpi_lb_get_interpolated_velocity(Utils::Vector3d const &pos) {
+  return mpi_reduce_optional(detail::lb_calc_for_pos(pos, [&](auto pos) {
     return lb_lbinterpolation_get_interpolated_velocity(pos);
-  });
+  }));
 }
 
-REGISTER_CALLBACK_ONE_RANK(mpi_lb_get_interpolated_velocity)
+REGISTER_CALLBACK_MAIN_RANK(mpi_lb_get_interpolated_velocity)
 
-boost::optional<double>
-mpi_lb_get_interpolated_density(Utils::Vector3d const &pos) {
-  return detail::lb_calc_for_pos(pos, [&](auto pos) {
+auto mpi_lb_get_interpolated_density(Utils::Vector3d const &pos) {
+  return mpi_reduce_optional(detail::lb_calc_for_pos(pos, [&](auto pos) {
     return lb_lbinterpolation_get_interpolated_density(pos);
-  });
+  }));
 }
 
-REGISTER_CALLBACK_ONE_RANK(mpi_lb_get_interpolated_density)
+REGISTER_CALLBACK_MAIN_RANK(mpi_lb_get_interpolated_density)
 
 auto mpi_lb_get_density(Utils::Vector3i const &index) {
-  return detail::lb_calc_fluid_kernel(index,
-                                      [&](auto const &modes, auto const &) {
-                                        return lb_calc_density(modes, lbpar);
-                                      });
+  return mpi_reduce_optional(
+      detail::lb_calc_fluid_kernel(index, [&](auto const &modes, auto const &) {
+        return lb_calc_density(modes, lbpar);
+      }));
 }
 
-REGISTER_CALLBACK_ONE_RANK(mpi_lb_get_density)
+REGISTER_CALLBACK_MAIN_RANK(mpi_lb_get_density)
 
 auto mpi_lb_get_populations(Utils::Vector3i const &index) {
-  return detail::lb_calc(index, [&](auto index) {
+  return mpi_reduce_optional(detail::lb_calc(index, [&](auto index) {
     auto const linear_index =
         get_linear_index(lblattice.local_index(index), lblattice.halo_grid);
     return lb_get_population(linear_index);
-  });
+  }));
 }
 
-REGISTER_CALLBACK_ONE_RANK(mpi_lb_get_populations)
+REGISTER_CALLBACK_MAIN_RANK(mpi_lb_get_populations)
 
-boost::optional<int> mpi_lb_get_boundary_flag(Utils::Vector3i const &index) {
-  return detail::lb_calc(index, [&](auto index) {
+auto mpi_lb_get_boundary_flag(Utils::Vector3i const &index) {
+  return mpi_reduce_optional(detail::lb_calc(index, [&](auto index) {
 #ifdef LB_BOUNDARIES
     auto const linear_index =
         get_linear_index(lblattice.local_index(index), lblattice.halo_grid);
@@ -118,10 +116,10 @@ boost::optional<int> mpi_lb_get_boundary_flag(Utils::Vector3i const &index) {
 #else
     return 0;
 #endif
-  });
+  }));
 }
 
-REGISTER_CALLBACK_ONE_RANK(mpi_lb_get_boundary_flag)
+REGISTER_CALLBACK_MAIN_RANK(mpi_lb_get_boundary_flag)
 
 void mpi_lb_set_population(Utils::Vector3i const &index,
                            Utils::Vector19d const &population) {
@@ -146,22 +144,22 @@ void mpi_lb_set_force_density(Utils::Vector3i const &index,
 REGISTER_CALLBACK(mpi_lb_set_force_density)
 
 auto mpi_lb_get_momentum_density(Utils::Vector3i const &index) {
-  return detail::lb_calc_fluid_kernel(
+  return mpi_reduce_optional(detail::lb_calc_fluid_kernel(
       index, [&](auto const &modes, auto const &force_density) {
         return lb_calc_momentum_density(modes, force_density);
-      });
+      }));
 }
 
-REGISTER_CALLBACK_ONE_RANK(mpi_lb_get_momentum_density)
+REGISTER_CALLBACK_MAIN_RANK(mpi_lb_get_momentum_density)
 
 auto mpi_lb_get_pressure_tensor(Utils::Vector3i const &index) {
-  return detail::lb_calc_fluid_kernel(
+  return mpi_reduce_optional(detail::lb_calc_fluid_kernel(
       index, [&](auto const &modes, auto const &force_density) {
         return lb_calc_pressure_tensor(modes, force_density, lbpar);
-      });
+      }));
 }
 
-REGISTER_CALLBACK_ONE_RANK(mpi_lb_get_pressure_tensor)
+REGISTER_CALLBACK_MAIN_RANK(mpi_lb_get_pressure_tensor)
 
 void mpi_bcast_lb_params_local(LBParam field, LB_Parameters const &params) {
   lbpar = params;

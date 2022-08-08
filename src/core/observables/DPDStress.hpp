@@ -19,6 +19,10 @@
 #ifndef OBSERVABLES_DPDSTRESS_HPP
 #define OBSERVABLES_DPDSTRESS_HPP
 
+#include "config/config.hpp"
+
+#ifdef DPD
+
 #include "Observable.hpp"
 #include "dpd.hpp"
 
@@ -35,4 +39,5 @@ public:
 
 } // Namespace Observables
 
+#endif // DPD
 #endif

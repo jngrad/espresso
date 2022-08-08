@@ -783,7 +783,7 @@ void lb_lbfluid_save_checkpoint(const std::string &filename, bool binary) {
         for (int j = 0; j < grid_size[1]; j++) {
           for (int k = 0; k < grid_size[2]; k++) {
             auto const ind = Utils::Vector3i{{i, j, k}};
-            auto const pop = mpi_call(::Communication::Result::one_rank,
+            auto const pop = mpi_call(::Communication::Result::main_rank,
                                       mpi_lb_get_populations, ind);
             cpfile.write(pop);
           }
@@ -905,7 +905,7 @@ double lb_lbnode_get_density(const Utils::Vector3i &ind) {
   }
   if (lattice_switch == ActiveLB::CPU) {
     return ::Communication::mpiCallbacks().call(
-        ::Communication::Result::one_rank, mpi_lb_get_density, ind);
+        ::Communication::Result::main_rank, mpi_lb_get_density, ind);
   }
   throw NoLBActive();
 }
@@ -923,9 +923,9 @@ const Utils::Vector3d lb_lbnode_get_velocity(const Utils::Vector3i &ind) {
   }
   if (lattice_switch == ActiveLB::CPU) {
     auto const density = ::Communication::mpiCallbacks().call(
-        ::Communication::Result::one_rank, mpi_lb_get_density, ind);
+        ::Communication::Result::main_rank, mpi_lb_get_density, ind);
     auto const momentum_density = ::Communication::mpiCallbacks().call(
-        ::Communication::Result::one_rank, mpi_lb_get_momentum_density, ind);
+        ::Communication::Result::main_rank, mpi_lb_get_momentum_density, ind);
     return momentum_density / density;
   }
   throw NoLBActive();
@@ -959,7 +959,7 @@ lb_lbnode_get_pressure_tensor_neq(const Utils::Vector3i &ind) {
 #endif //  CUDA
   }
   if (lattice_switch == ActiveLB::CPU) {
-    return mpi_call(::Communication::Result::one_rank,
+    return mpi_call(::Communication::Result::main_rank,
                     mpi_lb_get_pressure_tensor, ind);
   }
   throw NoLBActive();
@@ -1011,8 +1011,8 @@ int lb_lbnode_get_boundary(const Utils::Vector3i &ind) {
 #endif //  CUDA
   }
   if (lattice_switch == ActiveLB::CPU) {
-    return mpi_call(::Communication::Result::one_rank, mpi_lb_get_boundary_flag,
-                    ind);
+    return mpi_call(::Communication::Result::main_rank,
+                    mpi_lb_get_boundary_flag, ind);
   }
   throw NoLBActive();
 }
@@ -1030,7 +1030,7 @@ const Utils::Vector19d lb_lbnode_get_pop(const Utils::Vector3i &ind) {
 #endif //  CUDA
   }
   if (lattice_switch == ActiveLB::CPU) {
-    return mpi_call(::Communication::Result::one_rank, mpi_lb_get_populations,
+    return mpi_call(::Communication::Result::main_rank, mpi_lb_get_populations,
                     ind);
   }
   throw NoLBActive();
@@ -1139,7 +1139,7 @@ lb_lbfluid_get_interpolated_velocity(const Utils::Vector3d &pos) {
       throw std::runtime_error("The non-linear interpolation scheme is not "
                                "implemented for the CPU LB.");
     case (InterpolationOrder::linear):
-      return mpi_call(::Communication::Result::one_rank,
+      return mpi_call(::Communication::Result::main_rank,
                       mpi_lb_get_interpolated_velocity, folded_pos);
     }
   }
@@ -1159,7 +1159,7 @@ double lb_lbfluid_get_interpolated_density(const Utils::Vector3d &pos) {
       throw std::runtime_error("The non-linear interpolation scheme is not "
                                "implemented for the CPU LB.");
     case (InterpolationOrder::linear):
-      return mpi_call(::Communication::Result::one_rank,
+      return mpi_call(::Communication::Result::main_rank,
                       mpi_lb_get_interpolated_density, folded_pos);
     }
   }

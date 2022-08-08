@@ -34,8 +34,7 @@
  * the @ref callback_macros "callback macros". The visitor pattern
  * allows using arbitrary function signatures. For non-void returning
  * callbacks, several return value policies are available: ignore return
- * value, return only one value (this is achieved using a boost optional
- * that is empty on all but one node), return the value of the head node.
+ * value and return the value on the head node.
  */
 
 #include <utils/NumeratedContainer.hpp>
@@ -43,10 +42,10 @@
 #include <utils/tuple.hpp>
 #include <utils/type_traits.hpp>
 
-#include <boost/mpi/collectives/all_reduce.hpp>
 #include <boost/mpi/collectives/broadcast.hpp>
-#include <boost/mpi/collectives/reduce.hpp>
 #include <boost/mpi/communicator.hpp>
+#include <boost/mpi/packed_iarchive.hpp>
+#include <boost/mpi/packed_oarchive.hpp>
 #include <boost/optional.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 
@@ -54,6 +53,7 @@
 #include <functional>
 #include <initializer_list>
 #include <memory>
+#include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -72,9 +72,6 @@ namespace Result {
 /** %Ignore result */
 struct Ignore {};
 constexpr auto ignore = Ignore{};
-/** Return value from one rank */
-struct OneRank {};
-constexpr auto one_rank = OneRank{};
 /** Return value from the head node */
 struct MainRank {};
 constexpr auto main_rank = MainRank{};
@@ -168,37 +165,6 @@ struct callback_void_t final : public callback_concept_t {
 };
 
 /**
- * @brief Callback with a return value from one rank.
- *
- * This is an implementation of a callback for a specific callable
- * @p F and a set of arguments to call it with, where the value from
- * one rank is returned. Only one node is allowed to return a value.
- */
-template <class F, class... Args>
-struct callback_one_rank_t final : public callback_concept_t {
-  F m_f;
-
-  callback_one_rank_t(callback_one_rank_t const &) = delete;
-  callback_one_rank_t(callback_one_rank_t &&) = delete;
-
-  template <class FRef>
-  explicit callback_one_rank_t(FRef &&f) : m_f(std::forward<FRef>(f)) {}
-  void operator()(boost::mpi::communicator const &comm,
-                  boost::mpi::packed_iarchive &ia) const override {
-    auto const result = detail::invoke<F, Args...>(m_f, ia);
-
-    assert(1 == boost::mpi::all_reduce(comm, static_cast<int>(!!result),
-                                       std::plus<>()) &&
-           "Incorrect number of return values");
-
-    /* If this rank returned a result, send it to the head node. */
-    if (!!result) {
-      comm.send(0, 42, *result);
-    }
-  }
-};
-
-/**
  * @brief Callback with a return value from the head node.
  *
  * This is an implementation of a callback for a specific callable
@@ -261,11 +227,6 @@ template <typename F> auto make_model(F &&f) {
  */
 template <class... Args> auto make_model(void (*f_ptr)(Args...)) {
   return std::make_unique<callback_void_t<void (*)(Args...), Args...>>(f_ptr);
-}
-
-template <class R, class... Args>
-auto make_model(Result::OneRank, R (*f_ptr)(Args...)) {
-  return std::make_unique<callback_one_rank_t<R (*)(Args...), Args...>>(f_ptr);
 }
 
 template <class R, class... Args>
@@ -524,37 +485,6 @@ public:
   }
 
   /**
-   * @brief Call a callback and reduce the result over all nodes.
-   *
-   * This calls a callback on all nodes, including the head node,
-   * and returns the value from the node which returned an engaged
-   * optional. Only one node is allowed to return a value.
-   *
-   * This method can only be called on the head node.
-   */
-  template <class R, class... Args, class... ArgRef>
-  auto call(Result::OneRank, boost::optional<R> (*fp)(Args...),
-            ArgRef... args) const -> std::remove_reference_t<R> {
-
-    const int id = m_func_ptr_to_id.at(reinterpret_cast<void (*)()>(fp));
-    call(id, args...);
-
-    auto const local_result = fp(std::forward<Args>(args)...);
-
-    assert(1 == boost::mpi::all_reduce(m_comm, static_cast<int>(!!local_result),
-                                       std::plus<>()) &&
-           "Incorrect number of return values");
-
-    if (!!local_result) {
-      return *local_result;
-    }
-
-    std::remove_cv_t<std::remove_reference_t<R>> result;
-    m_comm.recv(boost::mpi::any_source, boost::mpi::any_tag, result);
-    return result;
-  }
-
-  /**
    * @brief Call a callback and return the result of the head node.
    *
    * This calls a callback on all nodes, including the head node,
@@ -685,22 +615,6 @@ public:
 #define REGISTER_CALLBACK(cb)                                                  \
   namespace Communication {                                                    \
   static ::Communication::RegisterCallback register_##cb(&(cb));               \
-  }
-
-/**
- * @brief Register a static callback which returns a value on only one node.
- *
- * This registers a function as an mpi callback with
- * reduction of the return values from one node
- * where the value of the optional is set.
- * The macro should be used at global scope.
- *
- * @param cb A function
- */
-#define REGISTER_CALLBACK_ONE_RANK(cb)                                         \
-  namespace Communication {                                                    \
-  static ::Communication::RegisterCallback                                     \
-      register_one_rank_##cb(::Communication::Result::OneRank{}, &(cb));       \
   }
 
 /**
