@@ -35,8 +35,7 @@
  * allows using arbitrary function signatures. For non-void returning
  * callbacks, several return value policies are available: ignore return
  * value, return only one value (this is achieved using a boost optional
- * that is empty on all but one node), return the value of the head node,
- * or return a reduced value (by specifying the reduction operation).
+ * that is empty on all but one node), return the value of the head node.
  */
 
 #include <utils/NumeratedContainer.hpp>
@@ -79,9 +78,6 @@ constexpr auto one_rank = OneRank{};
 /** Return value from the head node */
 struct MainRank {};
 constexpr auto main_rank = MainRank{};
-/** Reduce return value over all ranks */
-struct Reduction {};
-constexpr auto reduction = Reduction{};
 } // namespace Result
 
 namespace detail {
@@ -172,28 +168,6 @@ struct callback_void_t final : public callback_concept_t {
 };
 
 /**
- * @brief Callback where the return value is ignored.
- *
- * This is an implementation of a callback for a specific callable
- * @p F and a set of arguments to call it with, where the valued from
- * all ranks are ignored.
- */
-template <class F, class... Args>
-struct callback_ignore_t final : public callback_concept_t {
-  F m_f;
-
-  callback_ignore_t(callback_ignore_t const &) = delete;
-  callback_ignore_t(callback_ignore_t &&) = delete;
-
-  template <class FRef>
-  explicit callback_ignore_t(FRef &&f) : m_f(std::forward<FRef>(f)) {}
-  void operator()(boost::mpi::communicator const &,
-                  boost::mpi::packed_iarchive &ia) const override {
-    detail::invoke<F, Args...>(m_f, ia);
-  }
-};
-
-/**
  * @brief Callback with a return value from one rank.
  *
  * This is an implementation of a callback for a specific callable
@@ -246,37 +220,6 @@ struct callback_main_rank_t final : public callback_concept_t {
   }
 };
 
-/**
- * @brief Callback with return value reduction.
- *
- * This is an implementation of a callback for a specific callable
- * @p F and a set of arguments to call it with, where the return
- * value is reduced over the communicator.
- */
-template <class Op, class F, class... Args>
-struct callback_reduce_t final : public callback_concept_t {
-  Op m_op;
-  F m_f;
-
-  template <class OpRef, class FRef>
-  explicit callback_reduce_t(OpRef &&op, FRef &&f)
-      : m_op(std::forward<OpRef>(op)), m_f(std::forward<FRef>(f)) {}
-
-  /**
-   * @brief Execute the callback.
-   *
-   * Receive parameters for this callback, and then call it.
-   *
-   * @param comm The communicator to receive the parameters on.
-   */
-  void operator()(boost::mpi::communicator const &comm,
-                  boost::mpi::packed_iarchive &ia) const override {
-    /* Call the callback function, and reduce over the results with
-     * the stored reduction operation. */
-    boost::mpi::reduce(comm, detail::invoke<F, Args...>(m_f, ia), m_op, 0);
-  }
-};
-
 template <class F, class R, class... Args> struct FunctorTypes {
   using functor_type = F;
   using return_type = R;
@@ -318,18 +261,6 @@ template <typename F> auto make_model(F &&f) {
  */
 template <class... Args> auto make_model(void (*f_ptr)(Args...)) {
   return std::make_unique<callback_void_t<void (*)(Args...), Args...>>(f_ptr);
-}
-
-template <class Op, class R, class... Args>
-auto make_model(Result::Reduction, R (*f_ptr)(Args...), Op &&op) {
-  return std::make_unique<
-      callback_reduce_t<std::remove_reference_t<Op>, R (*)(Args...), Args...>>(
-      std::forward<Op>(op), f_ptr);
-}
-
-template <class R, class... Args>
-auto make_model(Result::Ignore, R (*f_ptr)(Args...)) {
-  return std::make_unique<callback_ignore_t<R (*)(Args...), Args...>>(f_ptr);
 }
 
 template <class R, class... Args>
@@ -596,50 +527,6 @@ public:
    * @brief Call a callback and reduce the result over all nodes.
    *
    * This calls a callback on all nodes, including the head node,
-   * and does a mpi reduction with the registered operation.
-   *
-   * This method can only be called on the head node.
-   */
-  template <class Op, class R, class... Args>
-  auto call(Result::Reduction, Op op, R (*fp)(Args...), Args... args) const
-      -> std::remove_reference_t<decltype(op(std::declval<R>(),
-                                             std::declval<R>()))> {
-    const int id = m_func_ptr_to_id.at(reinterpret_cast<void (*)()>(fp));
-
-    call(id, args...);
-
-    std::remove_cv_t<std::remove_reference_t<decltype(
-        op(std::declval<R>(), std::declval<R>()))>>
-        result{};
-    boost::mpi::reduce(m_comm, fp(args...), result, op, 0);
-
-    return result;
-  }
-
-  /**
-   * @brief Call a callback and ignore the result over all nodes.
-   *
-   * This calls a callback on all nodes, including the head node,
-   * and ignore all return values.
-   *
-   * This method can only be called on the head node.
-   */
-  template <class R, class... Args, class... ArgRef>
-  auto call(Result::Ignore, R (*fp)(Args...), ArgRef... args) const
-      -> std::remove_reference_t<R> {
-
-    const int id = m_func_ptr_to_id.at(reinterpret_cast<void (*)()>(fp));
-    call(id, args...);
-
-    fp(std::forward<Args>(args)...);
-
-    return {};
-  }
-
-  /**
-   * @brief Call a callback and reduce the result over all nodes.
-   *
-   * This calls a callback on all nodes, including the head node,
    * and returns the value from the node which returned an engaged
    * optional. Only one node is allowed to return a value.
    *
@@ -798,38 +685,6 @@ public:
 #define REGISTER_CALLBACK(cb)                                                  \
   namespace Communication {                                                    \
   static ::Communication::RegisterCallback register_##cb(&(cb));               \
-  }
-
-/**
- * @brief Register a static callback whose return value is reduced.
- *
- * This registers a function as an mpi callback with
- * reduction of the return values from the nodes.
- * The macro should be used at global scope.
- *
- * @param cb A function
- * @param op Reduction operation
- */
-#define REGISTER_CALLBACK_REDUCTION(cb, op)                                    \
-  namespace Communication {                                                    \
-  static ::Communication::RegisterCallback                                     \
-      register_reduction_##cb(::Communication::Result::Reduction{}, &(cb),     \
-                              (op));                                           \
-  }
-
-/**
- * @brief Register a static callback whose return value is to be ignored.
- *
- * This registers a function as an mpi callback with
- * ignored return values.
- * The macro should be used at global scope.
- *
- * @param cb A function
- */
-#define REGISTER_CALLBACK_IGNORE(cb)                                           \
-  namespace Communication {                                                    \
-  static ::Communication::RegisterCallback                                     \
-      register_ignore_##cb(::Communication::Result::Ignore{}, &(cb));          \
   }
 
 /**

@@ -120,17 +120,17 @@ Utils::Cache<int, Particle> particle_fetch_cache(max_cache_size);
 void invalidate_fetch_cache() { particle_fetch_cache.invalidate(); }
 std::size_t fetch_cache_max_size() { return particle_fetch_cache.max_size(); }
 
-static boost::optional<const Particle &> get_particle_data_local(int p_id) {
+static auto get_particle_data_local(int p_id) {
+  boost::optional<Particle const *> result{};
   auto p = cell_structure.get_local_particle(p_id);
 
   if (p and (not p->is_ghost())) {
-    return *p;
+    result = p;
   }
-
-  return {};
+  return mpi_reduce_optional(result);
 }
 
-REGISTER_CALLBACK_ONE_RANK(get_particle_data_local)
+REGISTER_CALLBACK_MAIN_RANK(get_particle_data_local)
 
 const Particle &get_particle_data(int p_id) {
   auto const pnode = get_particle_node(p_id);
@@ -149,8 +149,9 @@ const Particle &get_particle_data(int p_id) {
   /* Cache miss, fetch the particle,
    * put it into the cache and return a pointer into the cache. */
   auto const cache_ptr = particle_fetch_cache.put(
-      p_id, Communication::mpiCallbacks().call(Communication::Result::one_rank,
-                                               get_particle_data_local, p_id));
+      p_id,
+      *Communication::mpiCallbacks().call(Communication::Result::main_rank,
+                                          get_particle_data_local, p_id));
   return *cache_ptr;
 }
 
@@ -378,17 +379,17 @@ static Particle *local_move_particle(int p_id, const Utils::Vector3d &pos) {
   return pt;
 }
 
-static boost::optional<int>
-mpi_place_new_particle_local(int p_id, Utils::Vector3d const &pos) {
+static auto mpi_place_new_particle_local(int p_id, Utils::Vector3d const &pos) {
   auto p = local_insert_particle(p_id, pos);
   on_particle_change();
+  boost::optional<int> result = {};
   if (p) {
-    return comm_cart.rank();
+    result = comm_cart.rank();
   }
-  return {};
+  return mpi_reduce_optional(result);
 }
 
-REGISTER_CALLBACK_ONE_RANK(mpi_place_new_particle_local)
+REGISTER_CALLBACK_MAIN_RANK(mpi_place_new_particle_local)
 
 /** Create particle at a position on a node.
  *  Also calls \ref on_particle_change.
@@ -396,8 +397,8 @@ REGISTER_CALLBACK_ONE_RANK(mpi_place_new_particle_local)
  *  \param pos   the particles position.
  */
 static int mpi_place_new_particle(int p_id, const Utils::Vector3d &pos) {
-  return mpi_call(Communication::Result::one_rank, mpi_place_new_particle_local,
-                  p_id, pos);
+  return mpi_call(Communication::Result::main_rank,
+                  mpi_place_new_particle_local, p_id, pos);
 }
 
 void mpi_place_particle_local(int pnode, int p_id) {

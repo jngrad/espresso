@@ -113,7 +113,7 @@ Variant Analysis::do_call_method(std::string const &name,
   }
 #ifdef DPD
   if (name == "dpd_stress") {
-    auto const result = dpd_stress();
+    auto const result = mpi_dpd_stress();
     return result.as_vector();
   }
 #endif // DPD

@@ -126,38 +126,38 @@ static void search_neighbors_sanity_check(double const distance) {
 }
 } // namespace detail
 
-boost::optional<std::vector<int>>
-mpi_get_short_range_neighbors_local(int const pid, double const distance,
-                                    bool run_sanity_checks) {
+std::vector<int> mpi_get_short_range_neighbors_local(int const pid,
+                                                     double const distance,
+                                                     bool run_sanity_checks) {
 
   if (run_sanity_checks) {
     detail::search_neighbors_sanity_check(distance);
   }
   on_observable_calc();
+  boost::optional<std::vector<int>> result{};
 
   auto const p = cell_structure.get_local_particle(pid);
-  if (not p or p->is_ghost()) {
-    return {};
+  if (p and not p->is_ghost()) {
+    std::vector<int> ret;
+    auto const cutoff2 = distance * distance;
+    auto kernel = [&ret, cutoff2](Particle const &p1, Particle const &p2,
+                                  Utils::Vector3d const &vec) {
+      if (vec.norm2() < cutoff2) {
+        ret.emplace_back(p2.id());
+      }
+    };
+    cell_structure.run_on_particle_short_range_neighbors(*p, kernel);
+    result = ret;
   }
-
-  std::vector<int> ret;
-  auto const cutoff2 = distance * distance;
-  auto kernel = [&ret, cutoff2](Particle const &p1, Particle const &p2,
-                                Utils::Vector3d const &vec) {
-    if (vec.norm2() < cutoff2) {
-      ret.emplace_back(p2.id());
-    }
-  };
-  cell_structure.run_on_particle_short_range_neighbors(*p, kernel);
-  return ret;
+  return mpi_reduce_optional(result);
 }
 
-REGISTER_CALLBACK_ONE_RANK(mpi_get_short_range_neighbors_local)
+REGISTER_CALLBACK_MAIN_RANK(mpi_get_short_range_neighbors_local)
 
 std::vector<int> mpi_get_short_range_neighbors(int const pid,
                                                double const distance) {
   detail::search_neighbors_sanity_check(distance);
-  return mpi_call(::Communication::Result::one_rank,
+  return mpi_call(::Communication::Result::main_rank,
                   mpi_get_short_range_neighbors_local, pid, distance, false);
 }
 

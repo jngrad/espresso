@@ -490,15 +490,17 @@ int mpi_steepest_descent(int steps) {
 
 static int mpi_integrate_local(int n_steps, int reuse_forces) {
   integrate(n_steps, reuse_forces);
-
-  return check_runtime_errors_local();
+  auto const count_local = check_runtime_errors_local();
+  int count_global = 0;
+  boost::mpi::reduce(::comm_cart, count_local, count_global, std::plus<>(), 0);
+  return count_global;
 }
 
-REGISTER_CALLBACK_REDUCTION(mpi_integrate_local, std::plus<int>())
+REGISTER_CALLBACK_MAIN_RANK(mpi_integrate_local)
 
 int mpi_integrate(int n_steps, int reuse_forces) {
-  return mpi_call(Communication::Result::reduction, std::plus<int>(),
-                  mpi_integrate_local, n_steps, reuse_forces);
+  return mpi_call(Communication::Result::main_rank, mpi_integrate_local,
+                  n_steps, reuse_forces);
 }
 
 double interaction_range() {

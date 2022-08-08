@@ -138,7 +138,7 @@ Utils::Vector3d dpd_pair_force(Particle const &p1, Particle const &p2,
   return force;
 }
 
-static auto dpd_viscous_stress_local() {
+static auto mpi_dpd_viscous_stress_local() {
   on_observable_calc();
 
   Utils::Matrix<double, 3, 3> stress{};
@@ -162,9 +162,12 @@ static auto dpd_viscous_stress_local() {
         stress += tensor_product(d.vec21, f);
       });
 
-  return stress;
+  Utils::Matrix<double, 3, 3> stress_global{};
+  boost::mpi::reduce(::comm_cart, stress, stress_global, std::plus<>(), 0);
+  return stress_global;
 }
-REGISTER_CALLBACK_REDUCTION(dpd_viscous_stress_local, std::plus<>())
+
+REGISTER_CALLBACK_MAIN_RANK(mpi_dpd_viscous_stress_local)
 
 /**
  * @brief Viscous stress tensor of the DPD interaction.
@@ -181,9 +184,9 @@ REGISTER_CALLBACK_REDUCTION(dpd_viscous_stress_local, std::plus<>())
  *
  * @return Stress tensor contribution.
  */
-Utils::Vector9d dpd_stress() {
-  auto const stress = mpi_call(Communication::Result::reduction, std::plus<>(),
-                               dpd_viscous_stress_local);
+Utils::Vector9d mpi_dpd_stress() {
+  auto const stress =
+      mpi_call(Communication::Result::main_rank, mpi_dpd_viscous_stress_local);
   auto const volume = box_geo.volume();
 
   return Utils::flatten(stress) / volume;

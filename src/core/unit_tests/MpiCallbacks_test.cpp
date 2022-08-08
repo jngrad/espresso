@@ -174,45 +174,6 @@ BOOST_AUTO_TEST_CASE(CallbackHandle) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(reduce_callback) {
-  auto cb = []() -> int { return boost::mpi::communicator().rank(); };
-  Communication::MpiCallbacks::add_static(Communication::Result::Reduction{},
-                                          static_cast<int (*)()>(cb),
-                                          std::plus<int>());
-
-  boost::mpi::communicator world;
-  Communication::MpiCallbacks cbs(world);
-
-  if (0 == world.rank()) {
-    auto const ret = cbs.call(Communication::Result::reduction,
-                              std::plus<int>(), static_cast<int (*)()>(cb));
-    auto const n = world.size();
-    BOOST_CHECK_EQUAL(ret, (n * (n - 1)) / 2);
-  } else {
-    cbs.loop();
-  }
-}
-
-BOOST_AUTO_TEST_CASE(ignore_callback) {
-  called = false;
-  auto cb = []() -> int { return called = true, -1; };
-
-  auto const fp = static_cast<int (*)()>(cb);
-
-  Communication::MpiCallbacks::add_static(Communication::Result::ignore, fp);
-
-  boost::mpi::communicator world;
-  Communication::MpiCallbacks cbs(world);
-
-  if (0 == world.rank()) {
-    cbs.call(Communication::Result::ignore, fp);
-  } else {
-    cbs.loop();
-  }
-
-  BOOST_CHECK(called);
-}
-
 BOOST_AUTO_TEST_CASE(one_rank_callback) {
   auto cb = []() -> boost::optional<int> {
     boost::mpi::communicator world;

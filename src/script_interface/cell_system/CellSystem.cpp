@@ -185,26 +185,13 @@ Variant CellSystem::do_call_method(std::string const &name,
     return out;
   }
   if (name == "get_neighbors") {
-    std::vector<std::vector<int>> neighbors_global;
-    context()->parallel_try_catch([this, &neighbors_global, &params]() {
-      auto const dist = get_value<double>(params, "distance");
-      auto const pid = get_value<int>(params, "pid");
-      auto const ret = mpi_get_short_range_neighbors_local(pid, dist, true);
-      std::vector<int> neighbors_local;
-      if (ret) {
-        neighbors_local = *ret;
-      }
-      boost::mpi::gather(context()->get_comm(), neighbors_local,
-                         neighbors_global, 0);
+    auto const dist = get_value<double>(params, "distance");
+    auto const pid = get_value<int>(params, "pid");
+    std::vector<int> result;
+    context()->parallel_try_catch([&]() {
+      result = mpi_get_short_range_neighbors_local(pid, dist, true);
     });
-    std::vector<int> neighbors;
-    for (auto const &neighbors_local : neighbors_global) {
-      if (not neighbors_local.empty()) {
-        neighbors = neighbors_local;
-        break;
-      }
-    }
-    return neighbors;
+    return result;
   }
   if (name == "non_bonded_loop_trace") {
     std::vector<Variant> out;

@@ -46,6 +46,8 @@
 
 #include "MpiCallbacks.hpp"
 
+#include <boost/mpi/collectives/all_reduce.hpp>
+#include <boost/mpi/collectives/reduce.hpp>
 #include <boost/mpi/communicator.hpp>
 
 #include <memory>
@@ -57,6 +59,27 @@ extern int this_node;
 extern int n_nodes;
 /** The communicator */
 extern boost::mpi::communicator comm_cart;
+
+/**
+ * @brief Reduce an optional on the head node.
+ * Worker nodes get a default-constructed object.
+ */
+template <typename T> T mpi_reduce_optional(boost::optional<T> const &result) {
+  assert(1 == boost::mpi::all_reduce(::comm_cart, static_cast<int>(!!result),
+                                     std::plus<>()) &&
+         "Incorrect number of return values");
+  if (::comm_cart.rank() == 0) {
+    if (result) {
+      return *result;
+    }
+    T value;
+    ::comm_cart.recv(boost::mpi::any_source, 42, value);
+    return value;
+  } else if (result) {
+    ::comm_cart.send(0, 42, *result);
+  }
+  return {};
+}
 
 namespace Communication {
 /**

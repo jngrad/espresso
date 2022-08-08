@@ -56,8 +56,6 @@
 
 #include "Particle.hpp"
 
-#include <boost/optional.hpp>
-
 #include <utility>
 #include <vector>
 
@@ -115,9 +113,8 @@ void check_resort_particles();
  * of another particle.
  */
 std::vector<int> mpi_get_short_range_neighbors(int pid, double distance);
-boost::optional<std::vector<int>>
-mpi_get_short_range_neighbors_local(int pid, double distance,
-                                    bool run_sanity_checks);
+std::vector<int> mpi_get_short_range_neighbors_local(int pid, double distance,
+                                                     bool run_sanity_checks);
 
 /**
  * @brief Find the cell in which a particle is stored.
