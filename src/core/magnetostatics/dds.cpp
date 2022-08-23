@@ -46,6 +46,7 @@
 #include <cmath>
 #include <iterator>
 #include <stdexcept>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -195,37 +196,49 @@ T image_sum(InputIterator begin, InputIterator end, InputIterator pi,
   return init;
 }
 
-template <typename T>
-std::vector<T> all_gather(boost::mpi::communicator const &comm,
-                          T const &local_value) {
-  std::vector<T> all_values;
-  boost::mpi::all_gather(comm, local_value, all_values);
+auto gather_particle_data(ParticleRange const &particles, int n_replicas) {
+  auto const &comm = ::comm_cart;
+  std::vector<Particle *> local_particles;
+  std::vector<PosMom> local_posmom;
+  std::vector<PosMom> all_posmom;
+  std::vector<boost::mpi::request> reqs;
 
-  return all_values;
-}
-
-std::pair<int, int> offset_and_size(std::vector<int> const &sizes, int rank) {
-  auto const offset = std::accumulate(sizes.begin(), sizes.begin() + rank, 0);
-  auto const total_size =
-      std::accumulate(sizes.begin() + rank, sizes.end(), offset);
-
-  return {offset, total_size};
-}
-
-void collect_local_particles(ParticleRange const &particles,
-                             std::vector<Particle *> &interacting_particles,
-                             std::vector<PosMom> &posmom) {
-  interacting_particles.reserve(interacting_particles.size() +
-                                particles.size());
-  posmom.reserve(posmom.size() + particles.size());
+  local_particles.reserve(particles.size());
+  local_posmom.reserve(particles.size());
 
   for (auto &p : particles) {
     if (p.dipm() != 0.0) {
-      interacting_particles.emplace_back(&p);
-      posmom.emplace_back(
+      local_particles.emplace_back(&p);
+      local_posmom.emplace_back(
           PosMom{folded_position(p.pos(), ::box_geo), p.calc_dip()});
     }
   }
+
+  auto const local_size = static_cast<int>(local_posmom.size());
+  std::vector<int> all_sizes;
+  boost::mpi::all_gather(comm, local_size, all_sizes);
+
+  auto const offset =
+      std::accumulate(all_sizes.begin(), all_sizes.begin() + comm.rank(), 0);
+  auto const total_size =
+      std::accumulate(all_sizes.begin() + comm.rank(), all_sizes.end(), offset);
+
+  if (comm.size() > 1) {
+    all_posmom.resize(total_size);
+    reqs = Utils::Mpi::iall_gatherv(comm, local_posmom.data(), local_size,
+                                    all_posmom.data(), all_sizes.data());
+  } else {
+    std::swap(all_posmom, local_posmom);
+  }
+
+  return std::make_tuple(std::move(local_particles), std::move(local_posmom),
+                         std::move(all_posmom), std::move(reqs), offset);
+}
+
+auto get_n_cut(int n_replicas) {
+  return n_replicas * Utils::Vector3i{static_cast<int>(::box_geo.periodic(0)),
+                                      static_cast<int>(::box_geo.periodic(1)),
+                                      static_cast<int>(::box_geo.periodic(2))};
 }
 
 } // namespace
@@ -254,43 +267,26 @@ void collect_local_particles(ParticleRange const &particles,
  */
 void DipolarDirectSum::add_long_range_forces(
     ParticleRange const &particles) const {
-  auto const &comm = ::comm_cart;
   auto const &box_l = ::box_geo.length();
-  std::vector<Particle *> local_interacting_particles;
+  /* collect particle data */
+  std::vector<Particle *> local_particles;
   std::vector<PosMom> local_posmom;
-
-  collect_local_particles(particles, local_interacting_particles, local_posmom);
-
-  auto const local_size = static_cast<int>(local_posmom.size());
-  auto const sizes = all_gather(comm, local_size);
-
-  int offset, total_size;
-  std::tie(offset, total_size) = offset_and_size(sizes, comm.rank());
-
   std::vector<PosMom> all_posmom;
   std::vector<boost::mpi::request> reqs;
-  if (comm.size() > 1) {
-    all_posmom.resize(total_size);
-    reqs = Utils::Mpi::iall_gatherv(comm, local_posmom.data(), local_size,
-                                    all_posmom.data(), sizes.data());
-  } else {
-    std::swap(all_posmom, local_posmom);
-  }
+  int offset{0};
+  std::tie(local_particles, local_posmom, all_posmom, reqs, offset) =
+      gather_particle_data(particles, n_replicas);
 
   /* Number of image boxes considered */
-  auto const ncut =
-      n_replicas * Utils::Vector3i{static_cast<int>(::box_geo.periodic(0)),
-                                   static_cast<int>(::box_geo.periodic(1)),
-                                   static_cast<int>(::box_geo.periodic(2))};
+  auto const ncut = get_n_cut(n_replicas);
   auto const with_replicas = (ncut.norm2() > 0);
 
   /* Range of particles we calculate the ia for on this node */
   auto const local_posmom_begin = all_posmom.begin() + offset;
-  auto const local_posmom_end =
-      local_posmom_begin + local_interacting_particles.size();
+  auto const local_posmom_end = local_posmom_begin + local_particles.size();
 
   /* Output iterator for the force */
-  auto p = local_interacting_particles.begin();
+  auto p = local_particles.begin();
 
   /* IA with local particles */
   for (auto pi = local_posmom_begin; pi != local_posmom_end; ++pi, ++p) {
@@ -333,8 +329,10 @@ void DipolarDirectSum::add_long_range_forces(
   /* Wait for the rest of the data to arrive */
   boost::mpi::wait_all(reqs.begin(), reqs.end());
 
+  /* Output iterator for the force */
+  p = local_particles.begin();
+
   /* Interaction with all the other particles */
-  p = local_interacting_particles.begin();
   for (auto pi = local_posmom_begin; pi != local_posmom_end; ++pi, ++p) {
     // red particles
     auto fi =
@@ -363,44 +361,28 @@ void DipolarDirectSum::add_long_range_forces(
  */
 double
 DipolarDirectSum::long_range_energy(ParticleRange const &particles) const {
-  auto const &comm = ::comm_cart;
   auto const &box_l = ::box_geo.length();
-  std::vector<Particle *> local_interacting_particles;
-  std::vector<PosMom> local_posmom;
-
-  collect_local_particles(particles, local_interacting_particles, local_posmom);
-
-  auto const local_size = static_cast<int>(local_posmom.size());
-  auto const sizes = all_gather(comm, local_size);
-
-  int offset, total_size;
-  std::tie(offset, total_size) = offset_and_size(sizes, comm.rank());
-
+  /* collect particle data */
+  std::vector<Particle *> local_particles;
   std::vector<PosMom> all_posmom;
-  if (comm.size() > 1) {
-    all_posmom.resize(total_size);
-    Utils::Mpi::all_gatherv(comm, local_posmom.data(), local_size,
-                            all_posmom.data(), sizes.data());
-  } else {
-    std::swap(all_posmom, local_posmom);
-  }
+  std::vector<boost::mpi::request> reqs;
+  int offset{0};
+  std::tie(local_particles, std::ignore, all_posmom, reqs, offset) =
+      gather_particle_data(particles, n_replicas);
 
   /* Number of image boxes considered */
-  auto const ncut =
-      n_replicas * Utils::Vector3i{static_cast<int>(::box_geo.periodic(0)),
-                                   static_cast<int>(::box_geo.periodic(1)),
-                                   static_cast<int>(::box_geo.periodic(2))};
+  auto const ncut = get_n_cut(n_replicas);
   auto const with_replicas = (ncut.norm2() > 0);
 
-  /* Range of particles we calculate the ia for on this node */
-  auto const begin = all_posmom.begin() + offset;
-  auto const end = begin + local_interacting_particles.size();
+  /* Wait for the rest of the data to arrive */
+  boost::mpi::wait_all(reqs.begin(), reqs.end());
 
-  /* Output iterator for the force */
-  auto p = local_interacting_particles.begin();
+  /* Range of particles we calculate the ia for on this node */
+  auto const local_posmom_begin = all_posmom.begin() + offset;
+  auto const local_posmom_end = local_posmom_begin + local_particles.size();
 
   auto u = 0.;
-  for (auto pi = begin; pi != end; ++pi, ++p) {
+  for (auto pi = local_posmom_begin; pi != local_posmom_end; ++pi) {
     u = image_sum(pi, all_posmom.end(), pi, with_replicas, ncut, box_l, u,
                   [pi](Utils::Vector3d const &rn, Utils::Vector3d const &mj) {
                     return pair_potential(rn, pi->m, mj);
@@ -416,7 +398,7 @@ DipolarDirectSum::DipolarDirectSum(double prefactor, int n_replicas)
     throw std::domain_error("Parameter 'prefactor' must be > 0");
   }
   if (n_replicas < 0) {
-    throw std::domain_error("Parameter 'n_replicas' must be >= 0");
+    throw std::domain_error("Parameter 'n_replica' must be >= 0");
   }
 }
 
