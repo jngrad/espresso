@@ -26,7 +26,7 @@
 
 #include "Actor.hpp"
 
-#include "core/magnetostatics/dds_replica.hpp"
+#include "core/magnetostatics/dds.hpp"
 
 #include "script_interface/get_value.hpp"
 
@@ -37,7 +37,7 @@ namespace ScriptInterface {
 namespace Dipoles {
 
 class DipolarDirectSumWithReplica
-    : public Actor<DipolarDirectSumWithReplica, ::DipolarDirectSumWithReplica> {
+    : public Actor<DipolarDirectSumWithReplica, ::DipolarDirectSum> {
 public:
   DipolarDirectSumWithReplica() {
     add_parameters({

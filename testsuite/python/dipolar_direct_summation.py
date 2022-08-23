@@ -30,7 +30,7 @@ OPEN_BOUNDARIES_REF_ARRAYS = tests_common.data_path(
 
 
 @utx.skipIfMissingFeatures(["DIPOLES"])
-class dds(ut.TestCase):
+class Test(ut.TestCase):
 
     system = espressomd.System(box_l=[3, 3, 3])
 
@@ -119,8 +119,6 @@ class dds(ut.TestCase):
 
         return (ref_e, ref_f, ref_t)
 
-    @ut.skipIf(system.cell_system.get_state()["n_nodes"] > 1,
-               "Skipping test: only runs for n_nodes == 1")
     def test_gen_reference_data(self):
         filepaths = ('dipolar_direct_summation_energy.npy',
                      'dipolar_direct_summation_arrays.npy')

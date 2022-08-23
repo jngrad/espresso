@@ -27,7 +27,6 @@ import espressomd.magnetostatics
 @utx.skipIfMissingFeatures(["DIPOLES"])
 class Test(ut.TestCase):
     system = espressomd.System(box_l=[10., 10., 10.])
-    n_nodes = system.cell_system.get_state()["n_nodes"]
 
     def setUp(self):
         self.system.box_l = [10., 10., 10.]
@@ -39,12 +38,12 @@ class Test(ut.TestCase):
         self.system.part.clear()
         self.system.actors.clear()
 
-    if espressomd.has_features("DIPOLES") and n_nodes == 1:
+    if espressomd.has_features("DIPOLES"):
         test_dds_cpu = tests_common.generate_test_for_actor_class(
             system, espressomd.magnetostatics.DipolarDirectSumCpu,
             dict(prefactor=3.4))
 
-    if espressomd.has_features("DIPOLES") and n_nodes == 1:
+    if espressomd.has_features("DIPOLES"):
         test_dds_cpu = tests_common.generate_test_for_actor_class(
             system, espressomd.magnetostatics.DipolarDirectSumWithReplicaCpu,
             dict(prefactor=3.4, n_replica=3))
@@ -61,7 +60,7 @@ class Test(ut.TestCase):
             system, espressomd.magnetostatics.DipolarBarnesHutGpu,
             dict(prefactor=3.4, epssq=200.0, itolsq=8.0))
 
-    if espressomd.has_features("DIPOLES") and n_nodes == 1:
+    if espressomd.has_features("DIPOLES"):
         test_dds_replica = tests_common.generate_test_for_actor_class(
             system, espressomd.magnetostatics.DipolarDirectSumWithReplicaCpu,
             dict(prefactor=3.4, n_replica=2))
@@ -82,17 +81,6 @@ class Test(ut.TestCase):
                      cao=2, tune=False, mesh=8, prefactor=2.,
                      r_cut=1.4, alpha=12., accuracy=0.01)))
 
-    @ut.skipIf(n_nodes == 1, "only runs for 2 or more MPI ranks")
-    def test_mpi_sanity_checks(self):
-        DDSR = espressomd.magnetostatics.DipolarDirectSumWithReplicaCpu
-        DDSC = espressomd.magnetostatics.DipolarDirectSumCpu
-        # some actors don't support parallelization
-        with self.assertRaisesRegex(RuntimeError, 'MPI parallelization not supported'):
-            DDSC(prefactor=1.)
-        with self.assertRaisesRegex(RuntimeError, 'MPI parallelization not supported'):
-            DDSR(prefactor=1., n_replica=2)
-
-    @ut.skipIf(n_nodes != 1, "only runs for 1 MPI rank")
     def test_ddswr_mixed_particles(self):
         # check that non-magnetic particles don't influence the DDS kernels
         actor = espressomd.magnetostatics.DipolarDirectSumWithReplicaCpu(
@@ -103,7 +91,6 @@ class Test(ut.TestCase):
         energy2 = self.system.analysis.energy()["dipolar"]
         self.assertAlmostEqual(energy1, energy2, delta=1e-12)
 
-    @ut.skipIf(n_nodes != 1, "only runs for 1 MPI rank")
     def test_dds_mixed_particles(self):
         # check that non-magnetic particles don't influence the DDS kernels
         actor = espressomd.magnetostatics.DipolarDirectSumCpu(prefactor=1.)
@@ -113,8 +100,7 @@ class Test(ut.TestCase):
         energy2 = self.system.analysis.energy()["dipolar"]
         self.assertAlmostEqual(energy1, energy2, delta=1e-12)
 
-    @ut.skipIf(n_nodes != 1, "only runs for 1 MPI rank")
-    def test_exceptions_serial(self):
+    def test_exceptions_non_p3m(self):
         DDSR = espressomd.magnetostatics.DipolarDirectSumWithReplicaCpu
         DDSC = espressomd.magnetostatics.DipolarDirectSumCpu
         MDLC = espressomd.magnetostatics.DLC
@@ -131,8 +117,6 @@ class Test(ut.TestCase):
             DDSR(prefactor=1., n_replica=-2)
         with self.assertRaisesRegex(ValueError, "Parameter 'prefactor' must be > 0"):
             DDSR(prefactor=-2., n_replica=1)
-        with self.assertRaisesRegex(RuntimeError, 'with replica does not support a periodic system with zero replica'):
-            DDSR(prefactor=1., n_replica=0)
         # run sanity checks
         self.system.periodicity = [True, True, False]
         ddsr = DDSR(prefactor=1., n_replica=1)
@@ -158,7 +142,7 @@ class Test(ut.TestCase):
         self.system.box_l = [10., 10., 10.]
 
     @utx.skipIfMissingFeatures(["DP3M"])
-    def test_exceptions_parallel(self):
+    def test_exceptions_p3m(self):
         DP3M = espressomd.magnetostatics.DipolarP3M
         MDLC = espressomd.magnetostatics.DLC
         dp3m_params = dict(prefactor=1., epsilon=0.1, accuracy=1e-6,

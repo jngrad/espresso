@@ -38,10 +38,18 @@ namespace Dipoles {
 
 class DipolarDirectSum : public Actor<DipolarDirectSum, ::DipolarDirectSum> {
 public:
+  DipolarDirectSum() {
+    add_parameters({
+        {"n_replica", AutoParameter::read_only,
+         [this]() { return actor()->n_replica; }},
+    });
+  }
+
   void do_construct(VariantMap const &params) override {
     context()->parallel_try_catch([this, &params]() {
       m_actor = std::make_shared<CoreActorClass>(
-          get_value<double>(params, "prefactor"));
+          get_value<double>(params, "prefactor"),
+          get_value_or<int>(params, "n_replica", 0));
     });
   }
 };

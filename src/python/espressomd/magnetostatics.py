@@ -180,6 +180,8 @@ class DipolarDirectSumCpu(MagnetostaticInteraction):
     ----------
     prefactor : :obj:`float`
         Magnetostatics prefactor (:math:`\\mu_0/(4\\pi)`)
+    n_replica : :obj:`int`
+        Number of replicas to be taken into account at periodic boundaries.
 
     """
     _so_name = "Dipoles::DipolarDirectSum"
@@ -188,10 +190,10 @@ class DipolarDirectSumCpu(MagnetostaticInteraction):
         return {}
 
     def required_keys(self):
-        return set()
+        return {"n_replica"}
 
     def valid_keys(self):
-        return {"prefactor"}
+        return {"prefactor", "n_replica"}
 
 
 @script_interface_register
