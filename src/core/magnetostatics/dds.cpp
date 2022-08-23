@@ -309,17 +309,21 @@ void DipolarDirectSum::add_long_range_forces(
                          : ::box_geo.get_mi_vector(pi->pos, pj->pos);
 
       ParticleForce fij{};
+      ParticleForce fji{};
       for_each_image(ncut, [&](int nx, int ny, int nz) {
         auto const rn =
             d + Utils::Vector3d{nx * box_l[0], ny * box_l[1], nz * box_l[2]};
-        fij += pair_force(rn, pi->m, pj->m);
+        auto const pf = pair_force(rn, pi->m, pj->m);
+        fij += pf;
+        fji.f -= pf.f;
+        /* Conservation of angular momentum mandates that
+         * 0 = t_i + r_ij x F_ij + t_j */
+        fji.torque += vector_product(pf.f, rn) - pf.torque;
       });
 
       fi += fij;
-      (*q)->f.f -= prefactor * fij.f;
-      /* Conservation of angular momentum mandates that
-       * 0 = t_i + r_ij x F_ij + t_j */
-      (*q)->f.torque += prefactor * (-fij.torque + vector_product(fij.f, d));
+      (*q)->f.f += prefactor * fji.f;
+      (*q)->f.torque += prefactor * fji.torque;
     }
 
     (*p)->force() += prefactor * fi.f;
