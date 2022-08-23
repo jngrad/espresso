@@ -41,7 +41,7 @@ public:
   DipolarDirectSum() {
     add_parameters({
         {"n_replica", AutoParameter::read_only,
-         [this]() { return actor()->n_replica; }},
+         [this]() { return actor()->n_replicas; }},
     });
   }
 

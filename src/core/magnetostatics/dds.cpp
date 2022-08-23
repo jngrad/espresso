@@ -104,15 +104,14 @@ auto pair_potential(Utils::Vector3d const &d, Utils::Vector3d const &m1,
 }
 
 /**
- * @brief Call kernel for every 3-d index in
- *        a ball arcound the origin.
+ * @brief Call kernel for every 3d index in a sphere around the origin.
  *
- * This calls a Callable for all index-triples
+ * This calls a callable for all index-triples
  * that are within ball around the origin with
  * radius |ncut|.
  *
  * @tparam F Callable
- * @param ncut Limit in the three directions,
+ * @param ncut Limits in the three directions,
  *             all non-zero elements have to be
  *             the same number.
  * @param f will be called for each index triple
@@ -124,8 +123,8 @@ template <typename F> void for_each_image(Utils::Vector3i const &ncut, F f) {
   /* This runs over the index "cube"
    * [-ncut[0], ncut[0]] x ... x [-ncut[2], ncut[2]]
    * (inclusive on both sides), and calls f with
-   *  all the elements as argument. Counting range
-   *  is a range that just enumerates a range.
+   * all the elements as argument. Counting range
+   * is a range that just enumerates a range.
    */
   Utils::cartesian_product(
       [&](int nx, int ny, int nz) {
@@ -139,7 +138,7 @@ template <typename F> void for_each_image(Utils::Vector3i const &ncut, F f) {
 }
 
 /**
- * @brief Position and moment of one particle.
+ * @brief Position and dipole moment of one particle.
  */
 struct PosMom {
   Utils::Vector3d pos;
@@ -163,7 +162,7 @@ struct PosMom {
  * @param end Iterator pointing past the end of particle range
  * @param pi Pointer to particle that is considered
  * @param with_replicas If periodic replicas are to be considered
- *        at all. If false, distences are calulated as Euclidian
+ *        at all. If false, distances are calulated as Euclidean
  *        distances, and not using minimum image convention.
  * @param ncut Number of replicas in each direction.
  * @param init Initial value of the sum.
@@ -197,8 +196,8 @@ T image_sum(InputIterator begin, InputIterator end, InputIterator pi,
 }
 
 template <typename T>
-std::vector<T> all_gather(const boost::mpi::communicator &comm,
-                          const T &local_value) {
+std::vector<T> all_gather(boost::mpi::communicator const &comm,
+                          T const &local_value) {
   std::vector<T> all_values;
   boost::mpi::all_gather(comm, local_value, all_values);
 
@@ -232,12 +231,11 @@ void collect_local_particles(ParticleRange const &particles,
 } // namespace
 
 /**
- * @brief Calculated the interaction forces.
+ * @brief Calculate and add the interaction forces/torques to the particles.
  *
- * This employs a parallel n2 loop over all particle
- * pairs. The computation the partitioned into serveral
- * steps so that the communication latency can be hidden
- * behinder some local computation:
+ * This employs a parallel N-square loop over all particle pairs.
+ * The computation the partitioned into several steps so that the
+ * communication latency can be hidden behinder some local computation:
  *
  * 1. The local particle positions and momenta are packed into
  *    one array.
@@ -250,8 +248,9 @@ void collect_local_particles(ParticleRange const &particles,
  *    every pair is visited twice (not necessarily on the same rank)
  *    so that no reduction of the forces is needed.
  *
- * Logically this is equivalent to the potential calculation in @f mdds_energy,
- * which calculates a naiive n2 sum, but has better performance and scaling.
+ * Logically this is equivalent to the potential calculation
+ * in @ref DipolarDirectSum::long_range_energy, which calculates
+ * a naive N-square sum, but has better performance and scaling.
  */
 void DipolarDirectSum::add_long_range_forces(
     ParticleRange const &particles) const {
@@ -280,20 +279,21 @@ void DipolarDirectSum::add_long_range_forces(
 
   /* Number of image boxes considered */
   auto const ncut =
-      n_replica * Utils::Vector3i{static_cast<int>(::box_geo.periodic(0)),
-                                  static_cast<int>(::box_geo.periodic(1)),
-                                  static_cast<int>(::box_geo.periodic(2))};
+      n_replicas * Utils::Vector3i{static_cast<int>(::box_geo.periodic(0)),
+                                   static_cast<int>(::box_geo.periodic(1)),
+                                   static_cast<int>(::box_geo.periodic(2))};
   auto const with_replicas = (ncut.norm2() > 0);
 
   /* Range of particles we calculate the ia for on this node */
-  auto begin = all_posmom.begin() + offset;
-  auto const end = begin + local_interacting_particles.size();
+  auto const local_posmom_begin = all_posmom.begin() + offset;
+  auto const local_posmom_end =
+      local_posmom_begin + local_interacting_particles.size();
 
   /* Output iterator for the force */
   auto p = local_interacting_particles.begin();
 
   /* IA with local particles */
-  for (auto pi = begin; pi != end; ++pi, ++p) {
+  for (auto pi = local_posmom_begin; pi != local_posmom_end; ++pi, ++p) {
     /* IA with own images */
     auto fi = image_sum(
         pi, std::next(pi), pi, with_replicas, ncut, box_l, ParticleForce{},
@@ -303,7 +303,7 @@ void DipolarDirectSum::add_long_range_forces(
 
     /* IA with other local particles */
     auto q = std::next(p);
-    for (auto pj = std::next(pi); pj != end; ++pj, ++q) {
+    for (auto pj = std::next(pi); pj != local_posmom_end; ++pj, ++q) {
       auto const d = (with_replicas)
                          ? (pi->pos - pj->pos)
                          : ::box_geo.get_mi_vector(pi->pos, pj->pos);
@@ -331,18 +331,18 @@ void DipolarDirectSum::add_long_range_forces(
 
   /* Interaction with all the other particles */
   p = local_interacting_particles.begin();
-  for (auto pi = begin; pi != end; ++pi, ++p) {
+  for (auto pi = local_posmom_begin; pi != local_posmom_end; ++pi, ++p) {
     // red particles
     auto fi =
-        image_sum(all_posmom.begin(), begin, pi, with_replicas, ncut, box_l,
-                  ParticleForce{},
+        image_sum(all_posmom.begin(), local_posmom_begin, pi, with_replicas,
+                  ncut, box_l, ParticleForce{},
                   [pi](Utils::Vector3d const &rn, Utils::Vector3d const &mj) {
                     return pair_force(rn, pi->m, mj);
                   });
 
     // black particles
-    fi += image_sum(end, all_posmom.end(), pi, with_replicas, ncut, box_l,
-                    ParticleForce{},
+    fi += image_sum(local_posmom_end, all_posmom.end(), pi, with_replicas, ncut,
+                    box_l, ParticleForce{},
                     [pi](Utils::Vector3d const &rn, Utils::Vector3d const &mj) {
                       return pair_force(rn, pi->m, mj);
                     });
@@ -353,10 +353,9 @@ void DipolarDirectSum::add_long_range_forces(
 }
 
 /**
- * @brief Calculated the interaction potentials.
+ * @brief Calculate the interaction potential.
  *
- * This employs a parallel n2 loop over all particle
- * pairs.
+ * This employs a parallel N-square loop over all particle pairs.
  */
 double
 DipolarDirectSum::long_range_energy(ParticleRange const &particles) const {
@@ -367,7 +366,8 @@ DipolarDirectSum::long_range_energy(ParticleRange const &particles) const {
 
   collect_local_particles(particles, local_interacting_particles, local_posmom);
 
-  const auto sizes = all_gather(comm, static_cast<int>(local_posmom.size()));
+  auto const local_size = static_cast<int>(local_posmom.size());
+  auto const sizes = all_gather(comm, local_size);
 
   int offset, total_size;
   std::tie(offset, total_size) = offset_and_size(sizes, comm.rank());
@@ -375,7 +375,7 @@ DipolarDirectSum::long_range_energy(ParticleRange const &particles) const {
   std::vector<PosMom> all_posmom;
   if (comm.size() > 1) {
     all_posmom.resize(total_size);
-    Utils::Mpi::all_gatherv(comm, local_posmom.data(), local_posmom.size(),
+    Utils::Mpi::all_gatherv(comm, local_posmom.data(), local_size,
                             all_posmom.data(), sizes.data());
   } else {
     std::swap(all_posmom, local_posmom);
@@ -383,12 +383,13 @@ DipolarDirectSum::long_range_energy(ParticleRange const &particles) const {
 
   /* Number of image boxes considered */
   auto const ncut =
-      n_replica * Utils::Vector3i{static_cast<int>(::box_geo.periodic(0)),
-                                  static_cast<int>(::box_geo.periodic(1)),
-                                  static_cast<int>(::box_geo.periodic(2))};
+      n_replicas * Utils::Vector3i{static_cast<int>(::box_geo.periodic(0)),
+                                   static_cast<int>(::box_geo.periodic(1)),
+                                   static_cast<int>(::box_geo.periodic(2))};
   auto const with_replicas = (ncut.norm2() > 0);
+
   /* Range of particles we calculate the ia for on this node */
-  auto begin = all_posmom.begin() + offset;
+  auto const begin = all_posmom.begin() + offset;
   auto const end = begin + local_interacting_particles.size();
 
   /* Output iterator for the force */
@@ -405,13 +406,13 @@ DipolarDirectSum::long_range_energy(ParticleRange const &particles) const {
   return prefactor * u;
 }
 
-DipolarDirectSum::DipolarDirectSum(double prefactor, int n_replica)
-    : prefactor{prefactor}, n_replica{n_replica} {
+DipolarDirectSum::DipolarDirectSum(double prefactor, int n_replicas)
+    : prefactor{prefactor}, n_replicas{n_replicas} {
   if (prefactor <= 0.) {
     throw std::domain_error("Parameter 'prefactor' must be > 0");
   }
-  if (n_replica < 0) {
-    throw std::domain_error("Parameter 'n_replica' must be >= 0");
+  if (n_replicas < 0) {
+    throw std::domain_error("Parameter 'n_replicas' must be >= 0");
   }
 }
 
