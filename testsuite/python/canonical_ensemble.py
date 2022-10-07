@@ -107,19 +107,12 @@ class Test(ut.TestCase):
             (_, b, c), _ = scipy.optimize.curve_fit(
                 lambda x, a, b, c: a * np.exp(-b * x**2) + c, xdata, ydata)
             # check histogram profile is roughly gaussian
-            print(axis)
-            print(b, 0.5 / method.kT)
-            print(c, 0.)
-            print(np.mean(series), 0.)
-            print(np.median(series), 0.)
-            print(np.var(series), method.kT)
-            print()
-            self.assertAlmostEqual(b, 0.5 / method.kT, delta=0.5)
-            self.assertAlmostEqual(c, 0., delta=0.001)
+            self.assertAlmostEqual(b, 0.5 / method.kT, delta=0.45)
+            self.assertAlmostEqual(c, 0., delta=0.002)
             # check distribution parameters with high accuracy
             self.assertAlmostEqual(np.mean(series), 0., delta=0.05)
-            self.assertAlmostEqual(np.median(series), 0., delta=0.02)
-            self.assertAlmostEqual(np.var(series), method.kT, delta=0.02)
+            self.assertAlmostEqual(np.median(series), 0., delta=0.025)
+            self.assertAlmostEqual(np.var(series), method.kT, delta=0.025)
 
 
 if __name__ == "__main__":
