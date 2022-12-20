@@ -2,9 +2,6 @@ name: run tests on mac
 
 on:
   push:
-  pull_request:
-  schedule:
-    - cron: '0 3 * * *'
 
 permissions:
   contents: read # to fetch code (actions/checkout)
@@ -26,10 +23,6 @@ jobs:
           ubsan: false
 
   sanitizer_check:
-    permissions:
-      contents: read # to fetch code (actions/checkout)
-      issues: write # to create an issue
-
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -43,13 +36,17 @@ jobs:
         with:
           asan: true
           ubsan: true
-      - name: Setting job link variable
-        if: ${{ failure() }}
-        run: |
-          echo "job_link=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >> $GITHUB_ENV
-      - uses: alialaa/issue-action@v1
-        if: ${{ failure() }}
+
+  deploy_docs:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Install pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.7.0
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: Scheduled CI job has failed
-          body: ${{ env.job_link }}
+          ssh-private-key: ${{ secrets.GH_PAGES_SSH_PRIVATE_KEY }}
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Deploy documentation
+        uses: ./.github/actions/deploy_docs
