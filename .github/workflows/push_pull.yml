@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   regular_check:
-    runs-on: macos-latest
+    runs-on: macos-12
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -23,7 +23,7 @@ jobs:
           ubsan: false
 
   sanitizer_check:
-    runs-on: macos-latest
+    runs-on: macos-12
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -38,7 +38,7 @@ jobs:
           ubsan: true
 
   deploy_docs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Install pandoc
         uses: r-lib/actions/setup-pandoc@v2
