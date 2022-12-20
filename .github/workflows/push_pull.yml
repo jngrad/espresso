@@ -12,7 +12,6 @@ permissions:
 jobs:
   regular_check:
     runs-on: macos-latest
-    if: github.event_name != 'schedule'
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -32,7 +31,6 @@ jobs:
       issues: write # to create an issue
 
     runs-on: macos-latest
-    if: (github.event_name == 'schedule' && github.repository == 'espressomd/espresso')
     steps:
       - name: Checkout
         uses: actions/checkout@main
