@@ -216,6 +216,9 @@ protected:
     return -10.;
   }
 
+public:
+  bool check_exclusion_range_si(int pid);
+
 private:
   std::mt19937 m_generator;
   std::normal_distribution<double> m_normal_distribution;

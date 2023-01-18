@@ -46,7 +46,27 @@
 #include <utility>
 #include <vector>
 
+#include "communication.hpp"
+#include <utils/mpi/gather_buffer.hpp>
+#include <vector>
 namespace ReactionMethods {
+
+static std::vector<int> mpi_get_pids_of_type_local(int type) {
+  std::vector<int> pids;
+  for (auto const &p : ::cell_structure.local_particles()) {
+    if (p.type() == type) {
+      pids.push_back(p.id());
+    }
+  }
+  Utils::Mpi::gather_buffer(pids, ::comm_cart);
+  return pids;
+}
+
+REGISTER_CALLBACK_MAIN_RANK(mpi_get_pids_of_type_local)
+
+std::vector<int> mpi_get_pids_of_type(int type) {
+  return mpi_call(::Communication::Result::main_rank, mpi_get_pids_of_type_local, type);
+}
 
 /**
  * Performs a randomly selected reaction in the reaction ensemble
@@ -371,6 +391,12 @@ void ReactionAlgorithm::check_exclusion_range(int inserted_particle_id) {
       break;
     }
   }
+}
+
+bool ReactionAlgorithm::check_exclusion_range_si(int pid) {
+  particle_inside_exclusion_range_touched = false;
+  check_exclusion_range(pid);
+  return particle_inside_exclusion_range_touched;
 }
 
 /**

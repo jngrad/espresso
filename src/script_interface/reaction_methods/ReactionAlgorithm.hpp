@@ -25,12 +25,19 @@
 #include "script_interface/ScriptInterface.hpp"
 
 #include "core/reaction_methods/ReactionAlgorithm.hpp"
+#include "core/energy.hpp"
+#include "core/cells.hpp"
+#include "core/communication.hpp"
 
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+namespace ReactionMethods {
+std::vector<int> mpi_get_pids_of_type(int type);
+}
 
 namespace ScriptInterface {
 namespace ReactionMethods {
@@ -156,6 +163,13 @@ public:
       auto const type = get_value<int>(parameters, "type");
       auto const charge = get_value<double>(parameters, "charge");
       RE()->charges_of_types[type] = charge;
+    } else if (name == "potential_energy") {
+      return mpi_calculate_potential_energy();
+    } else if (name == "get_pids_of_type") {
+      auto const type = get_value<int>(parameters, "ptype");
+      return ::ReactionMethods::mpi_get_pids_of_type(type);
+    } else if (name == "check_exclusion_range") {
+      return RE()->check_exclusion_range_si(get_value<int>(parameters, "pid"));
     } else {
       throw std::runtime_error(("unknown method '" + name + "()'").c_str());
     }
