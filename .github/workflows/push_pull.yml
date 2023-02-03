@@ -6,7 +6,7 @@ jobs:
   container-test-job:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/espressomd/docker/debian:3fd42369f84239b8c4f5d77067d404789c55ff44
+      image: ghcr.io/jngrad/espresso-docker/debian:04437d653f7e6367c30b380a8a55dfc78caae871
       credentials:
          username: ${{ github.actor }}
          password: ${{ secrets.github_token }}
