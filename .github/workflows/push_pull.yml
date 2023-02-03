@@ -3,7 +3,7 @@ on:
   push:
     branches: [ ci-linux ]
 jobs:
-  container-test-job:
+  debian:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/jngrad/espresso-docker/debian:04437d653f7e6367c30b380a8a55dfc78caae871
@@ -12,8 +12,6 @@ jobs:
          password: ${{ secrets.github_token }}
       options: --cpus 1
     steps:
-      - name: Check for dockerenv file
-        run: (whoami) || (echo No dockerenv)
       - name: Checkout
         uses: actions/checkout@main
       - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -23,11 +21,39 @@ jobs:
           asan: false
           ubsan: false
         env:
-          with_cuda: 'false'
-          with_gsl: 'false'
           myconfig: 'maxset'
+          with_cuda: 'false'
+          with_hdf5: 'true'
+          with_fftw: 'true'
+          with_gsl: 'false'
+          with_scafacos: 'false'
+          with_stokesian_dynamics: 'false'
+          make_check_unit_tests: 'true'
           make_check_python: 'false'
-          with_stokesian_dynamics: 'true'
-
-
-
+  ubuntu-without-dependencies:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/jngrad/espresso-docker/ubuntu-wo-dependencies:04437d653f7e6367c30b380a8a55dfc78caae871
+      credentials:
+         username: ${{ github.actor }}
+         password: ${{ secrets.github_token }}
+      options: --cpus 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Build and check
+        uses: ./.github/actions/build_and_check
+        with:
+          asan: false
+          ubsan: false
+        env:
+          myconfig: 'maxset'
+          with_cuda: 'false'
+          with_hdf5: 'false'
+          with_fftw: 'false'
+          with_gsl: 'false'
+          with_scafacos: 'false'
+          with_stokesian_dynamics: 'false'
+          make_check_unit_tests: 'false'
+          make_check_python: 'false'
