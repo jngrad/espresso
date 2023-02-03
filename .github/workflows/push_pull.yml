@@ -1,57 +1,16 @@
-name: run tests on mac
-
+name: run tests on linux
 on:
   push:
-  pull_request:
-  schedule:
-    - cron: '0 3 * * *'
-
-permissions:
-  contents: read # to fetch code (actions/checkout)
-
+    branches: [ ci-linux ]
 jobs:
-  regular_check:
-    runs-on: macos-12
-    if: github.event_name != 'schedule'
+  container-test-job:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/espressomd/docker/debian:3fd42369f84239b8c4f5d77067d404789c55ff44
+      credentials:
+         username: ${{ github.actor }}
+         password: ${{ secrets.github_token }}
+      options: --cpus 1
     steps:
-      - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup Python environment
-        uses: actions/setup-python@v4.3.1
-        with:
-          python-version: '3.9'
-      - name: Check without sanitizer
-        uses: ./.github/actions/build_and_check
-        with:
-          asan: false
-          ubsan: false
-
-  sanitizer_check:
-    permissions:
-      contents: read # to fetch code (actions/checkout)
-      issues: write # to create an issue
-
-    runs-on: macos-12
-    if: (github.event_name == 'schedule' && github.repository == 'espressomd/espresso')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup Python environment
-        uses: actions/setup-python@v4.3.1
-        with:
-          python-version: '3.9'
-      - name: Check with sanitizer
-        uses: ./.github/actions/build_and_check
-        with:
-          asan: true
-          ubsan: true
-      - name: Setting job link variable
-        if: ${{ failure() }}
-        run: |
-          echo "job_link=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >> $GITHUB_ENV
-      - uses: alialaa/issue-action@v1
-        if: ${{ failure() }}
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: Scheduled CI job has failed
-          body: ${{ env.job_link }}
+      - name: Check for dockerenv file
+        run: (ls /.dockerenv && echo Found dockerenv) || (echo No dockerenv)
