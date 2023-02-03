@@ -10,8 +10,13 @@ jobs:
       credentials:
          username: ${{ github.actor }}
          password: ${{ secrets.github_token }}
-      options: --cpus 1 --user espresso:espresso
+      options: --cpus 1
     steps:
+      - name: Username
+        run: |
+         adduser espresso
+         su espresso
+         cd /home/espresso
       - name: Checkout
         uses: actions/checkout@main
       - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
