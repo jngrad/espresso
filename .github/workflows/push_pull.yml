@@ -12,6 +12,8 @@ jobs:
          password: ${{ secrets.github_token }}
       options: --cpus 1
     steps:
+      - name: Check for dockerenv file
+        run: (whoami) || (echo No dockerenv)
       - name: Checkout
         uses: actions/checkout@main
       - name: Build and check
