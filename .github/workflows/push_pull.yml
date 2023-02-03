@@ -12,5 +12,19 @@ jobs:
          password: ${{ secrets.github_token }}
       options: --cpus 1
     steps:
-      - name: Check for dockerenv file
-        run: (ls /.dockerenv && echo Found dockerenv) || (echo No dockerenv)
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Build and check
+        uses: ./.github/actions/build_and_check
+        with:
+          asan: false
+          ubsan: false
+        env:
+          with_cuda: 'false'
+          with_gsl: 'false'
+          myconfig: 'maxset'
+          make_check_python: 'false'
+          with_stokesian_dynamics: 'true'
+
+
+
