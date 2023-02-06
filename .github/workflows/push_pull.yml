@@ -3,23 +3,37 @@ on:
   push:
     branches: [ ci-linux ]
 jobs:
+  regular_check:
+    runs-on: macos-12
+    if: github.event_name != 'schedule'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Get specs
+        run: system_profiler SPHardwareDataType
+      - name: Setup Python environment
+        uses: actions/setup-python@v4.3.1
+        with:
+          python-version: '3.9'
+      - name: Check without sanitizer
+        uses: ./.github/actions/build_and_check
+        with:
+          asan: false
+          ubsan: false
+
   debian:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/espressomd/docker/debian:3fd42369f84239b8c4f5d77067d404789c55ff44
+      image: ghcr.io/jngrad/espresso-docker/debian:04437d653f7e6367c30b380a8a55dfc78caae871
       credentials:
          username: ${{ github.actor }}
          password: ${{ secrets.github_token }}
-      options: --cpus 1
+      options: --cpus 3
     steps:
-      - name: Username
-        run: |
-         adduser espresso
-         su espresso
-         cd /home/espresso
       - name: Checkout
         uses: actions/checkout@main
-      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Setup Git environment
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Build and check
         uses: ./.github/actions/build_and_check
         with:
@@ -35,3 +49,37 @@ jobs:
           with_stokesian_dynamics: 'false'
           make_check_unit_tests: 'true'
           make_check_python: 'false'
+          OMPI_ALLOW_RUN_AS_ROOT: 1
+          OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+  ubuntu-without-dependencies:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/jngrad/espresso-docker/ubuntu-wo-dependencies:04437d653f7e6367c30b380a8a55dfc78caae871
+      credentials:
+         username: ${{ github.actor }}
+         password: ${{ secrets.github_token }}
+      options: --cpus 2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Setup Git environment
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Get specs
+        run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
+      - name: Build and check
+        uses: ./.github/actions/build_and_check
+        with:
+          asan: false
+          ubsan: false
+        env:
+          myconfig: 'maxset'
+          with_cuda: 'false'
+          with_hdf5: 'false'
+          with_fftw: 'false'
+          with_gsl: 'false'
+          with_scafacos: 'false'
+          with_stokesian_dynamics: 'false'
+          make_check_unit_tests: 'false'
+          make_check_python: 'false'
+          OMPI_ALLOW_RUN_AS_ROOT: 1
+          OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
