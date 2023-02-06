@@ -1,4 +1,4 @@
-name: run tests on linux
+name: run tests
 on:
   push:
     branches: [ ci-linux ]
@@ -9,17 +9,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@main
-      - name: Get specs
-        run: system_profiler SPHardwareDataType
       - name: Setup Python environment
         uses: actions/setup-python@v4.3.1
         with:
           python-version: '3.9'
+      - name: Get runner specifications
+        run: system_profiler SPHardwareDataType
       - name: Check without sanitizer
         uses: ./.github/actions/build_and_check
         with:
           asan: false
           ubsan: false
+        env:
+          build_procs: 3
+          check_procs: 3
 
   debian:
     runs-on: ubuntu-latest
@@ -28,18 +31,22 @@ jobs:
       credentials:
          username: ${{ github.actor }}
          password: ${{ secrets.github_token }}
-      options: --cpus 3
+      options: --cpus 2
     steps:
       - name: Checkout
         uses: actions/checkout@main
       - name: Setup Git environment
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Get runner specifications
+        run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
       - name: Build and check
         uses: ./.github/actions/build_and_check
         with:
           asan: false
           ubsan: false
         env:
+          build_procs: 2
+          check_procs: 2
           myconfig: 'maxset'
           with_cuda: 'false'
           with_hdf5: 'true'
@@ -51,6 +58,7 @@ jobs:
           make_check_python: 'false'
           OMPI_ALLOW_RUN_AS_ROOT: 1
           OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+
   ubuntu-without-dependencies:
     runs-on: ubuntu-latest
     container:
@@ -64,7 +72,7 @@ jobs:
         uses: actions/checkout@main
       - name: Setup Git environment
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-      - name: Get specs
+      - name: Get runner specifications
         run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
       - name: Build and check
         uses: ./.github/actions/build_and_check
@@ -72,6 +80,8 @@ jobs:
           asan: false
           ubsan: false
         env:
+          build_procs: 2
+          check_procs: 2
           myconfig: 'maxset'
           with_cuda: 'false'
           with_hdf5: 'false'
