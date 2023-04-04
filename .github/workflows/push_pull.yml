@@ -1,12 +1,18 @@
 name: run tests
+
 on:
   push:
-    branches: [ ci-linux ]
+  pull_request:
+  schedule:
+    - cron: '0 3 * * *'
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
 jobs:
   macos:
     runs-on: macos-12
-    #if: github.event_name != 'schedule'
-    if: false
+    if: github.event_name != 'schedule'
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -31,8 +37,7 @@ jobs:
       issues: write # to create an issue
 
     runs-on: macos-12
-    #if: (github.event_name == 'schedule' && github.repository == 'espressomd/espresso')
-    if: false
+    if: (github.event_name == 'schedule' && github.repository == 'espressomd/espresso')
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -63,6 +68,7 @@ jobs:
 
   debian:
     runs-on: ubuntu-latest
+    if: (github.event_name != 'push' && github.repository == 'espressomd/espresso')
     container:
       image: ghcr.io/jngrad/espresso-docker/debian:09588f49ff226c29fb7cffec4240344902468f76_base_layer
       credentials:
@@ -98,6 +104,7 @@ jobs:
 
   ubuntu-without-dependencies:
     runs-on: ubuntu-latest
+    if: (github.event_name != 'push' && github.repository == 'espressomd/espresso')
     container:
       image: ghcr.io/jngrad/espresso-docker/ubuntu-wo-dependencies:09588f49ff226c29fb7cffec4240344902468f76_base_layer
       credentials:
