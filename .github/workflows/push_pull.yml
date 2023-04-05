@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@main
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ccache
       - name: Setup Python environment
         uses: actions/setup-python@v4.3.1
         with:
@@ -36,6 +40,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@main
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ccache
       - name: Setup Python environment
         uses: actions/setup-python@v4.3.1
         with:
@@ -72,6 +80,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@main
+      - run: apt update # required for ccache
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ccache
       - name: Setup Git environment
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Get runner specifications
@@ -85,6 +98,7 @@ jobs:
           build_procs: 2
           check_procs: 2
           myconfig: 'maxset'
+          with_ccache: 'true'
           with_cuda: 'false'
           with_hdf5: 'true'
           with_fftw: 'true'
@@ -107,6 +121,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@main
+      - run: apt update # required for ccache
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ccache
       - name: Setup Git environment
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Get runner specifications
@@ -120,6 +139,7 @@ jobs:
           build_procs: 2
           check_procs: 2
           myconfig: 'maxset'
+          with_ccache: 'true'
           with_cuda: 'false'
           with_hdf5: 'false'
           with_fftw: 'false'
