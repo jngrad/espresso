@@ -105,7 +105,7 @@ jobs:
           with_gsl: 'false'
           with_scafacos: 'false'
           with_stokesian_dynamics: 'false'
-          make_check_unit_tests: 'false'
+          make_check_unit_tests: 'true'
           make_check_python: 'false'
           OMPI_ALLOW_RUN_AS_ROOT: 1
           OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
