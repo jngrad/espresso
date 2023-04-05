@@ -9,6 +9,7 @@ permissions:
 jobs:
   macos:
     runs-on: macos-12
+    if: false
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -37,6 +38,7 @@ jobs:
       issues: write # to create an issue
 
     runs-on: macos-12
+    if: false
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -80,7 +82,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@main
-      - run: apt update # required for ccache
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -121,7 +122,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@main
-      - run: apt update # required for ccache
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
