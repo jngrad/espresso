@@ -15,7 +15,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ccache
+          key: macos
       - name: Setup Python environment
         uses: actions/setup-python@v4.3.1
         with:
@@ -43,7 +43,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ccache
+          key: macos_sanitizers
       - name: Setup Python environment
         uses: actions/setup-python@v4.3.1
         with:
@@ -84,7 +84,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ccache
+          key: debian
       - name: Setup Git environment
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Get runner specifications
@@ -125,7 +125,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ccache
+          key: ubuntu-without-dependencies
       - name: Setup Git environment
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Get runner specifications
