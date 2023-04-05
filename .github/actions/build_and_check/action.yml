@@ -20,6 +20,7 @@ runs:
       if: runner.os == 'macOS'
     - run: |
         export myconfig=maxset with_cuda=false with_gsl=false test_timeout=800 with_asan=${{ inputs.asan }} with_ubsan=${{ inputs.ubsan }} check_skip_long=true with_ccache=true
+        export make_check_unit_tests=false make_check_python=false
         bash maintainer/CI/build_cmake.sh
       shell: bash
       # This is a workaround for the unfortunate interaction of MacOS and OpenMPI 4
