@@ -58,7 +58,7 @@ class VirtualSites(ut.TestCase):
              - quat[2] * quat[2] + quat[3] * quat[3])))
 
     def verify_vs(self, vs, verify_velocity=True):
-        """Verify vs position and (if compiled in) velocity."""
+        """Verify vs position and velocity."""
         self.assertTrue(vs.virtual)
 
         vs_r = vs.vs_relative
