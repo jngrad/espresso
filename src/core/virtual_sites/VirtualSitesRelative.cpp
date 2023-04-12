@@ -124,7 +124,7 @@ void VirtualSitesRelative::update() const {
       push(p, -1); // includes a position fold
     } else {
       fold_position(p.pos(), p.image_box(), box_geo);
-     }
+    }
 
     if (have_quaternions())
       p.quat() = p_ref.quat() * p.vs_relative().quat;
