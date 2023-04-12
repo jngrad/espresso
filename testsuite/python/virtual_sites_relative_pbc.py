@@ -112,11 +112,7 @@ class Test(ut.TestCase):
             check_pos(real_part1, unit_cell, pos_away[1] + 0 * le_vec)
             check_pos(virt_part1, image_box, pos_near[1] + 1 * le_vec)
             check_pos(real_part2, image_box, pos_near[1] - 1 * le_vec)
-            # TODO: figure out MPI issue
-            if system.cell_system.node_grid[0] == 1:
-                check_pos(virt_part2, unit_cell, pos_away[1] - 2 * le_vec)
-            else:
-                check_pos(virt_part2, -image_box, pos_away[1] - 2 * le_vec + [-le_dir * box_l, 0., 0.])
+            check_pos(virt_part2, unit_cell, pos_away[1] - 2 * le_vec)
             system.integrator.run(1)
             check_dist(real_part1, virt_part1)
             check_dist(real_part2, virt_part2)
