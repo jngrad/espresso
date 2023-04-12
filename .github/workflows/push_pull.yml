@@ -18,7 +18,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: macos
-          save: ${{ ! startsWith(github.action_ref, 'refs/') }}
+          save: ${{ ! startsWith(github.ref, 'refs/pull') }}
       - name: Setup Python environment
         uses: actions/setup-python@v4.3.1
         with:
@@ -37,7 +37,7 @@ jobs:
     container:
       image: ghcr.io/espressomd/docker/debian:f6cf74049a2521b2b5580d23d42c8290c5f7611e-base-layer
       credentials:
-         username: ${{ github.action_ref }}
+         username: ${{ github.actor }}
          password: ${{ secrets.github_token }}
       options: --cpus 2
     steps:
@@ -47,7 +47,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: debian
-          save: ${{ ! startsWith(github.action_ref, 'refs/') }}
+          save: ${{  startsWith(github.ref, 'refs/pull') }}
       - name: Setup Git environment
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Get runner specifications
@@ -86,7 +86,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ubuntu
-          save: ${{ ! startsWith(github.action_ref, 'refs/') }}
+          save: ${{ ! startsWith(github.ref, 'refs/pull') }}
       - name: Setup Git environment
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Get runner specifications
