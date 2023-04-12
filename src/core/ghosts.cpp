@@ -299,6 +299,7 @@ static void cell_cell_transfer(const GhostCommunication &ghost_comm,
           /* ok, this is not nice, but perhaps fast */
           part2.r = part1.r;
           part2.pos() += ghost_comm.shift;
+          fold_position(part2.pos(), part2.image_box(), ::box_geo);
         }
         if (data_parts & GHOSTTRANS_MOMENTUM) {
           part2.m = part1.m;
