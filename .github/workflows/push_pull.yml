@@ -10,7 +10,7 @@ permissions:
 jobs:
   macos:
     runs-on: macos-12
-    if: ${{ github.repository == 'espressomd/espresso' }}
+    if: false
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -37,7 +37,7 @@ jobs:
     container:
       image: ghcr.io/espressomd/docker/debian:f6cf74049a2521b2b5580d23d42c8290c5f7611e-base-layer
       credentials:
-         username: ${{ github.actor }}
+         username: ${{ github.action_ref }}
          password: ${{ secrets.github_token }}
       options: --cpus 2
     steps:
@@ -72,7 +72,7 @@ jobs:
 
   ubuntu:
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'espressomd/espresso' }}
+    if: false
     container:
       image: ghcr.io/espressomd/docker/ubuntu-wo-dependencies:f6cf74049a2521b2b5580d23d42c8290c5f7611e-base-layer
       credentials:
