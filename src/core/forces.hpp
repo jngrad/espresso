@@ -30,6 +30,7 @@
  *  Implementation in forces.cpp.
  */
 
+#include "Integrator.hpp"
 #include "ParticleRange.hpp"
 #include "cell_system/CellStructure.hpp"
 #include "galilei/ComFixed.hpp"
@@ -57,15 +58,18 @@ void init_forces_ghosts(const ParticleRange &particles);
  *  <li> Calculate long range interaction forces
  *  </ol>
  */
-void force_calc(CellStructure &cell_structure, double time_step, double kT);
+void force_calc(CellStructure &cell_structure, Integrator &integrator,
+                double kT);
 
 /** Calculate long range forces (P3M, ...). */
-void calc_long_range_forces(const ParticleRange &particles);
+void calc_long_range_forces(Integrator const &integrator,
+                            ParticleRange const &particles);
 
 #ifdef NPT
 /** Update the NpT virial */
-void npt_add_virial_force_contribution(const Utils::Vector3d &force,
-                                       const Utils::Vector3d &d);
+void npt_add_virial_force_contribution(Integrator const &integrator,
+                                       Utils::Vector3d const &force,
+                                       Utils::Vector3d const &d);
 #endif
 
 #endif

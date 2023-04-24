@@ -28,6 +28,7 @@
 
 #include "forces.hpp"
 
+#include "Integrator.hpp"
 #include "actor/visitors.hpp"
 #include "bond_breakage/bond_breakage.hpp"
 #include "bonded_interactions/bonded_interaction_data.hpp"
@@ -170,13 +171,14 @@ inline ParticleForce calc_opposing_force(ParticleForce const &pf,
  *  @param[in] d           vector between @p p1 and @p p2.
  *  @param[in] dist        distance between @p p1 and @p p2.
  *  @param[in] dist2       distance squared between @p p1 and @p p2.
+ *  @param[in] integrator      Global integrator state.
  *  @param[in] coulomb_kernel  %Coulomb force kernel.
  *  @param[in] dipoles_kernel  Dipolar force kernel.
  *  @param[in] elc_kernel      ELC force correction kernel.
  */
 inline void add_non_bonded_pair_force(
     Particle &p1, Particle &p2, Utils::Vector3d const &d, double dist,
-    double dist2,
+    double dist2, Integrator const &integrator,
     Coulomb::ShortRangeForceKernel::kernel_type const *coulomb_kernel,
     Dipoles::ShortRangeForceKernel::kernel_type const *dipoles_kernel,
     Coulomb::ShortRangeForceCorrectionsKernel::kernel_type const *elc_kernel) {
@@ -216,7 +218,7 @@ inline void add_non_bonded_pair_force(
   /* but nothing afterwards                                            */
   /*********************************************************************/
 #ifdef NPT
-  npt_add_virial_force_contribution(pf.f, d);
+  npt_add_virial_force_contribution(integrator, pf.f, d);
 #endif
 
   /***********************************************/
@@ -318,7 +320,7 @@ inline bool add_bonded_two_body_force(
       p2.force() -= result.get();
 
 #ifdef NPT
-      npt_add_virial_force_contribution(result.get(), dx);
+      npt_add_virial_force_contribution(get_integrator(), result.get(), dx);
 #endif
       return false;
     }

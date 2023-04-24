@@ -23,6 +23,7 @@
 
 #include "magnetostatics/dipoles.hpp"
 
+#include "Integrator.hpp"
 #include "ParticleRange.hpp"
 #include "actor/traits.hpp"
 #include "actor/visit_try_catch.hpp"
@@ -107,17 +108,16 @@ void on_observable_calc() {
 }
 
 struct LongRangeForce : public boost::static_visitor<void> {
-  ParticleRange const &m_particles;
-  explicit LongRangeForce(ParticleRange const &particles)
-      : m_particles(particles) {}
+  LongRangeForce(ParticleRange const &particles, Integrator const &integrator)
+      : m_particles(particles), m_integrator(integrator) {}
 
 #ifdef DP3M
   void operator()(std::shared_ptr<DipolarP3M> const &actor) const {
     actor->dipole_assign(m_particles);
 #ifdef NPT
-    if (integ_switch == INTEG_METHOD_NPT_ISO) {
+    if (m_integrator.type == INTEG_METHOD_NPT_ISO) {
       auto const energy = actor->kernel(true, true, m_particles);
-      npt_add_virial_contribution(energy);
+      npt_add_virial_contribution(m_integrator, energy);
       fprintf(stderr, "dipolar_P3M at this moment is added to p_vir[0]\n");
     } else
 #endif // NPT
@@ -146,6 +146,10 @@ struct LongRangeForce : public boost::static_visitor<void> {
     actor->add_long_range_forces();
   }
 #endif
+
+private:
+  ParticleRange const &m_particles;
+  Integrator const &m_integrator;
 };
 
 struct LongRangeEnergy : public boost::static_visitor<double> {
@@ -186,9 +190,11 @@ struct LongRangeEnergy : public boost::static_visitor<double> {
 #endif
 };
 
-void calc_long_range_force(ParticleRange const &particles) {
+void calc_long_range_force(Integrator const &integrator,
+                           ParticleRange const &particles) {
   if (magnetostatics_actor) {
-    boost::apply_visitor(LongRangeForce(particles), *magnetostatics_actor);
+    boost::apply_visitor(LongRangeForce(particles, integrator),
+                         *magnetostatics_actor);
   }
 }
 

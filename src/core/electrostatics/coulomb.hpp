@@ -35,6 +35,7 @@
 #include "electrostatics/reaction_field.hpp"
 #include "electrostatics/scafacos.hpp"
 
+#include "Integrator.hpp"
 #include "ParticleRange.hpp"
 
 #include <utils/Vector.hpp>
@@ -129,7 +130,8 @@ void on_node_grid_change();
 void on_periodicity_change();
 void on_cell_structure_change();
 
-void calc_long_range_force(ParticleRange const &particles);
+void calc_long_range_force(Integrator const &integrator,
+                           ParticleRange const &particles);
 double calc_energy_long_range(ParticleRange const &particles);
 
 namespace detail {

@@ -98,7 +98,7 @@ CellSystem::CellSystem() {
          }
          ::set_skin(new_skin);
        },
-       []() { return ::skin; }},
+       []() { return get_integrator().skin; }},
       {"decomposition_type", AutoParameter::read_only,
        [this]() {
          return cs_type_to_name.at(::cell_structure.decomposition_type());
@@ -157,7 +157,7 @@ Variant CellSystem::do_call_method(std::string const &name,
               {"regular", hd.count_particles_in_regular()},
               {"n_square", hd.count_particles_in_n_square()}}};
     }
-    state["verlet_reuse"] = get_verlet_reuse();
+    state["verlet_reuse"] = get_integrator().verlet_reuse;
     state["n_nodes"] = context()->get_comm().size();
     return state;
   }
@@ -228,7 +228,7 @@ Variant CellSystem::do_call_method(std::string const &name,
               get_value<double>(params, "tol"),
               get_value<int>(params, "int_steps"),
               get_value_or<bool>(params, "adjust_max_skin", false));
-    return ::skin;
+    return get_integrator().skin;
   }
   if (name == "get_max_range") {
     return ::cell_structure.max_range();

@@ -119,6 +119,7 @@ void DipolarP3M::init() {
   assert(dp3m.params.cao >= 1 and dp3m.params.cao <= 7);
   assert(dp3m.params.alpha > 0.);
 
+  auto const skin = get_integrator().skin;
   dp3m.params.cao3 = Utils::int_pow<3>(dp3m.params.cao);
   dp3m.params.recalc_a_ai_cao_cut(box_geo.length());
   dp3m.local_mesh.calc_local_ca_mesh(dp3m.params, local_geo, skin, 0.);
@@ -931,7 +932,7 @@ void DipolarP3M::calc_energy_correction() {
 
 #ifdef NPT
 void npt_add_virial_magnetic_contribution(double energy) {
-  npt_add_virial_contribution(energy);
+  npt_add_virial_contribution(get_integrator(), energy);
 }
 #endif // NPT
 #endif // DP3M

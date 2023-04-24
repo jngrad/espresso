@@ -249,6 +249,7 @@ void CoulombP3M::init() {
     elc_layer = elc_actor->elc.space_layer;
   }
 
+  auto const skin = get_integrator().skin;
   p3m.local_mesh.calc_local_ca_mesh(p3m.params, local_geo, skin, elc_layer);
   p3m.sm.resize(comm_cart, p3m.local_mesh);
 

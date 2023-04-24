@@ -111,15 +111,15 @@ inline ParticleForce init_real_particle_force(Particle const &p,
   return thermostat_force(p, time_step, kT) + external_force(p);
 }
 
-static void init_forces(const ParticleRange &particles,
-                        const ParticleRange &ghost_particles, double time_step,
-                        double kT) {
+static void init_forces(ParticleRange const &particles,
+                        ParticleRange const &ghost_particles,
+                        Integrator const &integrator, double kT) {
   ESPRESSO_PROFILER_CXX_MARK_FUNCTION;
   /* The force initialization depends on the used thermostat and the
      thermodynamic ensemble */
 
 #ifdef NPT
-  npt_reset_instantaneous_virials();
+  npt_reset_instantaneous_virials(integrator);
 #endif
 
   /* initialize forces with Langevin thermostat forces
@@ -127,7 +127,8 @@ static void init_forces(const ParticleRange &particles,
      set torque to zero for all and rescale quaternions
   */
   for (auto &p : particles) {
-    p.force_and_torque() = init_real_particle_force(p, time_step, kT);
+    p.force_and_torque() =
+        init_real_particle_force(p, integrator.time_step, kT);
   }
 
   /* initialize ghost forces with zero
@@ -144,7 +145,8 @@ void init_forces_ghosts(const ParticleRange &particles) {
   }
 }
 
-void force_calc(CellStructure &cell_structure, double time_step, double kT) {
+void force_calc(CellStructure &cell_structure, Integrator &integrator,
+                double kT) {
   ESPRESSO_PROFILER_CXX_MARK_FUNCTION;
 
   auto &espresso_system = EspressoSystemInterface::Instance();
@@ -164,9 +166,9 @@ void force_calc(CellStructure &cell_structure, double time_step, double kT) {
     }
   }
 #endif
-  init_forces(particles, ghost_particles, time_step, kT);
+  init_forces(particles, ghost_particles, integrator, kT);
 
-  calc_long_range_forces(particles);
+  calc_long_range_forces(integrator, particles);
 
   auto const elc_kernel = Coulomb::pair_force_elc_kernel();
   auto const coulomb_kernel = Coulomb::pair_force_kernel();
@@ -185,24 +187,24 @@ void force_calc(CellStructure &cell_structure, double time_step, double kT) {
 #endif
 
   short_range_loop(
-      [coulomb_kernel_ptr = coulomb_kernel.get_ptr()](
+      [coulomb_kernel_ptr = coulomb_kernel.get_ptr(), &integrator](
           Particle &p1, int bond_id, Utils::Span<Particle *> partners) {
         return add_bonded_force(p1, bond_id, partners, coulomb_kernel_ptr);
       },
       [coulomb_kernel_ptr = coulomb_kernel.get_ptr(),
        dipoles_kernel_ptr = dipoles_kernel.get_ptr(),
-       elc_kernel_ptr = elc_kernel.get_ptr()](Particle &p1, Particle &p2,
-                                              Distance const &d) {
+       elc_kernel_ptr = elc_kernel.get_ptr(),
+       &integrator](Particle &p1, Particle &p2, Distance const &d) {
         add_non_bonded_pair_force(p1, p2, d.vec21, sqrt(d.dist2), d.dist2,
-                                  coulomb_kernel_ptr, dipoles_kernel_ptr,
-                                  elc_kernel_ptr);
+                                  integrator, coulomb_kernel_ptr,
+                                  dipoles_kernel_ptr, elc_kernel_ptr);
 #ifdef COLLISION_DETECTION
         if (collision_params.mode != CollisionModeType::OFF)
           detect_collision(p1, p2, d.dist2);
 #endif
       },
       maximal_cutoff(n_nodes), maximal_cutoff_bonded(),
-      VerletCriterion<>{skin, interaction_range(), coulomb_cutoff,
+      VerletCriterion<>{integrator.skin, interaction_range(), coulomb_cutoff,
                         dipole_cutoff, collision_detection_cutoff()});
 
   Constraints::constraints.add_forces(particles, get_sim_time());
@@ -226,7 +228,7 @@ void force_calc(CellStructure &cell_structure, double time_step, double kT) {
   immersed_boundaries.volume_conservation(cell_structure);
 
   lb_lbcoupling_calc_particle_lattice_ia(thermo_virtual, particles,
-                                         ghost_particles, time_step);
+                                         ghost_particles, integrator.time_step);
 
 #ifdef CUDA
   copy_forces_from_GPU(particles, this_node);
@@ -247,26 +249,28 @@ void force_calc(CellStructure &cell_structure, double time_step, double kT) {
   forcecap_cap(particles);
 
   // mark that forces are now up-to-date
-  recalc_forces = false;
+  integrator.recalc_forces = false;
 }
 
-void calc_long_range_forces(const ParticleRange &particles) {
+void calc_long_range_forces(Integrator const &integrator,
+                            ParticleRange const &particles) {
   ESPRESSO_PROFILER_CXX_MARK_FUNCTION;
 #ifdef ELECTROSTATICS
   /* calculate k-space part of electrostatic interaction. */
-  Coulomb::calc_long_range_force(particles);
+  Coulomb::calc_long_range_force(integrator, particles);
 
 #endif // ELECTROSTATICS
 
 #ifdef DIPOLES
   /* calculate k-space part of the magnetostatic interaction. */
-  Dipoles::calc_long_range_force(particles);
+  Dipoles::calc_long_range_force(integrator, particles);
 #endif // DIPOLES
 }
 
 #ifdef NPT
-void npt_add_virial_force_contribution(const Utils::Vector3d &force,
-                                       const Utils::Vector3d &d) {
-  npt_add_virial_contribution(force, d);
+void npt_add_virial_force_contribution(Integrator const &integrator,
+                                       Utils::Vector3d const &force,
+                                       Utils::Vector3d const &d) {
+  npt_add_virial_contribution(integrator, force, d);
 }
 #endif

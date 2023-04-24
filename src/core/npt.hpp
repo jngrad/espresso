@@ -29,6 +29,7 @@
 
 #ifdef NPT
 #include "BoxGeometry.hpp"
+#include "Integrator.hpp"
 
 #include <utils/Vector.hpp>
 
@@ -84,12 +85,13 @@ extern NptIsoParameters nptiso;
 /** @brief Synchronizes NpT state such as instantaneous and average pressure
  */
 void synchronize_npt_state();
-void npt_ensemble_init(const BoxGeometry &box);
-void integrator_npt_sanity_checks();
-void npt_reset_instantaneous_virials();
-void npt_add_virial_contribution(double energy);
-void npt_add_virial_contribution(const Utils::Vector3d &force,
-                                 const Utils::Vector3d &d);
+void npt_ensemble_init(BoxGeometry const &box, Integrator const &integrator);
+void integrator_npt_sanity_checks(Integrator const &integrator);
+void npt_reset_instantaneous_virials(Integrator const &integrator);
+void npt_add_virial_contribution(Integrator const &integrator, double energy);
+void npt_add_virial_contribution(Integrator const &integrator,
+                                 Utils::Vector3d const &force,
+                                 Utils::Vector3d const &d);
 
 #endif // NPT
 #endif

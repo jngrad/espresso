@@ -230,6 +230,7 @@ void cells_re_init(CellStructureType new_cs) {
 }
 
 void check_resort_particles() {
+  auto const skin = get_integrator().skin;
   auto const level = (cell_structure.check_resort_required(
                          cell_structure.local_particles(), skin))
                          ? Cells::RESORT_LOCAL

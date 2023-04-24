@@ -88,6 +88,7 @@ void CoulombScafacosImpl::tune_r_cut() {
 
   auto const min_box_l = *boost::min_element(box_geo.length());
   auto const min_local_box_l = *boost::min_element(local_geo.length());
+  auto const skin = get_integrator().skin;
 
   /* The bisection code breaks down when r_min < 1 for several methods
    * (e.g. p2nfft, p3m, ewald) if the mesh size is not fixed (ScaFaCoS

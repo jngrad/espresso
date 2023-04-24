@@ -44,7 +44,7 @@ IntegratorHandle::IntegratorHandle() {
          m_instance->activate();
        },
        [this]() {
-         switch (::integ_switch) {
+         switch (::get_integrator().type) {
          case INTEG_METHOD_STEEPEST_DESCENT:
            return Variant{
                std::dynamic_pointer_cast<SteepestDescent>(m_instance)};
@@ -86,9 +86,10 @@ static bool checkpoint_filter(typename VariantMap::value_type const &kv) {
   /* When loading from a checkpoint file, defer the integrator object to last,
    * and skip the time_step if it is -1 to avoid triggering sanity checks.
    */
+  auto const &integrator = ::get_integrator();
   return kv.first != "integrator" and
-         not(kv.first == "time_step" and ::integ_switch == INTEG_METHOD_NVT and
-             get_time_step() == -1. and is_type<double>(kv.second) and
+         not(kv.first == "time_step" and integrator.type == INTEG_METHOD_NVT and
+             integrator.time_step == -1. and is_type<double>(kv.second) and
              get_value<double>(kv.second) == -1.);
 }
 

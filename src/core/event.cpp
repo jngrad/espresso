@@ -46,18 +46,11 @@
 #include "interactions.hpp"
 #include "magnetostatics/dipoles.hpp"
 #include "nonbonded_interactions/nonbonded_interaction_data.hpp"
-#include "npt.hpp"
 #include "partCfg_global.hpp"
 #include "particle_node.hpp"
 #include "thermostat.hpp"
 #include "virtual_sites.hpp"
 
-#include <utils/mpi/all_compare.hpp>
-
-#include <mpi.h>
-
-/** whether the thermostat has to be reinitialized before integration */
-static bool reinit_thermo = true;
 #ifdef ELECTROSTATICS
 /** whether electrostatics actor has to be reinitialized on observable calc */
 static bool reinit_electrostatics = false;
@@ -85,68 +78,6 @@ void on_program_start() {
 
   /* make sure interaction 0<->0 always exists */
   make_particle_type_exist(0);
-}
-
-void on_integration_start(double time_step) {
-  /********************************************/
-  /* sanity checks                            */
-  /********************************************/
-
-  integrator_sanity_checks();
-#ifdef NPT
-  integrator_npt_sanity_checks();
-#endif
-  long_range_interactions_sanity_checks();
-  lb_lbfluid_sanity_checks(time_step);
-
-  /********************************************/
-  /* end sanity checks                        */
-  /********************************************/
-
-  lb_lbfluid_on_integration_start();
-
-#ifdef CUDA
-  MPI_Bcast(gpu_get_global_particle_vars_pointer_host(),
-            sizeof(CUDA_global_part_vars), MPI_BYTE, 0, comm_cart);
-#endif
-
-  /* Prepare the thermostat */
-  if (reinit_thermo) {
-    thermo_init(time_step);
-    reinit_thermo = false;
-    recalc_forces = true;
-  }
-
-#ifdef NPT
-  npt_ensemble_init(box_geo);
-#endif
-
-  partCfg().invalidate();
-  invalidate_fetch_cache();
-
-#ifdef ADDITIONAL_CHECKS
-  if (!Utils::Mpi::all_compare(comm_cart, cell_structure.use_verlet_list)) {
-    runtimeErrorMsg() << "Nodes disagree about use of verlet lists.";
-  }
-#ifdef ELECTROSTATICS
-  {
-    auto const &actor = electrostatics_actor;
-    if (!Utils::Mpi::all_compare(comm_cart, static_cast<bool>(actor)) or
-        (actor and !Utils::Mpi::all_compare(comm_cart, (*actor).which())))
-      runtimeErrorMsg() << "Nodes disagree about Coulomb long-range method";
-  }
-#endif
-#ifdef DIPOLES
-  {
-    auto const &actor = magnetostatics_actor;
-    if (!Utils::Mpi::all_compare(comm_cart, static_cast<bool>(actor)) or
-        (actor and !Utils::Mpi::all_compare(comm_cart, (*actor).which())))
-      runtimeErrorMsg() << "Nodes disagree about dipolar long-range method";
-  }
-#endif
-#endif /* ADDITIONAL_CHECKS */
-
-  on_observable_calc();
 }
 
 void on_observable_calc() {
@@ -199,7 +130,7 @@ void on_particle_change() {
 #ifdef DIPOLES
   reinit_magnetostatics = true;
 #endif
-  recalc_forces = true;
+  set_recalc_forces(true);
 
   /* the particle information is no longer valid */
   partCfg().invalidate();
@@ -243,16 +174,16 @@ void on_non_bonded_ia_change() {
 
 void on_short_range_ia_change() {
   cells_re_init(cell_structure.decomposition_type());
-  recalc_forces = true;
+  set_recalc_forces(true);
 }
 
-void on_constraint_change() { recalc_forces = true; }
+void on_constraint_change() { set_recalc_forces(true); }
 
 void on_lbboundary_change() {
 #if defined(LB_BOUNDARIES) || defined(LB_BOUNDARIES_GPU)
   LBBoundaries::lb_init_boundaries();
 
-  recalc_forces = true;
+  set_recalc_forces(true);
 #endif
 }
 
@@ -306,7 +237,7 @@ void on_periodicity_change() {
 #endif
 
 #ifdef STOKESIAN_DYNAMICS
-  if (integ_switch == INTEG_METHOD_SD) {
+  if (get_integrator().type == INTEG_METHOD_SD) {
     if (box_geo.periodic(0) || box_geo.periodic(1) || box_geo.periodic(2))
       runtimeErrorMsg() << "Stokesian Dynamics requires periodicity "
                         << "(False, False, False)\n";
@@ -320,14 +251,12 @@ void on_skin_change() {
   on_coulomb_and_dipoles_change();
 }
 
-void on_thermostat_param_change() { reinit_thermo = true; }
-
 void on_timestep_change() {
   lb_lbfluid_reinit_parameters();
   on_thermostat_param_change();
 }
 
-void on_forcecap_change() { recalc_forces = true; }
+void on_forcecap_change() { set_recalc_forces(true); }
 
 void on_node_grid_change() {
   grid_changed_n_nodes();

@@ -48,7 +48,7 @@ const std::shared_ptr<VirtualSites> &virtual_sites() { return m_virtual_sites; }
 
 void set_virtual_sites(std::shared_ptr<VirtualSites> const &v) {
   m_virtual_sites = v;
-  recalc_forces = true;
+  set_recalc_forces(true);
 }
 
 #ifdef VIRTUAL_SITES_RELATIVE

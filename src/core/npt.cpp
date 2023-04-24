@@ -20,6 +20,7 @@
 
 #ifdef NPT
 
+#include "Integrator.hpp"
 #include "communication.hpp"
 #include "config/config.hpp"
 #include "electrostatics/coulomb.hpp"
@@ -105,12 +106,12 @@ Utils::Vector<bool, 3> NptIsoParameters::get_direction() const {
           static_cast<bool>(geometry & ::nptgeom_dir[2])};
 }
 
-void npt_ensemble_init(const BoxGeometry &box) {
-  if (integ_switch == INTEG_METHOD_NPT_ISO) {
+void npt_ensemble_init(BoxGeometry const &box, Integrator const &integrator) {
+  if (integrator.type == INTEG_METHOD_NPT_ISO) {
     /* prepare NpT-integration */
     nptiso.inv_piston = 1. / nptiso.piston;
     nptiso.volume = pow(box.length()[nptiso.non_const_dim], nptiso.dimension);
-    if (recalc_forces) {
+    if (integrator.recalc_forces) {
       nptiso.p_inst = 0.0;
       nptiso.p_vir = Utils::Vector3d{};
       nptiso.p_vel = Utils::Vector3d{};
@@ -118,8 +119,8 @@ void npt_ensemble_init(const BoxGeometry &box) {
   }
 }
 
-void integrator_npt_sanity_checks() {
-  if (integ_switch == INTEG_METHOD_NPT_ISO) {
+void integrator_npt_sanity_checks(Integrator const &integrator) {
+  if (integrator.type == INTEG_METHOD_NPT_ISO) {
     try {
       nptiso.coulomb_dipole_sanity_checks();
     } catch (std::runtime_error const &err) {
@@ -129,20 +130,21 @@ void integrator_npt_sanity_checks() {
 }
 
 /** reset virial part of instantaneous pressure */
-void npt_reset_instantaneous_virials() {
-  if (integ_switch == INTEG_METHOD_NPT_ISO)
+void npt_reset_instantaneous_virials(Integrator const &integrator) {
+  if (integrator.type == INTEG_METHOD_NPT_ISO)
     nptiso.p_vir = Utils::Vector3d{};
 }
 
-void npt_add_virial_contribution(double energy) {
-  if (integ_switch == INTEG_METHOD_NPT_ISO) {
+void npt_add_virial_contribution(Integrator const &integrator, double energy) {
+  if (integrator.type == INTEG_METHOD_NPT_ISO) {
     nptiso.p_vir[0] += energy;
   }
 }
 
-void npt_add_virial_contribution(const Utils::Vector3d &force,
-                                 const Utils::Vector3d &d) {
-  if (integ_switch == INTEG_METHOD_NPT_ISO) {
+void npt_add_virial_contribution(Integrator const &integrator,
+                                 Utils::Vector3d const &force,
+                                 Utils::Vector3d const &d) {
+  if (integrator.type == INTEG_METHOD_NPT_ISO) {
     nptiso.p_vir += hadamard_product(force, d);
   }
 }

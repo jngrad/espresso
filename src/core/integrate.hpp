@@ -27,39 +27,7 @@
  *  Implementation in \ref integrate.cpp.
  */
 
-/** \name Integrator switches */
-/**@{*/
-#define INTEG_METHOD_NPT_ISO 0
-#define INTEG_METHOD_NVT 1
-#define INTEG_METHOD_STEEPEST_DESCENT 2
-#define INTEG_METHOD_BD 3
-#define INTEG_METHOD_SD 7
-/**@}*/
-
-/** \name Integrator error codes */
-/**@{*/
-#define INTEG_ERROR_RUNTIME -1
-#define INTEG_ERROR_SIGINT -2
-/**@}*/
-
-/** \name Integrator flags */
-/**@{*/
-/// recalculate forces unconditionally (mostly used for timing)
-#define INTEG_REUSE_FORCES_NEVER -1
-/// recalculate forces if @ref recalc_forces is set
-#define INTEG_REUSE_FORCES_CONDITIONALLY 0
-/// do not recalculate forces (mostly when reading checkpoints with forces)
-#define INTEG_REUSE_FORCES_ALWAYS 1
-/**@}*/
-
-/** Switch determining which integrator to use. */
-extern int integ_switch;
-
-/** Verlet list skin. */
-extern double skin;
-
-/** If true, the forces will be recalculated before the next integration. */
-extern bool recalc_forces;
+#include "Integrator.hpp"
 
 double interaction_range();
 
@@ -104,9 +72,6 @@ int integrate(int n_steps, int reuse_forces);
 int integrate_with_signal_handler(int n_steps, int reuse_forces,
                                   bool update_accumulators);
 
-/** Get @c verlet_reuse */
-double get_verlet_reuse();
-
 /** Get time step */
 double get_time_step();
 
@@ -126,5 +91,7 @@ void set_skin(double value);
 void set_time(double value);
 
 void set_integ_switch(int value);
+
+void set_recalc_forces(bool value);
 
 #endif

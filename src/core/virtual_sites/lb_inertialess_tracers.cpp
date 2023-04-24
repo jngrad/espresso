@@ -101,6 +101,7 @@ void IBM_UpdateParticlePositions(ParticleRange const &particles,
     }
   }
 
+  auto const skin = get_integrator().skin;
   if (cell_structure.check_resort_required(particles, skin)) {
     cell_structure.set_resort_particles(Cells::RESORT_LOCAL);
   }

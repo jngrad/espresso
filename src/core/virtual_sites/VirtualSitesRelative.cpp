@@ -135,6 +135,7 @@ void VirtualSitesRelative::update() const {
       p.quat() = p_ref.quat() * p.vs_relative().quat;
   }
 
+  auto const skin = get_integrator().skin;
   if (cell_structure.check_resort_required(particles, skin)) {
     cell_structure.set_resort_particles(Cells::RESORT_LOCAL);
   }

@@ -59,6 +59,7 @@ void TuningAlgorithm::determine_r_cut_limits() {
   if (r_cut_iL == 0.) {
     auto const min_box_l = *boost::min_element(box_geo.length());
     auto const min_local_box_l = *boost::min_element(local_geo.length());
+    auto const skin = get_integrator().skin;
     m_r_cut_iL_min = 0.;
     m_r_cut_iL_max = std::min(min_local_box_l, min_box_l / 2.) - skin;
     m_r_cut_iL_min *= box_geo.length_inv()[0];
@@ -122,6 +123,7 @@ double TuningAlgorithm::get_mc_time(Utils::Vector3i const &mesh, int cao,
   auto const k_cut_per_dir = (static_cast<double>(cao) / 2.) *
                              Utils::hadamard_division(box_geo.length(), mesh);
   auto const k_cut = *boost::min_element(k_cut_per_dir);
+  auto const skin = get_integrator().skin;
   auto const min_box_l = *boost::min_element(box_geo.length());
   auto const min_local_box_l = *boost::min_element(local_geo.length());
   auto const k_cut_max = std::min(min_box_l, min_local_box_l) - skin;

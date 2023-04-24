@@ -93,7 +93,7 @@ static void force_calc_icc(
         }
       });
 
-  Coulomb::calc_long_range_force(particles);
+  Coulomb::calc_long_range_force(get_integrator(), particles);
 }
 
 void ICCStar::iteration(CellStructure &cell_structure,
@@ -266,7 +266,7 @@ struct SanityChecksICC : public boost::static_visitor<void> {
 void ICCStar::sanity_check() const {
   sanity_checks_active_solver();
 #ifdef NPT
-  if (integ_switch == INTEG_METHOD_NPT_ISO) {
+  if (get_integrator().type == INTEG_METHOD_NPT_ISO) {
     throw std::runtime_error("ICC does not work in the NPT ensemble");
   }
 #endif

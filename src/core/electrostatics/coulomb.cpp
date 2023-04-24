@@ -23,6 +23,7 @@
 
 #include "electrostatics/coulomb.hpp"
 
+#include "Integrator.hpp"
 #include "ParticleRange.hpp"
 #include "actor/visit_try_catch.hpp"
 #include "actor/visitors.hpp"
@@ -196,16 +197,16 @@ void on_observable_calc() {
 }
 
 struct LongRangeForce : public boost::static_visitor<void> {
-  explicit LongRangeForce(ParticleRange const &particles)
-      : m_particles(particles) {}
+  LongRangeForce(ParticleRange const &particles, Integrator const &integrator)
+      : m_particles(particles), m_integrator(integrator) {}
 
 #ifdef P3M
   void operator()(std::shared_ptr<CoulombP3M> const &actor) const {
     actor->charge_assign(m_particles);
 #ifdef NPT
-    if (integ_switch == INTEG_METHOD_NPT_ISO) {
+    if (m_integrator.type == INTEG_METHOD_NPT_ISO) {
       auto const energy = actor->long_range_kernel(true, true, m_particles);
-      npt_add_virial_contribution(energy);
+      npt_add_virial_contribution(m_integrator, energy);
     } else
 #endif // NPT
       actor->add_long_range_forces(m_particles);
@@ -213,10 +214,10 @@ struct LongRangeForce : public boost::static_visitor<void> {
 #ifdef CUDA
   void operator()(std::shared_ptr<CoulombP3MGPU> const &actor) const {
 #ifdef NPT
-    if (integ_switch == INTEG_METHOD_NPT_ISO) {
+    if (m_integrator.type == INTEG_METHOD_NPT_ISO) {
       actor->charge_assign(m_particles);
       auto const energy = actor->long_range_energy(m_particles);
-      npt_add_virial_contribution(energy);
+      npt_add_virial_contribution(m_integrator, energy);
     }
 #endif // NPT
     actor->add_long_range_forces(m_particles);
@@ -244,6 +245,7 @@ struct LongRangeForce : public boost::static_visitor<void> {
 
 private:
   ParticleRange const &m_particles;
+  Integrator const &m_integrator;
 };
 
 struct LongRangeEnergy : public boost::static_visitor<double> {
@@ -280,9 +282,11 @@ private:
   ParticleRange const &m_particles;
 };
 
-void calc_long_range_force(ParticleRange const &particles) {
+void calc_long_range_force(Integrator const &integrator,
+                           ParticleRange const &particles) {
   if (electrostatics_actor) {
-    boost::apply_visitor(LongRangeForce(particles), *electrostatics_actor);
+    boost::apply_visitor(LongRangeForce(particles, integrator),
+                         *electrostatics_actor);
   }
 #ifdef ELECTROKINETICS
   /* Add fields from EK if enabled */
