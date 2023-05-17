@@ -60,6 +60,9 @@ class Observables(ut.TestCase):
     if espressomd.has_features("DIPOLES"):
         partcls.dipm = np.random.random(N_PART) + 2
 
+    if espressomd.has_features(["DIPOLE_FIELD_TRACKING"]):
+        system.analysis.call_method("calculate_dip_fld")
+
     if espressomd.has_features("ELECTROSTATICS"):
         partcls.q = np.random.random(N_PART)
 
@@ -140,6 +143,9 @@ class Observables(ut.TestCase):
     if espressomd.has_features(["DIPOLES"]):
         test_mag_dip = generate_test_for_pid_observable(
             espressomd.observables.MagneticDipoleMoment, "dip", "sum")
+    if espressomd.has_features(["DIPOLE_FIELD_TRACKING"]):
+        test_dip_fld = generate_test_for_pid_observable(
+            espressomd.observables.ParticleDipoleFields, "dip_fld")
 
     if espressomd.has_features(["ROTATION"]):
         test_body_angular_velocity = generate_test_for_pid_observable(
