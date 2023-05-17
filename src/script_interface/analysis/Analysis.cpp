@@ -19,6 +19,23 @@
 
 #include "Analysis.hpp"
 
+#include "particle_observables/properties.hpp"
+
+#include <utils/Vector.hpp>
+
+namespace ParticleObservables {
+struct PositionUnfolded {
+  Utils::Vector3d m_box_l;
+  PositionUnfolded(Utils::Vector3d const &box_l) : m_box_l(box_l) {}
+  template <class Particle, class Traits = default_traits<Particle>>
+  decltype(auto) operator()(Particle const &p,
+                            Traits particle_traits = {}) const {
+    return particle_traits.position(p) +
+           hadamard_product(m_box_l, p.image_box());
+  }
+};
+} // namespace ParticleObservables
+
 #include "core/analysis/statistics.hpp"
 #include "core/analysis/statistics_chain.hpp"
 #include "core/cells.hpp"
@@ -27,12 +44,12 @@
 #include "core/event.hpp"
 #include "core/grid.hpp"
 #include "core/nonbonded_interactions/nonbonded_interaction_data.hpp"
+#include "core/observables/ParticleTraits.hpp"
 #include "core/partCfg_global.hpp"
 #include "core/particle_node.hpp"
 
 #include "script_interface/communication.hpp"
 
-#include <utils/Vector.hpp>
 #include <utils/contains.hpp>
 #include <utils/mpi/gather_buffer.hpp>
 
@@ -77,8 +94,149 @@ static void check_particle_type(int p_type) {
   }
 }
 
+template <class ParticleTrait>
+Variant get_values(boost::mpi::communicator const &comm,
+                   std::vector<Particle *> const &local_particles,
+                   ParticleTrait const &extractor,
+                   std::vector<unsigned int> const &argsort) {
+  using value_type =
+      decltype(std::declval<ParticleTrait>()(std::declval<Particle const &>()));
+  std::vector<value_type> local_values{};
+  local_values.reserve(local_particles.size());
+  for (auto const p : local_particles) {
+    local_values.emplace_back(extractor(*p));
+  }
+  std::vector<std::vector<value_type>> global_values{};
+  boost::mpi::gather(comm, local_values, global_values, 0);
+  if (comm.rank() == 0) {
+    std::vector<value_type> values_unsorted{};
+    std::vector<value_type> values_sorted{};
+    values_unsorted.reserve(argsort.size());
+    values_sorted.reserve(argsort.size());
+    for (auto const &vec : global_values) {
+      for (auto const &val : vec) {
+        values_unsorted.emplace_back(val);
+      }
+    }
+    for (auto const i : argsort) {
+      values_sorted.emplace_back(std::move(values_unsorted[i]));
+    }
+    if constexpr (std::is_same_v<value_type, int> or
+                  std::is_same_v<value_type, double>) {
+      return Variant{values_sorted};
+    } else {
+      return make_vector_of_variants(values_sorted);
+    }
+  } else {
+    return Variant{};
+  }
+}
+
+static auto get_argsort(boost::mpi::communicator const &comm,
+                        std::vector<Particle *> const &local_particles,
+                        std::vector<int> const &sorted_pids) {
+  std::vector<unsigned int> argsort{};
+  std::vector<int> local_pids{};
+  local_pids.reserve(local_particles.size());
+  for (auto const p : local_particles) {
+    local_pids.emplace_back(p->id());
+  }
+  std::vector<std::vector<int>> global_pids;
+  boost::mpi::gather(comm, local_pids, global_pids, 0);
+  if (comm.rank() == 0) {
+    auto const n_part = sorted_pids.size();
+    std::vector<int> unsorted_pids;
+    unsorted_pids.reserve(n_part);
+    for (auto const &vec : global_pids) {
+      for (auto const pid : vec) {
+        unsorted_pids.emplace_back(pid);
+      }
+    }
+    // get vector of indices that sorts the data vectors
+    std::vector<unsigned int> iota(n_part);
+    std::iota(iota.begin(), iota.end(), 0u);
+    argsort.reserve(n_part);
+    auto const pid_begin = std::begin(unsorted_pids);
+    auto const pid_end = std::end(unsorted_pids);
+    for (auto const pid : sorted_pids) {
+      auto const pid_pos = std::find(pid_begin, pid_end, pid);
+      auto const i =
+          static_cast<std::size_t>(std::distance(pid_begin, pid_pos));
+      argsort.emplace_back(iota[i]);
+    }
+  }
+  return argsort;
+}
+
 Variant Analysis::do_call_method(std::string const &name,
                                  VariantMap const &parameters) {
+  if (name == "particle_properties") {
+    auto const pids = get_value<std::vector<int>>(parameters, "pids");
+    auto const properties =
+        get_value<std::vector<std::string>>(parameters, "properties");
+    std::vector<Particle *> local_particles{};
+    local_particles.reserve(pids.size() / 2ul);
+    for (auto const pid : pids) {
+      if (auto p = ::cell_structure.get_local_particle(pid)) {
+        local_particles.emplace_back(p);
+      }
+    }
+    auto const &comm = context()->get_comm();
+    auto const argsort = get_argsort(comm, local_particles, pids);
+    std::unordered_map<std::string, Variant> dict;
+    for (auto const &property : properties) {
+      if (property == "pos_folded") {
+        dict[property] = get_values(comm, local_particles,
+                                    ParticleObservables::Position{}, argsort);
+      } else if (property == "pos") {
+        dict[property] = get_values(
+            comm, local_particles,
+            ParticleObservables::PositionUnfolded{::box_geo.length()}, argsort);
+      } else if (property == "f") {
+        dict[property] = get_values(comm, local_particles,
+                                    ParticleObservables::Force{}, argsort);
+      }
+#ifdef ROTATION
+      else if (property == "director") {
+        dict[property] = get_values(comm, local_particles,
+                                    ParticleObservables::Director{}, argsort);
+      }
+#endif
+#ifdef ELECTROSTATICS
+      else if (property == "q") {
+        dict[property] = get_values(comm, local_particles,
+                                    ParticleObservables::Charge{}, argsort);
+      }
+#endif
+#ifdef DIPOLES
+      else if (property == "dip") {
+        dict[property] =
+            get_values(comm, local_particles,
+                       ParticleObservables::DipoleMoment{}, argsort);
+      }
+#endif
+      else {
+        context()->parallel_try_catch([&]() {
+          throw std::runtime_error("Property '" + property +
+                                   "' is not implemented");
+        });
+      }
+    }
+    return make_unordered_map_of_variants(dict);
+  }
+  if (name == "write_ml_forces") {
+    auto const pids = get_value<std::vector<int>>(parameters, "pids");
+    auto const forces =
+        get_value<std::vector<Utils::Vector3d>>(parameters, "forces");
+    std::vector<Particle *> local_particles{};
+    local_particles.reserve(pids.size() / 2ul);
+    for (std::size_t i = 0; i < pids.size(); ++i) {
+      if (auto p = ::cell_structure.get_local_particle(pids[i])) {
+        p->ext_force() = forces[i];
+      }
+    }
+    return {};
+  }
   if (name == "linear_momentum") {
     auto const local = calc_linear_momentum(
         get_value_or<bool>(parameters, "include_particles", true),
