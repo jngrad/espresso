@@ -38,6 +38,7 @@ import espressomd.shapes
 import espressomd.constraints
 import espressomd.lb
 import espressomd.electrokinetics
+import espressomd.barista
 with contextlib.suppress(ImportError):
     import espressomd.io.vtk
 
@@ -1002,6 +1003,15 @@ class CheckpointTest(ut.TestCase):
         p1.remove()
         p2.remove()
         system.non_bonded_inter[2, 6].reset()
+
+    def test_barista(self):
+        n_nodes = system.cell_system.get_state()["n_nodes"]
+        self.assertEqual(beverage.base, "lungo")
+        self.assertEqual(beverage.toppings, ["sugar"])
+        out = beverage.brew_coffee()
+        water_used = beverage.run_cleaning_cycle()
+        self.assertEqual(out, "Here is your lungo with sugar")
+        self.assertAlmostEqual(water_used, n_nodes * 0.1, delta=1e-5)
 
 
 if __name__ == '__main__':

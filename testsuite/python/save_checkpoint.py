@@ -41,6 +41,7 @@ import espressomd.shapes
 import espressomd.constraints
 import espressomd.bond_breakage
 import espressomd.reaction_methods
+import espressomd.barista
 
 config = utg.TestGenerator()
 modes = config.get_modes()
@@ -297,6 +298,8 @@ break_spec = espressomd.bond_breakage.BreakageSpec(
     breakage_length=5., action_type="delete_bond")
 system.bond_breakage[strong_harmonic_bond._bond_id] = break_spec
 
+beverage = espressomd.barista.FancyBrew(base="lungo", toppings=["sugar"])
+
 checkpoint.register("system")
 checkpoint.register("acc_mean_variance")
 checkpoint.register("acc_time_series")
@@ -306,6 +309,7 @@ checkpoint.register("ibm_tribend_bond")
 checkpoint.register("ibm_triel_bond")
 checkpoint.register("break_spec")
 checkpoint.register("p_slice")
+checkpoint.register("beverage")
 
 # calculate forces
 system.integrator.run(0)

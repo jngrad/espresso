@@ -202,6 +202,7 @@ checkpoint_test(MODES therm_dpd__int_nvt)
 checkpoint_test(MODES scafacos__therm_bd__int_bd)
 checkpoint_test(MODES therm_sdm__int_sdm)
 
+python_test(FILE barista.py MAX_NUM_PROC 4)
 python_test(FILE bond_breakage.py MAX_NUM_PROC 4)
 python_test(FILE cell_system.py MAX_NUM_PROC 4)
 python_test(FILE get_neighbors.py MAX_NUM_PROC 4)

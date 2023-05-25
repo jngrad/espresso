@@ -27,6 +27,7 @@ set_target_properties(espresso_script_interface
 
 add_subdirectory(accumulators)
 add_subdirectory(analysis)
+add_subdirectory(barista)
 add_subdirectory(bond_breakage)
 add_subdirectory(cell_system)
 add_subdirectory(cluster_analysis)
@@ -57,6 +58,7 @@ install(TARGETS espresso_script_interface
 
 target_link_libraries(
   espresso_script_interface PRIVATE espresso::config espresso::core
+                                    espresso::barista
   PUBLIC espresso::utils MPI::MPI_CXX Boost::mpi espresso::shapes
   PRIVATE espresso::cpp_flags)
 

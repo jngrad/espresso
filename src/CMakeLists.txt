@@ -30,6 +30,7 @@ if(ESPRESSO_BUILD_TESTS)
   add_dependencies(check check_unit_tests)
 endif()
 
+add_subdirectory(barista)
 add_subdirectory(utils)
 add_subdirectory(shapes)
 add_subdirectory(core)

@@ -7,6 +7,23 @@ This page documents advanced features of |es|. Be sure to read the relevant
 literature before using them.
 
 
+.. _Brewing coffee:
+
+Brewing coffee
+--------------
+
+|es| complies with the RFC 2324 protocol :cite:`rfc2324`::
+
+    >>> import espressomd.barista
+    >>> beverage = espressomd.barista.FancyBrew(base="lungo")
+    >>> beverage.set_toppings(toppings=["milk", "sugar"])
+    >>> print(beverage.brew_coffee())
+    Here is your lungo with milk, sugar"
+
+For the complete list of flavoring options, please refer to
+:class:`~espressomd.barista.FancyBrew`.
+
+
 .. _Creating bonds when particles collide:
 
 Creating bonds when particles collide
