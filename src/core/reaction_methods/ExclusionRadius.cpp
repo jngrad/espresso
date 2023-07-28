@@ -109,10 +109,12 @@ bool ExclusionRadius::check_exclusion_range(int p_id, int p_type) {
   auto within_exclusion_range = false;
   if (p1_ptr != nullptr) {
     auto &p1 = *p1_ptr;
+    auto const &box_geo = *system.box_geo;
+    auto &cell_structure = *system.cell_structure;
 
     /* Check if the inserted particle within any exclusion radius */
     for (auto const p2_id : particle_ids) {
-      if (auto const p2_ptr = system.cell_structure->get_local_particle(p2_id)) {
+      if (auto const p2_ptr = cell_structure.get_local_particle(p2_id)) {
         auto const &p2 = *p2_ptr;
         double excluded_distance;
         if (not exclusion_radius_per_type.contains(p_type) or
@@ -125,7 +127,7 @@ bool ExclusionRadius::check_exclusion_range(int p_id, int p_type) {
                               exclusion_radius_per_type[p2.type()];
         }
 
-        auto const d_min = system.box_geo->get_mi_vector(p2.pos(), p1.pos()).norm();
+        auto const d_min = box_geo.get_mi_vector(p2.pos(), p1.pos()).norm();
 
         if (d_min < excluded_distance) {
           within_exclusion_range = true;

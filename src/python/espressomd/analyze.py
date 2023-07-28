@@ -324,6 +324,15 @@ class Analysis(ScriptInterfaceHelper):
             Where [0] contains the midpoints of the bins,
             and [1] contains the values of the minimal distance distribution function.
 
+    potential_energy()
+        Calculate the potential energy of the system, i.e. the total energy
+        minus the kinetic energy.
+
+        Returns
+        -------
+        :obj: `float`
+            Potential energy.
+
     """
     _so_name = "Analysis::Analysis"
     _so_creation_policy = "GLOBAL"
@@ -331,6 +340,7 @@ class Analysis(ScriptInterfaceHelper):
         "linear_momentum",
         "center_of_mass",
         "nbhood",
+        "potential_energy",
         "particle_neighbor_pids",
         "calc_re",
         "calc_rg",
