@@ -32,6 +32,7 @@
 #include <memory>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 
 namespace walberla {
 
@@ -103,8 +104,10 @@ public:
   using value_type = T;
   using FlagField = field::FlagField<uint8_t>;
 
+  template<class... Args>
   BoundaryHandling(std::shared_ptr<StructuredBlockForest> blocks,
-                   BlockDataID value_field_id, BlockDataID flag_field_id)
+                   Args &&...args, BlockDataID value_field_id,
+                   BlockDataID flag_field_id)
       : m_blocks(std::move(blocks)), m_value_field_id(value_field_id),
         m_flag_field_id(flag_field_id), m_callback(DynamicValueCallback()),
         m_pending_changes(false) {
@@ -115,7 +118,7 @@ public:
     // instantiate the boundary sweep
     std::function callback = m_callback;
     m_boundary =
-        std::make_shared<BoundaryClass>(m_blocks, m_value_field_id, callback);
+        std::make_shared<BoundaryClass>(m_blocks, std::forward<Args>(args)..., m_value_field_id, callback);
   }
 
   void operator()(IBlock *block) { (*m_boundary)(block); }

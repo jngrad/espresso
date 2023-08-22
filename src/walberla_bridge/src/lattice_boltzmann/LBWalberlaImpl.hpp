@@ -166,11 +166,8 @@ private:
 
   void reset_boundary_handling() {
     auto const &blocks = get_lattice().get_blocks();
-    autpo bb = std::make_shared<BounceBackBoundary>(
-        blocks, m_last_applied_force_field_id, m_pdf_field_id, m_flag_field_id,
-        BounceBackBoundaryHandling::DynamicValueCallback());
     m_boundary_handling = std::make_shared<BounceBackBoundaryHandling>(
-        m_pdf_field_id, m_flag_field_id, bb);
+        m_last_applied_force_field_id, m_pdf_field_id, m_flag_field_id);
   }
 
   FloatType pressure_tensor_correction_factor() const {
