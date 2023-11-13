@@ -220,7 +220,7 @@ class System(ScriptInterfaceHelper):
                 implementation=virtual_sites.VirtualSitesOff())
 
         # lock class
-        self.call_method("lock_system_creation")
+        #self.call_method("lock_system_creation")
         self._setup_atexit()
 
     def _setup_atexit(self):
