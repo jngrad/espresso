@@ -25,6 +25,7 @@ import espressomd.propagation
 import numpy as np
 import collections
 import itertools
+import sys
 
 
 class ParticleProperties(ut.TestCase):
@@ -113,6 +114,9 @@ class ParticleProperties(ut.TestCase):
         Propagation = espressomd.propagation.Propagation
         flags_core = self.system.call_method("get_propagation_modes_enum")
         flags_si = {e.name: e.value for e in Propagation}
+        if sys.version_info[:2] >= (3, 11):
+            # Python 3.11+ skips empty bitfields during enum iteration
+            flags_si["NONE"] = Propagation.NONE
         self.assertEqual(flags_si, flags_core)
 
     test_bonds_property = generateTestForScalarProperty(
