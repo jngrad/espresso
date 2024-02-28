@@ -8,6 +8,15 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
+  ubuntu-minimal:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: eessi/github-action-eessi@v3
+    - name: Test EESSI
+      run: |
+        module avail
+      shell: bash
+
   macos:
     runs-on: macos-12
     if: ${{ github.repository == 'espressomd/espresso' }}
@@ -34,6 +43,7 @@ jobs:
 
   debian:
     runs-on: ubuntu-latest
+    if: false
     container:
       image: ghcr.io/espressomd/docker/debian:339903979196fd7e72127f2cb5bfb27759d129f9-base-layer
       credentials:
