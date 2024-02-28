@@ -3,6 +3,7 @@
 .PHONY: visual 
 .PHONY: clean
 .PHONY: tests
+.PHONY: testsuite
 .PHONY: docs
 
 ESPResSo_build_path=~/software/espresso_v4.2/build/
