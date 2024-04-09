@@ -56,8 +56,8 @@ void add_md_force(LB::Solver &lb, Utils::Vector3d const &pos,
 
 // internal function exposed for unit testing
 std::vector<Utils::Vector3d> positions_in_halo(Utils::Vector3d const &pos,
-                                               BoxGeometry const &box,
-                                               LocalBox const &local_geo,
+                                               BoxGeometry const &box_geo,
+                                               LocalBox const &local_box,
                                                double agrid);
 
 /** @brief Calculate drag force on a single particle.
@@ -108,6 +108,8 @@ public:
 
   Utils::Vector3d get_noise_term(Particle const &p) const;
   void kernel(Particle &p);
+  void commit(System::System const &system,
+              std::vector<Particle *> const &particles);
 
   /**
    * @brief Calculate particle drift velocity offset due to ENGINE and

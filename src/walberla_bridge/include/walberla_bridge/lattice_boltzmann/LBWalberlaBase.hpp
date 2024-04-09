@@ -71,6 +71,14 @@ public:
   virtual bool add_force_at_pos(Utils::Vector3d const &position,
                                 Utils::Vector3d const &force) = 0;
 
+  /**
+   * @brief Interpolate forces to the stored forces to be applied on nodes
+   * in the next time step.
+   */
+  virtual void
+  add_forces_at_pos(std::vector<Utils::Vector3d> const &positions,
+                    std::vector<Utils::Vector3d> const &forces) = 0;
+
   /** @brief Get stored force to be applied on node in the next time step. */
   virtual std::optional<Utils::Vector3d>
   get_node_force_to_be_applied(Utils::Vector3i const &node) const = 0;
@@ -245,6 +253,9 @@ public:
   /** @brief Get the fluid temperature (if thermalized). */
   virtual double get_kT() const noexcept = 0;
 
+  virtual std::vector<double> get_velocity_at_pos_simplified_cuda(
+      std::vector<Utils::Vector3d> const &pos) = 0;
+
   /** @brief Set the RNG counter (if thermalized). */
   [[nodiscard]] virtual std::optional<uint64_t> get_rng_state() const = 0;
 
@@ -256,4 +267,6 @@ public:
 
   /** @brief get the force field id */
   [[nodiscard]] virtual std::size_t get_force_field_id() const noexcept = 0;
+
+  [[nodiscard]] virtual bool is_gpu() const noexcept = 0;
 };

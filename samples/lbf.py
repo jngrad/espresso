@@ -60,7 +60,8 @@ particle = system.part.add(pos=[box_l / 2.0] * 3, fix=[True, True, True])
 
 
 lb_params = {'agrid': 1, 'density': 1, 'kinematic_viscosity': 1, 'tau': 0.01,
-             'ext_force_density': [0, 0, -1.0 / (box_l**3)]}
+             'ext_force_density': [0, 0, -1.0 / (box_l**3)],
+             'single_precision': False}
 
 if args.gpu:
     lbf = espressomd.lb.LBFluidWalberlaGPU(**lb_params)

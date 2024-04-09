@@ -91,6 +91,13 @@ class EKContainer : public ObjectList<EKSpecies> {
     }
   };
 
+  struct GetPoissonSolverParameters {
+    template <typename T>
+    VariantMap operator()(std::shared_ptr<T> const &solver) const {
+      return solver->get_parameters();
+    }
+  };
+
   auto extract_solver(Variant const &v) {
     std::optional<decltype(m_poisson_solver)> solver;
     auto so_ptr = get_value<ObjectRef>(v);

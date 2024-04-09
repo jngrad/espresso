@@ -104,8 +104,8 @@ static auto make_lb_actor() {
   lb_params = std::make_shared<LB::LBWalberlaParams>(params.agrid, params.tau);
   lb_lattice = std::make_shared<LatticeWalberla>(
       params.grid_dimensions, ::communicator.node_grid, n_ghost_layers);
-  lb_fluid = new_lb_walberla(lb_lattice, params.viscosity, params.density,
-                             single_precision);
+  lb_fluid = new_lb_walberla_cpu(lb_lattice, params.viscosity, params.density,
+                                 single_precision);
   lb_fluid->set_collision_model(params.kT, params.seed);
   lb_fluid->ghost_communication();
 }
@@ -553,7 +553,7 @@ bool test_lb_domain_mismatch_local() {
   ::communicator.node_grid = node_grid_reversed;
   auto const lattice = std::make_shared<LatticeWalberla>(
       Utils::Vector3i{12, 12, 12}, node_grid_original, n_ghost_layers);
-  auto const ptr = new_lb_walberla(lattice, 1.0, 1.0, false);
+  auto const ptr = new_lb_walberla_cpu(lattice, 1.0, 1.0, false);
   ptr->set_collision_model(0.0, 0);
   ::communicator.node_grid = node_grid_original;
   auto lb_instance = std::make_shared<LB::LBWalberla>(ptr, params);
@@ -632,6 +632,9 @@ BOOST_AUTO_TEST_CASE(lb_exceptions) {
     BOOST_CHECK_THROW(lb_impl->get_density_at_pos(vec, true), NoLBActive);
     BOOST_CHECK_THROW(lb_impl->get_velocity_at_pos(vec, true), NoLBActive);
     BOOST_CHECK_THROW(lb_impl->add_force_at_pos(vec, vec), NoLBActive);
+    BOOST_CHECK_THROW(lb_impl->add_forces_at_pos({}, {}), NoLBActive);
+    BOOST_CHECK_THROW(lb_impl->get_velocity_at_pos_simplified_cuda({}),
+                      NoLBActive);
     lb.reset();
   }
 }

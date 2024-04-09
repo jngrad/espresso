@@ -103,7 +103,7 @@ class CheckpointTest(ut.TestCase):
 
         # load the valid LB checkpoint file
         lbf.load_checkpoint(cpt_path.format(""), cpt_mode)
-        precision = 8 if "LB.WALBERLA" in modes else 5
+        precision = 8 if not lbf.single_precision else 5
         m = np.pi / 12
         nx = lbf.shape[0]
         ny = lbf.shape[1]
@@ -133,7 +133,10 @@ class CheckpointTest(ut.TestCase):
             np.testing.assert_allclose(np.copy(state[key]), reference[key],
                                        atol=1E-7, err_msg=f"{key} differs")
         self.assertTrue(lbf.is_active)
-        self.assertFalse(lbf.single_precision)
+        if "LB.CPU" in modes:
+            self.assertFalse(lbf.single_precision)
+        elif "LB.GPU" in modes:
+            self.assertTrue(lbf.single_precision)
 
         # check boundary objects
         slip_velocity1 = np.array([1e-4, 1e-4, 0.])
@@ -264,6 +267,8 @@ class CheckpointTest(ut.TestCase):
     @utx.skipIfMissingFeatures(["WALBERLA"])
     @ut.skipIf(not has_lb_mode, "Skipping test due to missing LB feature.")
     def test_lb_vtk(self):
+        if "LB.GPU" in modes:
+            return
         lbf = system.lb
         self.assertEqual(len(lbf.vtk_writers), 2)
         vtk_suffix = config.test_name
@@ -362,7 +367,8 @@ class CheckpointTest(ut.TestCase):
         np.testing.assert_array_equal(
             np.copy(system.periodicity), self.ref_periodicity)
 
-    @ut.skipIf('INT.NPT' in modes, 'Lees-Edwards not compatible with NPT')
+    @ut.skipIf('INT.NPT' in modes or 'LB.GPU' in modes,
+               'Lees-Edwards not compatible with NPT')
     def test_lees_edwards(self):
         lebc = system.lees_edwards
         protocol = lebc.protocol

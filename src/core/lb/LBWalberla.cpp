@@ -73,6 +73,16 @@ bool LBWalberla::add_force_at_pos(Utils::Vector3d const &pos,
   return lb_fluid->add_force_at_pos(pos, force);
 }
 
+void LBWalberla::add_forces_at_pos(std::vector<Utils::Vector3d> const &pos,
+                                   std::vector<Utils::Vector3d> const &forces) {
+  lb_fluid->add_forces_at_pos(pos, forces);
+}
+
+std::vector<double> LBWalberla::get_velocity_at_pos_simplified_cuda(
+    std::vector<Utils::Vector3d> const &pos) {
+  return lb_fluid->get_velocity_at_pos_simplified_cuda(pos);
+}
+
 void LBWalberla::veto_time_step(double time_step) const {
   walberla_tau_sanity_checks("LB", lb_params->get_tau(), time_step);
 }
