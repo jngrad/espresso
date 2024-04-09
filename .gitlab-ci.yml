@@ -149,9 +149,9 @@ clang-sanitizer:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'clang-14'
-     CXX: 'clang++-14'
-     CUDAXX: 'clang++-14'
+     CC: 'clang-18'
+     CXX: 'clang++-18'
+     CUDAXX: 'clang++-18'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -184,6 +184,7 @@ fast_math:
      with_scafacos: 'false'
      with_stokesian_dynamics: 'true'
      with_fast_math: 'true'
+     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -206,6 +207,7 @@ cuda12-coverage:
      with_scafacos: 'true'
      with_walberla: 'true'
      with_stokesian_dynamics: 'true'
+     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -232,6 +234,7 @@ cuda12-maxset:
      with_walberla_avx: 'true'
      with_stokesian_dynamics: 'true'
      with_caliper: 'true'
+     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   artifacts:
@@ -266,6 +269,7 @@ tutorials-samples-maxset:
      make_check_samples: 'true'
      make_check_benchmarks: 'true'
      test_timeout: '1200'
+     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -294,6 +298,7 @@ tutorials-samples-default:
      make_check_samples: 'true'
      make_check_benchmarks: 'true'
      test_timeout: '1200'
+     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -323,6 +328,7 @@ tutorials-samples-empty:
      make_check_samples: 'true'
      make_check_benchmarks: 'true'
      test_timeout: '1200'
+     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -353,6 +359,7 @@ tutorials-samples-no-gpu:
      make_check_benchmarks: 'true'
      test_timeout: '1200'
      hide_gpu: 'true'
+     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -380,6 +387,7 @@ installation:
      with_stokesian_dynamics: 'true'
      srcdir: '${CI_PROJECT_DIR}'
      build_type: 'Release'
+     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
     - cd build
