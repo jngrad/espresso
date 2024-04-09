@@ -242,7 +242,7 @@ endif()
 # Python interpreter and Cython interface library
 if(ESPRESSO_BUILD_WITH_PYTHON)
   find_package(Python 3.9 REQUIRED COMPONENTS Interpreter Development NumPy)
-  find_package(Cython 0.29.21...<3.0.8 REQUIRED)
+  find_package(Cython 0.29.21...<3.0.9 REQUIRED)
   find_program(IPYTHON_EXECUTABLE NAMES jupyter ipython3 ipython)
 endif()
 
@@ -481,6 +481,7 @@ target_compile_options(
     -Wno-sign-compare
     -Wno-unused-function
     -Wno-unused-parameter
+    -Wno-array-bounds
     $<$<CXX_COMPILER_ID:GNU>:-Wno-clobbered>
     $<$<CXX_COMPILER_ID:Intel,IntelLLVM>:-diag-disable=592>
     $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-gnu-zero-variadic-macro-arguments>
@@ -673,6 +674,7 @@ if(ESPRESSO_BUILD_WITH_CALIPER)
                                               "GNU")
     target_compile_options(caliper-services
                            PRIVATE -Wno-deprecated-declarations)
+    target_compile_options(caliper-runtime PRIVATE -Wno-maybe-uninitialized)
   endif()
 endif()
 

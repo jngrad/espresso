@@ -63,6 +63,7 @@ style:
 style_doxygen:
   <<: *global_job_definition
   stage: prepare
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   dependencies: []
   script:
     - mkdir build
@@ -187,10 +188,11 @@ clang-sanitizer:
 fast_math:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   variables:
-     CC: 'gcc-10'
-     CXX: 'g++-10'
-     GCOV: 'gcov-10'
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -204,13 +206,14 @@ fast_math:
     - cuda
   when: manual
 
-cuda11-coverage:
+cuda12-coverage:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   variables:
-     CC: 'gcc-10'
-     CXX: 'g++-10'
-     GCOV: 'gcov-10'
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'true'
@@ -225,13 +228,14 @@ cuda11-coverage:
     - cuda
     - numa
 
-cuda11-maxset:
+cuda12-maxset:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   variables:
-     CC: 'gcc-10'
-     CXX: 'g++-10'
-     GCOV: 'gcov-10'
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -258,10 +262,11 @@ cuda11-maxset:
 tutorials-samples-maxset:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   variables:
-     CC: 'gcc-10'
-     CXX: 'g++-10'
-     GCOV: 'gcov-10'
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -287,10 +292,11 @@ tutorials-samples-maxset:
 tutorials-samples-default:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   variables:
-     CC: 'gcc-10'
-     CXX: 'g++-10'
-     GCOV: 'gcov-10'
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
      myconfig: 'default'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -316,10 +322,11 @@ tutorials-samples-default:
 tutorials-samples-empty:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   variables:
-     CC: 'gcc-10'
-     CXX: 'g++-10'
-     GCOV: 'gcov-10'
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
      myconfig: 'empty'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -343,10 +350,11 @@ tutorials-samples-empty:
 tutorials-samples-no-gpu:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   variables:
-     CC: 'gcc-10'
-     CXX: 'g++-10'
-     GCOV: 'gcov-10'
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -372,10 +380,11 @@ tutorials-samples-no-gpu:
 installation:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   variables:
-     CC: 'gcc-10'
-     CXX: 'g++-10'
-     GCOV: 'gcov-10'
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -410,10 +419,11 @@ installation:
 empty:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   variables:
-     CC: 'clang-14'
-     CXX: 'clang++-14'
-     CUDAXX: 'clang++-14'
+     CC: 'clang-18'
+     CXX: 'clang++-18'
+     CUDAXX: 'clang++-18'
      myconfig: 'empty'
      with_cuda: 'true'
      with_static_analysis: 'true'
@@ -432,8 +442,9 @@ empty:
 check_sphinx:
   <<: *global_job_definition
   stage: additional_checks
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   needs:
-    - cuda11-maxset
+    - cuda12-maxset
   when: on_success
   script:
     - cd ${CI_PROJECT_DIR}/build
@@ -454,8 +465,9 @@ check_sphinx:
 run_tutorials:
   <<: *global_job_definition
   stage: additional_checks
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   needs:
-    - cuda11-maxset
+    - cuda12-maxset
   when: on_success
   script:
     - cd ${CI_PROJECT_DIR}/build
@@ -481,8 +493,9 @@ run_tutorials:
 run_doxygen:
   <<: *global_job_definition
   stage: additional_checks
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   needs:
-    - cuda11-maxset
+    - cuda12-maxset
   when: on_success
   only:
     - python
@@ -501,9 +514,10 @@ run_doxygen:
 maxset_no_gpu:
   <<: *global_job_definition
   stage: additional_checks
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   when: on_success
   needs:
-    - cuda11-maxset
+    - cuda12-maxset
   script:
     - export CUDA_VISIBLE_DEVICES=""
     - cd ${CI_PROJECT_DIR}/build
@@ -516,9 +530,10 @@ maxset_no_gpu:
 maxset_3_cores:
   <<: *global_job_definition
   stage: additional_checks
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   when: on_success
   needs:
-    - cuda11-maxset
+    - cuda12-maxset
   script:
     - cd ${CI_PROJECT_DIR}/build
     - cmake -D ESPRESSO_TEST_NP=3 .
