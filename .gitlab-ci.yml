@@ -40,26 +40,6 @@ status_pending:
   stage: prepare
   script: sh maintainer/gh_post_status.sh pending
 
-style:
-  <<: *global_job_definition
-  stage: prepare
-  dependencies: []
-  before_script:
-    - git config --global --add safe.directory ${CI_PROJECT_DIR}
-    - git submodule deinit .
-  script:
-    - sh maintainer/CI/fix_style.sh
-  tags:
-    - espresso
-    - no-cuda
-  variables:
-    GIT_SUBMODULE_STRATEGY: none
-  artifacts:
-    paths:
-    - style.patch
-    expire_in: 1 week
-    when: on_failure
-
 ### Builds without CUDA
 
 default:
