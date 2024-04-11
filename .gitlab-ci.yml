@@ -33,7 +33,7 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   CCACHE_DIR: /cache
   CCACHE_MAXSIZE: 100G
-  with_ccache: "true"
+  with_ccache: "false"
 
 status_pending:
   <<: *notification_job_definition
@@ -151,7 +151,8 @@ clang-sanitizer:
   variables:
      CC: 'clang-18'
      CXX: 'clang++-18'
-     CUDAXX: 'clang++-18'
+     CUDACXX: 'clang++-18'
+     with_cuda_compiler: 'clang'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
