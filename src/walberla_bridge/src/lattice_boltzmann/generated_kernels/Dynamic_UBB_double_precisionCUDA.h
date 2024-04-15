@@ -19,7 +19,7 @@
 
 // kernel generated with pystencils v1.2, lbmpy v1.2,
 // lbmpy_walberla/pystencils_walberla from waLBerla commit
-// 065ce5f311850371a97ac4766f47dbb5ca8424ba
+// 0c8b4b926c6979288fd8a6846d02ec0870e1fe41
 
 #pragma once
 #include "core/DataTypes.h"
@@ -31,6 +31,7 @@
 #include "field/FlagField.h"
 #include "gpu/FieldCopy.h"
 #include "gpu/GPUField.h"
+#include "gpu/GPUWrapper.h"
 
 #include <set>
 #include <vector>
@@ -78,7 +79,7 @@ public:
 
     ~IndexVectors() {
       for (auto &gpuVec : gpuVectors_)
-        cudaFree(gpuVec);
+        WALBERLA_GPU_CHECK(gpuFree(gpuVec));
     }
     CpuIndexVector &indexVector(Type t) { return cpuVectors_[t]; }
     IndexInfo *pointerCpu(Type t) { return cpuVectors_[t].data(); }
@@ -86,16 +87,18 @@ public:
     IndexInfo *pointerGpu(Type t) { return gpuVectors_[t]; }
     void syncGPU() {
       for (auto &gpuVec : gpuVectors_)
-        cudaFree(gpuVec);
+        WALBERLA_GPU_CHECK(gpuFree(gpuVec));
       gpuVectors_.resize(cpuVectors_.size());
 
       WALBERLA_ASSERT_EQUAL(cpuVectors_.size(), NUM_TYPES);
       for (size_t i = 0; i < cpuVectors_.size(); ++i) {
         auto &gpuVec = gpuVectors_[i];
         auto &cpuVec = cpuVectors_[i];
-        cudaMalloc(&gpuVec, sizeof(IndexInfo) * cpuVec.size());
-        cudaMemcpy(gpuVec, &cpuVec[0], sizeof(IndexInfo) * cpuVec.size(),
-                   cudaMemcpyHostToDevice);
+        WALBERLA_GPU_CHECK(
+            gpuMalloc(&gpuVec, sizeof(IndexInfo) * cpuVec.size()));
+        WALBERLA_GPU_CHECK(gpuMemcpy(gpuVec, &cpuVec[0],
+                                     sizeof(IndexInfo) * cpuVec.size(),
+                                     gpuMemcpyHostToDevice));
       }
     }
 

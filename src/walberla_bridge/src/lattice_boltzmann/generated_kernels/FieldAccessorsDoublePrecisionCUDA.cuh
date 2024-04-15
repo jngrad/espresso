@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The ESPResSo project
+ * Copyright (C) 2023-2024 The ESPResSo project
  * Copyright (C) 2020 The waLBerla project
  *
  * This file is part of ESPResSo.
@@ -20,7 +20,7 @@
 
 // kernel generated with pystencils v1.2, lbmpy v1.2,
 // lbmpy_walberla/pystencils_walberla from waLBerla commit
-// 065ce5f311850371a97ac4766f47dbb5ca8424ba
+// 0c8b4b926c6979288fd8a6846d02ec0870e1fe41
 
 /**
  * @file
@@ -78,17 +78,22 @@ void set(gpu::GPUField<double> *field, Vector3<double> const &vec,
          Cell const &cell);
 void add(gpu::GPUField<double> *field, Vector3<double> const &vec,
          Cell const &cell);
-void add_at(gpu::GPUField<double> *vec_field, std::vector<double> const &vecs,
-            std::vector<cell_idx_t> const &cells);
-std::vector<double> get_at(gpu::GPUField<double> *vec_field,
-                           std::vector<cell_idx_t> const &cells);
 void broadcast(gpu::GPUField<double> *field, Vector3<double> const &vec);
 void add_to_all(gpu::GPUField<double> *field, Vector3<double> const &vec);
 std::vector<double> get(gpu::GPUField<double> const *vec_field,
                         CellInterval const &ci);
 void set(gpu::GPUField<double> *vec_field, std::vector<double> const &values,
          CellInterval const &ci);
+
 } // namespace Vector
+
+namespace Coupling {
+std::vector<double> get_interpolated(gpu::GPUField<double> const *vec_field,
+                                     std::vector<double> const &pos, uint gl);
+void set_interpolated(gpu::GPUField<double> const *vec_field,
+                      std::vector<double> const &pos,
+                      std::vector<double> const &forces, uint gl);
+} // namespace Coupling
 
 namespace Density {
 double get(gpu::GPUField<double> const *pdf_field, Cell const &cell);

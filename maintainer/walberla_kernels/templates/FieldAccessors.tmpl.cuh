@@ -33,7 +33,7 @@
 #include <core/math/Matrix{{D}}.h>
 #include <core/math/Vector{{D}}.h>
 
-#include <cuda/GPUField.h>
+#include <gpu/GPUField.h>
 
 #include <array>
 #include <tuple>
@@ -57,80 +57,93 @@ namespace accessor {
 
 namespace Population {
     std::array<{{dtype}}, {{Q}}u>
-    get( cuda::GPUField< {{dtype}} > const * pdf_field,
+    get( gpu::GPUField< {{dtype}} > const * pdf_field,
          Cell const & cell );
     void
-    set( cuda::GPUField< {{dtype}} > * pdf_field,
+    set( gpu::GPUField< {{dtype}} > * pdf_field,
          std::array< {{dtype}}, {{Q}}u > const & pop,
          Cell const & cell );
     void broadcast(
-         cuda::GPUField< {{dtype}} > * pdf_field,
+         gpu::GPUField< {{dtype}} > * pdf_field,
          std::array< {{dtype}}, {{Q}}u > const & pop );
     std::vector< {{dtype}} >
-    get( cuda::GPUField< {{dtype}} > const * pdf_field,
+    get( gpu::GPUField< {{dtype}} > const * pdf_field,
          CellInterval const & ci );
     void
-    set( cuda::GPUField< {{dtype}} > * pdf_field,
+    set( gpu::GPUField< {{dtype}} > * pdf_field,
          std::vector< {{dtype}} > const & values,
          CellInterval const & ci );
 } // namespace Population
 
 namespace Vector {
     Vector{{D}}< {{dtype}} >
-    get( cuda::GPUField< {{dtype}} > const * field,
+    get( gpu::GPUField< {{dtype}} > const * field,
          Cell const & cell );
-    void set( cuda::GPUField< {{dtype}} > * field,
+    void set( gpu::GPUField< {{dtype}} > * field,
               Vector{{D}}< {{dtype}} > const & vec,
               Cell const & cell );
-    void add( cuda::GPUField< {{dtype}} > * field,
+    void add( gpu::GPUField< {{dtype}} > * field,
               Vector{{D}}< {{dtype}} > const & vec,
               Cell const & cell );
-    void broadcast( cuda::GPUField< {{dtype}} > * field,
+    void broadcast( gpu::GPUField< {{dtype}} > * field,
                     Vector{{D}}< {{dtype}} > const & vec);
-    void add_to_all( cuda::GPUField< {{dtype}} > * field,
+    void add_to_all( gpu::GPUField< {{dtype}} > * field,
                      Vector{{D}}< {{dtype}} > const & vec);
     std::vector< {{dtype}} >
-    get( cuda::GPUField< {{dtype}} > const * vec_field,
+    get( gpu::GPUField< {{dtype}} > const * vec_field,
          CellInterval const & ci);
     void
-    set( cuda::GPUField< {{dtype}} > * vec_field,
+    set( gpu::GPUField< {{dtype}} > * vec_field,
          std::vector< {{dtype}} > const & values,
          CellInterval const & ci );
+
 } // namespace Vector
+
+namespace Coupling {
+    std::vector< {{dtype}} >
+    get_interpolated( gpu::GPUField< {{dtype}} > const *vec_field,
+                      std::vector< {{dtype}} > const &pos,
+                      uint gl );
+    void
+    set_interpolated( gpu::GPUField< {{dtype}} > const *vec_field,
+                      std::vector< {{dtype}} > const &pos,
+                      std::vector< {{dtype}} > const &forces,
+                      uint gl );
+} // namespace Coupling
 
 namespace Density {
     {{dtype}}
-    get( cuda::GPUField< {{dtype}} > const * pdf_field,
+    get( gpu::GPUField< {{dtype}} > const * pdf_field,
          Cell const & cell );
     void
-    set( cuda::GPUField< {{dtype}} > * pdf_field,
+    set( gpu::GPUField< {{dtype}} > * pdf_field,
          {{dtype}} const rho,
          Cell const & cell );
     std::vector< {{dtype}} >
-    get( cuda::GPUField< {{dtype}} > const * pdf_field,
+    get( gpu::GPUField< {{dtype}} > const * pdf_field,
          CellInterval const & ci );
     void
-    set( cuda::GPUField< {{dtype}} > * pdf_field,
+    set( gpu::GPUField< {{dtype}} > * pdf_field,
          std::vector< {{dtype}} > const & values,
          CellInterval const & ci );
 } // namespace Density
 
 namespace Velocity {
     void
-    set( cuda::GPUField< {{dtype}} > * pdf_field,
-         cuda::GPUField< {{dtype}} > * force_field,
+    set( gpu::GPUField< {{dtype}} > * pdf_field,
+         gpu::GPUField< {{dtype}} > * force_field,
          Vector{{D}}< {{dtype}} > const & u,
          Cell const & cell );
 } // namespace Velocity
 
 namespace DensityAndVelocity {
     std::tuple< {{dtype}} , Vector{{D}}< {{dtype}} > >
-    get( cuda::GPUField< {{dtype}} > const * pdf_field,
-         cuda::GPUField< {{dtype}} > const * force_field,
+    get( gpu::GPUField< {{dtype}} > const * pdf_field,
+         gpu::GPUField< {{dtype}} > const * force_field,
          Cell const & cell );
     void
-    set( cuda::GPUField< {{dtype}} > * pdf_field,
-         cuda::GPUField< {{dtype}} > * force_field,
+    set( gpu::GPUField< {{dtype}} > * pdf_field,
+         gpu::GPUField< {{dtype}} > * force_field,
          Vector{{D}}< {{dtype}} > const & u,
          {{dtype}} const rho,
          Cell const & cell );
@@ -138,20 +151,20 @@ namespace DensityAndVelocity {
 
 namespace DensityAndMomentumDensity {
     std::tuple< {{dtype}} , Vector{{D}}< {{dtype}} > >
-    get( cuda::GPUField< {{dtype}} > const * pdf_field,
-         cuda::GPUField< {{dtype}} > const * force_field,
+    get( gpu::GPUField< {{dtype}} > const * pdf_field,
+         gpu::GPUField< {{dtype}} > const * force_field,
          Cell const & cell );
 } // namespace DensityAndMomentumDensity
 
 namespace MomentumDensity {
     Vector{{D}}< {{dtype}} >
-    reduce( cuda::GPUField< {{dtype}} > const * pdf_field,
-            cuda::GPUField< {{dtype}} > const * force_field );
+    reduce( gpu::GPUField< {{dtype}} > const * pdf_field,
+            gpu::GPUField< {{dtype}} > const * force_field );
 } // namespace MomentumDensity
 
 namespace PressureTensor {
     Matrix{{D}}< {{dtype}} >
-    get( cuda::GPUField< {{dtype}} > const * pdf_field,
+    get( gpu::GPUField< {{dtype}} > const * pdf_field,
          Cell const & cell );
 } // namespace PressureTensor
 

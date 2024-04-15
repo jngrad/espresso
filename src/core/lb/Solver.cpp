@@ -137,6 +137,11 @@ void Solver::on_temperature_change() {
   }
 }
 
+bool Solver::is_gpu() const {
+  check_solver(impl);
+  return std::visit([](auto &ptr) { return ptr->is_gpu(); }, *impl->solver);
+}
+
 double Solver::get_agrid() const {
   check_solver(impl);
   return std::visit([](auto &ptr) { return ptr->get_agrid(); }, *impl->solver);
@@ -198,11 +203,61 @@ Solver::get_coupling_interpolated_velocity(Utils::Vector3d const &pos) const {
       *impl->solver);
 }
 
+std::vector<Utils::Vector3d> Solver::get_coupling_interpolated_velocities(
+    std::vector<Utils::Vector3d> const &pos) const {
+  return std::visit(
+      [&](auto &ptr) {
+        auto const agrid = ptr->get_agrid();
+        auto const tau = ptr->get_tau();
+        auto conv_pos_to_lb = 1. / agrid;
+        auto conv_vel_to_md = agrid / tau;
+        std::vector<Utils::Vector3d> pos_lb;
+        pos_lb.reserve(pos.size());
+        for (auto const &pos_md : pos) {
+          pos_lb.emplace_back(pos_md * conv_pos_to_lb);
+        }
+        auto res = ptr->get_velocities_at_pos(pos_lb);
+        for (auto &v : res) {
+          v *= conv_vel_to_md;
+        }
+        return res;
+      },
+      *impl->solver);
+}
+
+void Solver::add_forces_at_pos(std::vector<Utils::Vector3d> const &pos,
+                               std::vector<Utils::Vector3d> const &forces) {
+  std::visit(
+      [&](auto &ptr) {
+        auto const agrid = ptr->get_agrid();
+        auto const tau = ptr->get_tau();
+        auto conv_pos_to_lb = 1. / agrid;
+        auto conv_force_to_lb = tau * tau / agrid;
+        std::vector<Utils::Vector3d> pos_lb;
+        std::vector<Utils::Vector3d> force_lb;
+        pos_lb.reserve(pos.size());
+        force_lb.reserve(pos.size());
+        for (auto const &pos_md : pos) {
+          pos_lb.emplace_back(pos_md * conv_pos_to_lb);
+        }
+        for (auto const &force_md : forces) {
+          force_lb.emplace_back(force_md * conv_force_to_lb);
+        }
+        ptr->add_forces_at_pos(pos_lb, force_lb);
+      },
+      *impl->solver);
+}
+
 void Solver::add_force_density(Utils::Vector3d const &pos,
                                Utils::Vector3d const &force_density) {
   std::visit(
       [&](auto &ptr) {
-        if (not ptr->add_force_at_pos(pos / ptr->get_agrid(), force_density)) {
+        auto const agrid = ptr->get_agrid();
+        auto const tau = ptr->get_tau();
+        auto conv_pos_to_lb = 1. / agrid;
+        auto conv_force_to_lb = tau * tau / agrid;
+        if (not ptr->add_force_at_pos(pos * conv_pos_to_lb,
+                                      force_density * conv_force_to_lb)) {
           throw std::runtime_error("Cannot apply force to LB");
         }
       },

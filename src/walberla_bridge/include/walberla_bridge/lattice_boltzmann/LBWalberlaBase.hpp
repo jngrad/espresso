@@ -59,6 +59,10 @@ public:
   get_velocity_at_pos(Utils::Vector3d const &position,
                       bool consider_points_in_halo = false) const = 0;
 
+  /** @brief Get interpolated velocities at positions. */
+  virtual std::vector<Utils::Vector3d>
+  get_velocities_at_pos(std::vector<Utils::Vector3d> const &pos) = 0;
+
   /** @brief Get interpolated densities at a position. */
   virtual std::optional<double>
   get_density_at_pos(Utils::Vector3d const &position,
@@ -252,9 +256,6 @@ public:
 
   /** @brief Get the fluid temperature (if thermalized). */
   virtual double get_kT() const noexcept = 0;
-
-  virtual std::vector<double> get_velocity_at_pos_simplified_cuda(
-      std::vector<Utils::Vector3d> const &pos) = 0;
 
   /** @brief Set the RNG counter (if thermalized). */
   [[nodiscard]] virtual std::optional<uint64_t> get_rng_state() const = 0;

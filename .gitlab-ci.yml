@@ -136,10 +136,9 @@ clang-sanitizer:
      CC: 'clang-18'
      CXX: 'clang++-18'
      CUDACXX: 'clang++-18'
-     with_cuda_compiler: 'clang'
      myconfig: 'maxset'
      with_cuda: 'true'
-     with_coverage: 'false'
+     with_cuda_compiler: 'clang'
      with_static_analysis: 'true'
      check_skip_long: 'true'
      with_asan: 'false'
@@ -147,6 +146,8 @@ clang-sanitizer:
      with_scafacos: 'true'
      with_walberla: 'true'
      with_stokesian_dynamics: 'true'
+     with_coverage: 'false'
+     with_coverage_python: 'false'
   script:
     - bash maintainer/CI/build_cmake.sh
   timeout: 2h
@@ -396,6 +397,7 @@ empty:
      CUDAXX: 'clang++-18'
      myconfig: 'empty'
      with_cuda: 'true'
+     with_cuda_compiler: 'clang'
      with_static_analysis: 'true'
      with_scafacos: 'false'
      with_walberla: 'false'

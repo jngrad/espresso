@@ -19,17 +19,21 @@
 
 // kernel generated with pystencils v1.2, lbmpy v1.2,
 // lbmpy_walberla/pystencils_walberla from waLBerla commit
-// 065ce5f311850371a97ac4766f47dbb5ca8424ba
+// 0c8b4b926c6979288fd8a6846d02ec0870e1fe41
 
 #pragma once
 #include "core/DataTypes.h"
+#include "core/logging/Logging.h"
 
 #include "gpu/GPUField.h"
+#include "gpu/GPUWrapper.h"
 
 #include "domain_decomposition/BlockDataID.h"
 #include "domain_decomposition/IBlock.h"
 #include "domain_decomposition/StructuredBlockStorage.h"
 #include "field/SwapableCompare.h"
+
+#include <functional>
 #include <set>
 
 #ifdef __GNUC__

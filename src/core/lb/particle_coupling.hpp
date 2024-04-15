@@ -44,16 +44,6 @@
 bool in_local_halo(LocalBox const &local_box, Utils::Vector3d const &pos,
                    double agrid);
 
-/**
- * @brief Add a force to the lattice force density.
- * @param lb Hydrodynamics solver
- * @param pos Position of the force in LB units.
- * @param force Force in MD units.
- * @param time_step MD time step.
- */
-void add_md_force(LB::Solver &lb, Utils::Vector3d const &pos,
-                  Utils::Vector3d const &force, double time_step);
-
 // internal function exposed for unit testing
 std::vector<Utils::Vector3d> positions_in_halo(Utils::Vector3d const &pos,
                                                BoxGeometry const &box_geo,

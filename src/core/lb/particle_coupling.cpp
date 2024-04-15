@@ -32,10 +32,6 @@
 #include "Implementation.hpp"
 #include "LBWalberla.hpp"
 
-#ifdef WALBERLA
-#include <walberla_bridge/lattice_boltzmann/LBWalberlaBase.hpp>
-#endif
-
 #include <utils/Counter.hpp>
 #include <utils/Vector.hpp>
 
@@ -52,14 +48,6 @@
 #include <limits>
 #include <stdexcept>
 #include <vector>
-
-void add_md_force(LB::Solver &lb, Utils::Vector3d const &pos,
-                  Utils::Vector3d const &force, double time_step) {
-  /* transform momentum transfer to lattice units
-     (eq. (12) @cite ahlrichs99a) */
-  auto const delta_j = (time_step / lb.get_lattice_speed()) * force;
-  lb.add_force_density(pos, delta_j);
-}
 
 static Thermostat::GammaType lb_handle_particle_anisotropy(Particle const &p,
                                                            double lb_gamma) {
@@ -204,8 +192,7 @@ void ParticleCoupling::commit(System::System const &system,
   if (particles.empty()) {
     return;
   }
-  auto const agrid = m_lb.get_agrid();
-  auto const halo = 0.5 * agrid;
+  auto const halo = 0.5 * m_lb.get_agrid();
   auto const halo_vec = Utils::Vector3d::broadcast(halo);
   auto const fully_inside_lower = m_local_box.my_left() + 2. * halo_vec;
   auto const fully_inside_upper = m_local_box.my_right() - 2. * halo_vec;
@@ -216,8 +203,6 @@ void ParticleCoupling::commit(System::System const &system,
   std::vector<Utils::Vector3d> force_coupling_forces;
   std::vector<unsigned> positions_force_coupling_counter;
   std::vector<Particle *> coupled_particles;
-  auto const lb_vel_conv = m_lb.get_lattice_speed();
-  auto const lb_force_conv_inv = m_time_step / lb_vel_conv;
   for (auto ptr : particles) {
     auto &p = *ptr;
     auto span_size = 1u;
@@ -240,7 +225,7 @@ void ParticleCoupling::commit(System::System const &system,
            it != end; ++it) {
         auto const &pos = *it;
         if (pos >= halo_lower_corner and pos < halo_upper_corner) {
-          positions_velocity_coupling.emplace_back(pos / agrid);
+          positions_velocity_coupling.emplace_back(pos);
           found = true;
           break;
         }
@@ -257,22 +242,8 @@ void ParticleCoupling::commit(System::System const &system,
   if (positions_velocity_coupling.empty()) {
     return;
   }
-  std::vector<double> interpolated_velocities{};
-#ifdef WALBERLA
-  system.lb.connect([&](LB::Solver::Implementation const &impl) {
-    using lb_value_type = std::shared_ptr<LBWalberla>;
-    if (impl.solver.has_value()) {
-      if (auto const *ptr = std::get_if<lb_value_type>(&(*impl.solver))) {
-        auto &lb_fluid = *(*ptr)->lb_fluid;
-        interpolated_velocities = lb_fluid.get_velocity_at_pos_simplified_cuda(
-            positions_velocity_coupling);
-        for (auto &v : interpolated_velocities) {
-          v *= lb_vel_conv;
-        }
-      }
-    }
-  });
-#endif
+  auto interpolated_velocities =
+      m_lb.get_coupling_interpolated_velocities(positions_velocity_coupling);
 
   auto const &domain_lower_corner = m_local_box.my_left();
   auto const &domain_upper_corner = m_local_box.my_right();
@@ -287,13 +258,13 @@ void ParticleCoupling::commit(System::System const &system,
     if (not p.swimming().is_engine_force_on_fluid)
 #endif
     {
-      auto const v_fluid = Utils::Vector3d{it_interpolated_velocities,
-                                           it_interpolated_velocities += 3ul};
+      auto const &v_fluid = *it_interpolated_velocities;
       auto const vel_offset = lb_drift_velocity_offset(p);
       auto const drag_force =
           lb_drag_force(p, m_thermostat.gamma, v_fluid, vel_offset);
       auto const random_force = get_noise_term(p);
       force_on_particle = drag_force + random_force;
+      ++it_interpolated_velocities;
     }
 
     auto force_on_fluid = -force_on_particle;
@@ -312,25 +283,11 @@ void ParticleCoupling::commit(System::System const &system,
          * is responsible to adding its force */
         p.force() += force_on_particle;
       }
-      // convert momentum to lattice units (eq. (12) @cite ahlrichs99a)
-      force_coupling_forces.emplace_back(force_on_fluid * lb_force_conv_inv);
-      // convert positions to lattice units
-      pos /= agrid;
+      force_coupling_forces.emplace_back(force_on_fluid);
       ++it_positions_force_coupling;
     }
   }
-#ifdef WALBERLA
-  system.lb.connect([&](LB::Solver::Implementation const &impl) {
-    using lb_value_type = std::shared_ptr<LBWalberla>;
-    if (impl.solver.has_value()) {
-      if (auto const *ptr = std::get_if<lb_value_type>(&(*impl.solver))) {
-        auto &instance = **ptr;
-        instance.lb_fluid->add_forces_at_pos(positions_force_coupling,
-                                             force_coupling_forces);
-      }
-    }
-  });
-#endif
+  m_lb.add_forces_at_pos(positions_force_coupling, force_coupling_forces);
 }
 
 void ParticleCoupling::kernel(Particle &p) {
@@ -370,7 +327,7 @@ void ParticleCoupling::kernel(Particle &p) {
        * is responsible to adding its force */
       p.force() += force_on_particle;
     }
-    add_md_force(m_lb, pos, force_on_fluid, m_time_step);
+    m_lb.add_force_density(pos, force_on_fluid);
   }
 }
 
@@ -406,18 +363,7 @@ void System::System::lb_couple_particles(double time_step) {
                                   time_step};
     LB::CouplingBookkeeping bookkeeping{*cell_structure};
     std::vector<Particle *> particles{};
-    auto is_gpu = false;
-#ifdef WALBERLA
-    lb.connect([&is_gpu](LB::Solver::Implementation const &impl) {
-      using lb_value_type = std::shared_ptr<LB::LBWalberla>;
-      if (impl.solver.has_value()) {
-        if (auto const *ptr = std::get_if<lb_value_type>(&(*impl.solver))) {
-          auto &instance = **ptr;
-          is_gpu = instance.lb_fluid->is_gpu();
-        }
-      }
-    });
-#endif
+    auto const is_gpu = lb.is_gpu();
     for (auto const *particle_range : {&real_particles, &ghost_particles}) {
       for (auto &p : *particle_range) {
         if (not LB::is_tracer(p) and bookkeeping.should_be_coupled(p)) {

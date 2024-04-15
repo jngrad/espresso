@@ -411,12 +411,11 @@ if [ "${with_coverage}" = true ] || [ "${with_coverage_python}" = true ]; then
         codecov_opts="${codecov_opts} --gcov"
         lcov --gcov-tool "${GCOV:-gcov}" \
              --quiet \
-             --ignore-errors graph,mismatch,gcov \
+             --ignore-errors graph,mismatch,gcov,unused \
              --directory . \
              --capture \
              --rc lcov_json_module="JSON::XS" \
              --exclude "/usr/*" \
-             --exclude "*/doc/*" \
              --exclude "$(realpath .)/_deps/*" \
              --exclude "*/tmpxft_*cudafe1.stub.*" \
              --output-file coverage.info

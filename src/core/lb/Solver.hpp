@@ -90,6 +90,8 @@ struct Solver : public System::Leaf<Solver> {
   void lebc_sanity_checks(unsigned int shear_direction,
                           unsigned int shear_plane_normal) const;
 
+  bool is_gpu() const;
+
   /**
    * @brief Get the LB time step.
    */
@@ -140,6 +142,12 @@ struct Solver : public System::Leaf<Solver> {
    */
   Utils::Vector3d
   get_coupling_interpolated_velocity(Utils::Vector3d const &pos) const;
+
+  std::vector<Utils::Vector3d> get_coupling_interpolated_velocities(
+      std::vector<Utils::Vector3d> const &pos) const;
+
+  void add_forces_at_pos(std::vector<Utils::Vector3d> const &pos,
+                         std::vector<Utils::Vector3d> const &forces);
 
   /**
    * @brief Add a force density to the fluid at the given position.

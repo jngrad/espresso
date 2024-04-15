@@ -780,7 +780,7 @@ public:
       std::vector<FloatType> host_pos;
       std::vector<FloatType> host_force;
       host_pos.reserve(3ul * pos.size());
-      host_force.reserve(3ul * pos.size());
+      host_force.reserve(3ul * forces.size());
       for (auto const &vec : pos) {
 #pragma unroll
         for (std::size_t i : {0ul, 1ul, 2ul}) {
@@ -796,13 +796,14 @@ public:
       auto const gl = lattice.get_ghost_layers();
       auto field = block.template uncheckedFastGetData<VectorField>(
           m_force_to_be_applied_id);
-      lbm::accessor::Vector::set_part_coupling(field, host_pos, host_force, gl);
+      lbm::accessor::Coupling::set_interpolated(field, host_pos, host_force,
+                                                gl);
     }
 #endif
   }
 
-  std::vector<double> get_velocity_at_pos_simplified_cuda(
-      std::vector<Utils::Vector3d> const &pos) override {
+  std::vector<Utils::Vector3d>
+  get_velocities_at_pos(std::vector<Utils::Vector3d> const &pos) override {
     if (pos.empty())
       return {};
 #if defined(__CUDACC__)
@@ -822,16 +823,15 @@ public:
       auto field =
           block.template uncheckedFastGetData<VectorField>(m_velocity_field_id);
       auto const res =
-          lbm::accessor::Vector::get_part_coupling(field, host_pos, gl);
-      if constexpr (std::is_same_v<FloatType, double>) {
-        return res;
+          lbm::accessor::Coupling::get_interpolated(field, host_pos, gl);
+      std::vector<Utils::Vector3d> vel{};
+      vel.reserve(res.size() / 3ul);
+      for (auto it = res.begin(); it != res.end(); it += 3) {
+        vel.emplace_back(Utils::Vector3d{static_cast<double>(*(it + 0)),
+                                         static_cast<double>(*(it + 1)),
+                                         static_cast<double>(*(it + 2))});
       }
-      std::vector<double> res_type{};
-      res_type.reserve(res.size());
-      for (auto const v : res) {
-        res_type.emplace_back(static_cast<double>(v));
-      }
-      return res_type;
+      return vel;
     }
 #endif
     return {};

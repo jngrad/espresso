@@ -33,6 +33,7 @@ struct LBNone {
   double get_tau() const { throw NoLBActive{}; }
   double get_kT() const { throw NoLBActive{}; }
   Utils::VectorXd<9> get_pressure_tensor() const { throw NoLBActive{}; }
+  bool is_gpu() const { throw NoLBActive{}; }
   std::optional<Utils::Vector3d> get_velocity_at_pos(Utils::Vector3d const &,
                                                      bool) const {
     throw NoLBActive{};
@@ -49,8 +50,8 @@ struct LBNone {
                          std::vector<Utils::Vector3d> const &) const {
     throw NoLBActive{};
   }
-  std::vector<double> get_velocity_at_pos_simplified_cuda(
-      std::vector<Utils::Vector3d> const &) const {
+  std::vector<Utils::Vector3d>
+  get_velocities_at_pos(std::vector<Utils::Vector3d> const &) const {
     throw NoLBActive{};
   }
   Utils::Vector3d get_momentum() const { throw NoLBActive{}; }

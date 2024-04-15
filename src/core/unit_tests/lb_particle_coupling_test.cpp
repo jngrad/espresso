@@ -303,8 +303,8 @@ BOOST_DATA_TEST_CASE(swimmer_force, bdata::make(kTs), kT) {
   // remove force of the particle from the fluid
   {
     if (in_local_halo(local_box, p.pos(), params.agrid)) {
-      add_md_force(lb, p.pos(), -Utils::Vector3d{0., 0., p.swimming().f_swim},
-                   params.time_step);
+      lb.add_force_density(p.pos(),
+                           -Utils::Vector3d{0., 0., p.swimming().f_swim});
       auto const reset = LB::get_force_to_be_applied(p.pos());
       BOOST_REQUIRE_SMALL(reset.norm(), eps);
     }
@@ -347,7 +347,7 @@ BOOST_DATA_TEST_CASE(particle_coupling, bdata::make(kTs), kT) {
   // remove force of the particle from the fluid
   {
     if (in_local_halo(local_box, p.pos(), params.agrid)) {
-      add_md_force(lb, p.pos(), -expected, params.time_step);
+      lb.add_force_density(p.pos(), -expected);
     }
   }
 }
@@ -495,7 +495,7 @@ BOOST_DATA_TEST_CASE_F(CleanupActorLB, coupling_particle_lattice_ia,
       }
       // remove force of the particle from the fluid
       set_particle_property(pid, &Particle::force, Utils::Vector3d{});
-      add_md_force(lb, p_pos, -expected, params.time_step);
+      lb.add_force_density(p_pos, -expected);
     }
   }
 
