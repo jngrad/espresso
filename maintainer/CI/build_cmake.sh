@@ -233,7 +233,7 @@ fi
 if [ "${with_cuda}" = true ]; then
     cmake_params="-D ESPRESSO_BUILD_WITH_CUDA=ON -D CUDAToolkit_ROOT=/usr/lib/cuda ${cmake_params}"
     if [ "${CUDACXX}" = "" ] && [ "${CXX}" != "" ]; then
-        cmake_params="-D CMAKE_CUDA_FLAGS='--compiler-bindir=$(realpath ${CXX})' ${cmake_params}"
+        cmake_params="-D CMAKE_CUDA_FLAGS='--compiler-bindir=$(which ${CXX})' ${cmake_params}"
     fi
 else
     cmake_params="-D ESPRESSO_BUILD_WITH_CUDA=OFF ${cmake_params}"
@@ -264,9 +264,18 @@ cd "${builddir}"
 
 # load MPI module if necessary
 if [ -f "/etc/os-release" ]; then
-    grep -q suse /etc/os-release && . /etc/profile.d/modules.sh && module load gnu-openmpi
-    grep -q 'rhel\|fedora' /etc/os-release && for f in /etc/profile.d/*module*.sh; do . "${f}"; done && module load mpi
-    grep -q "Ubuntu 22.04" /etc/os-release && export MPIEXEC_PREFLAGS="--mca;btl_vader_single_copy_mechanism;none${mpiexec_preflags:+;$mpiexec_preflags}"
+    grep -q "suse" /etc/os-release && . /etc/profile.d/modules.sh && module load gnu-openmpi
+    grep -q "rhel\|fedora" /etc/os-release && for f in /etc/profile.d/*module*.sh; do . "${f}"; done && module load mpi
+fi
+
+# setup environment
+if grep -q "Ubuntu" /etc/os-release; then
+    if [ -d "${HOME}/.local/var/lib/alternatives" ]; then
+        update-alternatives --altdir "${HOME}/.local/etc/alternatives" \
+                            --admindir "${HOME}/.local/var/lib/alternatives" \
+                            --install "${HOME}/.local/bin/gcov" "gcov" "$(which ${GCOV:-gcov})" 10
+        source "${HOME}/venv/bin/activate"
+    fi
 fi
 
 # CONFIGURE
@@ -400,12 +409,17 @@ if [ "${with_coverage}" = true ] || [ "${with_coverage_python}" = true ]; then
     if [ "${with_coverage}" = true ]; then
         echo "Running lcov and gcov..."
         codecov_opts="${codecov_opts} --gcov"
-        lcov --gcov-tool "${GCOV:-gcov}" -q --directory . --ignore-errors graph --capture --output-file coverage.info # capture coverage info
-        lcov --gcov-tool "${GCOV:-gcov}" -q --remove coverage.info '/usr/*' --output-file coverage.info # filter out system
-        lcov --gcov-tool "${GCOV:-gcov}" -q --remove coverage.info '*/doc/*' --output-file coverage.info # filter out docs
-        if [ -d _deps/ ]; then
-          lcov --gcov-tool "${GCOV:-gcov}" -q --remove coverage.info $(realpath _deps/)'/*' --output-file coverage.info # filter out external projects
-        fi
+        lcov --gcov-tool "${GCOV:-gcov}" \
+             --quiet \
+             --ignore-errors graph,mismatch,gcov \
+             --directory . \
+             --capture \
+             --rc lcov_json_module="JSON::XS" \
+             --exclude "/usr/*" \
+             --exclude "*/doc/*" \
+             --exclude "$(realpath .)/_deps/*" \
+             --exclude "*/tmpxft_*cudafe1.stub.*" \
+             --output-file coverage.info
     fi
     if [ "${with_coverage_python}" = true ]; then
         echo "Running python3-coverage..."

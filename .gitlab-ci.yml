@@ -107,10 +107,10 @@ no_rotation:
     - no-cuda
     - numa
 
-fedora:36:
+fedora:40:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/espressomd/docker/fedora:339903979196fd7e72127f2cb5bfb27759d129f9
+  image: ghcr.io/espressomd/docker/fedora:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
      with_cuda: 'false'
      with_gsl: 'false'
@@ -128,7 +128,7 @@ fedora:36:
 clang-sanitizer:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
      CC: 'clang-18'
      CXX: 'clang++-18'
@@ -155,7 +155,7 @@ clang-sanitizer:
 fast_math:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
      CC: 'gcc-12'
      CXX: 'g++-12'
@@ -166,7 +166,6 @@ fast_math:
      with_scafacos: 'false'
      with_stokesian_dynamics: 'true'
      with_fast_math: 'true'
-     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -177,7 +176,7 @@ fast_math:
 cuda12-coverage:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
      CC: 'gcc-12'
      CXX: 'g++-12'
@@ -189,7 +188,6 @@ cuda12-coverage:
      with_scafacos: 'true'
      with_walberla: 'true'
      with_stokesian_dynamics: 'true'
-     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -200,7 +198,7 @@ cuda12-coverage:
 cuda12-maxset:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
      CC: 'gcc-12'
      CXX: 'g++-12'
@@ -216,7 +214,6 @@ cuda12-maxset:
      with_walberla_avx: 'true'
      with_stokesian_dynamics: 'true'
      with_caliper: 'true'
-     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   artifacts:
@@ -232,7 +229,7 @@ cuda12-maxset:
 tutorials-samples-maxset:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
      CC: 'gcc-12'
      CXX: 'g++-12'
@@ -251,7 +248,6 @@ tutorials-samples-maxset:
      make_check_samples: 'true'
      make_check_benchmarks: 'true'
      test_timeout: '1200'
-     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -263,7 +259,7 @@ tutorials-samples-maxset:
 tutorials-samples-default:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
      CC: 'gcc-12'
      CXX: 'g++-12'
@@ -280,7 +276,6 @@ tutorials-samples-default:
      make_check_samples: 'true'
      make_check_benchmarks: 'true'
      test_timeout: '1200'
-     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -294,7 +289,7 @@ tutorials-samples-default:
 tutorials-samples-empty:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
      CC: 'gcc-12'
      CXX: 'g++-12'
@@ -310,7 +305,6 @@ tutorials-samples-empty:
      make_check_samples: 'true'
      make_check_benchmarks: 'true'
      test_timeout: '1200'
-     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -323,7 +317,7 @@ tutorials-samples-empty:
 tutorials-samples-no-gpu:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
      CC: 'gcc-12'
      CXX: 'g++-12'
@@ -341,7 +335,6 @@ tutorials-samples-no-gpu:
      make_check_benchmarks: 'true'
      test_timeout: '1200'
      hide_gpu: 'true'
-     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -354,7 +347,7 @@ tutorials-samples-no-gpu:
 installation:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
      CC: 'gcc-12'
      CXX: 'g++-12'
@@ -369,7 +362,6 @@ installation:
      with_stokesian_dynamics: 'true'
      srcdir: '${CI_PROJECT_DIR}'
      build_type: 'Release'
-     cmake_params: '-D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"'
   script:
     - bash maintainer/CI/build_cmake.sh
     - cd build
@@ -394,7 +386,7 @@ installation:
 empty:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
      CC: 'clang-18'
      CXX: 'clang++-18'
@@ -417,7 +409,7 @@ empty:
 check_sphinx:
   <<: *global_job_definition
   stage: additional_checks
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   needs:
     - cuda12-maxset
   when: on_success
@@ -440,7 +432,7 @@ check_sphinx:
 run_tutorials:
   <<: *global_job_definition
   stage: additional_checks
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   needs:
     - cuda12-maxset
   when: on_success
@@ -468,7 +460,7 @@ run_tutorials:
 maxset_no_gpu:
   <<: *global_job_definition
   stage: additional_checks
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   when: on_success
   needs:
     - cuda12-maxset
@@ -484,7 +476,7 @@ maxset_no_gpu:
 maxset_3_cores:
   <<: *global_job_definition
   stage: additional_checks
-  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   when: on_success
   needs:
     - cuda12-maxset
