@@ -45,10 +45,11 @@ status_pending:
 default:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
-     CC: 'gcc-10'
-     CXX: 'g++-10'
-     GCOV: 'gcov-10'
+     CC: 'gcc-13'
+     CXX: 'g++-13'
+     GCOV: 'gcov-13'
      with_cuda: 'false'
      myconfig: 'default'
      with_coverage: 'true'
@@ -66,10 +67,11 @@ default:
 maxset:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
-     CC: 'gcc-10'
-     CXX: 'g++-10'
-     GCOV: 'gcov-10'
+     CC: 'gcc-13'
+     CXX: 'g++-13'
+     GCOV: 'gcov-13'
      with_cuda: 'false'
      with_cxx_standard: '20'
      myconfig: 'maxset'
@@ -91,10 +93,11 @@ maxset:
 no_rotation:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
-     CC: 'gcc-10'
-     CXX: 'g++-10'
-     GCOV: 'gcov-10'
+     CC: 'gcc-13'
+     CXX: 'g++-13'
+     GCOV: 'gcov-13'
      with_cuda: 'false'
      myconfig: 'no_rotation'
      with_coverage: 'true'
@@ -110,7 +113,7 @@ no_rotation:
 fedora:40:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/espressomd/docker/fedora:ca8d92c48067ce638c893f73ca77e0951531eceb
+  image: ghcr.io/jngrad/espresso-docker/fedora:ca8d92c48067ce638c893f73ca77e0951531eceb
   variables:
      with_cuda: 'false'
      with_gsl: 'false'
