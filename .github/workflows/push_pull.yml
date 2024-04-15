@@ -35,7 +35,7 @@ jobs:
   debian:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/espressomd/docker/debian:ca8d92c48067ce638c893f73ca77e0951531eceb-base-layer
+      image: ghcr.io/jngrad/espresso-docker/debian:ca8d92c48067ce638c893f73ca77e0951531eceb-base-layer
       credentials:
          username: ${{ github.actor }}
          password: ${{ secrets.github_token }}
