@@ -128,6 +128,7 @@ fedora:36:
 clang-sanitizer:
   <<: *global_job_definition
   stage: build
+  image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ec3b7c7b62e7962d29a5794bf6d3781a6705414a
   variables:
      CC: 'clang-18'
      CXX: 'clang++-18'

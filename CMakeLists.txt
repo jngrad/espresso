@@ -226,7 +226,7 @@ endif()
 # Python interpreter and Cython interface library
 if(ESPRESSO_BUILD_WITH_PYTHON)
   find_package(Python 3.9 REQUIRED COMPONENTS Interpreter Development NumPy)
-  find_package(Cython 0.29.21...<3.0.9 REQUIRED)
+  find_package(Cython 0.29.21...<3.0.10 REQUIRED)
   find_program(IPYTHON_EXECUTABLE NAMES jupyter ipython3 ipython)
 endif()
 
@@ -640,7 +640,7 @@ if(ESPRESSO_BUILD_WITH_CALIPER)
   FetchContent_Declare(
     caliper
     GIT_REPOSITORY https://github.com/LLNL/Caliper.git
-    GIT_TAG        v2.9.1
+    GIT_TAG        v2.10.0
   )
   if(NOT DEFINED caliper_SOURCE_DIR OR NOT EXISTS "${caliper_SOURCE_DIR}")
     FetchContent_Populate(caliper)

@@ -53,7 +53,7 @@ boost::test_tools::assertion_result has_gpu(boost::unit_test::test_unit_id) {
   try {
     cuda_check_device();
     has_compatible_gpu = true;
-  } catch (cuda_runtime_error const &) {
+  } catch (cuda_runtime_error const &) { // NOLINT(bugprone-empty-catch)
   }
   return has_compatible_gpu;
 }
