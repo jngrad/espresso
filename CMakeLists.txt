@@ -575,7 +575,7 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   FetchContent_Declare(
     walberla
     GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla.git
-    GIT_TAG        0c8b4b926c6979288fd8a6846d02ec0870e1fe41
+    GIT_TAG        af126dc94aa3ff21a7516421ebbd5415ca7a41fd
   )
   # workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/21146
   if(NOT DEFINED walberla_SOURCE_DIR OR NOT EXISTS "${walberla_SOURCE_DIR}")
@@ -593,7 +593,7 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   set(WALBERLA_LOGLEVEL "WARNING" CACHE STRING "")
   set(CMAKE_POSITION_INDEPENDENT_CODE on CACHE BOOL "")
   if(ESPRESSO_BUILD_WITH_CUDA)
-    set(WALBERLA_BUILD_WITH_GPU_SUPPORT "on" CACHE BOOL "")
+    set(WALBERLA_BUILD_WITH_CUDA "on" CACHE BOOL "")
     if(CMAKE_VERSION VERSION_LESS 3.25 OR NOT ESPRESSO_CUDA_COMPILER STREQUAL
                                           "clang")
       if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
@@ -616,7 +616,7 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   if(ESPRESSO_BUILD_WITH_WALBERLA_FFT)
     set(WALBERLA_LIBS ${WALBERLA_LIBS} walberla::fft)
   endif()
-  if(ESPRESSO_BUILD_WITH_CUDA AND WALBERLA_BUILD_WITH_GPU_SUPPORT)
+  if(ESPRESSO_BUILD_WITH_CUDA AND WALBERLA_BUILD_WITH_CUDA)
     set(WALBERLA_LIBS ${WALBERLA_LIBS} walberla::gpu)
   endif()
   # workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/21283
