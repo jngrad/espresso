@@ -281,11 +281,11 @@ __launch_bounds__(256) void streamsweepdoubleprecisioncuda_streamsweepdoubleprec
 } // namespace
   // internal_streamsweepdoubleprecisioncuda_streamsweepdoubleprecisioncuda
 
-void StreamSweepDoublePrecisionCUDA::run(IBlock *block, cudaStream_t stream) {
-  auto pdfs = block->getData<cuda::GPUField<double>>(pdfsID);
-  auto velocity = block->getData<cuda::GPUField<double>>(velocityID);
-  auto force = block->getData<cuda::GPUField<double>>(forceID);
-  cuda::GPUField<double> *pdfs_tmp;
+void StreamSweepDoublePrecisionCUDA::run(IBlock *block, gpuStream_t stream) {
+  auto pdfs = block->getData<gpu::GPUField<double>>(pdfsID);
+  auto velocity = block->getData<gpu::GPUField<double>>(velocityID);
+  auto force = block->getData<gpu::GPUField<double>>(forceID);
+  gpu::GPUField<double> *pdfs_tmp;
   {
     // Getting temporary field pdfs_tmp
     auto it = cache_pdfs_.find(pdfs);
@@ -778,7 +778,7 @@ void StreamSweepDoublePrecisionCUDA::run(IBlock *block, cudaStream_t stream) {
 void StreamSweepDoublePrecisionCUDA::runOnCellInterval(
     const shared_ptr<StructuredBlockStorage> &blocks,
     const CellInterval &globalCellInterval, cell_idx_t ghostLayers,
-    IBlock *block, cudaStream_t stream) {
+    IBlock *block, gpuStream_t stream) {
   CellInterval ci = globalCellInterval;
   CellInterval blockBB = blocks->getBlockCellBB(*block);
   blockBB.expand(ghostLayers);
@@ -787,10 +787,10 @@ void StreamSweepDoublePrecisionCUDA::runOnCellInterval(
   if (ci.empty())
     return;
 
-  auto pdfs = block->getData<cuda::GPUField<double>>(pdfsID);
-  auto velocity = block->getData<cuda::GPUField<double>>(velocityID);
-  auto force = block->getData<cuda::GPUField<double>>(forceID);
-  cuda::GPUField<double> *pdfs_tmp;
+  auto pdfs = block->getData<gpu::GPUField<double>>(pdfsID);
+  auto velocity = block->getData<gpu::GPUField<double>>(velocityID);
+  auto force = block->getData<gpu::GPUField<double>>(forceID);
+  gpu::GPUField<double> *pdfs_tmp;
   {
     // Getting temporary field pdfs_tmp
     auto it = cache_pdfs_.find(pdfs);

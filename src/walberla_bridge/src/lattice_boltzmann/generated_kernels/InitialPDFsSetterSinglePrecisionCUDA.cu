@@ -251,10 +251,10 @@ __launch_bounds__(256) void initialpdfssettersingleprecisioncuda_initialpdfssett
   // internal_initialpdfssettersingleprecisioncuda_initialpdfssettersingleprecisioncuda
 
 void InitialPDFsSetterSinglePrecisionCUDA::run(IBlock *block,
-                                               cudaStream_t stream) {
-  auto velocity = block->getData<cuda::GPUField<float>>(velocityID);
-  auto force = block->getData<cuda::GPUField<float>>(forceID);
-  auto pdfs = block->getData<cuda::GPUField<float>>(pdfsID);
+                                               gpuStream_t stream) {
+  auto velocity = block->getData<gpu::GPUField<float>>(velocityID);
+  auto force = block->getData<gpu::GPUField<float>>(forceID);
+  auto pdfs = block->getData<gpu::GPUField<float>>(pdfsID);
 
   auto &rho_0 = this->rho_0_;
   WALBERLA_ASSERT_GREATER_EQUAL(0, -int_c(force->nrOfGhostLayers()));
@@ -688,7 +688,7 @@ void InitialPDFsSetterSinglePrecisionCUDA::run(IBlock *block,
 void InitialPDFsSetterSinglePrecisionCUDA::runOnCellInterval(
     const shared_ptr<StructuredBlockStorage> &blocks,
     const CellInterval &globalCellInterval, cell_idx_t ghostLayers,
-    IBlock *block, cudaStream_t stream) {
+    IBlock *block, gpuStream_t stream) {
   CellInterval ci = globalCellInterval;
   CellInterval blockBB = blocks->getBlockCellBB(*block);
   blockBB.expand(ghostLayers);
@@ -697,9 +697,9 @@ void InitialPDFsSetterSinglePrecisionCUDA::runOnCellInterval(
   if (ci.empty())
     return;
 
-  auto velocity = block->getData<cuda::GPUField<float>>(velocityID);
-  auto force = block->getData<cuda::GPUField<float>>(forceID);
-  auto pdfs = block->getData<cuda::GPUField<float>>(pdfsID);
+  auto velocity = block->getData<gpu::GPUField<float>>(velocityID);
+  auto force = block->getData<gpu::GPUField<float>>(forceID);
+  auto pdfs = block->getData<gpu::GPUField<float>>(pdfsID);
 
   auto &rho_0 = this->rho_0_;
   WALBERLA_ASSERT_GREATER_EQUAL(ci.xMin(), -int_c(force->nrOfGhostLayers()));

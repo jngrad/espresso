@@ -37,10 +37,10 @@
 
 #include <field/iterators/IteratorMacros.h>
 
-#include <cuda/FieldAccessor.h>
-#include <cuda/FieldIndexing.h>
-#include <cuda/GPUField.h>
-#include <cuda/Kernel.h>
+#include <gpu/FieldAccessor.h>
+#include <gpu/FieldIndexing.h>
+#include <gpu/GPUField.h>
+#include <gpu/Kernel.h>
 
 #include <thrust/device_ptr.h>
 #include <thrust/device_vector.h>
@@ -92,7 +92,7 @@ namespace lbm {
 namespace accessor {
 
 namespace Population {
-__global__ void kernel_get_interval(cuda::FieldAccessor<float> pdf,
+__global__ void kernel_get_interval(gpu::FieldAccessor<float> pdf,
                                     float *RESTRICT const pop) {
   pdf.set(blockIdx, threadIdx);
   if (pdf.isValidPosition()) {
@@ -120,7 +120,7 @@ __global__ void kernel_get_interval(cuda::FieldAccessor<float> pdf,
   }
 }
 
-__global__ void kernel_get(cuda::FieldAccessor<float> pdf,
+__global__ void kernel_get(gpu::FieldAccessor<float> pdf,
                            float *RESTRICT const pop) {
   pdf.set(blockIdx, threadIdx);
   if (pdf.isValidPosition()) {
@@ -148,7 +148,7 @@ __global__ void kernel_get(cuda::FieldAccessor<float> pdf,
   }
 }
 
-__global__ void kernel_set_interval(cuda::FieldAccessor<float> pdf,
+__global__ void kernel_set_interval(gpu::FieldAccessor<float> pdf,
                                     const float *RESTRICT const pop) {
   pdf.set(blockIdx, threadIdx);
   if (pdf.isValidPosition()) {
@@ -176,7 +176,7 @@ __global__ void kernel_set_interval(cuda::FieldAccessor<float> pdf,
   }
 }
 
-__global__ void kernel_set(cuda::FieldAccessor<float> pdf,
+__global__ void kernel_set(gpu::FieldAccessor<float> pdf,
                            const float *RESTRICT const pop) {
   pdf.set(blockIdx, threadIdx);
   if (pdf.isValidPosition()) {
@@ -204,14 +204,14 @@ __global__ void kernel_set(cuda::FieldAccessor<float> pdf,
   }
 }
 
-std::array<float, 19u> get(cuda::GPUField<float> const *pdf_field,
+std::array<float, 19u> get(gpu::GPUField<float> const *pdf_field,
                            Cell const &cell) {
   CellInterval ci(cell, cell);
   thrust::device_vector<float> dev_data(19u, float{0});
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_get);
+  auto kernel = gpu::make_kernel(kernel_get);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*pdf_field, ci));
+      gpu::FieldIndexing<float>::interval(*pdf_field, ci));
   kernel.addParam(dev_data_ptr);
   kernel();
   std::array<float, 19u> pop;
@@ -219,37 +219,37 @@ std::array<float, 19u> get(cuda::GPUField<float> const *pdf_field,
   return pop;
 }
 
-void set(cuda::GPUField<float> *pdf_field, std::array<float, 19u> const &pop,
+void set(gpu::GPUField<float> *pdf_field, std::array<float, 19u> const &pop,
          Cell const &cell) {
   thrust::device_vector<float> dev_data(pop.data(), pop.data() + 19u);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
   CellInterval ci(cell, cell);
-  auto kernel = cuda::make_kernel(kernel_set);
+  auto kernel = gpu::make_kernel(kernel_set);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*pdf_field, ci));
+      gpu::FieldIndexing<float>::interval(*pdf_field, ci));
   kernel.addParam(const_cast<const float *>(dev_data_ptr));
   kernel();
 }
 
-void broadcast(cuda::GPUField<float> *pdf_field,
+void broadcast(gpu::GPUField<float> *pdf_field,
                std::array<float, 19u> const &pop) {
   CellInterval ci = pdf_field->xyzSizeWithGhostLayer();
   thrust::device_vector<float> dev_data(pop.data(), pop.data() + 19u);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_set);
+  auto kernel = gpu::make_kernel(kernel_set);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*pdf_field, ci));
+      gpu::FieldIndexing<float>::interval(*pdf_field, ci));
   kernel.addParam(const_cast<const float *>(dev_data_ptr));
   kernel();
 }
 
-std::vector<float> get(cuda::GPUField<float> const *pdf_field,
+std::vector<float> get(gpu::GPUField<float> const *pdf_field,
                        CellInterval const &ci) {
   thrust::device_vector<float> dev_data(ci.numCells() * 19u);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_get_interval);
+  auto kernel = gpu::make_kernel(kernel_get_interval);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*pdf_field, ci));
+      gpu::FieldIndexing<float>::interval(*pdf_field, ci));
   kernel.addParam(dev_data_ptr);
   kernel();
   std::vector<float> out(ci.numCells() * 19u);
@@ -257,20 +257,20 @@ std::vector<float> get(cuda::GPUField<float> const *pdf_field,
   return out;
 }
 
-void set(cuda::GPUField<float> *pdf_field, std::vector<float> const &values,
+void set(gpu::GPUField<float> *pdf_field, std::vector<float> const &values,
          CellInterval const &ci) {
   thrust::device_vector<float> dev_data(values.begin(), values.end());
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_set_interval);
+  auto kernel = gpu::make_kernel(kernel_set_interval);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*pdf_field, ci));
+      gpu::FieldIndexing<float>::interval(*pdf_field, ci));
   kernel.addParam(const_cast<const float *>(dev_data_ptr));
   kernel();
 }
 } // namespace Population
 
 namespace Vector {
-__global__ void kernel_get_interval(cuda::FieldAccessor<float> vec,
+__global__ void kernel_get_interval(gpu::FieldAccessor<float> vec,
                                     float *const out) {
   vec.set(blockIdx, threadIdx);
   if (vec.isValidPosition()) {
@@ -282,7 +282,7 @@ __global__ void kernel_get_interval(cuda::FieldAccessor<float> vec,
   }
 }
 
-__global__ void kernel_get(cuda::FieldAccessor<float> vec, float *const out) {
+__global__ void kernel_get(gpu::FieldAccessor<float> vec, float *const out) {
   vec.set(blockIdx, threadIdx);
   if (vec.isValidPosition()) {
     const uint offset =
@@ -293,7 +293,7 @@ __global__ void kernel_get(cuda::FieldAccessor<float> vec, float *const out) {
   }
 }
 
-__global__ void kernel_set_interval(cuda::FieldAccessor<float> vec,
+__global__ void kernel_set_interval(gpu::FieldAccessor<float> vec,
                                     const float *RESTRICT const u) {
   vec.set(blockIdx, threadIdx);
   if (vec.isValidPosition()) {
@@ -305,7 +305,7 @@ __global__ void kernel_set_interval(cuda::FieldAccessor<float> vec,
   }
 }
 
-__global__ void kernel_set(cuda::FieldAccessor<float> vec,
+__global__ void kernel_set(gpu::FieldAccessor<float> vec,
                            const float *RESTRICT const u) {
   vec.set(blockIdx, threadIdx);
   if (vec.isValidPosition()) {
@@ -317,7 +317,7 @@ __global__ void kernel_set(cuda::FieldAccessor<float> vec,
   }
 }
 
-__global__ void kernel_add_interval(cuda::FieldAccessor<float> vec,
+__global__ void kernel_add_interval(gpu::FieldAccessor<float> vec,
                                     const float *RESTRICT const u) {
   vec.set(blockIdx, threadIdx);
   if (vec.isValidPosition()) {
@@ -329,7 +329,7 @@ __global__ void kernel_add_interval(cuda::FieldAccessor<float> vec,
   }
 }
 
-__global__ void kernel_add(cuda::FieldAccessor<float> vec,
+__global__ void kernel_add(gpu::FieldAccessor<float> vec,
                            const float *RESTRICT const u) {
   vec.set(blockIdx, threadIdx);
   if (vec.isValidPosition()) {
@@ -341,7 +341,7 @@ __global__ void kernel_add(cuda::FieldAccessor<float> vec,
   }
 }
 
-__global__ void kernel_get_part_coupling(cuda::FieldAccessor<float> vec,
+__global__ void kernel_get_part_coupling(gpu::FieldAccessor<float> vec,
                                          float const *RESTRICT const pos,
                                          float *RESTRICT const vel, uint n_part,
                                          uint gl) {
@@ -381,7 +381,7 @@ __global__ void kernel_get_part_coupling(cuda::FieldAccessor<float> vec,
   }
 }
 
-__global__ void kernel_set_part_coupling(cuda::FieldAccessor<float> vec,
+__global__ void kernel_set_part_coupling(gpu::FieldAccessor<float> vec,
                                          float const *RESTRICT const pos,
                                          float const *RESTRICT const forces,
                                          uint n_part, uint gl) {
@@ -435,7 +435,7 @@ inline dim3 calculate_dim_grid(unsigned const threads_x,
   return make_uint3(blocks_per_grid_x, blocks_per_grid_y, 1);
 }
 
-std::vector<float> get_part_coupling(cuda::GPUField<float> const *vec_field,
+std::vector<float> get_part_coupling(gpu::GPUField<float> const *vec_field,
                                      std::vector<float> const &pos, uint gl) {
   thrust::device_vector<float> dev_pos(pos.begin(), pos.end());
   thrust::device_vector<float> dev_vel(pos.size());
@@ -447,7 +447,7 @@ std::vector<float> get_part_coupling(cuda::GPUField<float> const *vec_field,
   dim3 dim_grid =
       calculate_dim_grid(static_cast<unsigned>(n_part), 4u, threads_per_block);
   kernel_get_part_coupling<<<dim_grid, threads_per_block, 0u, nullptr>>>(
-      cuda::FieldIndexing<float>::withGhostLayerXYZ(*vec_field, gl).gpuAccess(),
+      gpu::FieldIndexing<float>::withGhostLayerXYZ(*vec_field, gl).gpuAccess(),
       dev_pos_ptr, dev_vel_ptr, static_cast<uint>(pos.size() / 3ul), gl);
 
   std::vector<float> out(pos.size());
@@ -455,7 +455,7 @@ std::vector<float> get_part_coupling(cuda::GPUField<float> const *vec_field,
   return out;
 }
 
-void set_part_coupling(cuda::GPUField<float> const *vec_field,
+void set_part_coupling(gpu::GPUField<float> const *vec_field,
                        std::vector<float> const &pos,
                        std::vector<float> const &forces, uint gl) {
   thrust::device_vector<float> dev_pos(pos.begin(), pos.end());
@@ -468,17 +468,17 @@ void set_part_coupling(cuda::GPUField<float> const *vec_field,
   dim3 dim_grid =
       calculate_dim_grid(static_cast<unsigned>(n_part), 4u, threads_per_block);
   kernel_set_part_coupling<<<dim_grid, threads_per_block, 0u, nullptr>>>(
-      cuda::FieldIndexing<float>::withGhostLayerXYZ(*vec_field, gl).gpuAccess(),
+      gpu::FieldIndexing<float>::withGhostLayerXYZ(*vec_field, gl).gpuAccess(),
       dev_pos_ptr, dev_for_ptr, static_cast<uint>(pos.size() / 3ul), gl);
 }
 
-Vector3<float> get(cuda::GPUField<float> const *vec_field, Cell const &cell) {
+Vector3<float> get(gpu::GPUField<float> const *vec_field, Cell const &cell) {
   CellInterval ci(cell, cell);
   thrust::device_vector<float> dev_data(3u);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_get);
+  auto kernel = gpu::make_kernel(kernel_get);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*vec_field, ci));
+      gpu::FieldIndexing<float>::interval(*vec_field, ci));
   kernel.addParam(dev_data_ptr);
   kernel();
   Vector3<float> vec;
@@ -486,31 +486,31 @@ Vector3<float> get(cuda::GPUField<float> const *vec_field, Cell const &cell) {
   return vec;
 }
 
-void set(cuda::GPUField<float> *vec_field, Vector3<float> const &vec,
+void set(gpu::GPUField<float> *vec_field, Vector3<float> const &vec,
          Cell const &cell) {
   CellInterval ci(cell, cell);
   thrust::device_vector<float> dev_data(vec.data(), vec.data() + 3u);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_set);
+  auto kernel = gpu::make_kernel(kernel_set);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*vec_field, ci));
+      gpu::FieldIndexing<float>::interval(*vec_field, ci));
   kernel.addParam(const_cast<const float *>(dev_data_ptr));
   kernel();
 }
 
-void add(cuda::GPUField<float> *vec_field, Vector3<float> const &vec,
+void add(gpu::GPUField<float> *vec_field, Vector3<float> const &vec,
          Cell const &cell) {
   CellInterval ci(cell, cell);
   thrust::device_vector<float> dev_data(vec.data(), vec.data() + 3u);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_add);
+  auto kernel = gpu::make_kernel(kernel_add);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*vec_field, ci));
+      gpu::FieldIndexing<float>::interval(*vec_field, ci));
   kernel.addParam(const_cast<const float *>(dev_data_ptr));
   kernel();
 }
 
-__global__ void kernel_add_at(cuda::FieldAccessor<float> vec,
+__global__ void kernel_add_at(gpu::FieldAccessor<float> vec,
                               const float *RESTRICT const v,
                               const int *RESTRICT const c, uint size) {
   vec.set(blockIdx, threadIdx);
@@ -531,7 +531,7 @@ __global__ void kernel_add_at(cuda::FieldAccessor<float> vec,
   }
 }
 
-__global__ void kernel_get_at(cuda::FieldAccessor<float> vec,
+__global__ void kernel_get_at(gpu::FieldAccessor<float> vec,
                               float *RESTRICT const v,
                               const int *RESTRICT const c, uint size) {
   vec.set(blockIdx, threadIdx);
@@ -552,32 +552,32 @@ __global__ void kernel_get_at(cuda::FieldAccessor<float> vec,
   }
 }
 
-void add_at(cuda::GPUField<float> *vec_field, std::vector<float> const &vecs,
+void add_at(gpu::GPUField<float> *vec_field, std::vector<float> const &vecs,
             std::vector<cell_idx_t> const &cells) {
   CellInterval ci = vec_field->xyzSizeWithGhostLayer();
   thrust::device_vector<float> dev_data(vecs.begin(), vecs.end());
   thrust::device_vector<cell_idx_t> dev_cell(cells.begin(), cells.end());
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
   auto const dev_cell_ptr = thrust::raw_pointer_cast(dev_cell.data());
-  auto kernel = cuda::make_kernel(kernel_add_at);
+  auto kernel = gpu::make_kernel(kernel_add_at);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*vec_field, ci));
+      gpu::FieldIndexing<float>::interval(*vec_field, ci));
   kernel.addParam(const_cast<const float *>(dev_data_ptr));
   kernel.addParam(const_cast<const int *>(dev_cell_ptr));
   kernel.addParam(static_cast<unsigned int>(cells.size()));
   kernel();
 }
 
-std::vector<float> get_at(cuda::GPUField<float> *vec_field,
+std::vector<float> get_at(gpu::GPUField<float> *vec_field,
                           std::vector<cell_idx_t> const &cells) {
   CellInterval ci = vec_field->xyzSizeWithGhostLayer();
   thrust::device_vector<float> dev_data(cells.size());
   thrust::device_vector<cell_idx_t> dev_cell(cells.begin(), cells.end());
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
   auto const dev_cell_ptr = thrust::raw_pointer_cast(dev_cell.data());
-  auto kernel = cuda::make_kernel(kernel_get_at);
+  auto kernel = gpu::make_kernel(kernel_get_at);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*vec_field, ci));
+      gpu::FieldIndexing<float>::interval(*vec_field, ci));
   kernel.addParam(dev_data_ptr);
   kernel.addParam(const_cast<const int *>(dev_cell_ptr));
   kernel.addParam(static_cast<unsigned int>(cells.size()));
@@ -587,35 +587,35 @@ std::vector<float> get_at(cuda::GPUField<float> *vec_field,
   return out;
 }
 
-void broadcast(cuda::GPUField<float> *vec_field, Vector3<float> const &vec) {
+void broadcast(gpu::GPUField<float> *vec_field, Vector3<float> const &vec) {
   CellInterval ci = vec_field->xyzSizeWithGhostLayer();
   thrust::device_vector<float> dev_data(vec.data(), vec.data() + 3u);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_set);
+  auto kernel = gpu::make_kernel(kernel_set);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*vec_field, ci));
+      gpu::FieldIndexing<float>::interval(*vec_field, ci));
   kernel.addParam(const_cast<const float *>(dev_data_ptr));
   kernel();
 }
 
-void add_to_all(cuda::GPUField<float> *vec_field, Vector3<float> const &vec) {
+void add_to_all(gpu::GPUField<float> *vec_field, Vector3<float> const &vec) {
   CellInterval ci = vec_field->xyzSizeWithGhostLayer();
   thrust::device_vector<float> dev_data(vec.data(), vec.data() + 3u);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_add);
+  auto kernel = gpu::make_kernel(kernel_add);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*vec_field, ci));
+      gpu::FieldIndexing<float>::interval(*vec_field, ci));
   kernel.addParam(const_cast<const float *>(dev_data_ptr));
   kernel();
 }
 
-std::vector<float> get(cuda::GPUField<float> const *vec_field,
+std::vector<float> get(gpu::GPUField<float> const *vec_field,
                        CellInterval const &ci) {
   thrust::device_vector<float> dev_data(ci.numCells() * 3u);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_get_interval);
+  auto kernel = gpu::make_kernel(kernel_get_interval);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*vec_field, ci));
+      gpu::FieldIndexing<float>::interval(*vec_field, ci));
   kernel.addParam(dev_data_ptr);
   kernel();
   std::vector<float> out(ci.numCells() * 3u);
@@ -623,20 +623,20 @@ std::vector<float> get(cuda::GPUField<float> const *vec_field,
   return out;
 }
 
-void set(cuda::GPUField<float> *vec_field, std::vector<float> const &values,
+void set(gpu::GPUField<float> *vec_field, std::vector<float> const &values,
          CellInterval const &ci) {
   thrust::device_vector<float> dev_data(values.begin(), values.end());
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_set_interval);
+  auto kernel = gpu::make_kernel(kernel_set_interval);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*vec_field, ci));
+      gpu::FieldIndexing<float>::interval(*vec_field, ci));
   kernel.addParam(const_cast<const float *>(dev_data_ptr));
   kernel();
 }
 } // namespace Vector
 
 namespace Equilibrium {
-__device__ void kernel_set_device(cuda::FieldAccessor<float> pdf,
+__device__ void kernel_set_device(gpu::FieldAccessor<float> pdf,
                                   const float *RESTRICT const u, float rho) {
 
   pdf.get(0) = rho * -0.33333333333333331f * (u[0] * u[0]) +
@@ -734,7 +734,7 @@ __device__ void kernel_set_device(cuda::FieldAccessor<float> pdf,
 } // namespace Equilibrium
 
 namespace Density {
-__global__ void kernel_get(cuda::FieldAccessor<float> pdf,
+__global__ void kernel_get(gpu::FieldAccessor<float> pdf,
                            float *RESTRICT const out) {
   pdf.set(blockIdx, threadIdx);
   if (pdf.isValidPosition()) {
@@ -768,7 +768,7 @@ __global__ void kernel_get(cuda::FieldAccessor<float> pdf,
   }
 }
 
-__global__ void kernel_set(cuda::FieldAccessor<float> pdf,
+__global__ void kernel_set(gpu::FieldAccessor<float> pdf,
                            const float *RESTRICT const rho_in) {
   pdf.set(blockIdx, threadIdx);
   if (pdf.isValidPosition()) {
@@ -813,37 +813,37 @@ __global__ void kernel_set(cuda::FieldAccessor<float> pdf,
   }
 }
 
-float get(cuda::GPUField<float> const *pdf_field, Cell const &cell) {
+float get(gpu::GPUField<float> const *pdf_field, Cell const &cell) {
   CellInterval ci(cell, cell);
   thrust::device_vector<float> dev_data(1u);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_get);
+  auto kernel = gpu::make_kernel(kernel_get);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*pdf_field, ci));
+      gpu::FieldIndexing<float>::interval(*pdf_field, ci));
   kernel.addParam(dev_data_ptr);
   kernel();
   float rho = dev_data[0u];
   return rho;
 }
 
-void set(cuda::GPUField<float> *pdf_field, const float rho, Cell const &cell) {
+void set(gpu::GPUField<float> *pdf_field, const float rho, Cell const &cell) {
   CellInterval ci(cell, cell);
   thrust::device_vector<float> dev_data(1u, rho);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_set);
+  auto kernel = gpu::make_kernel(kernel_set);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*pdf_field, ci));
+      gpu::FieldIndexing<float>::interval(*pdf_field, ci));
   kernel.addParam(const_cast<const float *>(dev_data_ptr));
   kernel();
 }
 
-std::vector<float> get(cuda::GPUField<float> const *pdf_field,
+std::vector<float> get(gpu::GPUField<float> const *pdf_field,
                        CellInterval const &ci) {
   thrust::device_vector<float> dev_data(ci.numCells());
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_get);
+  auto kernel = gpu::make_kernel(kernel_get);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*pdf_field, ci));
+      gpu::FieldIndexing<float>::interval(*pdf_field, ci));
   kernel.addParam(dev_data_ptr);
   kernel();
   std::vector<float> out(ci.numCells());
@@ -851,21 +851,21 @@ std::vector<float> get(cuda::GPUField<float> const *pdf_field,
   return out;
 }
 
-void set(cuda::GPUField<float> *pdf_field, std::vector<float> const &values,
+void set(gpu::GPUField<float> *pdf_field, std::vector<float> const &values,
          CellInterval const &ci) {
   thrust::device_vector<float> dev_data(values.begin(), values.end());
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_set);
+  auto kernel = gpu::make_kernel(kernel_set);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*pdf_field, ci));
+      gpu::FieldIndexing<float>::interval(*pdf_field, ci));
   kernel.addParam(const_cast<const float *>(dev_data_ptr));
   kernel();
 }
 } // namespace Density
 
 namespace Velocity {
-__global__ void kernel_set(cuda::FieldAccessor<float> pdf,
-                           cuda::FieldAccessor<float> force,
+__global__ void kernel_set(gpu::FieldAccessor<float> pdf,
+                           gpu::FieldAccessor<float> force,
                            const float *RESTRICT const u_in) {
   pdf.set(blockIdx, threadIdx);
   force.set(blockIdx, threadIdx);
@@ -907,24 +907,24 @@ __global__ void kernel_set(cuda::FieldAccessor<float> pdf,
   }
 }
 
-void set(cuda::GPUField<float> *pdf_field, cuda::GPUField<float> *force_field,
+void set(gpu::GPUField<float> *pdf_field, gpu::GPUField<float> *force_field,
          Vector3<float> const &u, Cell const &cell) {
   CellInterval ci(cell, cell);
   thrust::device_vector<float> dev_data(u.data(), u.data() + 3u);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_set);
+  auto kernel = gpu::make_kernel(kernel_set);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*pdf_field, ci));
+      gpu::FieldIndexing<float>::interval(*pdf_field, ci));
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*force_field, ci));
+      gpu::FieldIndexing<float>::interval(*force_field, ci));
   kernel.addParam(const_cast<const float *>(dev_data_ptr));
   kernel();
 }
 } // namespace Velocity
 
 namespace MomentumDensity {
-__global__ void kernel_sum(cuda::FieldAccessor<float> pdf,
-                           cuda::FieldAccessor<float> force,
+__global__ void kernel_sum(gpu::FieldAccessor<float> pdf,
+                           gpu::FieldAccessor<float> force,
                            float *RESTRICT const out) {
   pdf.set(blockIdx, threadIdx);
   force.set(blockIdx, threadIdx);
@@ -967,18 +967,18 @@ __global__ void kernel_sum(cuda::FieldAccessor<float> pdf,
   }
 }
 
-Vector3<float> reduce(cuda::GPUField<float> const *pdf_field,
-                      cuda::GPUField<float> const *force_field) {
+Vector3<float> reduce(gpu::GPUField<float> const *pdf_field,
+                      gpu::GPUField<float> const *force_field) {
   thrust::device_vector<float> dev_data(3u, float{0});
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
   WALBERLA_FOR_ALL_CELLS_XYZ(pdf_field, {
     Cell cell(x, y, z);
     CellInterval ci(cell, cell);
-    auto kernel = cuda::make_kernel(kernel_sum);
+    auto kernel = gpu::make_kernel(kernel_sum);
     kernel.addFieldIndexingParam(
-        cuda::FieldIndexing<float>::interval(*pdf_field, ci));
+        gpu::FieldIndexing<float>::interval(*pdf_field, ci));
     kernel.addFieldIndexingParam(
-        cuda::FieldIndexing<float>::interval(*force_field, ci));
+        gpu::FieldIndexing<float>::interval(*force_field, ci));
     kernel.addParam(dev_data_ptr);
     kernel();
   });
@@ -989,7 +989,7 @@ Vector3<float> reduce(cuda::GPUField<float> const *pdf_field,
 } // namespace MomentumDensity
 
 namespace PressureTensor {
-__global__ void kernel_get(cuda::FieldAccessor<float> pdf,
+__global__ void kernel_get(gpu::FieldAccessor<float> pdf,
                            float *RESTRICT const out) {
   pdf.set(blockIdx, threadIdx);
   if (pdf.isValidPosition()) {
@@ -1041,13 +1041,13 @@ __global__ void kernel_get(cuda::FieldAccessor<float> pdf,
   }
 }
 
-Matrix3<float> get(cuda::GPUField<float> const *pdf_field, Cell const &cell) {
+Matrix3<float> get(gpu::GPUField<float> const *pdf_field, Cell const &cell) {
   CellInterval ci(cell, cell);
   thrust::device_vector<float> dev_data(9u);
   auto const dev_data_ptr = thrust::raw_pointer_cast(dev_data.data());
-  auto kernel = cuda::make_kernel(kernel_get);
+  auto kernel = gpu::make_kernel(kernel_get);
   kernel.addFieldIndexingParam(
-      cuda::FieldIndexing<float>::interval(*pdf_field, ci));
+      gpu::FieldIndexing<float>::interval(*pdf_field, ci));
   kernel.addParam(dev_data_ptr);
   kernel();
   Matrix3<float> out;

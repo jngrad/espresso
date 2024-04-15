@@ -574,9 +574,9 @@ __launch_bounds__(256) void collidesweepsingleprecisionthermalizedcuda_collidesw
   // internal_collidesweepsingleprecisionthermalizedcuda_collidesweepsingleprecisionthermalizedcuda
 
 void CollideSweepSinglePrecisionThermalizedCUDA::run(IBlock *block,
-                                                     cudaStream_t stream) {
-  auto force = block->getData<cuda::GPUField<float>>(forceID);
-  auto pdfs = block->getData<cuda::GPUField<float>>(pdfsID);
+                                                     gpuStream_t stream) {
+  auto force = block->getData<gpu::GPUField<float>>(forceID);
+  auto pdfs = block->getData<gpu::GPUField<float>>(pdfsID);
 
   auto &kT = this->kT_;
   auto &omega_odd = this->omega_odd_;
@@ -1013,7 +1013,7 @@ void CollideSweepSinglePrecisionThermalizedCUDA::run(IBlock *block,
 void CollideSweepSinglePrecisionThermalizedCUDA::runOnCellInterval(
     const shared_ptr<StructuredBlockStorage> &blocks,
     const CellInterval &globalCellInterval, cell_idx_t ghostLayers,
-    IBlock *block, cudaStream_t stream) {
+    IBlock *block, gpuStream_t stream) {
   CellInterval ci = globalCellInterval;
   CellInterval blockBB = blocks->getBlockCellBB(*block);
   blockBB.expand(ghostLayers);
@@ -1022,8 +1022,8 @@ void CollideSweepSinglePrecisionThermalizedCUDA::runOnCellInterval(
   if (ci.empty())
     return;
 
-  auto force = block->getData<cuda::GPUField<float>>(forceID);
-  auto pdfs = block->getData<cuda::GPUField<float>>(pdfsID);
+  auto force = block->getData<gpu::GPUField<float>>(forceID);
+  auto pdfs = block->getData<gpu::GPUField<float>>(pdfsID);
 
   auto &kT = this->kT_;
   auto &omega_odd = this->omega_odd_;

@@ -282,11 +282,11 @@ __launch_bounds__(256) void streamsweepsingleprecisioncuda_streamsweepsingleprec
 } // namespace
   // internal_streamsweepsingleprecisioncuda_streamsweepsingleprecisioncuda
 
-void StreamSweepSinglePrecisionCUDA::run(IBlock *block, cudaStream_t stream) {
-  auto velocity = block->getData<cuda::GPUField<float>>(velocityID);
-  auto force = block->getData<cuda::GPUField<float>>(forceID);
-  auto pdfs = block->getData<cuda::GPUField<float>>(pdfsID);
-  cuda::GPUField<float> *pdfs_tmp;
+void StreamSweepSinglePrecisionCUDA::run(IBlock *block, gpuStream_t stream) {
+  auto velocity = block->getData<gpu::GPUField<float>>(velocityID);
+  auto force = block->getData<gpu::GPUField<float>>(forceID);
+  auto pdfs = block->getData<gpu::GPUField<float>>(pdfsID);
+  gpu::GPUField<float> *pdfs_tmp;
   {
     // Getting temporary field pdfs_tmp
     auto it = cache_pdfs_.find(pdfs);
@@ -779,7 +779,7 @@ void StreamSweepSinglePrecisionCUDA::run(IBlock *block, cudaStream_t stream) {
 void StreamSweepSinglePrecisionCUDA::runOnCellInterval(
     const shared_ptr<StructuredBlockStorage> &blocks,
     const CellInterval &globalCellInterval, cell_idx_t ghostLayers,
-    IBlock *block, cudaStream_t stream) {
+    IBlock *block, gpuStream_t stream) {
   CellInterval ci = globalCellInterval;
   CellInterval blockBB = blocks->getBlockCellBB(*block);
   blockBB.expand(ghostLayers);
@@ -788,10 +788,10 @@ void StreamSweepSinglePrecisionCUDA::runOnCellInterval(
   if (ci.empty())
     return;
 
-  auto velocity = block->getData<cuda::GPUField<float>>(velocityID);
-  auto force = block->getData<cuda::GPUField<float>>(forceID);
-  auto pdfs = block->getData<cuda::GPUField<float>>(pdfsID);
-  cuda::GPUField<float> *pdfs_tmp;
+  auto velocity = block->getData<gpu::GPUField<float>>(velocityID);
+  auto force = block->getData<gpu::GPUField<float>>(forceID);
+  auto pdfs = block->getData<gpu::GPUField<float>>(pdfsID);
+  gpu::GPUField<float> *pdfs_tmp;
   {
     // Getting temporary field pdfs_tmp
     auto it = cache_pdfs_.find(pdfs);

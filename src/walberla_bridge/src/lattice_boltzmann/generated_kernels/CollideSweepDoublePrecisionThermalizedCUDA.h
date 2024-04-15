@@ -24,7 +24,7 @@
 #pragma once
 #include "core/DataTypes.h"
 
-#include "cuda/GPUField.h"
+#include "gpu/GPUField.h"
 
 #include "domain_decomposition/BlockDataID.h"
 #include "domain_decomposition/IBlock.h"
@@ -63,14 +63,14 @@ public:
         omega_odd_(omega_odd), omega_shear_(omega_shear), seed_(seed),
         time_step_(time_step){};
 
-  void run(IBlock *block, cudaStream_t stream = nullptr);
+  void run(IBlock *block, gpuStream_t stream = nullptr);
 
   void runOnCellInterval(const shared_ptr<StructuredBlockStorage> &blocks,
                          const CellInterval &globalCellInterval,
                          cell_idx_t ghostLayers, IBlock *block,
-                         cudaStream_t stream = nullptr);
+                         gpuStream_t stream = nullptr);
 
-  void operator()(IBlock *block, cudaStream_t stream = nullptr) {
+  void operator()(IBlock *block, gpuStream_t stream = nullptr) {
     run(block, stream);
   }
 
@@ -79,18 +79,18 @@ public:
     return [kernel](IBlock *b) { kernel->run(b); };
   }
 
-  static std::function<void(IBlock *, cudaStream_t)> getSweepOnCellInterval(
+  static std::function<void(IBlock *, gpuStream_t)> getSweepOnCellInterval(
       const shared_ptr<CollideSweepDoublePrecisionThermalizedCUDA> &kernel,
       const shared_ptr<StructuredBlockStorage> &blocks,
       const CellInterval &globalCellInterval, cell_idx_t ghostLayers = 1) {
     return [kernel, blocks, globalCellInterval,
-            ghostLayers](IBlock *b, cudaStream_t stream = nullptr) {
+            ghostLayers](IBlock *b, gpuStream_t stream = nullptr) {
       kernel->runOnCellInterval(blocks, globalCellInterval, ghostLayers, b,
                                 stream);
     };
   }
 
-  std::function<void(IBlock *)> getSweep(cudaStream_t stream = nullptr) {
+  std::function<void(IBlock *)> getSweep(gpuStream_t stream = nullptr) {
     return [this, stream](IBlock *b) { this->run(b, stream); };
   }
 
@@ -98,7 +98,7 @@ public:
   getSweepOnCellInterval(const shared_ptr<StructuredBlockStorage> &blocks,
                          const CellInterval &globalCellInterval,
                          cell_idx_t ghostLayers = 1,
-                         cudaStream_t stream = nullptr) {
+                         gpuStream_t stream = nullptr) {
     return [this, blocks, globalCellInterval, ghostLayers, stream](IBlock *b) {
       this->runOnCellInterval(blocks, globalCellInterval, ghostLayers, b,
                               stream);

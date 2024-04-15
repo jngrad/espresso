@@ -26,11 +26,11 @@
 
 #include "blockforest/StructuredBlockForest.h"
 #include "core/debug/Debug.h"
-#include "cuda/FieldCopy.h"
-#include "cuda/GPUField.h"
 #include "domain_decomposition/BlockDataID.h"
 #include "domain_decomposition/IBlock.h"
 #include "field/FlagField.h"
+#include "gpu/FieldCopy.h"
+#include "gpu/GPUField.h"
 
 #include <set>
 #include <vector>
@@ -119,25 +119,25 @@ public:
         createIdxVector, "IndexField_Dynamic_UBB_single_precisionCUDA");
   };
 
-  void run(IBlock *block, cudaStream_t stream = nullptr);
+  void run(IBlock *block, gpuStream_t stream = nullptr);
 
-  void operator()(IBlock *block, cudaStream_t stream = nullptr) {
+  void operator()(IBlock *block, gpuStream_t stream = nullptr) {
     run(block, stream);
   }
 
-  void inner(IBlock *block, cudaStream_t stream = nullptr);
+  void inner(IBlock *block, gpuStream_t stream = nullptr);
 
-  void outer(IBlock *block, cudaStream_t stream = nullptr);
+  void outer(IBlock *block, gpuStream_t stream = nullptr);
 
-  std::function<void(IBlock *)> getSweep(cudaStream_t stream = nullptr) {
+  std::function<void(IBlock *)> getSweep(gpuStream_t stream = nullptr) {
     return [this, stream](IBlock *b) { this->run(b, stream); };
   }
 
-  std::function<void(IBlock *)> getInnerSweep(cudaStream_t stream = nullptr) {
+  std::function<void(IBlock *)> getInnerSweep(gpuStream_t stream = nullptr) {
     return [this, stream](IBlock *b) { this->inner(b, stream); };
   }
 
-  std::function<void(IBlock *)> getOuterSweep(cudaStream_t stream = nullptr) {
+  std::function<void(IBlock *)> getOuterSweep(gpuStream_t stream = nullptr) {
     return [this, stream](IBlock *b) { this->outer(b, stream); };
   }
 
@@ -579,7 +579,7 @@ public:
 
 private:
   void run_impl(IBlock *block, IndexVectors::Type type,
-                cudaStream_t stream = nullptr);
+                gpuStream_t stream = nullptr);
 
   BlockDataID indexVectorID;
   std::function<Vector3<float>(

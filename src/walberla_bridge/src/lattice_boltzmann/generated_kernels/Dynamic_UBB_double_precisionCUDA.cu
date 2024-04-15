@@ -26,7 +26,7 @@
 #include "Dynamic_UBB_double_precisionCUDA.h"
 #include "core/DataTypes.h"
 #include "core/Macros.h"
-#include "cuda/ErrorChecking.h"
+#include "gpu/ErrorChecking.h"
 
 #define FUNC_PREFIX __global__
 
@@ -218,7 +218,7 @@ __launch_bounds__(256) void dynamic_ubb_double_precisioncuda_boundary_Dynamic_UB
 
 void Dynamic_UBB_double_precisionCUDA::run_impl(IBlock *block,
                                                 IndexVectors::Type type,
-                                                cudaStream_t stream) {
+                                                gpuStream_t stream) {
   auto *indexVectors = block->getData<IndexVectors>(indexVectorID);
   int32_t indexVectorSize = int32_c(indexVectors->indexVector(type).size());
   if (indexVectorSize == 0)
@@ -228,7 +228,7 @@ void Dynamic_UBB_double_precisionCUDA::run_impl(IBlock *block,
 
   uint8_t *_data_indexVector = reinterpret_cast<uint8_t *>(pointer);
 
-  auto pdfs = block->getData<cuda::GPUField<double>>(pdfsID);
+  auto pdfs = block->getData<gpu::GPUField<double>>(pdfsID);
 
   WALBERLA_ASSERT_GREATER_EQUAL(0, -int_c(pdfs->nrOfGhostLayers()));
   double *RESTRICT _data_pdfs = pdfs->dataAt(0, 0, 0, 0);
@@ -256,17 +256,17 @@ void Dynamic_UBB_double_precisionCUDA::run_impl(IBlock *block,
           _stride_pdfs_2, _stride_pdfs_3, indexVectorSize);
 }
 
-void Dynamic_UBB_double_precisionCUDA::run(IBlock *block, cudaStream_t stream) {
+void Dynamic_UBB_double_precisionCUDA::run(IBlock *block, gpuStream_t stream) {
   run_impl(block, IndexVectors::ALL, stream);
 }
 
 void Dynamic_UBB_double_precisionCUDA::inner(IBlock *block,
-                                             cudaStream_t stream) {
+                                             gpuStream_t stream) {
   run_impl(block, IndexVectors::INNER, stream);
 }
 
 void Dynamic_UBB_double_precisionCUDA::outer(IBlock *block,
-                                             cudaStream_t stream) {
+                                             gpuStream_t stream) {
   run_impl(block, IndexVectors::OUTER, stream);
 }
 

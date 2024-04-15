@@ -600,9 +600,9 @@ __launch_bounds__(256) void collidesweepsingleprecisionleesedwardscuda_collidesw
   // internal_collidesweepsingleprecisionleesedwardscuda_collidesweepsingleprecisionleesedwardscuda
 
 void CollideSweepSinglePrecisionLeesEdwardsCUDA::run(IBlock *block,
-                                                     cudaStream_t stream) {
-  auto force = block->getData<cuda::GPUField<float>>(forceID);
-  auto pdfs = block->getData<cuda::GPUField<float>>(pdfsID);
+                                                     gpuStream_t stream) {
+  auto force = block->getData<gpu::GPUField<float>>(forceID);
+  auto pdfs = block->getData<gpu::GPUField<float>>(pdfsID);
 
   auto &v_s = this->v_s_;
   auto &grid_size = this->grid_size_;
@@ -1030,7 +1030,7 @@ void CollideSweepSinglePrecisionLeesEdwardsCUDA::run(IBlock *block,
 void CollideSweepSinglePrecisionLeesEdwardsCUDA::runOnCellInterval(
     const shared_ptr<StructuredBlockStorage> &blocks,
     const CellInterval &globalCellInterval, cell_idx_t ghostLayers,
-    IBlock *block, cudaStream_t stream) {
+    IBlock *block, gpuStream_t stream) {
   CellInterval ci = globalCellInterval;
   CellInterval blockBB = blocks->getBlockCellBB(*block);
   blockBB.expand(ghostLayers);
@@ -1039,8 +1039,8 @@ void CollideSweepSinglePrecisionLeesEdwardsCUDA::runOnCellInterval(
   if (ci.empty())
     return;
 
-  auto force = block->getData<cuda::GPUField<float>>(forceID);
-  auto pdfs = block->getData<cuda::GPUField<float>>(pdfsID);
+  auto force = block->getData<gpu::GPUField<float>>(forceID);
+  auto pdfs = block->getData<gpu::GPUField<float>>(pdfsID);
 
   auto &v_s = this->v_s_;
   auto &grid_size = this->grid_size_;

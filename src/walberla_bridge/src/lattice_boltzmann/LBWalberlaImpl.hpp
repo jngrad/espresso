@@ -39,8 +39,8 @@
 #include <stencil/D3Q19.h>
 #include <stencil/D3Q27.h>
 #if defined(__CUDACC__)
-#include <cuda/AddGPUFieldToStorage.h>
-#include <cuda/communication/GPUPackInfo.h>
+#include <gpu/AddGPUFieldToStorage.h>
+#include <gpu/communication/GPUPackInfo.h>
 #endif
 
 #include "../BoundaryHandling.hpp"
@@ -84,14 +84,14 @@ namespace walberla {
 
 #if defined(__CUDACC__)
 namespace lbm::accessor::Vector {
-std::vector<float> get_part_coupling(cuda::GPUField<float> const *vec_field,
+std::vector<float> get_part_coupling(gpu::GPUField<float> const *vec_field,
                                      std::vector<float> const &pos, uint gl);
-void set_part_coupling(cuda::GPUField<float> const *vec_field,
+void set_part_coupling(gpu::GPUField<float> const *vec_field,
                        std::vector<float> const &pos,
                        std::vector<float> const &forces, uint gl);
-std::vector<double> get_part_coupling(cuda::GPUField<double> const *vec_field,
+std::vector<double> get_part_coupling(gpu::GPUField<double> const *vec_field,
                                       std::vector<double> const &pos, uint gl);
-void set_part_coupling(cuda::GPUField<double> const *vec_field,
+void set_part_coupling(gpu::GPUField<double> const *vec_field,
                        std::vector<double> const &pos,
                        std::vector<double> const &forces, uint gl);
 } // namespace lbm::accessor::Vector
@@ -133,10 +133,10 @@ protected:
 
 #if defined(__CUDACC__)
   template <typename FT> struct FieldTrait<FT, lbmpy::Arch::GPU> {
-    using PdfField = cuda::GPUField<FT>;
-    using VectorField = cuda::GPUField<FT>;
+    using PdfField = gpu::GPUField<FT>;
+    using VectorField = gpu::GPUField<FT>;
     template <class Field>
-    using PackInfo = cuda::communication::GPUPackInfo<Field>;
+    using PackInfo = gpu::communication::GPUPackInfo<Field>;
   };
 #endif
 
@@ -149,7 +149,7 @@ public:
   using VectorField = typename FieldTrait<FloatType, Architecture>::VectorField;
   using FlagField = typename BoundaryModel::FlagField;
 #if defined(__CUDACC__)
-  using GPUField = cuda::GPUField<FloatType>;
+  using GPUField = gpu::GPUField<FloatType>;
 #endif
 
 public:
@@ -356,7 +356,7 @@ protected:
     }
 #if defined(__CUDACC__)
     else {
-      auto field_id = cuda::addGPUFieldToStorage<GPUField>(
+      auto field_id = gpu::addGPUFieldToStorage<GPUField>(
           blocks, tag, Field::F_SIZE, field::fzyx, n_ghost_layers);
       if constexpr (std::is_same_v<Field, _VectorField>) {
         for (auto block = blocks->begin(); block != blocks->end(); ++block) {
