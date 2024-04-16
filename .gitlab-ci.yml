@@ -134,6 +134,7 @@ no_rotation:
      with_coverage: 'true'
      with_scafacos: 'true'
      check_skip_long: 'true'
+     with_ccache: "true"
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -151,6 +152,7 @@ fedora:40:
      myconfig: 'maxset'
      make_check_python: 'true'
      with_stokesian_dynamics: 'true'
+     with_ccache: "true"
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -204,7 +206,6 @@ fast_math:
   tags:
     - espresso
     - cuda
-  when: manual
 
 cuda12-coverage:
   <<: *global_job_definition
@@ -407,7 +408,6 @@ installation:
   tags:
     - espresso
     - cuda
-  when: manual
 
 empty:
   <<: *global_job_definition
@@ -478,8 +478,6 @@ run_tutorials:
     - espresso
     - cuda
     - numa
-  only:
-    - schedules
 
 run_doxygen:
   <<: *global_job_definition
