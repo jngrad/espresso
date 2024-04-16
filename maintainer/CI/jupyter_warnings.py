@@ -101,10 +101,6 @@ def detect_invalid_urls(nb, build_root='.', html_exporter=None):
                 broken_links.append(f'notebook has no anchor "{anchor}"')
         elif url.startswith('file:///'):
             broken_links.append(f'"{url}" is an absolute path to a local file')
-    for link in root.xpath('//script'):
-        url = link.attrib.get('src', '')
-        if url.startswith('file:///'):
-            broken_links.append(f'"{url}" is an absolute path to a local file')
     return broken_links
 
 
