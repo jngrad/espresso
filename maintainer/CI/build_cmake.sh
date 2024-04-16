@@ -233,7 +233,7 @@ fi
 if [ "${with_cuda}" = true ]; then
     cmake_params="-D ESPRESSO_BUILD_WITH_CUDA=ON -D CUDAToolkit_ROOT=/usr/lib/cuda ${cmake_params}"
     if [ "${CUDACXX}" = "" ] && [ "${CXX}" != "" ]; then
-        cmake_params="-D CMAKE_CUDA_FLAGS='--compiler-bindir=$(which ${CXX})' ${cmake_params}"
+        cmake_params="-D CMAKE_CUDA_FLAGS='--compiler-bindir=$(which "${CXX}")' ${cmake_params}"
     fi
 else
     cmake_params="-D ESPRESSO_BUILD_WITH_CUDA=OFF ${cmake_params}"
@@ -273,7 +273,7 @@ if grep -q "Ubuntu" /etc/os-release; then
     if [ -d "${HOME}/.local/var/lib/alternatives" ]; then
         update-alternatives --altdir "${HOME}/.local/etc/alternatives" \
                             --admindir "${HOME}/.local/var/lib/alternatives" \
-                            --install "${HOME}/.local/bin/gcov" "gcov" "$(which ${GCOV:-gcov})" 10
+                            --install "${HOME}/.local/bin/gcov" "gcov" "$(which "${GCOV:-gcov}")" 10
     fi
 fi
 
@@ -410,12 +410,13 @@ if [ "${with_coverage}" = true ] || [ "${with_coverage_python}" = true ]; then
         codecov_opts="${codecov_opts} --gcov"
         lcov --gcov-tool "${GCOV:-gcov}" \
              --quiet \
-             --ignore-errors graph,mismatch \
+             --ignore-errors graph,mismatch,gcov,unused \
              --directory . \
              --capture \
              --rc lcov_json_module="JSON::XS" \
              --exclude "/usr/*" \
              --exclude "$(realpath .)/_deps/*" \
+             --exclude "$(realpath "${srcdir}")/src/walberla_bridge/src/*/generated_kernels/*" \
              --exclude "*/tmpxft_*cudafe1.stub.*" \
              --output-file coverage.info
     fi

@@ -4,9 +4,6 @@ runs:
   using: "composite"
   steps:
     - run: |
-       pip3 install -v -c requirements.txt "cython<3.0" numpy scipy setuptools
-       python3 -c 'import setuptools;print(setuptools.__version__)'
-       python3 -c 'import setuptools;print(setuptools.__file__)'
-       python3 -c 'import pkg_resources;print(pkg_resources.__file__)'
+       pip3 install -v -c requirements.txt "cython<3.0" numpy scipy packaging
       shell: bash
       if: runner.os == 'macOS'
