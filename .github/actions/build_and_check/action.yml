@@ -7,6 +7,7 @@ runs:
        pip3 --version
        pip3 install --upgrade pip
        pip3 --version
-       pip3 install -v -c requirements.txt "cython<3.0" numpy scipy pkg-resources
+       pip3 install -v -c requirements.txt "cython<3.0" numpy scipy
+       pip3 install -v pkg-resources
       shell: bash
       if: runner.os == 'macOS'
