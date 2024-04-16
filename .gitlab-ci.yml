@@ -524,7 +524,7 @@ maxset_3_cores:
   script:
     - cd ${CI_PROJECT_DIR}/build
     - cmake -D ESPRESSO_TEST_NP=3 .
-    - make -t && make check_unit_tests && make check_python_parallel_odd
+    - make -t VERBOSE=1 && make check_unit_tests VERBOSE=1 && make check_python_parallel_odd VERBOSE=1
   tags:
     - espresso
     - cuda
