@@ -1,7 +1,7 @@
 # build system
 cython>=0.29.21,<3.0.10
-setuptools>=68.1.2
-pkg-resources>=68.1.2
+setuptools>=59.6.0
+pkg-resources>=59.6.0
 # required scientific packages
 numpy>=1.26.4
 h5py>=3.10.0

@@ -9,16 +9,10 @@ permissions:
 
 jobs:
   macos:
-    runs-on: macos-12
-    if: ${{ github.repository == 'espressomd/espresso' }}
+    runs-on: macos-13
     steps:
       - name: Checkout
         uses: actions/checkout@main
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2.12
-        with:
-          key: macos
-          save: ${{ github.ref == 'refs/heads/python' }}
       - name: Setup Python environment
         uses: actions/setup-python@v5.1.0
         with:
@@ -28,8 +22,8 @@ jobs:
       - name: Build and check
         uses: ./.github/actions/build_and_check
         env:
-          build_procs: 3
-          check_procs: 3
+          build_procs: 4
+          check_procs: 4
           with_ccache: 'true'
 
   debian:
