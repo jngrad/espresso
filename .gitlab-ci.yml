@@ -385,6 +385,7 @@ installation:
      make_check_python: 'false'
      with_scafacos: 'true'
      with_walberla: 'true'
+     with_walberla_avx: 'true'
      with_stokesian_dynamics: 'true'
      srcdir: '${CI_PROJECT_DIR}'
      build_type: 'Release'
@@ -407,6 +408,7 @@ installation:
   tags:
     - espresso
     - cuda
+    - avx2
 
 empty:
   <<: *global_job_definition
@@ -414,7 +416,7 @@ empty:
   variables:
      CC: 'clang-18'
      CXX: 'clang++-18'
-     CUDAXX: 'clang++-18'
+     CUDACXX: 'clang++-18'
      myconfig: 'empty'
      with_cuda: 'true'
      with_cuda_compiler: 'clang'

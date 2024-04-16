@@ -19,7 +19,7 @@
 #
 
 
-AUTOPEP8_VER=2.0.4
+AUTOPEP8_VER=2.1.0
 PYCODESTYLE_VER=2.11.1
 
 python3 -m autopep8 --help 2>&1 > /dev/null
