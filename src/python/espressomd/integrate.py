@@ -36,7 +36,8 @@ class IntegratorHandle(ScriptInterfaceHelper):
         super().__init__(**kwargs)
 
     def __str__(self):
-        return f'{self.__class__.__name__}({self.integrator.__class__.__name__})'
+        return f'{self.__class__.__name__}({
+            self.integrator.__class__.__name__})'
 
     def run(self, *args, **kwargs):
         """

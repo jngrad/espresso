@@ -54,7 +54,8 @@ else:
 # Make sure we have the correct versions of the required dependencies
 for module, requirement in [(ps, "==1.2"), (lbmpy, "==1.2")]:
     assert pkg_resources.packaging.specifiers.SpecifierSet(requirement).contains(module.__version__), \
-        f"{module.__name__} version {module.__version__} doesn't match requirement {requirement}"
+        f"{module.__name__} version {module.__version__} " \
+        f"doesn't match requirement {requirement}"
 
 
 def paramlist(parameters, keys):

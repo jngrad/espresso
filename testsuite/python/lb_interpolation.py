@@ -128,7 +128,6 @@ class LBInterpolation:
         self.assertIsNone(self.lbf[0, 0, 0].boundary)
 
     def test_interpolated_force(self):
-
         system = self.system
         system.thermostat.set_lb(LB_fluid=system.lb, seed=42, gamma=1.)
         system.integrator.run(1)

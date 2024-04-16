@@ -106,13 +106,15 @@ def equations_to_code(equations, variable_prefix="",
 
 def substitute_force_getter_cpp(code):
     field_getter = "force->"
-    assert field_getter in code is not None, f"pattern '{field_getter} not found in '''\n{code}\n'''"
+    assert field_getter in code is not None, \
+        f"pattern '{field_getter} not found in '''\n{code}\n'''"
     return code.replace(field_getter, "force_field->")
 
 
 def substitute_force_getter_cu(code):
     field_getter = "force->get(x,y,z,"
-    assert field_getter in code is not None, f"pattern '{field_getter} not found in '''\n{code}\n'''"
+    assert field_getter in code is not None, \
+        f"pattern '{field_getter} not found in '''\n{code}\n'''"
     return code.replace(field_getter, "force.get(")
 
 

@@ -49,7 +49,8 @@ def adapt_pystencils():
             if token in output:
                 i = output.index(token)
                 vartype = output[:i].split("\n")[-1].strip()
-                output += f"\nstd::function<void(IBlock *, {vartype}&, {vartype}&, {vartype}&)> block_offset_generator = [](IBlock * const, {vartype}&, {vartype}&, {vartype}&) {{ }};"
+                output += f"\nstd::function<void(IBlock *, {vartype}&, {vartype}&, {
+                    vartype}&)> block_offset_generator = [](IBlock * const, {vartype}&, {vartype}&, {vartype}&) {{ }};"
             return output
 
         def new_generate_refs_for_kernel_parameters(*args, **kwargs):
@@ -84,8 +85,10 @@ def earmark_generated_kernels():
             walberla_commit = f.read()
     token = "// kernel generated with"
     earmark = (
-        f"{token} pystencils v{pystencils.__version__}, lbmpy v{lbmpy.__version__}, "
-        f"lbmpy_walberla/pystencils_walberla from waLBerla commit {walberla_commit}"
+        f"{token} pystencils v{pystencils.__version__}, "
+        f"lbmpy v{lbmpy.__version__}, "
+        f"lbmpy_walberla/pystencils_walberla from "
+        f"waLBerla commit {walberla_commit}"
     )
     for filename in os.listdir("."):
         if filename.endswith((".h", ".cpp", ".cu", ".cuh")):
@@ -117,9 +120,9 @@ def guard_generated_kernels_clang_format():
             if not all_ns:
                 continue
             for ns in all_ns:
-                content = re.sub(rf"(?<=[^a-zA-Z0-9_]){ns}(?=[^a-zA-Z0-9_])",
-                                 f"internal_{hashlib.md5(ns.encode('utf-8')).hexdigest()}",
-                                 content)
+                ns_hash = hashlib.md5(ns.encode('utf-8')).hexdigest()
+                content = re.sub(f"(?<=[^a-zA-Z0-9_]){ns}(?=[^a-zA-Z0-9_])",
+                                 f"internal_{ns_hash}", content)
             with open(filename, "w") as f:
                 f.write(content)
 

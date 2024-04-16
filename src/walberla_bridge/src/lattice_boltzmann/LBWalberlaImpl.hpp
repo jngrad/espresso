@@ -222,9 +222,8 @@ private:
                                           std::array<int, 3> const &node,
                                           double weight)
         : std::runtime_error("Access to LB " + field + " field failed") {
-      std::cerr << "pos [" << pos << "], "
-                << "node [" << Utils::Vector3i(node) << "], "
-                << "weight " << weight << "\n";
+      std::cerr << "pos [" << pos << "], node [" << Utils::Vector3i(node)
+                << "], weight " << weight << "\n";
     }
   };
 
