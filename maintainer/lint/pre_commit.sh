@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-python3 -m pre_commit 2>&1 >/dev/null
+pre-commit 2>&1 >/dev/null
 if [ "$?" = "0" ]; then
     precommit="python3 -m pre_commit"
 else

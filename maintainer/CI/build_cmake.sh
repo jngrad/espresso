@@ -275,9 +275,6 @@ if grep -q "Ubuntu" /etc/os-release; then
                             --admindir "${HOME}/.local/var/lib/alternatives" \
                             --install "${HOME}/.local/bin/gcov" "gcov" "$(which ${GCOV:-gcov})" 10
     fi
-    if [ -d "${HOME}/venv/bin" ]; then
-        source "${HOME}/venv/bin/activate"
-    fi
 fi
 
 # CONFIGURE
