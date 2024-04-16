@@ -22,6 +22,6 @@ jobs:
       - name: Build and check
         uses: ./.github/actions/build_and_check
         env:
-          build_procs: 1
-          check_procs: 1
+          build_procs: 4
+          check_procs: 4
           with_ccache: 'true'
