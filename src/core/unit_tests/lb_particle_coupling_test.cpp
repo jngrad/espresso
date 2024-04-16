@@ -633,8 +633,7 @@ BOOST_AUTO_TEST_CASE(lb_exceptions) {
     BOOST_CHECK_THROW(lb_impl->get_velocity_at_pos(vec, true), NoLBActive);
     BOOST_CHECK_THROW(lb_impl->add_force_at_pos(vec, vec), NoLBActive);
     BOOST_CHECK_THROW(lb_impl->add_forces_at_pos({}, {}), NoLBActive);
-    BOOST_CHECK_THROW(lb_impl->get_velocity_at_pos_simplified_cuda({}),
-                      NoLBActive);
+    BOOST_CHECK_THROW(lb_impl->get_velocities_at_pos({}), NoLBActive);
     lb.reset();
   }
 }
