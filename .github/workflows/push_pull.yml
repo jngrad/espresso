@@ -35,7 +35,7 @@ jobs:
   debian:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/jngrad/espresso-docker/debian:ca8d92c48067ce638c893f73ca77e0951531eceb-base-layer
+      image: ghcr.io/jngrad/espresso-docker/debian:201045c4dc78b08f8a0c9a6f234adb16f4ab487a-base-layer
       credentials:
          username: ${{ github.actor }}
          password: ${{ secrets.github_token }}
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.repository == 'espressomd/espresso' }}
     container:
-      image: ghcr.io/espressomd/docker/ubuntu-wo-dependencies:339903979196fd7e72127f2cb5bfb27759d129f9-base-layer
+      image: ghcr.io/jngrad/espresso-docker/ubuntu-wo-dependencies:201045c4dc78b08f8a0c9a6f234adb16f4ab487a-base-layer
       credentials:
          username: ${{ github.actor }}
          password: ${{ secrets.github_token }}

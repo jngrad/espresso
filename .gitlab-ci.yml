@@ -1,4 +1,4 @@
-image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:ca8d92c48067ce638c893f73ca77e0951531eceb
+image: ghcr.io/jngrad/espresso-docker/ubuntu-24.04:201045c4dc78b08f8a0c9a6f234adb16f4ab487a
 
 stages:
   - prepare
@@ -18,6 +18,7 @@ stages:
 
 .notification_job_template: &notification_job_definition
   <<: *global_job_definition
+  image: ghcr.io/jngrad/espresso-docker/fedora:201045c4dc78b08f8a0c9a6f234adb16f4ab487a
   variables:
     GIT_SUBMODULE_STRATEGY: none
   before_script:
@@ -33,7 +34,7 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   CCACHE_DIR: /cache
   CCACHE_MAXSIZE: 100G
-  with_ccache: "false"
+  with_ccache: false
 
 status_pending:
   <<: *notification_job_definition
@@ -134,7 +135,6 @@ no_rotation:
      with_coverage: 'true'
      with_scafacos: 'true'
      check_skip_long: 'true'
-     with_ccache: "true"
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
@@ -145,14 +145,13 @@ no_rotation:
 fedora:40:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/jngrad/espresso-docker/fedora:ca8d92c48067ce638c893f73ca77e0951531eceb
+  image: ghcr.io/jngrad/espresso-docker/fedora:201045c4dc78b08f8a0c9a6f234adb16f4ab487a
   variables:
      with_cuda: 'false'
      with_gsl: 'false'
      myconfig: 'maxset'
      make_check_python: 'true'
      with_stokesian_dynamics: 'true'
-     with_ccache: "true"
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
