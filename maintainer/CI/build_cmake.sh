@@ -410,7 +410,7 @@ if [ "${with_coverage}" = true ] || [ "${with_coverage_python}" = true ]; then
         codecov_opts="${codecov_opts} --gcov"
         lcov --gcov-tool "${GCOV:-gcov}" \
              --quiet \
-             --ignore-errors graph,mismatch,gcov,unused \
+             --ignore-errors graph,mismatch \
              --directory . \
              --capture \
              --rc lcov_json_module="JSON::XS" \

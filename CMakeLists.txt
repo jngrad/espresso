@@ -437,10 +437,9 @@ if(ESPRESSO_BUILD_WITH_COVERAGE)
                                         -fcoverage-mapping)
   else()
     target_compile_options(
-      espresso_coverage_flags INTERFACE -g --coverage -fprofile-arcs
-                                        -ftest-coverage
-                                        -fno-elide-constructors
-                                        -fno-default-inline)
+      espresso_coverage_flags
+      INTERFACE -g --coverage -fprofile-arcs -ftest-coverage
+                -fno-elide-constructors -fno-default-inline)
     target_link_libraries(espresso_coverage_flags INTERFACE gcov)
   endif()
 endif()
