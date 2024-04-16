@@ -4,16 +4,9 @@ runs:
   using: "composite"
   steps:
     - run: |
-       brew install boost boost-mpi fftw
-       brew install hdf5-mpi
-       pip3 install -c requirements.txt "cython<3.0" numpy scipy h5py pkg-resources
+       pip3 --version
+       pip3 install --upgrade pip
+       pip3 --version
+       pip3 install -v -c requirements.txt "cython<3.0" numpy scipy pkg-resources
       shell: bash
       if: runner.os == 'macOS'
-    - run: |
-        export myconfig=maxset with_cuda=false with_gsl=false test_timeout=800 check_skip_long=true
-        bash maintainer/CI/build_cmake.sh
-      shell: bash
-      # This is a workaround for the unfortunate interaction of MacOS and OpenMPI 4
-      # See https://github.com/open-mpi/ompi/issues/6518
-      env:
-        OMPI_MCA_btl: "self,tcp"
