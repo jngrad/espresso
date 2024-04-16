@@ -47,9 +47,9 @@ macro(espresso_minimal_compiler_version)
   endif()
 endmacro()
 
-espresso_minimal_compiler_version("GNU" 8.0.0)
-espresso_minimal_compiler_version("Clang" 9.0.0)
-espresso_minimal_compiler_version("AppleClang" 11.0.0)
+espresso_minimal_compiler_version("GNU" 10.5.0)
+espresso_minimal_compiler_version("Clang" 14.0.0)
+espresso_minimal_compiler_version("AppleClang" 14.0.0)
 espresso_minimal_compiler_version("Intel" 18.0)
 espresso_minimal_compiler_version("IntelLLVM" 2021.0)
 
@@ -225,8 +225,8 @@ endif()
 
 # Python interpreter and Cython interface library
 if(ESPRESSO_BUILD_WITH_PYTHON)
-  find_package(Python 3.9 REQUIRED COMPONENTS Interpreter Development NumPy)
-  find_package(Cython 0.29.21...<3.0.10 REQUIRED)
+  find_package(Python 3.10 REQUIRED COMPONENTS Interpreter Development NumPy)
+  find_package(Cython 0.29.28...<3.0.10 REQUIRED)
   find_program(IPYTHON_EXECUTABLE NAMES jupyter ipython3 ipython)
 endif()
 
