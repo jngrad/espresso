@@ -60,24 +60,9 @@ ReactionAlgorithm::ReactionAlgorithm() {
        {"kT", AutoParameter::read_only, [this]() { return RE()->get_kT(); }},
        {"search_algorithm",
         [this](Variant const &v) {
-          context()->parallel_try_catch([&]() {
-            auto const key = get_value<std::string>(v);
-            if (key == "order_n") {
-              RE()->neighbor_search_order_n = true;
-            } else if (key == "parallel") {
-              RE()->neighbor_search_order_n = false;
-            } else {
-              throw std::invalid_argument("Unknown search algorithm '" + key +
-                                          "'");
-            }
-          });
+          m_exclusion->do_set_parameter("search_algorithm", v);
         },
-        [this]() {
-          if (RE()->neighbor_search_order_n) {
-            return std::string("order_n");
-          }
-          return std::string("parallel");
-        }},
+        [this]() { return m_exclusion->get_parameter("search_algorithm"); }},
        {"particle_inside_exclusion_range_touched",
         [this](Variant const &v) {
           RE()->particle_inside_exclusion_range_touched = get_value<bool>(v);
@@ -87,18 +72,17 @@ ReactionAlgorithm::ReactionAlgorithm() {
         [this]() {
           return make_unordered_map_of_variants(RE()->charges_of_types);
         }},
-       {"exclusion_range", AutoParameter::read_only,
-        [this]() { return RE()->get_exclusion_range(); }},
+       {"exclusion_range",
+        [this](Variant const &v) {
+          m_exclusion->do_set_parameter("exclusion_range", v);
+        },
+        [this]() { return m_exclusion->get_parameter("exclusion_range"); }},
        {"exclusion_radius_per_type",
         [this](Variant const &v) {
-          context()->parallel_try_catch([&]() {
-            RE()->set_exclusion_radius_per_type(
-                get_value<std::unordered_map<int, double>>(v));
-          });
+          m_exclusion->do_set_parameter("exclusion_radius_per_type", v);
         },
         [this]() {
-          return make_unordered_map_of_variants(
-              RE()->exclusion_radius_per_type);
+          return m_exclusion->get_parameter("exclusion_radius_per_type");
         }}});
 }
 

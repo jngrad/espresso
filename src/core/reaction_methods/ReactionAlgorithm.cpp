@@ -82,6 +82,7 @@ void ReactionAlgorithm::add_reaction(
  * except for particle deletion (the cell structure is still reinitialized
  * after each deletion).
  */
+
 void ReactionAlgorithm::restore_old_system_state() {
   auto &system = System::get_system();
   auto const &old_state = get_old_system_state();
@@ -126,6 +127,7 @@ void ReactionAlgorithm::restore_old_system_state() {
  * Automatically sets the volume which is used by the reaction ensemble to the
  * volume of a cuboid box.
  */
+
 void ReactionAlgorithm::update_volume() {
   auto const &box_geo = *System::get_system().box_geo;
   volume = box_geo.volume();
@@ -322,72 +324,8 @@ void ReactionAlgorithm::hide_particle(int p_id, int p_type) const {
  * Check if the inserted particle is too close to neighboring particles.
  */
 void ReactionAlgorithm::check_exclusion_range(int p_id, int p_type) {
-
-  /* Check the exclusion radius of the inserted particle */
-  if (exclusion_radius_per_type.count(p_type) != 0) {
-    if (exclusion_radius_per_type[p_type] == 0.) {
-      return;
-    }
-  }
-
-  auto p1_ptr = get_real_particle(p_id);
-
-  std::vector<int> particle_ids;
-  if (neighbor_search_order_n) {
-    auto all_ids = get_particle_ids_parallel();
-    /* remove the inserted particle id */
-    all_ids.erase(std::remove(all_ids.begin(), all_ids.end(), p_id),
-                  all_ids.end());
-    particle_ids = all_ids;
-  } else {
-    auto &system = System::get_system();
-    system.on_observable_calc();
-    auto const local_ids =
-        get_short_range_neighbors(system, p_id, m_max_exclusion_range);
-    assert(p1_ptr == nullptr or !!local_ids);
-    if (local_ids) {
-      particle_ids = std::move(*local_ids);
-    }
-  }
-
-  if (p1_ptr != nullptr) {
-    auto &p1 = *p1_ptr;
-    auto const &system = System::get_system();
-    auto const &box_geo = *system.box_geo;
-    auto &cell_structure = *system.cell_structure;
-
-    /* Check if the inserted particle within the exclusion radius of any other
-     * particle */
-    for (auto const p2_id : particle_ids) {
-      if (auto const p2_ptr = cell_structure.get_local_particle(p2_id)) {
-        auto const &p2 = *p2_ptr;
-        double excluded_distance;
-        if (exclusion_radius_per_type.count(p_type) == 0 ||
-            exclusion_radius_per_type.count(p2.type()) == 0) {
-          excluded_distance = exclusion_range;
-        } else if (exclusion_radius_per_type[p2.type()] == 0.) {
-          continue;
-        } else {
-          excluded_distance = exclusion_radius_per_type[p_type] +
-                              exclusion_radius_per_type[p2.type()];
-        }
-
-        auto const d_min = box_geo.get_mi_vector(p2.pos(), p1.pos()).norm();
-
-        if (d_min < excluded_distance) {
-          particle_inside_exclusion_range_touched = true;
-          break;
-        }
-      }
-    }
-    if (m_comm.rank() != 0) {
-      m_comm.send(0, 1, particle_inside_exclusion_range_touched);
-    }
-  } else if (m_comm.rank() == 0) {
-    m_comm.recv(boost::mpi::any_source, 1,
-                particle_inside_exclusion_range_touched);
-  }
-  boost::mpi::broadcast(m_comm, particle_inside_exclusion_range_touched, 0);
+  particle_inside_exclusion_range_touched |=
+      m_exclusion->check_exclusion_range(p_id, p_type);
 }
 
 /**
@@ -396,6 +334,7 @@ void ReactionAlgorithm::check_exclusion_range(int p_id, int p_type) {
  * delete unbonded particles since bonds are coupled to ids. This is used to
  * avoid the id range becoming excessively huge.
  */
+
 void ReactionAlgorithm::delete_particle(int p_id) {
   if (p_id < 0) {
     throw std::domain_error("Invalid particle id: " + std::to_string(p_id));
@@ -451,6 +390,7 @@ void ReactionAlgorithm::set_slab_constraint(double slab_start_z,
   m_slab_end_z = slab_end_z;
   m_reaction_constraint = ReactionConstraint::SLAB_Z;
 }
+
 
 /**
  * Writes a random position inside the central box into the provided array.
@@ -605,7 +545,6 @@ bool ReactionAlgorithm::make_displacement_mc_move_attempt(int type,
   restore_old_system_state();
   return false;
 }
-
 /**
  * Cleans the list of empty pids and searches for empty pid in the system
  */
