@@ -19,7 +19,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.25.2)
+cmake_minimum_required(VERSION 3.25.1)
 message(STATUS "CMake version: ${CMAKE_VERSION}")
 if(POLICY CMP0076)
   # make target_sources() convert relative paths to absolute
@@ -190,6 +190,7 @@ add_library(espresso::avx_flags ALIAS espresso_avx_flags)
 
 # CUDA compiler
 if(ESPRESSO_BUILD_WITH_CUDA)
+  cmake_minimum_required(VERSION 3.25.2)
   include(CheckLanguage)
   enable_language(CUDA)
   check_language(CUDA)
