@@ -1,5 +1,7 @@
 /*
- * Copyright (C) 2017-2022 The ESPResSo project
+ * Copyright (C) 2024 The ESPResSo project
+ *
+ * This file is part of ESPResSo.
  *
  * ESPResSo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE Utils::sinc test
+#define BOOST_TEST_MODULE cuda test
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
-#include "utils/math/sinc.hpp"
+void gpu_interface_test();
 
-#include <cmath>
-#include <cstdlib>
-#include <numbers>
+boost::test_tools::assertion_result has_gpu(boost::unit_test::test_unit_id);
 
-BOOST_AUTO_TEST_CASE(zero) { BOOST_CHECK_EQUAL(Utils::sinc(0.0), 1.0); }
-
-BOOST_AUTO_TEST_CASE(approx) {
-  auto x = 0.001;
-  while (x <= 0.11) {
-    auto const approx = Utils::sinc(x);
-    auto const pi_x = std::numbers::pi * x;
-    auto const exact = std::sin(pi_x) / (pi_x);
-    BOOST_CHECK_SMALL(approx - exact, 1e-13);
-    x += 0.01;
-  }
+BOOST_AUTO_TEST_CASE(gpu_interface, *boost::unit_test::precondition(has_gpu)) {
+  gpu_interface_test();
 }

@@ -41,6 +41,16 @@ unit_test(NAME MpiCallbacks_test SRC MpiCallbacks_test.cpp DEPENDS
 unit_test(NAME ParticleIterator_test SRC ParticleIterator_test.cpp DEPENDS
           espresso::utils)
 unit_test(NAME p3m_test SRC p3m_test.cpp DEPENDS espresso::utils espresso::core)
+unit_test(NAME fft_test SRC fft_test.cpp DEPENDS espresso::utils espresso::core)
+if(ESPRESSO_BUILD_WITH_CUDA)
+  add_library(cuda_test_main OBJECT cuda_test_main.cpp)
+  target_link_libraries(cuda_test_main PRIVATE espresso::cpp_flags
+                                               Boost::unit_test_framework)
+  set_target_properties(cuda_test_main PROPERTIES CUDA_CLANG_TIDY
+                                                  "${ESPRESSO_CUDA_CLANG_TIDY}")
+  unit_test(NAME cuda_test SRC cuda_test_cuda.cu DEPENDS espresso::utils
+            espresso::core espresso::cuda cuda_test_main)
+endif()
 unit_test(NAME link_cell_test SRC link_cell_test.cpp DEPENDS espresso::utils)
 unit_test(NAME Particle_test SRC Particle_test.cpp DEPENDS espresso::utils
           Boost::serialization)

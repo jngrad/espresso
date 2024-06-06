@@ -251,7 +251,7 @@ std::array<std::vector<int>, 3> inline calc_meshift(
   std::array<std::vector<int>, 3> ret{};
 
   for (unsigned int i = 0; i < 3; i++) {
-    ret[i] = std::vector<int>(mesh_size[i]);
+    ret[i] = std::vector<int>(static_cast<std::size_t>(mesh_size[i]));
 
     for (int j = 1; j <= mesh_size[i] / 2; j++) {
       ret[i][j] = j;

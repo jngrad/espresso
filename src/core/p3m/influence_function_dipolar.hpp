@@ -28,17 +28,15 @@
 #include "p3m/common.hpp"
 
 #include <utils/Vector.hpp>
-#include <utils/constants.hpp>
 #include <utils/index.hpp>
 #include <utils/math/int_pow.hpp>
 #include <utils/math/sinc.hpp>
 #include <utils/math/sqr.hpp>
 
-#include <boost/range/numeric.hpp>
-
 #include <cmath>
 #include <cstddef>
 #include <functional>
+#include <numbers>
 #include <vector>
 
 /** Calculate the aliasing sums for the optimal influence function.
@@ -62,11 +60,11 @@ double G_opt_dipolar(P3MParameters const &params, Utils::Vector3i const &shift,
   auto constexpr exp_limit = 30.;
   auto const exponent = 2. * params.cao;
 
-  auto numerator = 0.0;
-  auto denominator = 0.0;
+  auto numerator = 0.;
+  auto denominator = 0.;
 
-  auto const f1 = 1.0 / static_cast<double>(params.mesh[0]);
-  auto const f2 = Utils::sqr(Utils::pi() / params.alpha_L);
+  auto const f1 = 1. / static_cast<double>(params.mesh[0]);
+  auto const f2 = Utils::sqr(std::numbers::pi / params.alpha_L);
 
   for (int mx = -limit; mx <= limit; mx++) {
     auto const nmx = shift[0] + params.mesh[0] * mx;
@@ -115,8 +113,7 @@ std::vector<double> grid_influence_function(P3MParameters const &params,
   auto const size = n_end - n_start;
 
   /* The influence function grid */
-  auto g =
-      std::vector<double>(boost::accumulate(size, 1, std::multiplies<>()), 0.);
+  auto g = std::vector<double>(Utils::product(size), 0.);
 
   /* Skip influence function calculation in tuning mode,
      the results need not be correct for timing. */

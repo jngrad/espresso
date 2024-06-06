@@ -47,7 +47,7 @@ target_compile_options(
   $<$<CONFIG:Release>:-Xptxas=-O3 -Xcompiler=-O3 -DNDEBUG>
   $<$<CONFIG:MinSizeRel>:-Xptxas=-O2 -Xcompiler=-Os -DNDEBUG>
   $<$<CONFIG:RelWithDebInfo>:-Xptxas=-O2 -Xcompiler=-O2,-g -DNDEBUG>
-  $<$<CONFIG:Coverage>:-Xptxas=-O3 -Xcompiler=-Og,-g>
+  $<$<CONFIG:Coverage>:-Xptxas=-O3 -Xcompiler=-Og,-g,--coverage,-fprofile-abs-path>
   $<$<CONFIG:RelWithAssert>:-Xptxas=-O3 -Xcompiler=-O3,-g>
   $<$<BOOL:${CMAKE_OSX_SYSROOT}>:-Xcompiler=-isysroot;-Xcompiler=${CMAKE_OSX_SYSROOT}>
 )
@@ -56,7 +56,14 @@ function(espresso_add_gpu_library)
   add_library(${ARGV})
   set(TARGET_NAME ${ARGV0})
   set_target_properties(${TARGET_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-  target_link_libraries(${TARGET_NAME} PRIVATE espresso::cuda_flags)
+  target_link_libraries(${TARGET_NAME} PRIVATE espresso::cuda_flags $<$<CONFIG:Coverage>:gcov>)
+endfunction()
+
+function(espresso_add_gpu_executable)
+  add_executable(${ARGV})
+  set(TARGET_NAME ${ARGV0})
+  set_target_properties(${TARGET_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  target_link_libraries(${TARGET_NAME} PRIVATE espresso::cuda_flags $<$<CONFIG:Coverage>:gcov>)
 endfunction()
 
 include(FindPackageHandleStandardArgs)

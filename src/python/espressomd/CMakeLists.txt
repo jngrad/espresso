@@ -17,22 +17,54 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+define_property(TARGET PROPERTY EspressoResourceFiles
+                BRIEF_DOCS "List of resource files to be deployed with target")
+
+# Register resource files (Python files, text files, etc.) that need to be
+# deployed alongside a target. If the file exists in the project source
+# directory, it is configured with COPYONLY. If not, it is assumed to be a
+# generated file.
+function(espresso_target_resources)
+  list(POP_FRONT ARGV TARGET_NAME)
+  foreach(RESOURCE_RELPATH ${ARGV})
+    if(IS_ABSOLUTE ${RESOURCE_RELPATH})
+      message(
+        FATAL_ERROR
+          "function espresso_target_resources() only supports relative paths, could not process \"${RESOURCE_RELPATH}\""
+      )
+    endif()
+    set(RESOURCE_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${RESOURCE_RELPATH}")
+    set(RESOURCE_BINARY_PATH "${CMAKE_CURRENT_BINARY_DIR}/${RESOURCE_RELPATH}")
+    if(EXISTS ${RESOURCE_SOURCE_PATH})
+      configure_file(${RESOURCE_SOURCE_PATH} ${RESOURCE_BINARY_PATH} COPYONLY)
+    endif()
+    set_property(TARGET ${TARGET_NAME} APPEND
+                 PROPERTY EspressoResourceFiles "${RESOURCE_BINARY_PATH}")
+  endforeach()
+endfunction()
+
 add_custom_target(espressomd)
 
-# Make the cython_SRC, cython_HEADER and cython_AUX a cached variable to be able
-# to extend it in the subdirectories.
 file(GLOB cython_SRC *.pyx)
-set(cython_SRC "${cython_SRC}" CACHE INTERNAL "cython_SRC")
 file(GLOB cython_HEADER *.pxd)
-set(cython_HEADER "${cython_HEADER}" CACHE INTERNAL "cython_HEADER")
-file(GLOB cython_AUX *.py)
-set(cython_AUX "${cython_AUX}" CACHE INTERNAL "cython_AUX")
+file(GLOB python_SRC RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" *.py)
+
+espresso_target_resources(espressomd ${python_SRC})
 
 add_subdirectory(io)
 add_subdirectory(detail)
 add_subdirectory(plugins)
 
-list(REMOVE_DUPLICATES cython_SRC)
+# Install resource files (Python files, text files, etc.)
+get_property(ESPRESSOMD_RESOURCE_FILES TARGET espressomd
+             PROPERTY EspressoResourceFiles)
+foreach(RESOURCE_ABSPATH ${ESPRESSOMD_RESOURCE_FILES})
+  cmake_path(RELATIVE_PATH RESOURCE_ABSPATH BASE_DIRECTORY
+             ${CMAKE_CURRENT_BINARY_DIR} OUTPUT_VARIABLE RESOURCE_RELPATH)
+  cmake_path(GET RESOURCE_RELPATH PARENT_PATH RESOURCE_RELPARENT)
+  install(FILES ${RESOURCE_ABSPATH}
+          DESTINATION "${ESPRESSO_INSTALL_PYTHON}/${RESOURCE_RELPARENT}")
+endforeach()
 
 add_library(espresso_pyx_flags INTERFACE)
 add_library(espresso::pyx_flags ALIAS espresso_pyx_flags)
@@ -46,9 +78,10 @@ target_compile_options(
     $<$<CXX_COMPILER_ID:GNU>:-Wno-strict-aliasing>
     $<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>
     $<$<CXX_COMPILER_ID:GNU>:-Wno-volatile>
-    $<$<CXX_COMPILER_ID:AppleClang>:-Wno-missing-field-initializers>
     $<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wno-sometimes-uninitialized>
     $<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wno-\#warnings>
+    $<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wno-deprecated-volatile>
+    -Wno-missing-field-initializers
     -Wno-unused-variable)
 
 # Configure, compile and install Cython files
@@ -102,19 +135,3 @@ foreach(cython_file ${cython_SRC})
             LIBRARY DESTINATION ${ESPRESSO_INSTALL_PYTHON}/espressomd)
   endif()
 endforeach()
-
-# Configure Python files
-foreach(auxfile ${cython_AUX})
-  get_filename_component(filename ${auxfile} NAME)
-  file(RELATIVE_PATH relpath ${CMAKE_CURRENT_SOURCE_DIR} ${auxfile})
-  get_filename_component(relpath ${relpath} DIRECTORY)
-  string(CONCAT outputpath ${CMAKE_CURRENT_BINARY_DIR} "/" ${relpath} "/"
-                ${filename})
-  add_custom_command(TARGET espressomd COMMAND ${CMAKE_COMMAND} -E copy
-                                               ${auxfile} ${outputpath})
-endforeach(auxfile)
-
-# Install Python files
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DESTINATION ${ESPRESSO_INSTALL_PYTHON} FILES_MATCHING PATTERN "*.py"
-        PATTERN "CMakeFiles" EXCLUDE)
