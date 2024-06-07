@@ -461,9 +461,10 @@ int map_3don2d_grid(int const g3d[3], int g2d[3]) {
   }
   return row_dir;
 }
+} // namespace
 
 /** Calculate most square 2D grid. */
-void calc_2d_grid(int n, int grid[3]) {
+static void calc_2d_grid(int n, int grid[3]) {
   grid[0] = n;
   grid[1] = 1;
   grid[2] = 1;
@@ -476,7 +477,6 @@ void calc_2d_grid(int n, int grid[3]) {
     }
   }
 }
-} // namespace
 
 int fft_init(Utils::Vector3i const &ca_mesh_dim, int const *ca_mesh_margin,
              Utils::Vector3i const &global_mesh_dim,

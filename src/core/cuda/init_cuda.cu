@@ -117,7 +117,7 @@ bool cuda_test_device_access() {
   if (err != cudaSuccess) {
     throw cuda_runtime_error_cuda(err);
   }
-  return h == 42;
+  return h != 42;
 }
 
 void cuda_check_device() {
@@ -125,9 +125,9 @@ void cuda_check_device() {
     throw cuda_runtime_error("No GPU was found.");
   }
   auto const devID = cuda_get_device();
-  auto const compute_capability = cuda_check_gpu_compute_capability(devID);
-  auto const communication_test = cuda_test_device_access();
-  if (not(compute_capability and communication_test)) {
+  auto const incompatible = cuda_check_gpu_compute_capability(devID);
+  auto const communication_failure = cuda_test_device_access();
+  if (incompatible or communication_failure) {
     throw cuda_runtime_error("CUDA device " + std::to_string(devID) +
                              " is not capable of running ESPResSo.");
   }

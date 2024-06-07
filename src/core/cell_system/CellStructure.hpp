@@ -474,7 +474,7 @@ private:
   /**
    * @brief Resolve ids to particles.
    *
-   * @throws @ref BondResolutionError if one of the ids
+   * @throws BondResolutionError if one of the ids
    *         was not found.
    *
    * @param partner_ids Ids to resolve.

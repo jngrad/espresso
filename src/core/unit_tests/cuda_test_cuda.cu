@@ -80,8 +80,8 @@ void gpu_interface_test() {
       error_caught = true;
       err.set_terminate(increment_counter);
       std::string const what =
-          "CUDA error: \"invalid device ordinal\" calling cudaSetDevice() with "
-          "block: [1,2,3], grid: [4,5,6] in filename.cu:4";
+          "CUDA error: \"invalid device ordinal\" while calling "
+          "cudaSetDevice() with block: <1,2,3>, grid: <4,5,6> in filename.cu:4";
       BOOST_CHECK_EQUAL(fatal_error_counter, local_error_counter);
       BOOST_CHECK_EQUAL(err.what(), what);
       BOOST_CHECK_EQUAL(cudaGetLastError(), cudaSuccess);
@@ -98,12 +98,12 @@ void gpu_interface_test() {
       // trigger non-sticky CUDA error
       cudaSetDevice(-1);
       // should throw
-      cuda_safe_mem_exit(cudaSuccess, "function_name()", 4u);
+      cuda_safe_mem_exit(cudaSuccess, "filename.cu", 4u);
     } catch (cuda_fatal_error &err) {
       error_caught = true;
       err.set_terminate(increment_counter);
       std::string const what =
-          "CUDA error: \"invalid device ordinal\" in function_name():4. Error "
+          "CUDA error: \"invalid device ordinal\" in filename.cu:4. Error "
           "found during memory operation. Possibly however from a failed "
           "operation before the memory operation";
       BOOST_CHECK_EQUAL(fatal_error_counter, local_error_counter);
@@ -116,12 +116,12 @@ void gpu_interface_test() {
   {
     auto error_caught = false;
     try {
-      cuda_safe_mem_exit(cudaErrorNotPermitted, "function_name()", 4u);
+      cuda_safe_mem_exit(cudaErrorNotPermitted, "filename.cu", 4u);
     } catch (cuda_fatal_error &err) {
       error_caught = true;
       err.set_terminate(increment_counter);
       std::string const what = "CUDA error: \"operation not permitted\" during "
-                               "memory operation in function_name():4";
+                               "memory operation in filename.cu:4";
       BOOST_CHECK_EQUAL(fatal_error_counter, local_error_counter);
       BOOST_CHECK_EQUAL(err.what(), what);
     }

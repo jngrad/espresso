@@ -33,18 +33,27 @@
 
 cudaStream_t stream[1];
 
+static std::basic_ostream<char> &operator<<(std::basic_ostream<char> &os,
+                                            const dim3 &dim) {
+  os << "<" << dim.x << "," << dim.y << "," << dim.z << ">";
+  return os;
+}
+
+static std::basic_ostream<char> &operator<<(std::basic_ostream<char> &os,
+                                            cudaError_t CU_err) {
+  os << "CUDA error: \"" << cudaGetErrorString(CU_err) << "\"";
+  return os;
+}
+
 void cuda_check_errors_exit(const dim3 &block, const dim3 &grid,
                             const char *function, const char *file,
                             unsigned int line) {
   cudaError_t CU_err = cudaGetLastError();
   if (CU_err != cudaSuccess) {
     std::stringstream message;
-    message << "CUDA error: \"" << cudaGetErrorString(CU_err) << "\" "
-            << "calling " << function << " with "
-            << "block: [" << block.x << "," << block.y << "," << block.z
-            << "], "
-            << "grid: [" << grid.x << "," << grid.y << "," << grid.z << "] "
-            << "in " << file << ":" << line;
+    message << CU_err << " while calling " << function
+            << " with block: " << block << ", grid: " << grid << " in " << file
+            << ":" << line;
     throw cuda_fatal_error(message.str());
   }
 }
@@ -53,8 +62,7 @@ void cuda_safe_mem_exit(cudaError_t CU_err, const char *file,
                         unsigned int line) {
   if (CU_err != cudaSuccess) {
     std::stringstream message;
-    message << "CUDA error: \"" << cudaGetErrorString(CU_err)
-            << "\" during memory operation in " << file << ":" << line;
+    message << CU_err << " during memory operation in " << file << ":" << line;
     if (CU_err == cudaErrorInvalidValue)
       message << ". You may have tried to allocate zero memory";
     throw cuda_fatal_error(message.str());
@@ -63,10 +71,9 @@ void cuda_safe_mem_exit(cudaError_t CU_err, const char *file,
     CU_err = cudaGetLastError();
     if (CU_err != cudaSuccess) {
       std::stringstream message;
-      message << "CUDA error: \"" << cudaGetErrorString(CU_err) << "\" in "
-              << file << ":" << line << ". Error found during memory operation"
-              << ". Possibly however from a failed operation before the memory "
-                 "operation";
+      message << CU_err << " in " << file << ":" << line << ". Error found "
+              << "during memory operation. Possibly however from a failed "
+                 "operation before the memory operation";
       throw cuda_fatal_error(message.str());
     }
   }
@@ -76,5 +83,8 @@ cuda_fatal_error::cuda_fatal_error(std::string msg)
     : m_msg(std::move(msg)), m_terminate_handler(&errexit) {}
 
 void cuda_fatal_error::terminate() noexcept {
+  if (m_terminate_handler == nullptr or m_terminate_handler == errexit) {
+    fprintf(stderr, "%s\n", what());
+  }
   ((m_terminate_handler == nullptr) ? &std::abort : m_terminate_handler)();
 }
