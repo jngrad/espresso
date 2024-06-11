@@ -194,7 +194,7 @@ if(ESPRESSO_BUILD_WITH_CUDA)
   include(CheckLanguage)
   enable_language(CUDA)
   check_language(CUDA)
-  set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
+  set(CMAKE_CUDA_STANDARD 20)
   set(CMAKE_CUDA_STANDARD_REQUIRED ON)
   set(ESPRESSO_MINIMAL_CUDA_VERSION 12.0)
   find_package(CUDAToolkit ${ESPRESSO_MINIMAL_CUDA_VERSION} REQUIRED)
@@ -460,11 +460,12 @@ target_compile_options(
     $<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wmissing-variable-declarations>
     $<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_GREATER_EQUAL:$<CXX_COMPILER_VERSION>,11.0.0>>:-Wnon-c-typedef-for-linkage>
     $<$<NOT:$<CXX_COMPILER_ID:Intel>>:-Wdelete-non-virtual-dtor>
-    # disable warnings from -Wextra
+    # disable warnings from -Wall and -Wextra
     -Wno-sign-compare
     -Wno-unused-function
     -Wno-unused-parameter
     -Wno-array-bounds
+    $<$<CXX_COMPILER_ID:GNU>:-Wno-restrict>
     $<$<CXX_COMPILER_ID:GNU>:-Wno-clobbered>
     $<$<CXX_COMPILER_ID:Intel,IntelLLVM>:-diag-disable=592>
     $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-gnu-zero-variadic-macro-arguments>
@@ -591,7 +592,7 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   FetchContent_Declare(
     walberla
     GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla.git
-    GIT_TAG        0c8b4b926c6979288fd8a6846d02ec0870e1fe41
+    GIT_TAG        b0842e1a493ce19ef1bbb8d2cf382fc343970a7f
   )
   # workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/21146
   if(NOT DEFINED walberla_SOURCE_DIR OR NOT EXISTS "${walberla_SOURCE_DIR}")
@@ -610,8 +611,7 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   set(CMAKE_POSITION_INDEPENDENT_CODE on CACHE BOOL "")
   if(ESPRESSO_BUILD_WITH_CUDA)
     set(WALBERLA_BUILD_WITH_CUDA "on" CACHE BOOL "")
-    if(CMAKE_VERSION VERSION_LESS 3.25 OR NOT ESPRESSO_CUDA_COMPILER STREQUAL
-                                          "clang")
+    if(NOT ESPRESSO_CUDA_COMPILER STREQUAL "clang")
       if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
         message(FATAL_ERROR "variable CMAKE_CUDA_ARCHITECTURES is undefined")
       endif()
@@ -664,10 +664,8 @@ if(ESPRESSO_BUILD_WITH_CALIPER)
   # cmake-format: on
   set(CALIPER_OPTION_PREFIX on CACHE BOOL "")
   set(CALIPER_WITH_MPI on CACHE BOOL "")
-  if(ESPRESSO_BUILD_WITH_CUDA)
-    set(CALIPER_WITH_NVTX on CACHE BOOL "")
-    set(CALIPER_WITH_CUPTI on CACHE BOOL "")
-  endif()
+  set(CALIPER_WITH_NVTX off CACHE BOOL "")
+  set(CALIPER_WITH_CUPTI off CACHE BOOL "")
   set(CALIPER_BUILD_SHARED_LIBS on CACHE BOOL "")
   add_subdirectory("${caliper_SOURCE_DIR}")
   target_compile_options(

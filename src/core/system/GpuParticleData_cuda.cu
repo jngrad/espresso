@@ -270,7 +270,7 @@ void GpuParticleData::copy_forces_to_host(ParticleRange const &particles,
 #ifdef ROTATION
     auto torques_buffer = m_data->get_particle_torques_host_span();
 #else
-    auto torques_buffer = std::span<float>{nullptr, std::size_t{0ul}};
+    auto torques_buffer = std::span<float>();
 #endif
 
     // add forces and torques to the particles

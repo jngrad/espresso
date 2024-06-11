@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(basic) {
 
   auto const &parameters = a.valid_parameters();
 
-  BOOST_CHECK(parameters.size() == 2);
+  BOOST_CHECK(parameters.size() == 2u);
   BOOST_CHECK(std::ranges::find(parameters, "i") != parameters.end());
   BOOST_CHECK(std::ranges::find(parameters, "j") != parameters.end());
 

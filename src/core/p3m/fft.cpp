@@ -553,7 +553,7 @@ int fft_init(Utils::Vector3i const &ca_mesh_dim, int const *ca_mesh_margin,
       }
     }
 
-    fft.plan[i].group = *group;
+    fft.plan[i].group = group.value();
 
     fft.plan[i].send_block.resize(6 * fft.plan[i].group.size());
     fft.plan[i].send_size.resize(fft.plan[i].group.size());

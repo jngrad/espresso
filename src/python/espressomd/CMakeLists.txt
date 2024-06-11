@@ -17,31 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-define_property(TARGET PROPERTY EspressoResourceFiles
-                BRIEF_DOCS "List of resource files to be deployed with target")
-
-# Register resource files (Python files, text files, etc.) that need to be
-# deployed alongside a target. If the file exists in the project source
-# directory, it is configured with COPYONLY. If not, it is assumed to be a
-# generated file.
-function(espresso_target_resources)
-  list(POP_FRONT ARGV TARGET_NAME)
-  foreach(RESOURCE_RELPATH ${ARGV})
-    if(IS_ABSOLUTE ${RESOURCE_RELPATH})
-      message(
-        FATAL_ERROR
-          "function espresso_target_resources() only supports relative paths, could not process \"${RESOURCE_RELPATH}\""
-      )
-    endif()
-    set(RESOURCE_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${RESOURCE_RELPATH}")
-    set(RESOURCE_BINARY_PATH "${CMAKE_CURRENT_BINARY_DIR}/${RESOURCE_RELPATH}")
-    if(EXISTS ${RESOURCE_SOURCE_PATH})
-      configure_file(${RESOURCE_SOURCE_PATH} ${RESOURCE_BINARY_PATH} COPYONLY)
-    endif()
-    set_property(TARGET ${TARGET_NAME} APPEND
-                 PROPERTY EspressoResourceFiles "${RESOURCE_BINARY_PATH}")
-  endforeach()
-endfunction()
+include(espresso_resource_files)
 
 add_custom_target(espressomd)
 
@@ -62,8 +38,9 @@ foreach(RESOURCE_ABSPATH ${ESPRESSOMD_RESOURCE_FILES})
   cmake_path(RELATIVE_PATH RESOURCE_ABSPATH BASE_DIRECTORY
              ${CMAKE_CURRENT_BINARY_DIR} OUTPUT_VARIABLE RESOURCE_RELPATH)
   cmake_path(GET RESOURCE_RELPATH PARENT_PATH RESOURCE_RELPARENT)
-  install(FILES ${RESOURCE_ABSPATH}
-          DESTINATION "${ESPRESSO_INSTALL_PYTHON}/${RESOURCE_RELPARENT}")
+  install(
+    FILES "${RESOURCE_ABSPATH}"
+    DESTINATION "${ESPRESSO_INSTALL_PYTHON}/espressomd/${RESOURCE_RELPARENT}")
 endforeach()
 
 add_library(espresso_pyx_flags INTERFACE)
@@ -86,52 +63,41 @@ target_compile_options(
 
 # Configure, compile and install Cython files
 foreach(cython_file ${cython_SRC})
-  get_filename_component(basename ${cython_file} NAME_WE)
-  file(RELATIVE_PATH relpath ${CMAKE_CURRENT_SOURCE_DIR} ${cython_file})
-  if(basename STREQUAL "code_info")
-    file(RELATIVE_PATH relpath ${CMAKE_CURRENT_BINARY_DIR} ${cython_file})
-  endif()
-  get_filename_component(relpath ${relpath} DIRECTORY)
-  if(relpath STREQUAL "")
-    string(CONCAT outputpath ${CMAKE_CURRENT_BINARY_DIR} "/" ${basename} ".cpp")
+  cmake_path(GET cython_file STEM basename)
+  cmake_path(RELATIVE_PATH cython_file BASE_DIRECTORY
+             ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE relpath)
+  cmake_path(GET relpath PARENT_PATH subfolder)
+  cmake_path(APPEND CMAKE_CURRENT_BINARY_DIR ${subfolder} "${basename}.cpp"
+             OUTPUT_VARIABLE outputpath)
+  add_custom_command(
+    OUTPUT ${outputpath}
+    COMMAND
+      ${CYTHON_EXECUTABLE} -3 --cplus --directive embedsignature=True
+      --directive binding=True -I ${CMAKE_CURRENT_SOURCE_DIR} -I
+      ${CMAKE_CURRENT_BINARY_DIR} ${cython_file} -o ${outputpath}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/..
+    DEPENDS ${cython_file} ${cython_HEADER})
+  set(target "espressomd_${basename}")
+  add_library(${target} SHARED ${outputpath})
+  if(NOT "${subfolder}" STREQUAL "")
+    set_target_properties(${target} PROPERTIES PREFIX "${subfolder}/")
   else()
-    string(CONCAT outputpath ${CMAKE_CURRENT_BINARY_DIR} "/" ${relpath} "/"
-                  ${basename} ".cpp")
+    set_target_properties(${target} PROPERTIES PREFIX "")
   endif()
-  if(basename STREQUAL "")
-    message(FATAL_ERROR "Internal error empty basename of file ${cython_file}")
-  else()
-    add_custom_command(
-      OUTPUT ${outputpath}
-      COMMAND
-        ${CYTHON_EXECUTABLE} -3 --cplus --directive embedsignature=True
-        --directive binding=True -I ${CMAKE_CURRENT_SOURCE_DIR} -I
-        ${CMAKE_CURRENT_BINARY_DIR} ${cython_file} -o ${outputpath}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/..
-      DEPENDS ${cython_file} ${cython_HEADER})
-    set(target "espressomd_${basename}")
-    add_library(${target} SHARED ${outputpath})
-    if(NOT "${relpath}" STREQUAL "")
-      set_target_properties(${target} PROPERTIES PREFIX "${relpath}/")
-    else()
-      set_target_properties(${target} PROPERTIES PREFIX "")
-    endif()
-    set_target_properties(${target} PROPERTIES OUTPUT_NAME ${basename})
-    if(APPLE)
-      set_target_properties(
-        ${target} PROPERTIES SUFFIX ".so" LINK_FLAGS
-                                          "-undefined dynamic_lookup")
-    endif()
-    set_target_properties(${target} PROPERTIES CXX_CLANG_TIDY "")
-    target_link_libraries(${target} PRIVATE espresso::config espresso::core
-                                            espresso::script_interface)
-    target_link_libraries(${target} PRIVATE espresso::cpp_flags)
-    target_link_libraries(${target} PRIVATE espresso::pyx_flags)
-    target_include_directories(
-      ${target} SYSTEM PRIVATE ${Python_INCLUDE_DIRS}
-                               ${Python_NumPy_INCLUDE_DIRS})
-    add_dependencies(espressomd ${target})
-    install(TARGETS ${target}
-            LIBRARY DESTINATION ${ESPRESSO_INSTALL_PYTHON}/espressomd)
+  set_target_properties(${target} PROPERTIES OUTPUT_NAME ${basename})
+  if(APPLE)
+    set_target_properties(
+      ${target} PROPERTIES SUFFIX ".so" LINK_FLAGS "-undefined dynamic_lookup")
   endif()
+  set_target_properties(${target} PROPERTIES CXX_CLANG_TIDY "")
+  target_link_libraries(${target} PRIVATE espresso::config espresso::core
+                                          espresso::script_interface)
+  target_link_libraries(${target} PRIVATE espresso::cpp_flags)
+  target_link_libraries(${target} PRIVATE espresso::pyx_flags)
+  target_include_directories(
+    ${target} SYSTEM PRIVATE ${Python_INCLUDE_DIRS}
+                             ${Python_NumPy_INCLUDE_DIRS})
+  add_dependencies(espressomd ${target})
+  install(TARGETS "${target}"
+          LIBRARY DESTINATION "${ESPRESSO_INSTALL_PYTHON}/espressomd")
 endforeach()

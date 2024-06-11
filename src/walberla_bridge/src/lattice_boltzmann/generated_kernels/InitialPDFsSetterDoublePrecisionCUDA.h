@@ -17,9 +17,9 @@
 //! \\author pystencils
 //======================================================================================================================
 
-// kernel generated with pystencils v1.2, lbmpy v1.2,
+// kernel generated with pystencils v1.3.3, lbmpy v1.3.3,
 // lbmpy_walberla/pystencils_walberla from waLBerla commit
-// 0c8b4b926c6979288fd8a6846d02ec0870e1fe41
+// b0842e1a493ce19ef1bbb8d2cf382fc343970a7f
 
 #pragma once
 #include "core/DataTypes.h"
@@ -58,7 +58,7 @@ public:
                                        BlockDataID pdfsID_,
                                        BlockDataID velocityID_, double rho_0)
       : forceID(forceID_), pdfsID(pdfsID_), velocityID(velocityID_),
-        rho_0_(rho_0){};
+        rho_0_(rho_0) {};
 
   void run(IBlock *block, gpuStream_t stream = nullptr);
 
@@ -101,6 +101,9 @@ public:
                               stream);
     };
   }
+
+  void configure(const shared_ptr<StructuredBlockStorage> &blocks,
+                 IBlock *block) {}
 
   BlockDataID forceID;
   BlockDataID pdfsID;

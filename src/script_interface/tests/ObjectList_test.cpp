@@ -42,14 +42,13 @@ struct ObjectListImpl : ObjectList<ObjectHandle> {
 
 private:
   bool has_in_core(const ObjectRef &obj_ptr) const override {
-    return std::ranges::count(mock_core, obj_ptr) == 1;
+    return std::ranges::count(mock_core, obj_ptr) >= 1;
   }
   void add_in_core(const ObjectRef &obj_ptr) override {
     mock_core.push_back(obj_ptr);
   }
   void remove_in_core(const ObjectRef &obj_ptr) override {
-    mock_core.erase(std::remove(mock_core.begin(), mock_core.end(), obj_ptr),
-                    mock_core.end());
+    std::erase(mock_core, obj_ptr);
   }
 };
 

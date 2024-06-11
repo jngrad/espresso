@@ -87,9 +87,8 @@ unsigned map_data_parts(unsigned data_parts);
 namespace Cells {
 inline ParticleRange particles(std::span<Cell *const> cells) {
   /* Find first non-empty cell */
-  auto first_non_empty =
-      std::find_if(cells.begin(), cells.end(),
-                   [](const Cell *c) { return not c->particles().empty(); });
+  auto first_non_empty = std::ranges::find_if(
+      cells, [](const Cell *c) { return not c->particles().empty(); });
 
   return {CellParticleIterator(first_non_empty, cells.end()),
           CellParticleIterator(cells.end())};

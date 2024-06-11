@@ -17,12 +17,13 @@
 //! \\author pystencils
 //======================================================================================================================
 
-// kernel generated with pystencils v1.2, lbmpy v1.2,
+// kernel generated with pystencils v1.3.3, lbmpy v1.3.3,
 // lbmpy_walberla/pystencils_walberla from waLBerla commit
-// 4d10e7f2358fc4a4f7e99195d0f67f0b759ecb6f
+// b0842e1a493ce19ef1bbb8d2cf382fc343970a7f
 
 #pragma once
 #include "core/DataTypes.h"
+#include "core/logging/Logging.h"
 
 #include "domain_decomposition/BlockDataID.h"
 #include "domain_decomposition/IBlock.h"
@@ -56,7 +57,7 @@ public:
                                             double grid_size,
                                             double omega_shear, double v_s)
       : forceID(forceID_), pdfsID(pdfsID_), grid_size_(grid_size),
-        omega_shear_(omega_shear), v_s_(v_s){};
+        omega_shear_(omega_shear), v_s_(v_s) {};
 
   void run(IBlock *block);
 
@@ -92,6 +93,9 @@ public:
       this->runOnCellInterval(blocks, globalCellInterval, ghostLayers, b);
     };
   }
+
+  void configure(const shared_ptr<StructuredBlockStorage> &blocks,
+                 IBlock *block) {}
 
   BlockDataID forceID;
   BlockDataID pdfsID;

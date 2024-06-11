@@ -79,7 +79,7 @@ maxset:
      with_stokesian_dynamics: 'true'
      with_caliper: 'true'
      check_skip_long: 'true'
-     cmake_params: '-D ESPRESSO_TEST_NP=8 -D CMAKE_CXX_STANDARD=20'
+     cmake_params: '-D CMAKE_CXX_STANDARD=23 -D ESPRESSO_TEST_NP=8'
   script:
     - bash maintainer/CI/build_cmake.sh
   tags:
