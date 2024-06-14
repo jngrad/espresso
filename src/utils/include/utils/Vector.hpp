@@ -86,7 +86,7 @@ public:
     copy_init(std::begin(v), std::end(v));
   }
 
-  explicit constexpr Vector(std::span<T> span) : Base() {
+  explicit Vector(std::span<T> span) : Base() {
     if (span.size() != N) {
       throw std::length_error(
           "Construction of Vector from Container of wrong length.");
