@@ -475,18 +475,20 @@ target_compile_options(
     # warnings are errors
     $<$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>:-Werror>)
 
-target_compile_options(
-  espresso_cuda_flags
-  INTERFACE
-    -Wall
-    -Wextra
-    -Wno-sign-compare
-    -Wno-unused-parameter
-    $<$<NOT:$<CXX_COMPILER_ID:Intel,IntelLLVM>>:-Wno-implicit-fallthrough>
-    # warnings are errors
-    $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<CUDA_COMPILER_ID:NVIDIA>>:--Werror=all-warnings>
-    $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<CUDA_COMPILER_ID:Clang>>:-Werror>
-)
+if(ESPRESSO_BUILD_WITH_CUDA)
+  target_compile_options(
+    espresso_cuda_flags
+    INTERFACE
+      -Wall
+      -Wextra
+      -Wno-sign-compare
+      -Wno-unused-parameter
+      $<$<NOT:$<CXX_COMPILER_ID:Intel,IntelLLVM>>:-Wno-implicit-fallthrough>
+      # warnings are errors
+      $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<CUDA_COMPILER_ID:NVIDIA>>:--Werror=all-warnings>
+      $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<CUDA_COMPILER_ID:Clang>>:-Werror>
+  )
+endif()
 
 # disable warning from -Wextra on ARM processors
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_SYSTEM_PROCESSOR MATCHES
@@ -521,19 +523,25 @@ if(ESPRESSO_BUILD_WITH_ASAN)
   target_compile_options(espresso_cpp_flags INTERFACE -fsanitize=address
                                                       -fno-omit-frame-pointer)
   target_link_libraries(espresso_cpp_flags INTERFACE -fsanitize=address)
-  target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=address)
+  if(ESPRESSO_BUILD_WITH_CUDA)
+    target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=address)
+  endif()
 endif()
 if(ESPRESSO_BUILD_WITH_MSAN)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g -O1")
   target_compile_options(espresso_cpp_flags INTERFACE -fsanitize=memory
                                                       -fno-omit-frame-pointer)
   target_link_libraries(espresso_cpp_flags INTERFACE -fsanitize=memory)
-  target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=memory)
+  if(ESPRESSO_BUILD_WITH_CUDA)
+    target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=memory)
+  endif()
 endif()
 if(ESPRESSO_BUILD_WITH_UBSAN)
   target_compile_options(espresso_cpp_flags INTERFACE -fsanitize=undefined)
   target_link_libraries(espresso_cpp_flags INTERFACE -fsanitize=undefined)
-  target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=undefined)
+  if(ESPRESSO_BUILD_WITH_CUDA)
+    target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=undefined)
+  endif()
 endif()
 
 target_link_libraries(espresso_cpp_flags INTERFACE espresso::coverage_flags)
