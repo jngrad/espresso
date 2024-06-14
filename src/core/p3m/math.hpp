@@ -61,7 +61,7 @@ template <typename T> DEVICE_QUALIFIER auto sinc(T x) {
   if (::math::abs(x) > epsilon)
     return sin(pix) / pix;
 
-  auto constexpr factorial = [](int n) {
+  auto constexpr factorial = [](int n) consteval {
     int acc{1}, c{1};
     while (c < n) {
       acc *= ++c;

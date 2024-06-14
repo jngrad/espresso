@@ -232,4 +232,6 @@ void fft_pack_block(double const *in, double *out, int const start[3],
 void fft_unpack_block(double const *in, double *out, int const start[3],
                       int const size[3], int const dim[3], int element);
 
+int map_3don2d_grid(int const g3d[3], int g2d[3]);
+
 #endif // defined(P3M) || defined(DP3M)

@@ -411,6 +411,7 @@ void back_grid_comm(fft_forw_plan plan_f, fft_back_plan plan_b,
                      plan_f.element);
   }
 }
+} // namespace
 
 /** Calculate 'best' mapping between a 2D and 3D grid.
  *  Required for the communication from 3D regular domain
@@ -461,7 +462,6 @@ int map_3don2d_grid(int const g3d[3], int g2d[3]) {
   }
   return row_dir;
 }
-} // namespace
 
 /** Calculate most square 2D grid. */
 static void calc_2d_grid(int n, int grid[3]) {

@@ -67,6 +67,97 @@ BOOST_AUTO_TEST_CASE(fft_find_comm_groups_mismatch) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(fft_map_grid) {
+  {
+    auto g3d = Utils::Vector3i{{3, 2, 1}};
+    auto g2d = Utils::Vector3i{{3, 2, 1}};
+    auto ref = g2d;
+    auto dir = map_3don2d_grid(g3d.data(), g2d.data());
+    BOOST_CHECK_EQUAL(dir, 2);
+    BOOST_CHECK_EQUAL(g2d, ref);
+  }
+  {
+    auto g3d = Utils::Vector3i{{2, 1, 6}};
+    auto g2d = Utils::Vector3i{{6, 2, 1}};
+    auto ref = g2d;
+    auto dir = map_3don2d_grid(g3d.data(), g2d.data());
+    BOOST_CHECK_EQUAL(dir, 2);
+    BOOST_CHECK_EQUAL(g2d, ref);
+  }
+  {
+    auto g3d = Utils::Vector3i{{2, 6, 2}};
+    auto g2d = Utils::Vector3i{{6, 2, 6}};
+    auto ref = Utils::Vector3i{{6, 1, 2}};
+    auto dir = map_3don2d_grid(g3d.data(), g2d.data());
+    BOOST_CHECK_EQUAL(dir, 1);
+    BOOST_CHECK_EQUAL(g2d, ref);
+  }
+  {
+    auto g3d = Utils::Vector3i{{3, 6, 6}};
+    auto g2d = Utils::Vector3i{{6, 3, 6}};
+    auto ref = g2d;
+    auto dir = map_3don2d_grid(g3d.data(), g2d.data());
+    BOOST_CHECK_EQUAL(dir, -1);
+    BOOST_CHECK_EQUAL(g2d, ref);
+  }
+  {
+    auto g3d = Utils::Vector3i{{4, 1, 6}};
+    auto g2d = Utils::Vector3i{{6, 4, 1}};
+    auto ref = Utils::Vector3i{{4, 6, 1}};
+    auto dir = map_3don2d_grid(g3d.data(), g2d.data());
+    BOOST_CHECK_EQUAL(dir, 2);
+    BOOST_CHECK_EQUAL(g2d, ref);
+  }
+  {
+    auto g3d = Utils::Vector3i{{5, 7, 7}};
+    auto g2d = Utils::Vector3i{{7, 7, 5}};
+    auto ref = Utils::Vector3i{{1, 7, 7}};
+    auto dir = map_3don2d_grid(g3d.data(), g2d.data());
+    BOOST_CHECK_EQUAL(dir, 0);
+    BOOST_CHECK_EQUAL(g2d, ref);
+  }
+  {
+    auto g3d = Utils::Vector3i{{5, 7, 5}};
+    auto g2d = Utils::Vector3i{{7, 7, 5}};
+    auto ref = g2d;
+    auto dir = map_3don2d_grid(g3d.data(), g2d.data());
+    BOOST_CHECK_EQUAL(dir, -1);
+    BOOST_CHECK_EQUAL(g2d, ref);
+  }
+  {
+    auto g3d = Utils::Vector3i{{4, 5, 6}};
+    auto g2d = Utils::Vector3i{{6, 4, 5}};
+    auto ref = Utils::Vector3i{{4, 1, 6}};
+    auto dir = map_3don2d_grid(g3d.data(), g2d.data());
+    BOOST_CHECK_EQUAL(dir, 1);
+    BOOST_CHECK_EQUAL(g2d, ref);
+  }
+  {
+    auto g3d = Utils::Vector3i{{5, 4, 6}};
+    auto g2d = Utils::Vector3i{{6, 4, 5}};
+    auto ref = Utils::Vector3i{{1, 4, 6}};
+    auto dir = map_3don2d_grid(g3d.data(), g2d.data());
+    BOOST_CHECK_EQUAL(dir, 0);
+    BOOST_CHECK_EQUAL(g2d, ref);
+  }
+  {
+    auto g3d = Utils::Vector3i{{5, 6, 8}};
+    auto g2d = Utils::Vector3i{{8, 7, 5}};
+    auto ref = g2d;
+    auto dir = map_3don2d_grid(g3d.data(), g2d.data());
+    BOOST_CHECK_EQUAL(dir, -1);
+    BOOST_CHECK_EQUAL(g2d, ref);
+  }
+  {
+    auto g3d = Utils::Vector3i{{5, 6, 9}};
+    auto g2d = Utils::Vector3i{{8, 7, 5}};
+    auto ref = g2d;
+    auto dir = map_3don2d_grid(g3d.data(), g2d.data());
+    BOOST_CHECK_EQUAL(dir, -1);
+    BOOST_CHECK_EQUAL(g2d, ref);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(fft_exceptions) {
   auto constexpr size_max = std::numeric_limits<std::size_t>::max();
   auto constexpr bad_size = size_max / sizeof(int) + 1ul;
