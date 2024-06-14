@@ -585,9 +585,9 @@ public:
     auto const omega_odd = odd_mode_relaxation_rate(omega);
     auto const blocks = get_lattice().get_blocks();
     m_kT = FloatType_c(kT);
-    auto obj = CollisionModelThermalized(
-        m_last_applied_force_field_id, m_pdf_field_id, m_kT, omega, omega,
-        omega_odd, omega, seed, uint32_t{0u});
+    auto obj = CollisionModelThermalized(m_last_applied_force_field_id,
+                                         m_pdf_field_id, m_kT, omega, omega,
+                                         omega_odd, omega, seed, uint32_t{0u});
     m_collision_model = std::make_shared<CollisionModel>(std::move(obj));
     m_run_collide_sweep = CollideSweepVisitor(blocks);
   }

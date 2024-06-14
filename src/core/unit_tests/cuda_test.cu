@@ -17,9 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE cuda test
+#define BOOST_TEST_MODULE "CUDA interface tests"
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
+
+#include "config/config.hpp"
 
 #include "cuda/init.hpp"
 #include "cuda/utils.cuh"
@@ -78,6 +80,10 @@ void clear() {
 }
 
 } // namespace Testing::non_sticky_cuda_error
+
+#ifdef P3M
+dim3 p3m_make_grid(unsigned int n_blocks);
+#endif
 
 static auto fixture = boost::unit_test::fixture(&setup, &teardown);
 
@@ -247,5 +253,34 @@ BOOST_AUTO_TEST_CASE(gpu_interface, *fixture) {
     }
   }
 }
+
+#ifdef P3M
+
+BOOST_AUTO_TEST_CASE(p3m_reshape_grid_test, *fixture) {
+  auto constexpr optimal_size = 65536u;
+  for (auto cao = 1u; cao <= 3u; ++cao) {
+    auto const n_blocks = cao * optimal_size;
+    auto const grid = p3m_make_grid(n_blocks);
+    BOOST_CHECK_EQUAL(grid.x, optimal_size);
+    BOOST_CHECK_EQUAL(grid.y, cao);
+    BOOST_CHECK_EQUAL(grid.z, 1u);
+  }
+  {
+    auto const n_blocks = 2u * optimal_size + 1u;
+    auto const grid = p3m_make_grid(n_blocks);
+    BOOST_CHECK_EQUAL(grid.x, n_blocks / 3u);
+    BOOST_CHECK_EQUAL(grid.y, 3u);
+    BOOST_CHECK_EQUAL(grid.z, 1u);
+  }
+  {
+    auto const n_blocks = 3u * optimal_size + 1u;
+    auto const grid = p3m_make_grid(n_blocks);
+    BOOST_CHECK_EQUAL(grid.x, n_blocks / 4u + 1u);
+    BOOST_CHECK_EQUAL(grid.y, 4u);
+    BOOST_CHECK_EQUAL(grid.z, 1u);
+  }
+}
+
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()

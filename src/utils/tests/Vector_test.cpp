@@ -62,6 +62,17 @@ BOOST_AUTO_TEST_CASE(initializer_list_constructor) {
   BOOST_CHECK_THROW(Utils::Vector2d({1., 2., 3.}), std::length_error);
 }
 
+BOOST_AUTO_TEST_CASE(span_constructor) {
+  constexpr static std::array<int, n_test_numbers> values(TEST_NUMBERS);
+  constexpr auto view = std::span(values);
+  Vector<int, n_test_numbers> v(view);
+
+  BOOST_CHECK(std::equal(v.begin(), v.end(), test_numbers));
+
+  BOOST_CHECK_THROW(Utils::Vector3i{view}, std::length_error);
+  BOOST_CHECK_THROW(Utils::Vector3i{view.subspan(0u, 2u)}, std::length_error);
+}
+
 BOOST_AUTO_TEST_CASE(iterator_constructor) {
   Vector<int, n_test_numbers> v(std::begin(test_numbers),
                                 std::end(test_numbers));
@@ -105,8 +116,8 @@ BOOST_AUTO_TEST_CASE(range_constructor_test) {
 }
 
 BOOST_AUTO_TEST_CASE(unit_vector_test) {
-  BOOST_CHECK((Utils::unit_vector<int>(2) == Utils::Vector3i{0, 0, 1}));
-  BOOST_CHECK_THROW(Utils::unit_vector<double>(3), std::domain_error);
+  BOOST_CHECK((Utils::unit_vector<int>(2u) == Utils::Vector3i{0, 0, 1}));
+  BOOST_CHECK_THROW(Utils::unit_vector<double>(3u), std::domain_error);
 }
 
 BOOST_AUTO_TEST_CASE(test_norm2) {
@@ -185,6 +196,13 @@ BOOST_AUTO_TEST_CASE(algebraic_operators) {
     Utils::Vector3i v3{2, 4, 6};
     auto v4 = v3 / 2;
     BOOST_CHECK(v4 == (v3 /= 2));
+  }
+
+  {
+    Utils::Vector3i v3{2, 12, 91};
+    Utils::Vector3i v4{180, 30, 3};
+    auto v5 = 360 / v3;
+    BOOST_CHECK(v5 == v4);
   }
 
   BOOST_CHECK((sqrt(Utils::Vector3d{1., 2., 3.}) ==

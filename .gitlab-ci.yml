@@ -41,6 +41,40 @@ status_pending:
   stage: prepare
   script: sh maintainer/gh_post_status.sh pending
 
+style:
+  <<: *global_job_definition
+  stage: build
+  dependencies: []
+  before_script:
+    - git config --global --add safe.directory ${CI_PROJECT_DIR}
+    - git submodule deinit .
+  script:
+    - sh maintainer/CI/fix_style.sh
+  tags:
+    - espresso
+    - no-cuda
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
+  artifacts:
+    paths:
+    - style.patch
+    expire_in: 1 week
+    when: on_failure
+
+style_doxygen:
+  <<: *global_job_definition
+  stage: build
+  dependencies: []
+  script:
+    - mkdir build
+    - cd build
+    - cp ../maintainer/configs/maxset.hpp myconfig.hpp
+    - cmake .. -D ESPRESSO_BUILD_WITH_CUDA=ON -D ESPRESSO_BUILD_WITH_GSL=ON -D ESPRESSO_BUILD_WITH_HDF5=ON -D ESPRESSO_BUILD_WITH_SCAFACOS=ON -D ESPRESSO_BUILD_WITH_WALBERLA=ON -D ESPRESSO_BUILD_WITH_WALBERLA_FFT=ON -D ESPRESSO_BUILD_WITH_STOKESIAN_DYNAMICS=ON -D ESPRESSO_BUILD_WITH_CALIPER=ON
+    - sh ../maintainer/CI/dox_warnings.sh
+  tags:
+    - espresso
+    - no-cuda
+
 ### Builds without CUDA
 
 default:
@@ -402,6 +436,29 @@ empty:
     - cuda
     - numa
 
+check_sphinx:
+  <<: *global_job_definition
+  stage: additional_checks
+  needs:
+    - cuda12-maxset
+  when: on_success
+  script:
+    - cd ${CI_PROJECT_DIR}/build
+    - make -t && make sphinx
+    - make -j2 tutorials
+    - make check_utils
+    - bash ${CI_PROJECT_DIR}/maintainer/CI/doc_warnings.sh
+    - python3 ${CI_PROJECT_DIR}/maintainer/CI/jupyter_warnings.py
+  artifacts:
+    paths:
+    - build/doc/sphinx
+    expire_in: 1 week
+  tags:
+    - espresso
+    - cuda
+    - numa
+    - reuse-artifacts-same-arch
+
 run_tutorials:
   <<: *global_job_definition
   stage: additional_checks
@@ -429,6 +486,25 @@ run_tutorials:
     - reuse-artifacts-same-arch
   only:
     - schedules
+
+run_doxygen:
+  <<: *global_job_definition
+  stage: additional_checks
+  needs:
+    - cuda12-maxset
+  when: on_success
+  script:
+    - cd ${CI_PROJECT_DIR}/build
+    - make -t && make doxygen
+  artifacts:
+    paths:
+    - build/doc/doxygen
+    expire_in: 1 week
+  tags:
+    - espresso
+    - no-cuda
+    - numa
+    - reuse-artifacts-same-arch
 
 maxset_no_gpu:
   <<: *global_job_definition
