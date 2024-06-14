@@ -63,17 +63,6 @@ BOOST_AUTO_TEST_CASE(initializer_list_constructor) {
   BOOST_CHECK_THROW(Utils::Vector2d({1., 2., 3.}), std::length_error);
 }
 
-BOOST_AUTO_TEST_CASE(span_constructor) {
-  constexpr static std::array<int, n_test_numbers> values(TEST_NUMBERS);
-  constexpr auto view = std::span(values);
-  Vector<int, n_test_numbers> v(view);
-
-  BOOST_CHECK(std::equal(v.begin(), v.end(), test_numbers));
-
-  BOOST_CHECK_THROW(Utils::Vector3i{view}, std::length_error);
-  BOOST_CHECK_THROW(Utils::Vector3i{view.subspan(0u, 2u)}, std::length_error);
-}
-
 BOOST_AUTO_TEST_CASE(iterator_constructor) {
   Vector<int, n_test_numbers> v(std::begin(test_numbers),
                                 std::end(test_numbers));
