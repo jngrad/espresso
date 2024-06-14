@@ -36,6 +36,7 @@
 #include <iterator>
 #include <limits>
 #include <numeric>
+#include <span>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
@@ -315,6 +316,27 @@ BOOST_AUTO_TEST_CASE(conversion) {
   {
     auto const result = Utils::Vector3d{orig.as_vector()};
     BOOST_TEST(result == orig);
+  }
+
+  // check span conversion
+  {
+    auto const view = static_cast<std::span<double, 3>>(orig);
+    BOOST_TEST(view.data() == orig.data());
+    BOOST_TEST(view.size() == orig.size());
+  }
+
+  // check span conversion
+  {
+    auto const view = std::span(orig);
+    BOOST_TEST(view.data() == orig.data());
+    BOOST_TEST(view.size() == orig.size());
+  }
+
+  // check span conversion
+  {
+    auto const view = orig.as_span();
+    BOOST_TEST(view.data() == orig.data());
+    BOOST_TEST(view.size() == orig.size());
   }
 }
 

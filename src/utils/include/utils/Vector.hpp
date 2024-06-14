@@ -39,6 +39,7 @@
 #include <initializer_list>
 #include <iterator>
 #include <numeric>
+#include <span>
 #include <type_traits>
 #include <vector>
 
@@ -117,6 +118,12 @@ public:
   std::vector<T> as_vector() const { return std::vector<T>(begin(), end()); }
 
   operator std::vector<T>() const { return as_vector(); }
+
+  constexpr std::span<T, N> as_span() const {
+    return std::span<T, N>(const_cast<T *>(begin()), size());
+  }
+
+  constexpr operator std::span<T, N>() const { return as_span(); }
 
   template <class U> explicit operator Vector<U, N>() const {
     Vector<U, N> ret;
