@@ -149,9 +149,7 @@ with code_generation_context.CodeGeneration() as ctx:
             params
         )
 
-    block_offsets = tuple(
-        ps.TypedSymbol(f"block_offset_{i}", np.uint32)
-        for i in range(3))
+    block_offsets = tuple(ps.TypedSymbol(f"block_offset_{i}", np.uint32) for i in range(3))
 
     # generate thermalized LB
     collision_rule_thermalized = lbmpy.creationfunctions.create_lb_collision_rule(

@@ -39,7 +39,6 @@
 #include <initializer_list>
 #include <iterator>
 #include <numeric>
-#include <span>
 #include <type_traits>
 #include <vector>
 
@@ -80,19 +79,9 @@ private:
 
 public:
   template <class Range>
-  explicit Vector(Range const &rng)
-      : Vector(std::begin(rng), std::end(rng)) {}
+  explicit Vector(Range const &rng) : Vector(std::begin(rng), std::end(rng)) {}
   explicit constexpr Vector(T const (&v)[N]) : Base() {
     copy_init(std::begin(v), std::end(v));
-  }
-
-  explicit constexpr Vector(std::span<T> span) : Base() {
-    if (span.size() != N) {
-      throw std::length_error(
-          "Construction of Vector from Container of wrong length.");
-    }
-
-    copy_init(span.begin(), span.end());
   }
 
   constexpr Vector(std::initializer_list<T> v) : Base() {
@@ -114,13 +103,14 @@ public:
     }
   }
 
-  /** @brief Create a vector that has all entries set to the same value. */
-  DEVICE_QUALIFIER static constexpr Vector<T, N>
-  broadcast(typename Base::value_type const &value) {
-    Vector<T, N> ret{};
-    for (std::size_t i = 0u; i != N; ++i) {
-      ret[i] = value;
-    }
+  /**
+   * @brief Create a vector that has all entries set to
+   *         one value.
+   */
+  static Vector<T, N> broadcast(T const &s) {
+    Vector<T, N> ret;
+    std::fill(ret.begin(), ret.end(), s);
+
     return ret;
   }
 
@@ -128,17 +118,11 @@ public:
 
   operator std::vector<T>() const { return as_vector(); }
 
-  constexpr std::span<T, N> as_span() const {
-    return std::span<T, N>(const_cast<T *>(begin()), size());
-  }
-
-  constexpr operator std::span<T, N>() const { return as_span(); }
-
   template <class U> explicit operator Vector<U, N>() const {
     Vector<U, N> ret;
 
     std::transform(begin(), end(), ret.begin(),
-                   [](auto const &e) { return static_cast<U>(e); });
+                   [](auto e) { return static_cast<U>(e); });
 
     return ret;
   }
@@ -156,7 +140,7 @@ public:
   Vector &normalize() {
     auto const l = norm();
     if (l > T(0)) {
-      for (std::size_t i = 0u; i < N; ++i)
+      for (std::size_t i = 0; i < N; i++)
         this->operator[](i) /= l;
     }
 
@@ -263,7 +247,8 @@ template <std::size_t N, typename T>
 Vector<T, N> operator-(Vector<T, N> const &a) {
   Vector<T, N> ret;
 
-  std::transform(std::begin(a), std::end(a), std::begin(ret), std::negate<T>());
+  std::transform(std::begin(a), std::end(a), std::begin(ret),
+                 [](T const &v) { return -v; });
 
   return ret;
 }
@@ -312,15 +297,6 @@ Vector<T, N> operator/(Vector<T, N> const &a, T const &b) {
 
   std::transform(std::begin(a), std::end(a), ret.begin(),
                  [b](T const &val) { return val / b; });
-  return ret;
-}
-
-template <std::size_t N, typename T>
-Vector<T, N> operator/(T const &a, Vector<T, N> const &b) {
-  Vector<T, N> ret;
-
-  std::transform(std::begin(b), std::end(b), ret.begin(),
-                 [a](T const &val) { return a / val; });
   return ret;
 }
 
@@ -391,7 +367,7 @@ auto hadamard_product(Vector<T, N> const &a, Vector<U, N> const &b) {
 
   Vector<R, N> ret;
   std::transform(a.cbegin(), a.cend(), b.cbegin(), ret.begin(),
-                 [](auto const &ai, auto const &bi) { return ai * bi; });
+                 [](auto ai, auto bi) { return ai * bi; });
 
   return ret;
 }
@@ -434,7 +410,7 @@ auto hadamard_division(Vector<T, N> const &a, Vector<U, N> const &b) {
 
   Vector<R, N> ret;
   std::transform(a.cbegin(), a.cend(), b.cbegin(), ret.begin(),
-                 [](auto const &ai, auto const &bi) { return ai / bi; });
+                 [](auto ai, auto bi) { return ai / bi; });
 
   return ret;
 }
@@ -472,11 +448,11 @@ auto hadamard_division(T const &a, U const &b) {
 }
 
 template <typename T> Vector<T, 3> unit_vector(unsigned int i) {
-  if (i == 0u)
+  if (i == 0)
     return {T{1}, T{0}, T{0}};
-  if (i == 1u)
+  if (i == 1)
     return {T{0}, T{1}, T{0}};
-  if (i == 2u)
+  if (i == 2)
     return {T{0}, T{0}, T{1}};
   throw std::domain_error("coordinate out of range");
 }
