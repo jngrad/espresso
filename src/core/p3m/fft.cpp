@@ -84,7 +84,7 @@ using Utils::permute_ifield;
  */
 std::optional<std::vector<int>>
 find_comm_groups(Utils::Vector3i const &grid1, Utils::Vector3i const &grid2,
-                 std::span<int const> node_list1, std::span<int> node_list2,
+                 std::span<const int> node_list1, std::span<int> node_list2,
                  std::span<int> pos, std::span<int> my_pos, int rank) {
   int i;
   /* communication group cell size on grid1 and grid2 */

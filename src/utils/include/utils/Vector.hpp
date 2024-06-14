@@ -80,7 +80,7 @@ private:
 
 public:
   template <class Range>
-  explicit constexpr Vector(Range const &rng)
+  explicit Vector(Range const &rng)
       : Vector(std::begin(rng), std::end(rng)) {}
   explicit constexpr Vector(T const (&v)[N]) : Base() {
     copy_init(std::begin(v), std::end(v));
