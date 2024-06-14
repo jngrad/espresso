@@ -43,7 +43,8 @@
 using Utils::Vector;
 
 /* Number of nontrivial Baxter permutations of length 2n-1. (A001185) */
-#define TEST_NUMBERS {0, 1, 1, 7, 21, 112, 456, 2603, 13203}
+#define TEST_NUMBERS                                                           \
+  { 0, 1, 1, 7, 21, 112, 456, 2603, 13203 }
 
 constexpr int test_numbers[] = TEST_NUMBERS;
 constexpr std::size_t n_test_numbers = sizeof(test_numbers) / sizeof(int);
