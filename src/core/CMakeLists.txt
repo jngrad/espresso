@@ -82,9 +82,9 @@ install(TARGETS espresso_core
 
 target_link_libraries(
   espresso_core PRIVATE espresso::config espresso::utils::mpi espresso::shapes
-                        espresso::cpp_flags
+                        espresso::profiler espresso::cpp_flags
   PUBLIC espresso::utils MPI::MPI_CXX Random123 espresso::particle_observables
-         Boost::serialization Boost::mpi espresso::profiler)
+         Boost::serialization Boost::mpi)
 
 target_include_directories(espresso_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

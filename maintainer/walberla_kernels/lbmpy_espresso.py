@@ -46,11 +46,11 @@ class BounceBackSlipVelocityUBB(
         cell_args = [f"it.{direction}() + {bb_vec[i]}".replace('+ -', '-')
                      for i, direction in enumerate("xyz")]
         code = [
-            "auto const InitialisationAdditionalData = elementInitialiser(",
-            f"Cell({', '.join(cell_args)}), blocks, *block);",
-            "element.vel_0 = InitialisationAdditionalData[0];",
-            "element.vel_1 = InitialisationAdditionalData[1];",
-            "element.vel_2 = InitialisationAdditionalData[2];",
+          "auto const InitialisationAdditionalData = elementInitialiser(",
+          f"Cell({', '.join(cell_args)}), blocks, *block);",
+          "element.vel_0 = InitialisationAdditionalData[0];",
+          "element.vel_1 = InitialisationAdditionalData[1];",
+          "element.vel_2 = InitialisationAdditionalData[2];",
         ]
         return "\n".join(code)
 
