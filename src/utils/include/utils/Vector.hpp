@@ -119,6 +119,12 @@ public:
 
   operator std::vector<T>() const { return as_vector(); }
 
+  constexpr std::span<T, N> as_span() const {
+    return std::span<T, N>(const_cast<T *>(begin()), size());
+  }
+
+  constexpr operator std::span<T, N>() const { return as_span(); }
+
   template <class U> explicit operator Vector<U, N>() const {
     Vector<U, N> ret;
 
