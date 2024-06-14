@@ -26,7 +26,6 @@ import pystencils
 import pystencils_walberla
 
 
-
 def earmark_generated_kernels():
     """
     Add an earmark at the beginning of generated kernels to document the
