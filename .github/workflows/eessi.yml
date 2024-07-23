@@ -7,11 +7,17 @@ permissions:
 jobs:
   ubuntu:
     runs-on: ubuntu-latest
+    env:
+      FI_PROVIDER: "^psm3,psm3;ofi_rxd"
+      OMPI_MCA_mtl_ofi_provider_exclude: psm3
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Setup EESSI
         uses: eessi/github-action-eessi@v3
         with:
           eessi_stack_version: "2023.06"
-      - name: Show dependencies
+      - name: Run pyMBE unit test
         run: |
-          module avail
+          module load pyMBE/0.8.0-foss-2023b
+          PYMBE_PATH=$(python3 -c "import pyMBE;print(pyMBE.__file__.rsplit('/', 1)[0])")
+          python $PYMBE_PATH/testsuite/setup_salt_ions_unit_tests.py
