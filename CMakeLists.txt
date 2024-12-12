@@ -60,6 +60,13 @@ include(FetchContent)
 include(espresso_option_enum)
 include(espresso_enable_avx2_support)
 
+if(EXISTS "${PROJECT_BINARY_DIR}/CMakeLists.txt")
+  message(
+    FATAL_ERROR
+      "${PROJECT_NAME} cannot be built in-place. Instead, create a build directory and run CMake from there. A new file 'CMakeCache.txt' and a new folder 'CMakeFiles' have just been created by CMake in the current folder and need to be removed."
+  )
+endif()
+
 #
 # CMake internal vars
 #
