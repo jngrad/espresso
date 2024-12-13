@@ -103,7 +103,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   caliper
   GIT_REPOSITORY https://github.com/LLNL/Caliper.git
-  GIT_TAG        v2.10.0
+  GIT_TAG        v2.12.0
 )
 # cmake-format: on
 

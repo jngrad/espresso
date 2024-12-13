@@ -734,6 +734,12 @@ tool. It detects memory leaks and bugs caused by dangling references.
 
 For more details, please consult the tool online documentation [5]_.
 
+On some releases of the Linux kernel, ASAN fails to initialize when running
+the executable due to address space layout randomization (ASLR) [10]_.
+On affected environments, one can temporarily reduce the entropy via
+``sudo sysctl vm.mmap_rnd_bits=28`` (default is usually 32 bits)
+for the time of the ASAN analysis, and then revert back to the default value.
+
 .. _UBSAN:
 
 UBSAN
@@ -871,8 +877,8 @@ graph that can be converted to a static graph using ``gprof2dot`` and ``dot``:
     dot -Tpdf ${callgrind_out}.dot -o ${callgrind_out}.pdf
 
 The Valgrind output file generally follows the pattern ``callgrind.out.pid``,
-where ``pid`` is the actualy process id. The ``${callgrind_out}`` variable
-is populated with the return value of a subshell commands that finds the most
+where ``pid`` is the actual process id. The ``${callgrind_out}`` variable
+is populated with the return value of a subshell command that finds the most
 recent output file that matches that pattern.
 
 It is also possible to open the output file in KCachegrind [4]_ to browse
@@ -1087,3 +1093,6 @@ ____
 
 .. [9]
    https://docs.nvidia.com/compute-sanitizer/ComputeSanitizer/index.html
+
+.. [10]
+   https://github.com/google/sanitizers/issues/1614
