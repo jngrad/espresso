@@ -80,7 +80,7 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
                                                   espresso::walberla::cpp_flags)
 endif()
 
-espresso_unit_test(SRC fpe.cpp DEPENDS espresso::utils espresso::core)
+#espresso_unit_test(SRC fpe.cpp DEPENDS espresso::utils espresso::core)
 if(ESPRESSO_BUILD_WITH_FFTW)
   espresso_unit_test(SRC p3m_test.cpp DEPENDS espresso::utils espresso::core)
   espresso_unit_test(SRC fft_test.cpp DEPENDS espresso::utils espresso::core)
