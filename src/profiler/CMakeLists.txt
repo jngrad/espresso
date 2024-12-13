@@ -27,12 +27,7 @@ endif()
 
 if(ESPRESSO_BUILD_WITH_CALIPER)
   target_link_libraries(espresso_profiler INTERFACE caliper)
-  # workaround to handle the case where the build directory is outside `_deps`
-  cmake_path(GET CMAKE_BINARY_DIR FILENAME CMAKE_BINARY_DIR_BASENAME)
-  set(caliper_BINARY_DIR_ALTERNATIVE
-      "${CMAKE_BINARY_DIR}/${CMAKE_BINARY_DIR_BASENAME}/_deps/caliper-src")
   target_include_directories(
     espresso_profiler
-    INTERFACE "${caliper_SOURCE_DIR}/include" "${caliper_BINARY_DIR}/include"
-              "${caliper_BINARY_DIR_ALTERNATIVE}/include")
+    INTERFACE "${caliper_SOURCE_DIR}/include" "${caliper_BINARY_DIR}/include")
 endif()
