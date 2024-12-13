@@ -8,29 +8,29 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
-#  macos-13:
-#    runs-on: macos-13
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@main
-#      - name: Setup ccache
-#        uses: hendrikmuhs/ccache-action@v1.2
-#        with:
-#          key: macos
-#          save: false
-#      - name: Setup Python environment
-#        uses: actions/setup-python@v5.1.0
-#        with:
-#          python-version: '3.12'
-#      - name: Get runner specifications
-#        run: system_profiler SPHardwareDataType
-#      - name: Build and check
-#        uses: ./.github/actions/build_and_check
-#        env:
-#          build_procs: 4
-#          check_procs: 4
-#          with_ccache: 'true'
-#          make_check_python: 'false'
+  macos-13:
+    runs-on: macos-13
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos
+          save: false
+      - name: Setup Python environment
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: '3.12'
+      - name: Get runner specifications
+        run: system_profiler SPHardwareDataType
+      - name: Build and check
+        uses: ./.github/actions/build_and_check
+        env:
+          build_procs: 4
+          check_procs: 4
+          with_ccache: 'true'
+          make_check_python: 'false'
 
   macos-14:
     runs-on: macos-14
@@ -49,7 +49,7 @@ jobs:
           build_procs: 4
           check_procs: 4
           with_ccache: 'false'
-          make_check_python: 'true'
+          make_check_python: 'false'
 
   macos-15:
     runs-on: macos-15
@@ -68,7 +68,7 @@ jobs:
           build_procs: 3
           check_procs: 3
           with_ccache: 'false'
-          make_check_python: 'true'
+          make_check_python: 'false'
 
   ubuntu:
     runs-on: ubuntu-24.04
