@@ -19,7 +19,6 @@
 
 #define BOOST_TEST_MODULE floating-point exceptions test
 #define BOOST_TEST_DYN_LINK
-#include <boost/test/unit_test.hpp>
 
 #include <memory>
 #include <mutex>
@@ -161,6 +160,7 @@ fe_trap::scoped_instance fe_trap::make_shared_scoped(std::optional<int> excepts)
 #include <cfenv>
 
 #if defined(__STDC_IEC_559__) and defined(__GLIBC__) and !defined(__FAST_MATH__)
+#include <boost/test/unit_test.hpp>
 
 #include <cassert>
 #include <cmath>
