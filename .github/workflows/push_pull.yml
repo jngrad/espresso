@@ -8,9 +8,8 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
-  macos:
+  macos-13:
     runs-on: macos-13
-    if: ${{ github.repository == 'espressomd/espresso' }}
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -18,7 +17,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: macos
-          save: ${{ github.ref == 'refs/heads/python' }}
+          save: false
       - name: Setup Python environment
         uses: actions/setup-python@v5.1.0
         with:
@@ -31,6 +30,45 @@ jobs:
           build_procs: 4
           check_procs: 4
           with_ccache: 'true'
+          make_check_python: 'false'
+
+  macos-14:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Setup Python environment
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: '3.12'
+      - name: Get runner specifications
+        run: system_profiler SPHardwareDataType
+      - name: Build and check
+        uses: ./.github/actions/build_and_check
+        env:
+          build_procs: 4
+          check_procs: 4
+          with_ccache: 'false'
+          make_check_python: 'false'
+
+  macos-15:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Setup Python environment
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: '3.12'
+      - name: Get runner specifications
+        run: system_profiler SPHardwareDataType
+      - name: Build and check
+        uses: ./.github/actions/build_and_check
+        env:
+          build_procs: 3
+          check_procs: 3
+          with_ccache: 'false'
+          make_check_python: 'false'
 
   debian:
     runs-on: ubuntu-latest
@@ -47,7 +85,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: debian
-          save: ${{ github.ref == 'refs/heads/python' || ( github.repository != 'espressomd/espresso' && ! startsWith(github.ref, 'refs/pull') ) }}
+          save: false
       - name: Setup Git environment
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Get runner specifications
@@ -72,7 +110,6 @@ jobs:
 
   ubuntu:
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'espressomd/espresso' }}
     container:
       image: ghcr.io/espressomd/docker/ubuntu-wo-dependencies:f7f8ef2c0ca93c67aa16b9f91785492fb04ecc1b-base-layer
       credentials:
@@ -86,7 +123,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ubuntu
-          save: ${{ github.ref == 'refs/heads/python' }}
+          save: false
       - name: Setup Git environment
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Get runner specifications
