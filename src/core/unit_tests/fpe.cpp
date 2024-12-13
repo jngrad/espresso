@@ -90,6 +90,7 @@ fe_trap::fe_trap(std::optional<int> excepts, bool unique) {
 #endif // defined(__STDC_IEC_559__) and defined(__GLIBC__)
 #if defined(__arm64__) and defined(__APPLE__)
 #define ESPRESSO_FENV_DEFINED_CTOR
+    using fpcr_t = decltype(std::fenv_t::__fpcr);
    m_flags = parse_excepts(excepts);
 printf("%i -> %i\n", __fpcr_trap_invalid, FE_INVALID<<8);
 printf("%i -> %i\n", __fpcr_trap_divbyzero, FE_DIVBYZERO<<8);
@@ -98,7 +99,7 @@ printf("%i -> %i\n", __fpcr_trap_underflow, FE_UNDERFLOW<<8);
   std::fenv_t env;
   [[maybe_unused]] auto const ret1 = std::fegetenv(&env);
   assert(ret1 == 0u);
-  env.__fpcr |= m_flags;
+  env.__fpcr |= static_cast<fpcr_t>(m_flags);
   [[maybe_unused]] auto const ret2 =  std::fesetenv(&env);
   assert(ret2 == 0u);
 #endif // defined(__arm64__) and defined(__APPLE__)
@@ -108,7 +109,7 @@ printf("%i -> %i\n", __fpcr_trap_underflow, FE_UNDERFLOW<<8);
 #if defined(ESPRESSO_FENV_DEFINED_CTOR)
 #undef ESPRESSO_FENV_DEFINED_CTOR
 #else
-#error "FE not supported"
+//#error "FE not supported"
 #endif
 }
 
@@ -120,12 +121,13 @@ fe_trap::~fe_trap() {
 #endif // defined(__STDC_IEC_559__) and defined(__GLIBC__)
 #if defined(__arm64__) and defined(__APPLE__)
 #define ESPRESSO_FENV_DEFINED_DTOR
+    using fpcr_t = decltype(std::fenv_t::__fpcr);
     std::fenv_t env;
     [[maybe_unused]] auto const ret1 = std::fegetenv(&env);
     assert(ret1 == 0u);
-printf("disable: %i\n",env.__fpcr);
-    assert((env.__fpcr & m_flags) == m_flags);
-    env.__fpcr &= ~m_flags;
+printf("disable: %llu\n",env.__fpcr);
+    assert((env.__fpcr & static_cast<fpcr_t>(m_flags)) == static_cast<fpcr_t>(m_flags));
+    env.__fpcr &= static_cast<fpcr_t>(~m_flags);
     [[maybe_unused]] auto const ret2 =  std::fesetenv(&env);
     assert(ret2 == 0u);
 #endif // defined(__arm64__) and defined(__APPLE__)
@@ -134,21 +136,16 @@ printf("disable: %i\n",env.__fpcr);
 #if defined(ESPRESSO_FENV_DEFINED_DTOR)
 #undef ESPRESSO_FENV_DEFINED_DTOR
 #else
-#error "FE not supported"
+//#error "FE not supported"
 #endif
 }
 
 int fe_trap::parse_excepts(std::optional<int> excepts) {
-  auto constexpr fallback =
-#if defined(__STDC_IEC_559__) and defined(__GLIBC__)
-     FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW;
+  auto const fallback = FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW;
+  int retval = excepts ? *excepts : fallback;
 #elif defined(__arm64__) and defined(__APPLE__)
-     (FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW)<<8;
-#else
-     0;
+  retval <<= 8;
 #endif
-  int retval = 0;
-  retval = excepts ? *excepts : fallback;
   return retval;
 }
 
@@ -286,14 +283,51 @@ BOOST_AUTO_TEST_CASE(exceptions) {
     auto const trap = fe_trap::make_shared_scoped();
     BOOST_REQUIRE_THROW(fe_trap::make_unique_scoped(), std::runtime_error);
     for (int other_excepts : {FE_INEXACT, FE_ALL_EXCEPT}) {
-      if (trap.get_flags() != bitmask_conversion(other_excepts)) {
-        BOOST_REQUIRE_THROW(
-          fe_trap::make_shared_scoped(bitmask_conversion(FE_ALL_EXCEPT)),
-          std::invalid_argument);
+      if (trap.get_flags() != other_excepts) {
+        BOOST_REQUIRE_THROW(fe_trap::make_shared_scoped(FE_ALL_EXCEPT),
+                            std::invalid_argument);
       }
     }
   }
 }
 #else
-int main() {}
+#include <cstdio>
+#include <cfenv>
+int main() {
+#if defined(__STDC_IEC_559__)
+puts("defined(__STDC_IEC_559__)");
+#else
+puts("!defined(__STDC_IEC_559__)");
+#endif
+#if defined(__GLIBC__)
+puts("defined(__GLIBC__)");
+#else
+puts("!defined(__GLIBC__)");
+#endif
+#if defined(__FAST_MATH__)
+puts("defined(__FAST_MATH__)");
+puts("!defined(__FAST_MATH__)");
+#endif
+#if defined(__arm64__)
+puts("defined(__arm64__)");
+#else
+puts("!defined(__arm64__)");
+#endif
+#if defined(__APPLE__)
+puts("defined(__APPLE__)");
+#else
+puts("!defined(__APPLE__)");
+#endif
+#if defined(HAVE_FPCR)
+puts("defined(HAVE_FPCR)");
+#else
+puts("!defined(HAVE_FPCR)");
+#endif
+#if defined(HAVE_FEENABLEEXCEPT)
+puts("defined(HAVE_FEENABLEEXCEPT)");
+#else
+puts("!defined(HAVE_FEENABLEEXCEPT)");
+#endif
+return 2;
+}
 #endif // defined(ESPRESSO_FPE_IS_SUPPORTED)
