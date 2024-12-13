@@ -269,5 +269,6 @@ puts("defined(__FAST_MATH__)");
 #else
 puts("!defined(__FAST_MATH__)");
 #endif
+return 2;
 }
 #endif
