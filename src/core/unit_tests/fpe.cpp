@@ -97,7 +97,6 @@ fe_trap::fe_trap(std::optional<int> excepts, bool unique) {
 #if defined(ESPRESSO_FENV_DEFINED_CTOR)
 #undef ESPRESSO_FENV_DEFINED_CTOR
 #else
-#error "FE not supported"
 #endif
 }
 
@@ -114,7 +113,6 @@ fe_trap::~fe_trap() {
 #if defined(ESPRESSO_FENV_DEFINED_DTOR)
 #undef ESPRESSO_FENV_DEFINED_DTOR
 #else
-#error "FE not supported"
 #endif
 }
 
