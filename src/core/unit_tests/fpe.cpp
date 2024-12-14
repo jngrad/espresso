@@ -196,37 +196,43 @@ fe_trap::scoped_instance fe_trap::make_shared_scoped(std::optional<int> excepts)
 #include <csignal>
 #include <initializer_list>
 
-#if defined(SIGFPE) and (SIGFPE == SIGILL)
-#undef SIGFPE
-#define SIGFPE SIGILL
-#endif
-
-static volatile std::sig_atomic_t last_signal_status;
+static volatile std::sig_atomic_t last_signal_status = 0;
+static volatile std::sig_atomic_t last_signal_code = 0;
 static std::jmp_buf jmp_env;
 
-void sigfpe_handler(int signal) {
+void fpe_signal_handler(int signal) {
   ::last_signal_status = signal;
   siglongjmp(::jmp_env, 1);
 }
 
-static int bitmask_conversion(int excepts) {
-#if defined(__arm64__) and defined(__APPLE__)
-  return excepts<<8;
-#else
-  return excepts;
-#endif
+static void fpe_signal_handler(int signum, siginfo_t *sip, void *) {
+  ::last_signal_status = signum;
+  ::last_signal_code = sip->si_code;
+  siglongjmp(::jmp_env, 1);
 }
 
 BOOST_AUTO_TEST_CASE(trap_by_signal) {
   double volatile denominator = 0.;
   double volatile value = 1.;
-  printf("SIGILL: %i\n", SIGILL);
-  printf("SIGFPE: %i\n", SIGFPE);
   value = 0. / denominator;
   BOOST_REQUIRE(std::isnan(value));
   BOOST_REQUIRE_EQUAL(::last_signal_status, 0);
-  [[maybe_unused]] auto sig_ret = std::signal(SIGFPE, sigfpe_handler);
-  assert(sig_ret != SIG_ERR);
+  BOOST_REQUIRE_EQUAL(::last_signal_code, 0);
+
+#if defined(SIGFPE) and (SIGFPE == SIGILL)
+  auto constexpr ref_signal_status = SIGILL;
+  auto constexpr ref_signal_code = ILL_ILLTRP;
+#else
+  auto constexpr ref_signal_status = SIGFPE;
+  auto constexpr ref_signal_code = FPE_FLTINV;
+#endif
+
+    struct sigaction act;
+    act.sa_sigaction = fpe_signal_handler;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_SIGINFO;
+    sigaction(ref_signal_status, &act, nullptr);
+
     {
       auto const trap = fe_trap::make_unique_scoped();
       BOOST_REQUIRE(trap.is_unique());
@@ -235,7 +241,8 @@ BOOST_AUTO_TEST_CASE(trap_by_signal) {
         value = 2.;
         value = 0. / denominator;
       }
-      BOOST_CHECK_EQUAL(::last_signal_status, SIGFPE);
+      BOOST_CHECK_EQUAL(::last_signal_status, ref_signal_status);
+      BOOST_CHECK_EQUAL(::last_signal_code, ref_signal_code);
       BOOST_REQUIRE(not std::isnan(value));
       BOOST_REQUIRE_EQUAL(value, 2.);
       ::last_signal_status = 0;
@@ -248,7 +255,8 @@ BOOST_AUTO_TEST_CASE(trap_by_signal) {
         value = 2.;
         value = 0. / denominator;
       }
-      BOOST_CHECK_EQUAL(::last_signal_status, SIGFPE);
+      BOOST_CHECK_EQUAL(::last_signal_status, ref_signal_status);
+      BOOST_CHECK_EQUAL(::last_signal_code, ref_signal_code);
       BOOST_REQUIRE(not std::isnan(value));
       BOOST_REQUIRE_EQUAL(value, 2.);
       ::last_signal_status = 0;
@@ -263,13 +271,13 @@ BOOST_AUTO_TEST_CASE(trap_by_signal) {
             value = 2.;
             value = 0. / denominator;
           }
-          BOOST_CHECK_EQUAL(::last_signal_status, SIGFPE);
+          BOOST_CHECK_EQUAL(::last_signal_status, ref_signal_status);
+          BOOST_CHECK_EQUAL(::last_signal_code, ref_signal_code);
           BOOST_REQUIRE(not std::isnan(value));
           BOOST_REQUIRE_EQUAL(value, 2.);
           ::last_signal_status = 0;
       }
     }
-  std::signal(SIGFPE, SIG_DFL);
   value = 1. / denominator;
 }
 
