@@ -188,8 +188,10 @@ fe_trap::scoped_instance fe_trap::make_shared_scoped(std::optional<int> excepts)
 #define ESPRESSO_FPE_IS_SUPPORTED
 #endif
 
-#if defined(ESPRESSO_FPE_IS_SUPPORTED) and not defined(__APPLE__)
+#if defined(ESPRESSO_FPE_IS_SUPPORTED)
 #include <boost/test/unit_test.hpp>
+
+#if not defined(__APPLE__)
 #include <cassert>
 #include <cmath>
 #include <csetjmp>
@@ -212,26 +214,20 @@ static void fpe_signal_handler(int signum, siginfo_t *sip, void *) {
 }
 
 BOOST_AUTO_TEST_CASE(trap_by_signal) {
-  double volatile denominator = 0.;
+  double volatile bad_denominator = 0.;
+  double volatile bad_exponent = 10000.;
   double volatile value = 1.;
-  value = 0. / denominator;
+  value = std::exp(bad_exponent);
+  value = 0. / bad_denominator;
   BOOST_REQUIRE(std::isnan(value));
   BOOST_REQUIRE_EQUAL(::last_signal_status, 0);
   BOOST_REQUIRE_EQUAL(::last_signal_code, 0);
-
-#if defined(SIGFPE) and (SIGFPE == SIGILL)
-  auto constexpr ref_signal_status = SIGILL;
-  auto constexpr ref_signal_code = ILL_ILLTRP;
-#else
-  auto constexpr ref_signal_status = SIGFPE;
-  auto constexpr ref_signal_code = FPE_FLTINV;
-#endif
 
     struct sigaction act;
     act.sa_sigaction = fpe_signal_handler;
     sigemptyset(&act.sa_mask);
     act.sa_flags = SA_SIGINFO;
-    sigaction(ref_signal_status, &act, nullptr);
+    sigaction(SIGFPE, &act, nullptr);
 
     {
       auto const trap = fe_trap::make_unique_scoped();
@@ -239,10 +235,10 @@ BOOST_AUTO_TEST_CASE(trap_by_signal) {
       value = 0.;
       while (sigsetjmp(::jmp_env, 1) == 0) {
         value = 2.;
-        value = 0. / denominator;
+        value = 0. / bad_denominator;
       }
-      BOOST_CHECK_EQUAL(::last_signal_status, ref_signal_status);
-      BOOST_CHECK_EQUAL(::last_signal_code, ref_signal_code);
+      BOOST_CHECK_EQUAL(::last_signal_status, SIGFPE);
+      BOOST_CHECK_EQUAL(::last_signal_code, FPE_FLTINV);
       BOOST_REQUIRE(not std::isnan(value));
       BOOST_REQUIRE_EQUAL(value, 2.);
       ::last_signal_status = 0;
@@ -253,10 +249,10 @@ BOOST_AUTO_TEST_CASE(trap_by_signal) {
       value = 0.;
       while (sigsetjmp(::jmp_env, 1) == 0) {
         value = 2.;
-        value = 0. / denominator;
+        value = std::exp(bad_exponent);
       }
-      BOOST_CHECK_EQUAL(::last_signal_status, ref_signal_status);
-      BOOST_CHECK_EQUAL(::last_signal_code, ref_signal_code);
+      BOOST_CHECK_EQUAL(::last_signal_status, SIGFPE);
+      BOOST_CHECK_EQUAL(::last_signal_code, FPE_FLTOVF);
       BOOST_REQUIRE(not std::isnan(value));
       BOOST_REQUIRE_EQUAL(value, 2.);
       ::last_signal_status = 0;
@@ -269,20 +265,20 @@ BOOST_AUTO_TEST_CASE(trap_by_signal) {
           value = 0.;
           while (sigsetjmp(::jmp_env, 1) == 0) {
             value = 2.;
-            value = 0. / denominator;
+            value = std::exp(-bad_exponent);
           }
-          BOOST_CHECK_EQUAL(::last_signal_status, ref_signal_status);
-          BOOST_CHECK_EQUAL(::last_signal_code, ref_signal_code);
+          BOOST_CHECK_EQUAL(::last_signal_status, SIGFPE);
+          BOOST_CHECK_EQUAL(::last_signal_code, FPE_FLTUND);
           BOOST_REQUIRE(not std::isnan(value));
           BOOST_REQUIRE_EQUAL(value, 2.);
           ::last_signal_status = 0;
       }
     }
-  value = 1. / denominator;
+  value = 1. / bad_denominator;
+  value = std::exp(bad_exponent);
 }
 #endif
 
-#if defined(ESPRESSO_FPE_IS_SUPPORTED)
 BOOST_AUTO_TEST_CASE(exceptions) {
   {
     auto const trap = fe_trap::make_unique_scoped();
