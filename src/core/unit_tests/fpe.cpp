@@ -188,7 +188,7 @@ fe_trap::scoped_instance fe_trap::make_shared_scoped(std::optional<int> excepts)
 #define ESPRESSO_FPE_IS_SUPPORTED
 #endif
 
-#if defined(ESPRESSO_FPE_IS_SUPPORTED)
+#if defined(ESPRESSO_FPE_IS_SUPPORTED) and not defined(__APPLE__)
 #include <boost/test/unit_test.hpp>
 #include <cassert>
 #include <cmath>
@@ -280,7 +280,9 @@ BOOST_AUTO_TEST_CASE(trap_by_signal) {
     }
   value = 1. / denominator;
 }
+#endif
 
+#if defined(ESPRESSO_FPE_IS_SUPPORTED)
 BOOST_AUTO_TEST_CASE(exceptions) {
   {
     auto const trap = fe_trap::make_unique_scoped();
