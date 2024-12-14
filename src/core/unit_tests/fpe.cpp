@@ -143,7 +143,7 @@ printf("disable: %llu\n",env.__fpcr);
 int fe_trap::parse_excepts(std::optional<int> excepts) {
   auto const fallback = FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW;
   int retval = excepts ? *excepts : fallback;
-#elif defined(__arm64__) and defined(__APPLE__)
+#if defined(__arm64__) and defined(__APPLE__)
   retval <<= 8;
 #endif
   return retval;
