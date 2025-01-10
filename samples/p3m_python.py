@@ -1479,6 +1479,7 @@ def get_system():
     return system
 
 
+# unit test
 system = System(box_l=[8, 8, 8])
 p1 = Particle(pos=[0, 0, 0], q=+1)
 p2 = Particle(pos=[0, 1, 0], q=-1)
@@ -1503,3 +1504,43 @@ for p in system.particles:
 
 for i, p in enumerate(system.particles):
     np.testing.assert_allclose(p.f, ref_forces[i], rtol=1e-7, atol=1e-9)
+
+
+# coulomb cloud wall test
+system = System(box_l=[10., 10., 10.])
+ref_forces = []
+data = np.genfromtxt("../testsuite/python/data/coulomb_cloud_wall_system.data")
+for line in data:
+    system.particles.append(Particle(pos=line[1:4], q=line[4]))
+    ref_forces.append(line[5:8])
+solver = P3M(prefactor=1., accuracy=1e-3, cao=7, mesh=[64, 64, 64],
+             alpha=2.70746, r_cut=1.001, tune=False)
+system.solver = solver
+solver.activate()
+
+solver.actor.add_long_range_forces(system.particles)
+short_range_loop(system)
+
+cur_forces = [p.f for p in system.particles]
+np.testing.assert_allclose(cur_forces, ref_forces, atol=2e-3)
+
+
+# coulomb cloud wall duplicated test
+system = System(box_l=[10., 10., 20.])
+ref_forces = []
+data = np.genfromtxt("../testsuite/python/data/coulomb_cloud_wall_duplicated_system.data")
+for line in data:
+    system.particles.append(Particle(pos=line[1:4], q=line[4]))
+    ref_forces.append(line[5:8])
+solver = P3M(prefactor=1., accuracy=1e-3, cao=7, mesh=[64, 64, 128],
+             alpha=2.70746, r_cut=1.001, tune=False)
+system.solver = solver
+solver.activate()
+
+solver.actor.add_long_range_forces(system.particles)
+short_range_loop(system)
+
+cur_forces = [p.f for p in system.particles]
+rms = np.sqrt(np.mean(np.linalg.norm(cur_forces - np.array(ref_forces), axis=1)**2))
+np.testing.assert_allclose(rms, 0., atol=1e-2)
+np.testing.assert_allclose(cur_forces, ref_forces, atol=2e-2)
