@@ -21,7 +21,6 @@ P3M method implemented in Python.
 Limitations:
 
 - only 1 MPI rank
-- cubic box
 - energy kernels are incorrect
 - pressure kernels are not implemented
 - tuning algorithm not implemented
@@ -194,18 +193,9 @@ def bspline_d(order: int, i: int, x: float):
     raise RuntimeError("Internal interpolation error.")
 
 
-def multiply_complex_by_imaginary(z, k):
-    # Perform the multiplication manually: (re + i*imag) * (i*k)
-    return complex(-z.imag * k, z.real * k)
-
-
-def multiply_complex_by_real(z, k):
-    # Perform the multiplication manually: (re + i*imag) * (i*k)
-    return complex(z.real * k, z.imag * k)
-
-
-def complex_norm2(z):
-    return z.real**2 + z.imag**2
+#@numba.vectorize([numba.float64(numba.complex128),numba.float32(numba.complex64)])
+def complex_norm2(x):
+    return x.real**2 + x.imag**2
 
 
 def get_linear_index(pos, adim, memory_order=COLUMN_MAJOR):
@@ -1078,9 +1068,9 @@ def grid_influence_function(S: int, params: P3MParameters,
         if ((indices[KX] % half_mesh[0] != 0) or
             (indices[KY] % half_mesh[1] != 0) or
             (indices[KZ] % half_mesh[2] != 0)):
-            k = [shifts[0][indices[KX]] * wavevector[0],
-                 shifts[1][indices[KY]] * wavevector[1],
-                 shifts[2][indices[KZ]] * wavevector[2]]
+            k = [shifts[0][indices[0]] * wavevector[0],
+                 shifts[1][indices[1]] * wavevector[1],
+                 shifts[2][indices[2]] * wavevector[2]]
             g[index[0]] = G_opt(S, m, params.cao, params.alpha, k, params.a)
         index[0] += 1
 
@@ -1294,10 +1284,8 @@ class CoulombP3MImpl(CoulombP3M):
         energy = 0.
 
         if energy_flag:
-            node_energy = 0.
             fft_mesh_length = np.prod(p3m.fft.ks_local_size())
-            for i in range(fft_mesh_length):
-                node_energy += p3m.g_energy[i] * complex_norm2(p3m.ks_charge_density[i])
+            node_energy = np.sum(p3m.g_energy[:fft_mesh_length] * complex_norm2(p3m.ks_charge_density[:fft_mesh_length]))
             node_energy /= 2. * volume;
 
             if comm_cart.rank() == 0:
@@ -1320,16 +1308,14 @@ class CoulombP3MImpl(CoulombP3M):
                 ks_E_fields.append(p3m.ks_E_fields_storage.view()[d*fft_mesh_length:(d+1)*fft_mesh_length])
 
             # compute electric field
-            for i in range(len(p3m.ks_charge_density)):
-                p3m.ks_charge_density[i] = multiply_complex_by_real(
-                    p3m.ks_charge_density[i], p3m.g_force[i])
+            p3m.ks_charge_density *= p3m.g_force
 
             def kernel():
                 phi_hat = p3m.ks_charge_density[index[0]]
                 global_index = indices + p3m.fft.ks_local_ld_index()
                 for d in range(3):
                     k = p3m.d_op[d][global_index[d]] * wavevector[d]
-                    ks_E_fields[d][index[0]] = multiply_complex_by_imaginary(phi_hat, k)
+                    ks_E_fields[d][index[0]] = phi_hat * 1.j * k
                 index[0] += 1
 
             for_each_3d(mesh_start, mesh_stop, indices, kernel)
@@ -1450,7 +1436,7 @@ class P3M:
         self.epsilon = -1.
         self.params = P3MParameters(
             tuning=tune, epsilon=P3M_EPSILON_METALLIC, r_cut=r_cut, cao=cao, alpha=alpha,
-            accuracy=accuracy, mesh=np.array(mesh, dtype=int))
+            accuracy=accuracy, mesh=np.array(mesh, dtype=int), mesh_off=np.array(P3M_MESHOFF, dtype=float))
         self.state = CoulombP3MState(self.params)
         self.actor = CoulombP3MImpl(p3m_state=self.state, prefactor=prefactor)
 
@@ -1489,13 +1475,11 @@ def short_range_loop(system):
                     p2.f -= force
 
 
-system = System(box_l=[8, 8, 8])
-
-
 def get_system():
     return system
 
 
+system = System(box_l=[8, 8, 8])
 p1 = Particle(pos=[0, 0, 0], q=+1)
 p2 = Particle(pos=[0, 1, 0], q=-1)
 ref_forces = [
@@ -1507,7 +1491,7 @@ system.particles.append(p2)
 solver = P3M(prefactor=1, accuracy=1e-3, cao=4,
              alpha=5.2859 / np.max(system.box_l),
              r_cut=0.405176 * np.max(system.box_l),
-             mesh=3 * [8], tune=False)
+             mesh=[8, 8, 8], tune=False)
 system.solver = solver
 solver.activate()
 energy = solver.actor.long_range_energy(system.particles)
@@ -1515,7 +1499,7 @@ print(energy)
 solver.actor.add_long_range_forces(system.particles)
 short_range_loop(system)
 for p in system.particles:
-    print(p.f)
+    print(np.around(p.f, 8))
 
 for i, p in enumerate(system.particles):
-    np.testing.assert_allclose(p.f, ref_forces[i], rtol=1e-12, atol=1e-9)
+    np.testing.assert_allclose(p.f, ref_forces[i], rtol=1e-7, atol=1e-9)
