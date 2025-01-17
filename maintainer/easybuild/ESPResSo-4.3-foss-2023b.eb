@@ -1,0 +1,98 @@
+easyblock = 'EB_ESPResSo'
+
+name = 'ESPResSo'
+version = '237c376'
+
+homepage = 'https://espressomd.org/wordpress'
+description = """A software package for Molecular Dynamics and Monte Carlo
+simulations of bead-spring models. Particles can be coupled to electrostatics,
+magnetostatics, hydrodynamics and reaction-diffusion-advection solvers."""
+
+sources = [
+{
+    'source_urls': ['https://github.com/jngrad/espresso/archive/%(version)s.tar.gz'],
+    'filename': SOURCELOWER_TAR_GZ,
+    'download_filename': '%(version)s.tar.gz',
+},
+{
+    'source_urls': ['https://i10git.cs.fau.de/api/v4/projects/walberla%2Fwalberla/repository/archive?sha=f36fa0a6'],
+    'filename': 'walberla-f36fa0a6.tar.gz',
+},
+#{
+#    'source_urls': ['https://github.com/h5md/h5xx/archive/0.9.1.tar.gz'],
+#    'filename': 'h5xx-0.9.1.tar.gz',
+#},
+]
+checksums = [{
+  'espresso-237c376.tar.gz': '67cb83e0327fdb03e02631bfd225d11e6b5465b8c3d4ee0d7b6c0dc504f9365a',
+  'walberla-f36fa0a6.tar.gz': '487fb6572121580c0a478a6d3463025a2a7a8bef65261fb30e180ce663c8b134',
+#  'h5xx-0.9.1.tar.gz': '414c2ae4f7e94c136ed4789b561d632cffe275907d9e7ed5cf09c9fdddb78884',
+}]
+
+toolchain = {'name': 'foss', 'version': '2023b'}
+toolchainopts = {'usempi': True, 'pic': True}
+
+builddependencies = [('CMake', '3.27.6')]
+
+dependencies = [
+    ('Python', '3.11.5'),
+    ('SciPy-bundle', '2023.11'),
+    ('Boost.MPI', '1.83.0'),
+    ('Mesa', '23.1.9'),
+    ('GSL', '2.7'),
+    ('IPython', '8.17.2'),
+    ('Pint', '0.24'),
+    #('HDF5', '1.14.3'), # hdf5 >= 1.13.0 not compatible with h5xx 0.9.1
+    #('VTK', '9.3.0'), # error: libpython3.10.so.1.0: file not found
+    #('PFFT', '20181230'), # not available in this toolchain
+    #('CUDA', '12.1.1', '', SYSTEM), # deferred for now
+]
+
+# default CUDA compute capabilities to use (override via --cuda-compute-capabilities)
+if any(x[0] == 'CUDA' for x in dependencies):
+    cuda_compute_capabilities = ['5.2', '6.0', '7.0', '7.5', '8.0', '8.6', '9.0']
+
+configopts = f' -DCMAKE_SKIP_RPATH=OFF -DESPRESSO_BUILD_TESTS=ON'
+# make sure the right Python is used (note: -DPython3_EXECUTABLE or -DPython_EXECUTABLE does not work!)
+configopts += ' -D PYTHON_EXECUTABLE=$EBROOTPYTHON/bin/python '
+
+runtest = 'check_unit_tests && make check_python'
+
+modextrapaths = {'PYTHONPATH': ['lib/python%(pyshortver)s/site-packages']}
+
+_binaries = ['ipypresso',  'pypresso']
+_libs = [
+    'espresso_config', 'espresso_core', 'espresso_script_interface',
+    'espresso_shapes', 'script_interface', 'utils', '_init',
+    'espresso_walberla', 'espresso_walberla_codegen',
+    'libwalberla_core', 'libwalberla_executiontree',
+    'libwalberla_field', 'libwalberla_blockforest',
+    'libwalberla_gather', 'libwalberla_geometry',
+    'libwalberla_gui', 'libwalberla_boundary',
+    'libwalberla_vtk', 'libwalberla_domain_decomposition',
+    'libwalberla_pde', 'libwalberla_postprocessing',
+    'libwalberla_lbm', 'libwalberla_pe', 'libwalberla_pe_coupling',
+    'libwalberla_lbm_generated', 'libwalberla_timeloop',
+    'libwalberla_lbm_mesapd_coupling', 'libwalberla_mesa_pd',
+    'libwalberla_lodepng', 'libwalberla_sqlite3', 'libwalberla_sqlite',
+]
+if any(x[0] == 'PFFT' for x in dependencies):
+    _libs += [
+        'libwalberla_fft',
+    ]
+if any(x[0] == 'CUDA' for x in dependencies):
+    _libs += [
+        'espresso_cuda', 'espresso_walberla_cuda',
+        'espresso_walberla_codegen_cuda', 'libwalberla_gpu',
+    ]
+
+_lib_path = 'lib/python%(pyshortver)s/site-packages/espressomd'
+sanity_check_paths = {
+    'files': ['bin/%s' % x for x in _binaries] +
+             [_lib_path + '/%s.' % x + SHLIB_EXT for x in _libs],
+    'dirs': ['bin', 'lib']
+}
+
+sanity_check_commands = ['pypresso -h', 'ipypresso -h']
+
+moduleclass = 'chem'
