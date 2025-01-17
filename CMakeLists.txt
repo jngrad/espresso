@@ -299,6 +299,183 @@ if(ESPRESSO_BUILD_WITH_PYTHON)
 endif()
 
 #
+# Compiler flags: must be added to all ESPResSo targets
+#
+
+add_library(espresso_cpp_flags INTERFACE)
+add_library(espresso::cpp_flags ALIAS espresso_cpp_flags)
+
+#
+# Compiler diagnostics
+#
+
+target_compile_options(
+  espresso_cpp_flags
+  INTERFACE
+    -Wall
+    -Wextra
+    -pedantic
+    # add extra warnings
+    $<$<CXX_COMPILER_ID:Clang>:-Wextern-initializer>
+    $<$<CXX_COMPILER_ID:Clang>:-Wrange-loop-analysis>
+    -Wfloat-conversion
+    $<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wimplicit-float-conversion>
+    $<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wunused-exception-parameter>
+    $<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wmissing-variable-declarations>
+    $<$<CXX_COMPILER_ID:Clang>:-Wnon-c-typedef-for-linkage>
+    $<$<NOT:$<CXX_COMPILER_ID:Intel>>:-Wdelete-non-virtual-dtor>
+    # disable warnings from -Wall and -Wextra
+    -Wno-sign-compare
+    -Wno-unused-function
+    -Wno-unused-parameter
+    -Wno-array-bounds
+    $<$<CXX_COMPILER_ID:GNU>:-Wno-restrict>
+    $<$<CXX_COMPILER_ID:GNU>:-Wno-clobbered>
+    $<$<CXX_COMPILER_ID:GNU>:-Wno-cast-function-type>
+    $<$<CXX_COMPILER_ID:Intel,IntelLLVM>:-diag-disable=592>
+    $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-gnu-zero-variadic-macro-arguments>
+    $<$<NOT:$<CXX_COMPILER_ID:Intel,IntelLLVM>>:-Wno-implicit-fallthrough>
+    $<$<NOT:$<CXX_COMPILER_ID:Intel,IntelLLVM,GNU>>:-Wno-unused-private-field>
+    # warnings are errors
+    $<$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>:-Werror>)
+
+if(ESPRESSO_BUILD_WITH_CUDA)
+  target_compile_options(
+    espresso_cuda_flags
+    INTERFACE
+      -Wall
+      -Wextra
+      -Wno-sign-compare
+      -Wno-unused-parameter
+      $<$<NOT:$<CXX_COMPILER_ID:Intel,IntelLLVM>>:-Wno-implicit-fallthrough>
+      # warnings are errors
+      $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<CUDA_COMPILER_ID:NVIDIA>>:--Werror=all-warnings>
+      $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<CUDA_COMPILER_ID:Clang>>:-Werror>
+  )
+endif()
+
+# disable warning from -Wextra on ARM processors
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_SYSTEM_PROCESSOR MATCHES
+                                            "arm")
+  target_compile_options(espresso_cpp_flags INTERFACE -Wno-psabi)
+endif()
+
+#
+# Code coverage
+#
+
+add_library(espresso_coverage_flags INTERFACE)
+add_library(espresso::coverage_flags ALIAS espresso_coverage_flags)
+if(ESPRESSO_BUILD_WITH_COVERAGE)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(
+      espresso_coverage_flags INTERFACE -g -fprofile-instr-generate
+                                        -fcoverage-mapping)
+  else()
+    target_compile_options(espresso_coverage_flags INTERFACE -g --coverage
+                                                             -fprofile-abs-path)
+    target_link_libraries(espresso_coverage_flags INTERFACE gcov)
+  endif()
+endif()
+
+#
+# Portability options
+#
+
+# prevent 80-bit arithmetic on old Intel processors
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_SIZEOF_VOID_P EQUAL 4
+   AND CMAKE_SYSTEM_PROCESSOR MATCHES "[xX]86")
+  target_compile_options(espresso_cpp_flags INTERFACE -ffloat-store)
+endif()
+
+#
+# Sanitizers
+#
+
+if(ESPRESSO_BUILD_WITH_ASAN AND ESPRESSO_BUILD_WITH_MSAN)
+  message(
+    FATAL_ERROR
+      "Address sanitizer and memory sanitizer cannot be enabled simultaneously")
+endif()
+if(ESPRESSO_BUILD_WITH_ASAN)
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g -O1")
+  target_compile_options(espresso_cpp_flags INTERFACE -fsanitize=address
+                                                      -fno-omit-frame-pointer)
+  target_link_libraries(espresso_cpp_flags INTERFACE -fsanitize=address)
+  if(ESPRESSO_BUILD_WITH_CUDA)
+    target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=address)
+  endif()
+endif()
+if(ESPRESSO_BUILD_WITH_MSAN)
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g -O1")
+  target_compile_options(espresso_cpp_flags INTERFACE -fsanitize=memory
+                                                      -fno-omit-frame-pointer)
+  target_link_libraries(espresso_cpp_flags INTERFACE -fsanitize=memory)
+  if(ESPRESSO_BUILD_WITH_CUDA)
+    target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=memory)
+  endif()
+endif()
+if(ESPRESSO_BUILD_WITH_UBSAN)
+  target_compile_options(espresso_cpp_flags INTERFACE -fsanitize=undefined)
+  target_link_libraries(espresso_cpp_flags INTERFACE -fsanitize=undefined)
+  if(ESPRESSO_BUILD_WITH_CUDA)
+    target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=undefined)
+  endif()
+endif()
+
+target_link_libraries(espresso_cpp_flags INTERFACE espresso::coverage_flags)
+
+#
+# Static analysis
+#
+
+if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
+  find_package(ClangTidy "${CMAKE_CXX_COMPILER_VERSION}" EXACT REQUIRED)
+  set(ESPRESSO_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+  set(ESPRESSO_CUDA_CLANG_TIDY "${CLANG_TIDY_EXE};--extra-arg=--cuda-host-only")
+  set(SKIP_CLANG_TIDY_CHECKS "")
+  set(SKIP_CLANG_TIDY_CHECKS_CXX "")
+  set(SKIP_CLANG_TIDY_CHECKS_CUDA "")
+  if(ESPRESSO_BUILD_WITH_CALIPER)
+    # Clang-Tidy sometimes emits diagnostics in code enclosed in `extern "C"`
+    # that are not always actionable, since they may rely on keywords only
+    # available in the C++ language. While some checks have an extra flag
+    # 'IgnoreExternC' to disable them inside C code, not all affected checks
+    # have been fixed yet. For an in-depth discussion on this topic, see
+    # https://github.com/llvm/llvm-project/issues/35272
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-auto")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-nullptr")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-deprecated-headers")
+  endif()
+  if(ESPRESSO_BUILD_WITH_CUDA)
+    # silence casts in cuda_runtime.h (for both C++ and CUDA source files)
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-casting-through-void")
+    # silence nullptr dereference in cuda::thrust
+    list(APPEND SKIP_CLANG_TIDY_CHECKS_CUDA
+         "-clang-analyzer-core.NonNullParamChecker")
+  endif()
+  espresso_override_clang_tidy_checks(
+    ESPRESSO_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
+    "${SKIP_CLANG_TIDY_CHECKS_CXX}")
+  espresso_override_clang_tidy_checks(
+    ESPRESSO_CUDA_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
+    "${SKIP_CLANG_TIDY_CHECKS_CUDA}")
+endif()
+
+if(ESPRESSO_BUILD_WITH_CPPCHECK)
+  find_program(CMAKE_CXX_CPPCHECK NAMES cppcheck)
+  if(NOT CMAKE_CXX_CPPCHECK)
+    message(FATAL_ERROR "Could not find the program cppcheck.")
+  endif()
+  list(APPEND CMAKE_CXX_CPPCHECK "--enable=all"
+       "--std=c++${CMAKE_CXX_STANDARD}" "--quiet" "--inline-suppr"
+       "--suppressions-list=${CMAKE_CURRENT_SOURCE_DIR}/.cppcheck")
+  if(ESPRESSO_WARNINGS_ARE_ERRORS)
+    list(APPEND CMAKE_CXX_CPPCHECK "--error-exitcode=2")
+  endif()
+endif()
+
+#
 # Libraries
 #
 
@@ -453,6 +630,11 @@ endif()
 
 find_package(Boost 1.74.0 REQUIRED ${BOOST_COMPONENTS})
 
+# enable boost::variant with more than 20 types
+target_compile_options(
+  espresso_cpp_flags INTERFACE -DBOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
+                               -DBOOST_MPL_LIMIT_LIST_SIZE=30)
+
 #
 # Paths
 #
@@ -460,179 +642,14 @@ find_package(Boost 1.74.0 REQUIRED ${BOOST_COMPONENTS})
 set(CMAKE_INSTALL_RPATH "${ESPRESSO_INSTALL_LIBDIR}")
 
 #
-# Flags
+# Packaging
 #
 
 # drop 'lib' prefix from all libraries
 set(ESPRESSO_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_SHARED_LIBRARY_PREFIX "${ESPRESSO_SHARED_LIBRARY_PREFIX}")
 
-add_library(espresso_coverage_flags INTERFACE)
-add_library(espresso::coverage_flags ALIAS espresso_coverage_flags)
-if(ESPRESSO_BUILD_WITH_COVERAGE)
-  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    target_compile_options(
-      espresso_coverage_flags INTERFACE -g -fprofile-instr-generate
-                                        -fcoverage-mapping)
-  else()
-    target_compile_options(espresso_coverage_flags INTERFACE -g --coverage
-                                                             -fprofile-abs-path)
-    target_link_libraries(espresso_coverage_flags INTERFACE gcov)
-  endif()
-endif()
-
-add_library(espresso_cpp_flags INTERFACE)
-add_library(espresso::cpp_flags ALIAS espresso_cpp_flags)
-target_compile_options(
-  espresso_cpp_flags
-  INTERFACE
-    -Wall
-    -Wextra
-    -pedantic
-    # add extra warnings
-    $<$<CXX_COMPILER_ID:Clang>:-Wextern-initializer>
-    $<$<CXX_COMPILER_ID:Clang>:-Wrange-loop-analysis>
-    -Wfloat-conversion
-    $<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wimplicit-float-conversion>
-    $<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wunused-exception-parameter>
-    $<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wmissing-variable-declarations>
-    $<$<CXX_COMPILER_ID:Clang>:-Wnon-c-typedef-for-linkage>
-    $<$<NOT:$<CXX_COMPILER_ID:Intel>>:-Wdelete-non-virtual-dtor>
-    # disable warnings from -Wall and -Wextra
-    -Wno-sign-compare
-    -Wno-unused-function
-    -Wno-unused-parameter
-    -Wno-array-bounds
-    $<$<CXX_COMPILER_ID:GNU>:-Wno-restrict>
-    $<$<CXX_COMPILER_ID:GNU>:-Wno-clobbered>
-    $<$<CXX_COMPILER_ID:GNU>:-Wno-cast-function-type>
-    $<$<CXX_COMPILER_ID:Intel,IntelLLVM>:-diag-disable=592>
-    $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-gnu-zero-variadic-macro-arguments>
-    $<$<NOT:$<CXX_COMPILER_ID:Intel,IntelLLVM>>:-Wno-implicit-fallthrough>
-    $<$<NOT:$<CXX_COMPILER_ID:Intel,IntelLLVM,GNU>>:-Wno-unused-private-field>
-    # warnings are errors
-    $<$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>:-Werror>)
-
-if(ESPRESSO_BUILD_WITH_CUDA)
-  target_compile_options(
-    espresso_cuda_flags
-    INTERFACE
-      -Wall
-      -Wextra
-      -Wno-sign-compare
-      -Wno-unused-parameter
-      $<$<NOT:$<CXX_COMPILER_ID:Intel,IntelLLVM>>:-Wno-implicit-fallthrough>
-      # warnings are errors
-      $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<CUDA_COMPILER_ID:NVIDIA>>:--Werror=all-warnings>
-      $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<CUDA_COMPILER_ID:Clang>>:-Werror>
-  )
-endif()
-
-# disable warning from -Wextra on ARM processors
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_SYSTEM_PROCESSOR MATCHES
-                                            "arm")
-  target_compile_options(espresso_cpp_flags INTERFACE -Wno-psabi)
-endif()
-
-# prevent 80-bit arithmetic on old Intel processors
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_SIZEOF_VOID_P EQUAL 4
-   AND CMAKE_SYSTEM_PROCESSOR MATCHES "[xX]86")
-  target_compile_options(espresso_cpp_flags INTERFACE -ffloat-store)
-endif()
-
-# enable boost::variant with more than 20 types
-target_compile_options(
-  espresso_cpp_flags INTERFACE -DBOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
-                               -DBOOST_MPL_LIMIT_LIST_SIZE=30)
-
 set(CMAKE_MACOSX_RPATH TRUE)
-
-#
-# Sanitizers
-#
-
-if(ESPRESSO_BUILD_WITH_ASAN AND ESPRESSO_BUILD_WITH_MSAN)
-  message(
-    FATAL_ERROR
-      "Address sanitizer and memory sanitizer cannot be enabled simultaneously")
-endif()
-if(ESPRESSO_BUILD_WITH_ASAN)
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g -O1")
-  target_compile_options(espresso_cpp_flags INTERFACE -fsanitize=address
-                                                      -fno-omit-frame-pointer)
-  target_link_libraries(espresso_cpp_flags INTERFACE -fsanitize=address)
-  if(ESPRESSO_BUILD_WITH_CUDA)
-    target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=address)
-  endif()
-endif()
-if(ESPRESSO_BUILD_WITH_MSAN)
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g -O1")
-  target_compile_options(espresso_cpp_flags INTERFACE -fsanitize=memory
-                                                      -fno-omit-frame-pointer)
-  target_link_libraries(espresso_cpp_flags INTERFACE -fsanitize=memory)
-  if(ESPRESSO_BUILD_WITH_CUDA)
-    target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=memory)
-  endif()
-endif()
-if(ESPRESSO_BUILD_WITH_UBSAN)
-  target_compile_options(espresso_cpp_flags INTERFACE -fsanitize=undefined)
-  target_link_libraries(espresso_cpp_flags INTERFACE -fsanitize=undefined)
-  if(ESPRESSO_BUILD_WITH_CUDA)
-    target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=undefined)
-  endif()
-endif()
-
-target_link_libraries(espresso_cpp_flags INTERFACE espresso::coverage_flags)
-
-#
-# Static analysis
-#
-
-if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
-  find_package(ClangTidy "${CMAKE_CXX_COMPILER_VERSION}" EXACT REQUIRED)
-  set(ESPRESSO_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
-  set(ESPRESSO_CUDA_CLANG_TIDY "${CLANG_TIDY_EXE};--extra-arg=--cuda-host-only")
-  set(SKIP_CLANG_TIDY_CHECKS "")
-  set(SKIP_CLANG_TIDY_CHECKS_CXX "")
-  set(SKIP_CLANG_TIDY_CHECKS_CUDA "")
-  if(ESPRESSO_BUILD_WITH_CALIPER)
-    # Clang-Tidy sometimes emits diagnostics in code enclosed in `extern "C"`
-    # that are not always actionable, since they may rely on keywords only
-    # available in the C++ language. While some checks have an extra flag
-    # 'IgnoreExternC' to disable them inside C code, not all affected checks
-    # have been fixed yet. For an in-depth discussion on this topic, see
-    # https://github.com/llvm/llvm-project/issues/35272
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-auto")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-nullptr")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-deprecated-headers")
-  endif()
-  if(ESPRESSO_BUILD_WITH_CUDA)
-    # silence casts in cuda_runtime.h (for both C++ and CUDA source files)
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-casting-through-void")
-    # silence nullptr dereference in cuda::thrust
-    list(APPEND SKIP_CLANG_TIDY_CHECKS_CUDA
-         "-clang-analyzer-core.NonNullParamChecker")
-  endif()
-  espresso_override_clang_tidy_checks(
-    ESPRESSO_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
-    "${SKIP_CLANG_TIDY_CHECKS_CXX}")
-  espresso_override_clang_tidy_checks(
-    ESPRESSO_CUDA_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
-    "${SKIP_CLANG_TIDY_CHECKS_CUDA}")
-endif()
-
-if(ESPRESSO_BUILD_WITH_CPPCHECK)
-  find_program(CMAKE_CXX_CPPCHECK NAMES cppcheck)
-  if(NOT CMAKE_CXX_CPPCHECK)
-    message(FATAL_ERROR "Could not find the program cppcheck.")
-  endif()
-  list(APPEND CMAKE_CXX_CPPCHECK "--enable=all"
-       "--std=c++${CMAKE_CXX_STANDARD}" "--quiet" "--inline-suppr"
-       "--suppressions-list=${CMAKE_CURRENT_SOURCE_DIR}/.cppcheck")
-  if(ESPRESSO_WARNINGS_ARE_ERRORS)
-    list(APPEND CMAKE_CXX_CPPCHECK "--error-exitcode=2")
-  endif()
-endif()
 
 #
 # Testing
