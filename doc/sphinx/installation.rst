@@ -886,28 +886,7 @@ external libraries that are downloaded automatically by CMake. When a
 network connection cannot be established due to firewall restrictions,
 the CMake logic needs editing.
 
-.. _Git submodules without a network connection:
-
-Git submodules without a network connection
-"""""""""""""""""""""""""""""""""""""""""""
-
-* ``ESPRESSO_BUILD_WITH_HDF5``: when cloning |es|, the :file:`libs/h5xx` folder
-  will be a git submodule containing a :file:`.git` subfolder. To prevent CMake
-  from updating this submodule with git, delete the corresponding command with:
-
-  .. code-block:: bash
-
-    sed -i '/execute_process(COMMAND ${GIT_EXECUTABLE} submodule update -- libs\/h5xx/,+1 d' CMakeLists.txt
-
-  When installing a release version of |es|, no network communication
-  is needed for HDF5.
-
-.. _CMake subprojects without a network connection:
-
-CMake subprojects without a network connection
-""""""""""""""""""""""""""""""""""""""""""""""
-
-Several libraries are downloaded and included into the CMake project using
+External libraries are downloaded and included into the CMake project using
 `FetchContent <https://cmake.org/cmake/help/latest/module/FetchContent.html>`__.
 The repository URLs can be found in the ``GIT_REPOSITORY`` field of the
 corresponding ``FetchContent_Declare()`` commands. The ``GIT_TAG`` field
@@ -920,6 +899,12 @@ the clone. You can automate this task by adapting the following commands:
   .. code-block:: bash
 
     sed -ri 's|GIT_REPOSITORY +.+/walberla.git|GIT_REPOSITORY /work/username/walberla|' CMakeLists.txt
+
+* ``ESPRESSO_BUILD_WITH_HDF5``
+
+  .. code-block:: bash
+
+    sed -ri 's|GIT_REPOSITORY +.+h5xx.git|GIT_REPOSITORY /work/username/h5xx|' CMakeLists.txt
 
 * ``ESPRESSO_BUILD_WITH_STOKESIAN_DYNAMICS``
 

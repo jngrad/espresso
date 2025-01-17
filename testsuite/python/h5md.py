@@ -291,7 +291,6 @@ class H5mdTests(ut.TestCase):
             self.assertEqual(bond[1], i + 1)
 
     def test_script(self):
-        assert sys.argv[0] == __file__
         # case #1: running a pypresso script
         with open(sys.argv[0], 'r') as f:
             ref = f.read()

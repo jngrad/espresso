@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2020-2022 The ESPResSo project
+# Copyright (C) 2020-2025 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -18,7 +18,17 @@
 #
 
 if(ESPRESSO_BUILD_WITH_HDF5)
-  target_sources(
-    espresso_script_interface PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/initialize.cpp
-                                      ${CMAKE_CURRENT_SOURCE_DIR}/h5md.cpp)
+  add_library(espresso_si_hdf5 STATIC initialize.cpp h5md.cpp)
+  add_library(espresso::si_hdf5 ALIAS espresso_si_hdf5)
+  if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
+    set_target_properties(espresso_si_hdf5 PROPERTIES CXX_CLANG_TIDY
+                                                      "${H5XX_CXX_CLANG_TIDY}")
+  endif()
+  target_include_directories(espresso_si_hdf5 PRIVATE ${CMAKE_SOURCE_DIR}/src)
+  target_link_libraries(
+    espresso_si_hdf5
+    PRIVATE h5xx hdf5 espresso::hdf5 espresso::cpp_flags
+            espresso::h5xx_cpp_flags espresso::core espresso::config
+            espresso::utils espresso::instrumentation)
+  target_link_libraries(espresso_script_interface PRIVATE espresso_si_hdf5)
 endif()

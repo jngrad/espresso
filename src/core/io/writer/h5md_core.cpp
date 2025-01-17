@@ -30,7 +30,10 @@
 
 #include <utils/Vector.hpp>
 
+#include <boost/array.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/mpi/collectives.hpp>
+#include <boost/multi_array.hpp>
 
 #include <mpi.h>
 
@@ -71,7 +74,7 @@ static void extend_dataset(h5xx::dataset &dataset,
   auto const rank = static_cast<h5xx::dataspace>(dataset).rank();
   auto extents = static_cast<h5xx::dataspace>(dataset).extents();
   /* Extend the dataset for another timestep */
-  for (int i = 0; i < rank; i++) {
+  for (auto i = 0u; i < rank; i++) {
     extents[i] += change_extent[i];
   }
   H5Dset_extent(dataset.hid(), extents.data()); // extend all dims is collective
@@ -151,11 +154,11 @@ void File::create_groups() {
 
 static std::vector<hsize_t> create_dims(hsize_t rank, hsize_t data_dim) {
   switch (rank) {
-  case 3:
-    return std::vector<hsize_t>{0, 0, data_dim};
-  case 2:
-    return std::vector<hsize_t>{0, data_dim};
-  case 1:
+  case 3ul:
+    return std::vector<hsize_t>{0ul, 0ul, data_dim};
+  case 2ul:
+    return std::vector<hsize_t>{0ul, data_dim};
+  case 1ul:
     return std::vector<hsize_t>{data_dim};
   default:
     throw std::runtime_error(
@@ -164,13 +167,13 @@ static std::vector<hsize_t> create_dims(hsize_t rank, hsize_t data_dim) {
 }
 
 static std::vector<hsize_t> create_chunk_dims(hsize_t rank, hsize_t data_dim) {
-  hsize_t chunk_size = (rank > 1) ? 1000 : 1;
+  hsize_t chunk_size = (rank > 1ul) ? 1000ul : 1ul;
   switch (rank) {
-  case 3:
-    return {1, chunk_size, data_dim};
-  case 2:
-    return {1, chunk_size};
-  case 1:
+  case 3ul:
+    return {1ul, chunk_size, data_dim};
+  case 2ul:
+    return {1ul, chunk_size};
+  case 1ul:
     return {chunk_size};
   default:
     throw std::runtime_error(
@@ -200,7 +203,7 @@ void File::load_file(const std::string &file_path) {
 static void write_attributes(h5xx::file &h5md_file) {
   auto h5md_group = h5xx::group(h5md_file, "h5md");
   h5xx::write_attribute(h5md_group, "version",
-                        boost::array<hsize_t, 2>{{1, 1}});
+                        boost::array<hsize_t, 2>{{1ul, 1ul}});
   auto h5md_creator_group = h5xx::group(h5md_group, "creator");
   h5xx::write_attribute(h5md_creator_group, "name", "ESPResSo");
   h5xx::write_attribute(h5md_creator_group, "version", ESPRESSO_VERSION);

@@ -19,8 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CORE_IO_WRITER_H5MD_CORE_HPP
-#define CORE_IO_WRITER_H5MD_CORE_HPP
+#pragma once
 
 #include "BoxGeometry.hpp"
 #include "ParticleRange.hpp"
@@ -293,4 +292,3 @@ struct left_backupfile : public std::exception {
 
 } /* namespace H5md */
 } /* namespace Writer */
-#endif

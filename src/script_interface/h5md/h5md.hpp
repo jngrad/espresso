@@ -19,8 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ESPRESSO_SRC_SCRIPT_INTERFACE_H5MD_H5MD_HPP
-#define ESPRESSO_SRC_SCRIPT_INTERFACE_H5MD_H5MD_HPP
+#pragma once
 
 #include "config/config.hpp"
 
@@ -86,4 +85,3 @@ private:
 } // namespace ScriptInterface
 
 #endif // H5MD
-#endif

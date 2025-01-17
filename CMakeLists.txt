@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2009-2022 The ESPResSo project
+# Copyright (C) 2009-2025 The ESPResSo project
 # Copyright (C) 2009,2010
 #   Max-Planck-Institute for Polymer Research, Theory Group
 #
@@ -104,6 +104,11 @@ FetchContent_Declare(
   stokesian_dynamics
   GIT_REPOSITORY https://github.com/hmenke/espresso-stokesian-dynamics.git
   GIT_TAG        862a7537a366f0c32f0c25e46bd107bea590faea
+)
+FetchContent_Declare(
+  h5xx
+  GIT_REPOSITORY https://github.com/h5md/h5xx.git
+  GIT_TAG        0.9.1
 )
 FetchContent_Declare(
   caliper
@@ -490,22 +495,67 @@ if(ESPRESSO_BUILD_WITH_HDF5)
       set(HDF5_FOUND FALSE)
       message(FATAL_ERROR "HDF5 parallel version not found.")
     endif()
-  endif()
-endif()
-
-# Check for the h5xx submodule and try to check it out if not found or update it
-# if found.
-if(ESPRESSO_BUILD_WITH_HDF5 AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
-  # Try to find git
-  find_package(Git)
-  if(GIT_FOUND)
-    if(NOT EXISTS "${CMAKE_SOURCE_DIR}/libs/h5xx/.git")
-      execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --
-                              libs/h5xx WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-    else()
-      execute_process(COMMAND ${GIT_EXECUTABLE} submodule update -- libs/h5xx
-                      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    if(${HDF5_VERSION} VERSION_GREATER_EQUAL 1.13.0)
+      message(
+        WARNING
+          "Library hdf5 >= 1.13.0 is incompatible with h5xx 0.9.1 on some platforms (https://github.com/fhoefling/h5xx/issues/11)"
+      )
     endif()
+  endif()
+  # We need to define our own h5xx target, since the project version we depend
+  # on is not fully compatible with modern CMake.
+  FetchContent_GetProperties(h5xx)
+  if(NOT h5xx_POPULATED)
+    FetchContent_Populate(h5xx)
+  endif()
+  add_library(h5xx INTERFACE)
+  add_library(hdf5 INTERFACE)
+  target_link_libraries(hdf5 INTERFACE $<BUILD_INTERFACE:${HDF5_LIBRARIES}>)
+  target_include_directories(hdf5
+                             INTERFACE $<BUILD_INTERFACE:${HDF5_INCLUDE_DIRS}>)
+  target_include_directories(h5xx
+                             INTERFACE $<BUILD_INTERFACE:${h5xx_SOURCE_DIR}>)
+  target_compile_features(h5xx INTERFACE cxx_std_11)
+  target_compile_definitions(h5xx INTERFACE H5XX_USE_MPI)
+  add_library(espresso_h5xx_cpp_flags INTERFACE)
+  add_library(espresso::h5xx_cpp_flags ALIAS espresso_h5xx_cpp_flags)
+  target_compile_options(
+    espresso_h5xx_cpp_flags
+    INTERFACE
+      $<$<CXX_COMPILER_ID:GNU>:-Wno-terminate>
+      $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-exceptions>
+      $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-unused-but-set-variable>
+      $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-delete-non-abstract-non-virtual-dtor>
+  )
+  if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
+    set(H5XX_CXX_CLANG_TIDY "${ESPRESSO_CXX_CLANG_TIDY}")
+    set(SKIP_CLANG_TIDY_CHECKS "")
+    set(SKIP_CLANG_TIDY_CHECKS_CXX "")
+    # silence hdf5 and h5xx diagnostics
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-clang-analyzer-deadcode.DeadStores")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS
+         "-clang-analyzer-optin.performance.Padding")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS
+         "-clang-diagnostic-unused-but-set-variable")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-clang-diagnostic-exceptions")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS
+         "-bugprone-multi-level-implicit-pointer-conversion")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-assignment-in-if-condition")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-exception-escape")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-narrowing-conversions")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-auto")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-nullptr")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-noexcept")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-override")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-equals-default")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-loop-convert")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-pass-by-value")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-redundant-void-arg")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-else-after-return")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-container-size-empty")
+    espresso_override_clang_tidy_checks(
+      H5XX_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
+      "${SKIP_CLANG_TIDY_CHECKS_CXX}")
   endif()
 endif()
 

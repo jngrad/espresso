@@ -18,8 +18,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef CORE_IO_WRITER_H5MD_SPECIFICATION_HPP
-#define CORE_IO_WRITER_H5MD_SPECIFICATION_HPP
+
+#pragma once
+
+// guard for hdf5.h
+#if not defined(_H5public_H)
+#ifdef OMPI_SKIP_MPICXX
+#undef OMPI_SKIP_MPICXX
+#endif
+#ifdef MPICH_SKIP_MPICXX
+#undef MPICH_SKIP_MPICXX
+#endif
+#endif // not defined(_H5public_H)
+#include <H5public.h>
 
 #include <h5xx/h5xx.hpp>
 
@@ -73,5 +84,3 @@ private:
 
 } // namespace H5md
 } // namespace Writer
-
-#endif

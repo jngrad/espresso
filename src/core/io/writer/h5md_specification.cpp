@@ -21,7 +21,8 @@
 
 #include "h5md_specification.hpp"
 #include "h5md_core.hpp"
-#include "hdf5.h"
+
+#include <hdf5.h>
 
 #include <utility>
 
