@@ -336,6 +336,7 @@ target_compile_options(
     $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-gnu-zero-variadic-macro-arguments>
     $<$<NOT:$<CXX_COMPILER_ID:Intel,IntelLLVM>>:-Wno-implicit-fallthrough>
     $<$<NOT:$<CXX_COMPILER_ID:Intel,IntelLLVM,GNU>>:-Wno-unused-private-field>
+    $<$<AND:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},arm>>:-Wno-psabi>
     # warnings are errors
     $<$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>:-Werror>)
 
@@ -354,27 +355,19 @@ if(ESPRESSO_BUILD_WITH_CUDA)
   )
 endif()
 
-# disable warning from -Wextra on ARM processors
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_SYSTEM_PROCESSOR MATCHES
-                                            "arm")
-  target_compile_options(espresso_cpp_flags INTERFACE -Wno-psabi)
-endif()
-
 #
 # Code coverage
 #
 
-add_library(espresso_coverage_flags INTERFACE)
-add_library(espresso::coverage_flags ALIAS espresso_coverage_flags)
 if(ESPRESSO_BUILD_WITH_COVERAGE)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     target_compile_options(
-      espresso_coverage_flags INTERFACE -g -fprofile-instr-generate
-                                        -fcoverage-mapping)
+      espresso_cpp_flags INTERFACE -g -fprofile-instr-generate
+                                   -fcoverage-mapping)
   else()
-    target_compile_options(espresso_coverage_flags INTERFACE -g --coverage
-                                                             -fprofile-abs-path)
-    target_link_libraries(espresso_coverage_flags INTERFACE gcov)
+    target_compile_options(espresso_cpp_flags INTERFACE -g --coverage
+                                                        -fprofile-abs-path)
+    target_link_libraries(espresso_cpp_flags INTERFACE gcov)
   endif()
 endif()
 
@@ -422,8 +415,6 @@ if(ESPRESSO_BUILD_WITH_UBSAN)
     target_link_libraries(espresso_cuda_flags INTERFACE -fsanitize=undefined)
   endif()
 endif()
-
-target_link_libraries(espresso_cpp_flags INTERFACE espresso::coverage_flags)
 
 #
 # Static analysis
