@@ -426,7 +426,7 @@ Start by installing the code generator dependencies:
 
 .. code-block:: bash
 
-    python3 -m pip install --user -c requirements.txt numpy sympy lbmpy pystencils islpy
+    python3 -m pip install -c requirements.txt numpy sympy lbmpy pystencils islpy
 
 Next, edit the code generator script to configure new kernels, then execute it:
 

@@ -110,9 +110,14 @@ class Test(ut.TestCase):
             with self.assertRaisesRegex(ValueError, f"Parameter '{key}' must be > 0"):
                 espressomd.electrostatics.MMM1D(**invalid_params)
 
+    @utx.skipIfMissingFeatures(["P3M"])
+    def test_solvers_rollback(self):
         # swapping two solvers should safely rollback to last valid solver
+        self.system.periodicity = [False, False, True]
+        self.system.cell_system.set_n_square()
         self.assertEqual(abs(self.system.analysis.energy()["coulomb"]), 0.)
-        mmm1d = espressomd.electrostatics.MMM1D(**valid_params)
+        mmm1d = espressomd.electrostatics.MMM1D(
+            prefactor=1., maxPWerror=1e-3, far_switch_radius=1.)
         self.system.electrostatics.solver = mmm1d
         ref_energy = self.system.analysis.energy()["coulomb"]
         with self.assertRaisesRegex(RuntimeError, "CoulombP3M: requires periodicity"):

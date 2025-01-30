@@ -25,6 +25,10 @@ if(POLICY CMP0167)
   # use BoostConfig.cmake shipped with Boost 1.70+ instead of the one in CMake
   cmake_policy(SET CMP0167 NEW)
 endif()
+if(POLICY CMP0169)
+  # use deprecated FetchContent_Populate function for h5xx dependency
+  cmake_policy(SET CMP0169 OLD)
+endif()
 message(STATUS "CMake version: ${CMAKE_VERSION}")
 # CMake modules/macros are in a subdirectory to keep this file cleaner
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -117,7 +121,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   caliper
   GIT_REPOSITORY https://github.com/LLNL/Caliper.git
-  GIT_TAG        v2.12.0
+  GIT_TAG        v2.12.1
 )
 # cmake-format: on
 

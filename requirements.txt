@@ -32,7 +32,7 @@ sphinxcontrib-bibtex>=2.6.2
 numpydoc>=1.6.0
 pybtex>=0.24.0
 # jupyter dependencies
-jupyterlab>=3.5
+jupyterlab>=4.0
 ipykernel>=6.29.3
 nbformat==5.9.1
 nbconvert==6.5.3

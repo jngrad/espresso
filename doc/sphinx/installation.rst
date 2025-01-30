@@ -132,7 +132,7 @@ To install the ZnDraw visualizer:
 
 .. code-block:: bash
 
-    python3 -m pip install --user -c requirements.txt 'zndraw==0.4.6'
+    python3 -m pip install -c requirements.txt 'zndraw==0.4.6'
 
 .. _Nvidia GPU acceleration:
 
@@ -207,7 +207,7 @@ To generate the Sphinx documentation, install the following packages:
 
 .. code-block:: bash
 
-    python3 -m pip install --user -c requirements.txt \
+    python3 -m pip install -c requirements.txt \
         sphinx sphinxcontrib-bibtex sphinx-toggleprompt
 
 To generate the Doxygen documentation, install the following packages:
@@ -250,15 +250,14 @@ to use, we recommend installing JupyterLab:
 
 .. code-block:: bash
 
-    python3 -m pip install --user -c requirements.txt \
-        nbformat nbconvert jupyterlab
+    python3 -m pip install -c requirements.txt \
+        jupyterlab>=4.3 nbformat nbconvert lxml[html_clean]
 
-If you prefer the look and feel of Jupyter Classic, install the following:
+If you prefer the look and feel of Jupyter Classic, install the following extra package:
 
 .. code-block:: bash
 
-    python3 -m pip install --user -c requirements.txt \
-        nbformat nbconvert jupyterlab nbclassic
+    python3 -m pip install -c requirements.txt nbclassic
 
 Alternatively, to use VS Code Jupyter, install the following extensions:
 

@@ -906,7 +906,7 @@ Valgrind
     .. code-block:: bash
 
         sudo apt install valgrind kcachegrind graphviz
-        python3 -m pip install --user gprof2dot
+        python3 -m pip install gprof2dot
 
 The Valgrind [2]_ :cite:`nethercote07a,nethercote03a` framework brings several
 tools to examine a program runtime performance.
@@ -1066,7 +1066,7 @@ kernprof
 
     .. code-block:: bash
 
-        python3 -m pip install --user line_profiler
+        python3 -m pip install line_profiler
 
 kernprof [8]_ :cite:`misc-kernprof` is a low-overhead Python profiler.
 It supports two instrumentation modes: ``line_profile`` and ``cProfile``.

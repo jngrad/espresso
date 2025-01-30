@@ -25,10 +25,9 @@ import pathlib
 import os
 
 
-EXPECTED_TRACEBACK_ENDING = """ in handle_sigint
-    signal.raise_signal(signal.Signals.SIGINT)
-KeyboardInterrupt
-"""
+EXPECTED_TRACEBACK_ENDING = r""" in handle_sigint
+    signal\.raise_signal\(signal\.Signals\.SIGINT\)(?:\n +~+\^+)?
+KeyboardInterrupt\s*$"""
 
 
 class SigintTest(ut.TestCase):
@@ -51,8 +50,8 @@ class SigintTest(ut.TestCase):
             self.assertEqual(traceback, "")
         elif sig == signal.Signals.SIGINT:
             self.assertIn(" self.integrator.run(", traceback)
-            self.assertTrue(traceback.endswith(EXPECTED_TRACEBACK_ENDING),
-                            msg=f"Traceback failed string match:\n{traceback}")
+            with self.assertRaisesRegex(KeyboardInterrupt, EXPECTED_TRACEBACK_ENDING):
+                raise KeyboardInterrupt(traceback)
 
     def test_signal_handling(self):
         signals = [signal.Signals.SIGINT, signal.Signals.SIGTERM]
