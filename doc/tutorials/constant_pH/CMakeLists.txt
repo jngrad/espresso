@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019-2022 The ESPResSo project
+# Copyright (C) 2019-2025 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -17,6 +17,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-configure_tutorial_target(TARGET tutorial_cph DEPENDS constant_pH.ipynb)
-
-nb_export(TARGET tutorial_cph SUFFIX "" FILE "constant_pH.ipynb" HTML_RUN)
+espresso_add_tutorial(TARGET tutorial_cph FILE "constant_pH.ipynb" HTML_RUN)

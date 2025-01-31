@@ -19,47 +19,50 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# Register a new tutorial target that depends on a list of files that need to be
-# copied from the source directory to the build directory. Make the tutorial
-# target a dependency of target `tutorials`.
-function(configure_tutorial_target)
-  cmake_parse_arguments(CONFIGURE "" "TARGET" "DEPENDS" ${ARGN})
-  set(TARGET_DEPENDENCIES "")
-  foreach(filepath ${CONFIGURE_DEPENDS})
-    list(APPEND TARGET_DEPENDENCIES "${CMAKE_CURRENT_BINARY_DIR}/${filepath}")
-    add_custom_command(
-      OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${filepath}"
-      DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${filepath}"
-      COMMAND
-        ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${filepath}"
-        "${CMAKE_CURRENT_BINARY_DIR}/${filepath}")
-  endforeach(filepath)
-  add_custom_target(${CONFIGURE_TARGET} DEPENDS ${TARGET_DEPENDENCIES})
-  add_dependencies(tutorials ${CONFIGURE_TARGET})
-endfunction(configure_tutorial_target)
+add_custom_target(tutorials)
+add_custom_target(tutorials_html)
+add_custom_target(tutorials_python)
+
+configure_file(Readme.md ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+configure_file(convert.py ${CMAKE_CURRENT_BINARY_DIR})
 
 # Convert a tutorial to the Python and HTML formats. Make these files
 # dependencies of targets `tutorials_html` and `tutorials_python`.
-function(NB_EXPORT)
+function(ESPRESSO_ADD_TUTORIAL)
   cmake_parse_arguments(NB_EXPORT "HTML_RUN" "FILE;TARGET;SUFFIX"
-                        "VAR_SUBST;ADD_SCRIPTS" ${ARGN})
+                        "VAR_SUBST;ADD_SCRIPTS;DEPENDS" ${ARGN})
 
-  set(NB_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NB_EXPORT_FILE}")
+  # create target if it doesn't already exist
+  set(TUTORIAL_TARGET ${NB_EXPORT_TARGET})
+  if(NOT TARGET ${TUTORIAL_TARGET})
+    add_custom_target(${TUTORIAL_TARGET})
+  endif()
+
+  # deploy dependencies
+  set(TARGET_DEPENDENCIES "")
+  foreach(RELPATH ${NB_EXPORT_DEPENDS})
+    configure_file(${RELPATH} ${RELPATH} COPYONLY)
+    list(APPEND TARGET_DEPENDENCIES ${CMAKE_CURRENT_BINARY_DIR}/${RELPATH})
+  endforeach()
+
+  set(NB_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${NB_EXPORT_FILE})
+  set(IPYNB_FILE ${CMAKE_CURRENT_BINARY_DIR}/${NB_EXPORT_FILE})
   set(DEPENDENCY_OF_TARGET "${NB_EXPORT_TARGET}")
-  if(NOT "${NB_EXPORT_SUFFIX}" STREQUAL "")
+  if(DEFINED NB_EXPORT_SUFFIX AND NOT "${NB_EXPORT_SUFFIX}" STREQUAL "")
     set(NB_EXPORT_TARGET "${NB_EXPORT_TARGET}_${NB_EXPORT_SUFFIX}")
   endif()
   cmake_path(GET NB_FILE STEM NB_FILE_STEM)
   cmake_path(GET NB_FILE EXTENSION NB_FILE_EXT)
-  set(HTML_FILE "${NB_FILE_STEM}.html")
-  set(PY_FILE "${NB_FILE_STEM}.py")
+  set(HTML_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NB_FILE_STEM}.html")
+  set(PY_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NB_FILE_STEM}.py")
 
   if(NB_EXPORT_HTML_RUN)
     set(NB_FILE_RUN "${NB_FILE_STEM}.run${NB_FILE_EXT}")
     add_custom_command(
       OUTPUT ${NB_FILE_RUN}
-      DEPENDS
-        "${NB_FILE};${NB_EXPORT_ADD_SCRIPTS};${CMAKE_BINARY_DIR}/doc/tutorials/convert.py;${CMAKE_BINARY_DIR}/testsuite/scripts/importlib_wrapper.py"
+      DEPENDS ${NB_FILE} ${NB_EXPORT_ADD_SCRIPTS} ${CMAKE_BINARY_DIR}/pypresso
+              ${CMAKE_BINARY_DIR}/doc/tutorials/convert.py
+              ${CMAKE_BINARY_DIR}/testsuite/scripts/importlib_wrapper.py
       COMMAND
         ${CMAKE_BINARY_DIR}/pypresso
         ${CMAKE_BINARY_DIR}/doc/tutorials/convert.py ci --execute
@@ -71,7 +74,16 @@ function(NB_EXPORT)
   endif()
 
   add_custom_command(
-    OUTPUT ${HTML_FILE} DEPENDS ${NB_FILE_RUN};${NB_EXPORT_ADD_SCRIPTS}
+    OUTPUT ${IPYNB_FILE}
+    DEPENDS ${NB_FILE} ${CMAKE_BINARY_DIR}/pypresso
+            ${CMAKE_BINARY_DIR}/doc/tutorials/convert.py
+    COMMAND ${CMAKE_COMMAND} -E copy ${NB_FILE} ${IPYNB_FILE}
+    COMMAND
+      ${CMAKE_BINARY_DIR}/pypresso ${CMAKE_BINARY_DIR}/doc/tutorials/convert.py
+      cells --to-md ${IPYNB_FILE})
+
+  add_custom_command(
+    OUTPUT ${HTML_FILE} DEPENDS ${NB_FILE_RUN} ${NB_EXPORT_ADD_SCRIPTS}
     COMMAND ${IPYTHON_EXECUTABLE} nbconvert --to "html" --output ${HTML_FILE}
             ${NB_FILE_RUN})
 
@@ -80,17 +92,17 @@ function(NB_EXPORT)
     COMMAND ${IPYTHON_EXECUTABLE} nbconvert --to "python" --output ${PY_FILE}
             ${NB_FILE})
 
+  add_custom_target("${NB_EXPORT_TARGET}_deps" DEPENDS ${TARGET_DEPENDENCIES}
+                                                       ${IPYNB_FILE})
   add_custom_target("${NB_EXPORT_TARGET}_html" DEPENDS ${HTML_FILE}
-                                                       ${DEPENDENCY_OF_TARGET})
-  add_custom_target("${NB_EXPORT_TARGET}_python"
-                    DEPENDS ${PY_FILE} ${DEPENDENCY_OF_TARGET})
+                                                       ${TUTORIAL_TARGET})
+  add_custom_target("${NB_EXPORT_TARGET}_python" DEPENDS ${PY_FILE}
+                                                         ${TUTORIAL_TARGET})
+  add_dependencies(${TUTORIAL_TARGET} "${NB_EXPORT_TARGET}_deps")
+  add_dependencies(tutorials ${TUTORIAL_TARGET})
   add_dependencies(tutorials_html "${NB_EXPORT_TARGET}_html")
   add_dependencies(tutorials_python "${NB_EXPORT_TARGET}_python")
-endfunction(NB_EXPORT)
-
-add_custom_target(tutorials)
-add_custom_target(tutorials_html)
-add_custom_target(tutorials_python)
+endfunction()
 
 # Here: add new directory
 add_subdirectory(lennard_jones)
@@ -109,6 +121,3 @@ add_subdirectory(widom_insertion)
 add_subdirectory(electrodes)
 add_subdirectory(grand_canonical_monte_carlo)
 add_subdirectory(mlip)
-
-configure_file(Readme.md ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
-configure_file(convert.py ${CMAKE_CURRENT_BINARY_DIR})

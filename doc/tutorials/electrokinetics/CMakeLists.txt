@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016-2022 The ESPResSo project
+# Copyright (C) 2016-2025 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -17,7 +17,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-configure_tutorial_target(TARGET tutorial_ek DEPENDS electrokinetics.ipynb
-                          figures/schlitzpore_3d.png)
-
-nb_export(TARGET tutorial_ek SUFFIX "" FILE "electrokinetics.ipynb" HTML_RUN)
+espresso_add_tutorial(TARGET tutorial_ek FILE "electrokinetics.ipynb" HTML_RUN
+                      DEPENDS figures/schlitzpore_3d.png)

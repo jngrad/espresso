@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2021-2022 The ESPResSo project
+# Copyright (C) 2021-2025 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -17,10 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-configure_tutorial_target(TARGET tutorial_err DEPENDS
-                          error_analysis_part1.ipynb error_analysis_part2.ipynb)
-
-nb_export(TARGET tutorial_err SUFFIX "1" FILE "error_analysis_part1.ipynb"
-          HTML_RUN)
-nb_export(TARGET tutorial_err SUFFIX "2" FILE "error_analysis_part2.ipynb"
-          HTML_RUN)
+espresso_add_tutorial(TARGET tutorial_err SUFFIX "1" FILE
+                      "error_analysis_part1.ipynb" HTML_RUN)
+espresso_add_tutorial(TARGET tutorial_err SUFFIX "2" FILE
+                      "error_analysis_part2.ipynb" HTML_RUN)

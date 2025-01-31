@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016-2024 The ESPResSo project
+# Copyright (C) 2024-2025 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -17,6 +17,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-configure_tutorial_target(TARGET tutorial_mlip DEPENDS mlip.ipynb)
-
-nb_export(TARGET tutorial_mlip SUFFIX "" FILE "mlip.ipynb")
+espresso_add_tutorial(TARGET tutorial_mlip FILE "mlip.ipynb")

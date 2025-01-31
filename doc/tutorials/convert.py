@@ -32,7 +32,6 @@ import os
 import sys
 import uuid
 sys.path.append('@CMAKE_SOURCE_DIR@/testsuite/scripts')
-import importlib_wrapper as iw
 
 
 SOLUTION_CELL_TOKEN = "# SOLUTION CELL"
@@ -186,6 +185,7 @@ def execute_notebook(nb, src, cell_separator, notebook_filepath):
     the notebook in a CI environment.
     """
     import nbconvert.preprocessors
+    import importlib_wrapper as iw
     notebook_dirname = os.path.dirname(notebook_filepath)
     # disable OpenGL GUI
     src_no_gui = iw.mock_es_visualization(src)
@@ -224,6 +224,7 @@ def handle_ci_case(args):
     disable_plot_interactivity(nb)
 
     if args.substitutions or args.execute:
+        import importlib_wrapper as iw
         # substitute global variables
         cell_separator = f'\n##{uuid.uuid4().hex}\n'
         src = cell_separator.join(get_code_cells(nb))

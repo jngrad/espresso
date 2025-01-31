@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2017-2022 The ESPResSo project
+# Copyright (C) 2017-2025 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -17,8 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-configure_tutorial_target(
-  TARGET tutorial_am DEPENDS active_matter.ipynb figures/friction.svg
-  figures/pusher-puller.svg figures/geometry.svg)
-
-nb_export(TARGET tutorial_am FILE "active_matter.ipynb" HTML_RUN)
+espresso_add_tutorial(
+  TARGET tutorial_am FILE "active_matter.ipynb" HTML_RUN DEPENDS
+  figures/friction.svg figures/pusher-puller.svg figures/geometry.svg)
