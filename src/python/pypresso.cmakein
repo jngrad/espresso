@@ -93,7 +93,7 @@ case "$1" in
         ;;
     --coverage)
         shift
-        exec @Python_EXECUTABLE@ -m coverage run --source=@CMAKE_BINARY_DIR@/testsuite/ --rcfile="@PROJECT_SOURCE_DIR@/.coveragerc" "$@"
+        exec "@Python_EXECUTABLE@" -m coverage run --source="@CMAKE_BINARY_DIR@/testsuite/" --rcfile="@PROJECT_SOURCE_DIR@/.coveragerc" "$@"
         ;;
     --valgrind)
         shift
