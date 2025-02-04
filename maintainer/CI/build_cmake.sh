@@ -245,13 +245,6 @@ end "CONFIGURE"
 # BUILD
 start "BUILD"
 
-echo 'python3 -c "import sys;print(sys.path)"'
-python3 -c "import sys;print(sys.path)"
-echo './pypresso -c "import sys;print(sys.path)"'
-./pypresso -c "import sys;print(sys.path)"
-cat ./pypresso
-exit 1
-
 make -k -j${build_procs} || make -k -j1 || exit ${?}
 
 end "BUILD"
