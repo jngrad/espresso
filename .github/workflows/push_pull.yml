@@ -37,6 +37,5 @@ jobs:
           check_procs: 3
           CC: ${{ steps.toolchain.outputs.clang_CC }}
           CXX: ${{ steps.toolchain.outputs.clang_CXX }}
-          PATH: ${{ github.workspace }}/venv/bin/activate
           with_ccache: 'true'
 
