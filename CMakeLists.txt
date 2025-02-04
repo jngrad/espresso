@@ -44,6 +44,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # require minimal compiler versions
+# AppleClang 16.x maps to LLVM 17.0.6
 macro(espresso_minimal_compiler_version)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "${ARGV0}" AND CMAKE_CXX_COMPILER_VERSION
                                                    VERSION_LESS "${ARGV1}")
@@ -54,7 +55,7 @@ endmacro()
 
 espresso_minimal_compiler_version("GNU" 12.2.0)
 espresso_minimal_compiler_version("Clang" 18.1.0)
-espresso_minimal_compiler_version("AppleClang" 14.0.0)
+espresso_minimal_compiler_version("AppleClang" 16.0.0)
 espresso_minimal_compiler_version("IntelLLVM" 2023.1)
 
 set(UNSUPPORTED_COMPILERS "Intel;MSVC")

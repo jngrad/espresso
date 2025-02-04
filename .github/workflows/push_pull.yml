@@ -27,13 +27,13 @@ jobs:
          . venv/bin/activate
          pip3 install -c requirements.txt "cython<3.0.10" numpy scipy packaging
          deactivate
-         echo "clang_CC=$(brew --prefix llvm@18)/bin/clang" >> $GITHUB_OUTPUT
-         echo "clang_CXX=$(brew --prefix llvm@18)/bin/clang++" >> $GITHUB_OUTPUT
         shell: bash
       - name: Build and check
         uses: ./.github/actions/build_and_check
         env:
           build_procs: 3
           check_procs: 3
+          CC: ${{ steps.toolchain.outputs.clang_CC }}
+          CXX: ${{ steps.toolchain.outputs.clang_CXX }}
           with_ccache: 'true'
 

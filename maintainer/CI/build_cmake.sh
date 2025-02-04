@@ -249,6 +249,11 @@ make -k -j${build_procs} || make -k -j1 || exit ${?}
 
 end "BUILD"
 
+echo 'python3 -c "import sys;print(sys.path)"'
+python3 -c "import sys;print(sys.path)"
+echo './pypresso -c "import sys;print(sys.path)"'
+./pypresso -c "import sys;print(sys.path)"
+
 # Check for exit() function, which should never be called from a shared
 # library. See details in https://github.com/espressomd/espresso/issues/2249
 # Can't do this check on CUDA though because nvcc creates a host function
