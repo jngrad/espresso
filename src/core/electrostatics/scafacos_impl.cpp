@@ -121,10 +121,9 @@ void CoulombScafacosImpl::tune_r_cut() {
       break;
     }
 
+    r_min += dr;
     if (t_mid > t_min) {
-      r_max = r_min += dr;
-    } else {
-      r_min += dr;
+      r_max = r_min;
     }
   }
   assert(r_opt >= 0.);

@@ -52,8 +52,8 @@ macro(espresso_minimal_compiler_version)
   endif()
 endmacro()
 
-espresso_minimal_compiler_version("GNU" 10.5.0)
-espresso_minimal_compiler_version("Clang" 14.0.0)
+espresso_minimal_compiler_version("GNU" 12.2.0)
+espresso_minimal_compiler_version("Clang" 18.1.0)
 espresso_minimal_compiler_version("AppleClang" 14.0.0)
 espresso_minimal_compiler_version("IntelLLVM" 2023.1)
 
@@ -241,8 +241,6 @@ if(ESPRESSO_BUILD_WITH_CUDA)
   include(CheckLanguage)
   enable_language(CUDA)
   check_language(CUDA)
-  espresso_minimal_compiler_version("GNU" 11.4.0)
-  espresso_minimal_compiler_version("Clang" 17.0.0)
   set(CMAKE_CUDA_STANDARD 20)
   set(CMAKE_CUDA_STANDARD_REQUIRED ON)
   set(ESPRESSO_MINIMAL_CUDA_VERSION 12.0)
@@ -771,15 +769,21 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
     set(BUILD_SHARED_LIBS ${ESPRESSO_BUILD_SHARED_LIBS_DEFAULT})
     set(CMAKE_SHARED_LIBRARY_PREFIX "${ESPRESSO_SHARED_LIBRARY_PREFIX}")
   endif()
+  # patching
+  target_compile_options(
+    blockforest
+    PRIVATE
+      $<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_GREATER_EQUAL:$<CXX_COMPILER_VERSION>,14>>:-Wno-alloc-size>
+  )
   set(WALBERLA_LIBS
       walberla::core walberla::domain_decomposition walberla::blockforest
       walberla::boundary walberla::field walberla::lbm walberla::timeloop
       walberla::vtk)
   if(WALBERLA_BUILD_WITH_FFTW)
-    set(WALBERLA_LIBS ${WALBERLA_LIBS} walberla::fft)
+    list(APPEND WALBERLA_LIBS walberla::fft)
   endif()
   if(WALBERLA_BUILD_WITH_CUDA)
-    set(WALBERLA_LIBS ${WALBERLA_LIBS} walberla::gpu)
+    list(APPEND WALBERLA_LIBS walberla::gpu)
   endif()
   set(WALBERLA_LIBS_EXPORT
       ${WALBERLA_LIBS}

@@ -77,9 +77,9 @@ default:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'gcc-13'
-     CXX: 'g++-13'
-     GCOV: 'gcov-13'
+     CC: 'gcc-14'
+     CXX: 'g++-14'
+     GCOV: 'gcov-14'
      with_cuda: 'false'
      myconfig: 'default'
      with_coverage: 'true'
@@ -98,9 +98,9 @@ maxset:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'gcc-13'
-     CXX: 'g++-13'
-     GCOV: 'gcov-13'
+     CC: 'gcc-14'
+     CXX: 'g++-14'
+     GCOV: 'gcov-14'
      with_cuda: 'false'
      myconfig: 'maxset'
      with_coverage: 'true'
@@ -122,9 +122,9 @@ no_rotation:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'gcc-13'
-     CXX: 'g++-13'
-     GCOV: 'gcov-13'
+     CC: 'gcc-14'
+     CXX: 'g++-14'
+     GCOV: 'gcov-14'
      with_cuda: 'false'
      myconfig: 'no_rotation'
      with_coverage: 'true'
@@ -163,9 +163,9 @@ clang-sanitizer:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'clang-18'
-     CXX: 'clang++-18'
-     CUDACXX: 'clang++-18'
+     CC: 'clang-19'
+     CXX: 'clang++-19'
+     CUDACXX: 'clang++-19'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_cuda_compiler: 'clang'
@@ -190,9 +190,9 @@ fast_math:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'gcc-12'
-     CXX: 'g++-12'
-     GCOV: 'gcov-12'
+     CC: 'gcc-13'
+     CXX: 'g++-13'
+     GCOV: 'gcov-13'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -210,9 +210,9 @@ cuda12-coverage:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'gcc-12'
-     CXX: 'g++-12'
-     GCOV: 'gcov-12'
+     CC: 'gcc-13'
+     CXX: 'g++-13'
+     GCOV: 'gcov-13'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'true'
@@ -232,9 +232,9 @@ cuda12-maxset:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'gcc-12'
-     CXX: 'g++-12'
-     GCOV: 'gcov-12'
+     CC: 'gcc-13'
+     CXX: 'g++-13'
+     GCOV: 'gcov-13'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -264,9 +264,9 @@ tutorials-samples-maxset:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'gcc-12'
-     CXX: 'g++-12'
-     GCOV: 'gcov-12'
+     CC: 'gcc-13'
+     CXX: 'g++-13'
+     GCOV: 'gcov-13'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -293,9 +293,9 @@ tutorials-samples-default:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'gcc-12'
-     CXX: 'g++-12'
-     GCOV: 'gcov-12'
+     CC: 'gcc-13'
+     CXX: 'g++-13'
+     GCOV: 'gcov-13'
      myconfig: 'default'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -322,9 +322,9 @@ tutorials-samples-empty:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'gcc-12'
-     CXX: 'g++-12'
-     GCOV: 'gcov-12'
+     CC: 'gcc-13'
+     CXX: 'g++-13'
+     GCOV: 'gcov-13'
      myconfig: 'empty'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -349,9 +349,9 @@ tutorials-samples-no-gpu:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'gcc-12'
-     CXX: 'g++-12'
-     GCOV: 'gcov-12'
+     CC: 'gcc-13'
+     CXX: 'g++-13'
+     GCOV: 'gcov-13'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -378,9 +378,9 @@ installation:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'gcc-12'
-     CXX: 'g++-12'
-     GCOV: 'gcov-12'
+     CC: 'gcc-13'
+     CXX: 'g++-13'
+     GCOV: 'gcov-13'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
@@ -411,9 +411,9 @@ empty:
   <<: *global_job_definition
   stage: build
   variables:
-     CC: 'clang-18'
-     CXX: 'clang++-18'
-     CUDACXX: 'clang++-18'
+     CC: 'clang-19'
+     CXX: 'clang++-19'
+     CUDACXX: 'clang++-19'
      myconfig: 'empty'
      with_cuda: 'true'
      with_cuda_compiler: 'clang'
@@ -531,9 +531,9 @@ maxset_3_cores:
     - job: cuda12-maxset
       artifacts: false
   variables:
-     CC: 'gcc-12'
-     CXX: 'g++-12'
-     GCOV: 'gcov-12'
+     CC: 'gcc-13'
+     CXX: 'g++-13'
+     GCOV: 'gcov-13'
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'

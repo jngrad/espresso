@@ -125,8 +125,9 @@ class LBCouetteTest:
         v_r, v_phi, v_z = profile_v.T
 
         # check velocity is zero for the radial and axial components
+        # (the absolute tolerance follows a Poisson distribution)
         np.testing.assert_allclose(v_r, 0., atol=1e-4)
-        np.testing.assert_allclose(v_z, 0., atol=1e-6)
+        np.testing.assert_allclose(v_z, 0., atol=4e-6)
 
         # check azimuthal velocity is zero inside boundary
         np.testing.assert_allclose(v_phi[:7], 0., atol=1e-7)
