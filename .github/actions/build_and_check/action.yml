@@ -4,11 +4,6 @@ runs:
   using: "composite"
   steps:
     - run: |
-       brew install boost boost-mpi fftw
-       pip3 install -c requirements.txt "cython<3.0" numpy scipy packaging
-      shell: bash
-      if: runner.os == 'macOS'
-    - run: |
         export myconfig=maxset with_cuda=false with_gsl=false with_hdf5=false test_timeout=800 check_skip_long=true
         bash maintainer/CI/build_cmake.sh
       shell: bash

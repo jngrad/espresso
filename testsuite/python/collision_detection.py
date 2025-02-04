@@ -186,19 +186,8 @@ class CollisionDetection(ut.TestCase):
         # We traverse particles. We look for a vs with a bond to find the other vs.
         # From the two vs we find the two non-virtual particles
         for p in system.part:
-            # Skip non-virtual
-            if not p.is_virtual():
-                continue
-            # Skip vs that doesn't have a bond
-            if p.bonds == ():
-                continue
-            if p.id == 1:
-                # Parse the bond
-                self.assertEqual(len(p.bonds), 2)
-                # Bond type
-                self.assertEqual(p.bonds[0][0], self.bond_pair)
-                self.assertEqual(p.bonds[1][0], self.bond_vs)
-            else:
+            # Skip non-vs and vs that don't have a bond
+            if p.is_virtual() and p.bonds != ():
                 # Parse the bond
                 self.assertEqual(len(p.bonds), 1)
                 # Bond type
@@ -677,80 +666,6 @@ class CollisionDetection(ut.TestCase):
 
         # Tidy
         system.non_bonded_inter[0, 0].lennard_jones.deactivate()
-
-    def verify_triangle_binding(self, distance, first_bond, angle_res):
-        system = self.system
-        # Gather pairs
-        n = len(system.part)
-        angle_res = angle_res - 1
-
-        expected_pairs = []
-        for i in range(n):
-            for j in range(i + 1, n, 1):
-                if system.distance(system.part.by_id(i),
-                                   system.part.by_id(j)) <= distance:
-                    expected_pairs.append((i, j))
-
-        # Find triangles
-        # Each element is a particle id, a bond id and two bond partners in
-        # ascending order
-        expected_angle_bonds = []
-        for i in range(n):
-            for j in range(i + 1, n, 1):
-                for k in range(j + 1, n, 1):
-                    # Ref to particles
-                    p_i, p_j, p_k = system.part.by_ids([i, j, k])
-
-                    # Normalized distance vectors
-                    d_ij = np.copy(p_j.pos - p_i.pos)
-                    d_ik = np.copy(p_k.pos - p_i.pos)
-                    d_jk = np.copy(p_k.pos - p_j.pos)
-                    d_ij /= np.linalg.norm(d_ij)
-                    d_ik /= np.linalg.norm(d_ik)
-                    d_jk /= np.linalg.norm(d_jk)
-
-                    if system.distance(p_i, p_j) <= distance and system.distance(
-                            p_i, p_k) <= distance:
-                        id_i = first_bond._bond_id + \
-                            int(np.round(
-                                np.arccos(np.dot(d_ij, d_ik)) * angle_res / np.pi))
-                        expected_angle_bonds.append((i, id_i, j, k))
-
-                    if system.distance(p_i, p_j) <= distance and system.distance(
-                            p_j, p_k) <= distance:
-                        id_j = first_bond._bond_id + \
-                            int(np.round(
-                                np.arccos(np.dot(-d_ij, d_jk)) * angle_res / np.pi))
-                        expected_angle_bonds.append((j, id_j, i, k))
-                    if system.distance(p_i, p_k) <= distance and system.distance(
-                            p_j, p_k) <= distance:
-                        id_k = first_bond._bond_id + \
-                            int(np.round(
-                                np.arccos(np.dot(-d_ik, -d_jk)) * angle_res / np.pi))
-                        expected_angle_bonds.append((k, id_k, i, j))
-
-        # Gather actual pairs and actual triangles
-        found_pairs = []
-        found_angle_bonds = []
-        for i in range(n):
-            for b in system.part.by_id(i).bonds:
-                self.assertIn(
-                    len(b), (2, 3), msg="There should only be 2- and 3-particle bonds")
-                if len(b) == 2:
-                    self.assertEqual(b[0]._bond_id, self.bond_center._bond_id)
-                    found_pairs.append(tuple(sorted((i, b[1]))))
-                elif len(b) == 3:
-                    partners = sorted(b[1:])
-                    found_angle_bonds.append(
-                        (i, b[0]._bond_id, partners[0], partners[1]))
-
-        # The order between expected and found bonds does not always match
-        # because collisions occur in random order. Sort stuff
-        found_pairs = sorted(found_pairs)
-        found_angle_bonds = sorted(found_angle_bonds)
-        expected_angle_bonds = sorted(expected_angle_bonds)
-        self.assertEqual(found_pairs, expected_pairs)
-        self.assertEqual(found_angle_bonds, expected_angle_bonds)
 
 
 if __name__ == "__main__":
