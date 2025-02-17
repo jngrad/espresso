@@ -27,6 +27,7 @@ Limitations:
 - non-metallic boundaries not implemented
 """
 
+import os
 import math
 import numpy as np
 
@@ -872,10 +873,10 @@ class CoulombP3MState(P3MStateCommon):
         self.inter_weights = p3m_interpolation_cache()
 
         self.rs_charge_density = np.zeros(0, dtype=float)
-        self.ks_charge_density = np.zeros(0, dtype=np.complex_)
+        self.ks_charge_density = np.zeros(0, dtype=np.complex128)
         self.rs_E_fields = [np.zeros(0, dtype=float) for _ in range(3)]
-        self.ks_E_fields_storage = np.zeros(0, dtype=np.complex_)
-        self.rs_E_fields_no_halo = np.zeros(0, dtype=np.complex_)
+        self.ks_E_fields_storage = np.zeros(0, dtype=np.complex128)
+        self.rs_E_fields_no_halo = np.zeros(0, dtype=np.complex128)
         self.halo_comm = p3m_send_mesh()
         self.fft = None
 
@@ -1398,11 +1399,11 @@ class CoulombP3MImpl(CoulombP3M):
         rs_array_length_no_halo = np.prod(self.p3m.local_mesh.dim_no_halo)
         fft_mesh_length = np.prod(self.p3m.fft.ks_local_size())
         self.p3m.rs_charge_density = np.zeros(rs_array_length, dtype=float)
-        self.p3m.ks_charge_density = np.zeros(fft_mesh_length, dtype=np.complex_)
+        self.p3m.ks_charge_density = np.zeros(fft_mesh_length, dtype=np.complex128)
         for i in range(3):
             self.p3m.rs_E_fields[i] = np.zeros(rs_array_length, dtype=float)
-        self.p3m.ks_E_fields_storage = np.zeros(3 * fft_mesh_length, dtype=np.complex_)
-        self.p3m.rs_E_fields_no_halo = np.zeros(3 * rs_array_length_no_halo, dtype=np.complex_)
+        self.p3m.ks_E_fields_storage = np.zeros(3 * fft_mesh_length, dtype=np.complex128)
+        self.p3m.rs_E_fields_no_halo = np.zeros(3 * rs_array_length_no_halo, dtype=np.complex128)
         self.p3m.calc_differential_operator()
         self.scaleby_box_l()
         self.count_charged_particles()
@@ -1503,13 +1504,13 @@ for p in system.particles:
     print(np.around(p.f, 8))
 
 for i, p in enumerate(system.particles):
-    np.testing.assert_allclose(p.f, ref_forces[i], rtol=1e-7, atol=1e-9)
+    np.testing.assert_allclose(np.around(p.f, 12), np.around(ref_forces[i], 12), rtol=1e-7, atol=1e-9)
 
 
 # coulomb cloud wall test
 system = System(box_l=[10., 10., 10.])
 ref_forces = []
-data = np.genfromtxt("../testsuite/python/data/coulomb_cloud_wall_system.data")
+data = np.genfromtxt(os.path.join(os.path.dirname(__file__), "../testsuite/python/data/coulomb_cloud_wall_system.data"))
 for line in data:
     system.particles.append(Particle(pos=line[1:4], q=line[4]))
     ref_forces.append(line[5:8])
@@ -1528,7 +1529,7 @@ np.testing.assert_allclose(cur_forces, ref_forces, atol=2e-3)
 # coulomb cloud wall duplicated test
 system = System(box_l=[10., 10., 20.])
 ref_forces = []
-data = np.genfromtxt("../testsuite/python/data/coulomb_cloud_wall_duplicated_system.data")
+data = np.genfromtxt(os.path.join(os.path.dirname(__file__), "../testsuite/python/data/coulomb_cloud_wall_duplicated_system.data"))
 for line in data:
     system.particles.append(Particle(pos=line[1:4], q=line[4]))
     ref_forces.append(line[5:8])
