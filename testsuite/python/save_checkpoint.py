@@ -178,11 +178,15 @@ if has_ase and "ase" in sys.modules:
 
 # accumulators
 obs = espressomd.observables.ParticlePositions(ids=[0, 1])
+obs_dist = espressomd.observables.PairwiseDistances(
+    ids=[0, 2, 1], target_ids=[4, 3])
 acc_mean_variance = espressomd.accumulators.MeanVarianceCalculator(obs=obs)
 acc_time_series = espressomd.accumulators.TimeSeries(obs=obs)
 acc_correlator = espressomd.accumulators.Correlator(
     obs1=obs, tau_lin=10, tau_max=2, delta_N=1,
     corr_operation="componentwise_product")
+acc_contact_times = espressomd.accumulators.ContactTimes(
+    obs=obs_dist, delta_N=2, contact_threshold=0.2)
 acc_mean_variance.update()
 acc_time_series.update()
 acc_correlator.update()
@@ -194,6 +198,7 @@ acc_correlator.update()
 system.auto_update_accumulators.add(acc_mean_variance)
 system.auto_update_accumulators.add(acc_time_series)
 system.auto_update_accumulators.add(acc_correlator)
+system.auto_update_accumulators.add(acc_contact_times)
 
 # constraints
 system.constraints.add(shape=espressomd.shapes.Sphere(center=system.box_l / 2, radius=0.1),

@@ -641,6 +641,36 @@ class ParticleDistances(Observable):
 
 
 @script_interface_register
+class PairwiseDistances(Observable):
+    """
+    Calculates the distance matrix between two sets of particles.
+    Duplicate entries in each set are only counted once.
+    The calculation yields a flattened triangular matrix.
+
+    Parameters
+    ----------
+    ids : array_like of :obj:`int`
+        The first set of ids of particles.
+
+    target_ids : array_like of :obj:`int`
+        The second set of (target) ids of particles.
+        In case of overlap with the first set,
+        self-interactions are removed from the result.
+
+    Methods
+    -------
+    calculate()
+        Run the observable.
+
+        Returns
+        -------
+        (N * M / 2,) :obj:`ndarray` of :obj:`float`
+
+    """
+    _so_name = "Observables::PairwiseDistances"
+
+
+@script_interface_register
 class TotalForce(Observable):
 
     """Calculates the total force on particles with given ids.

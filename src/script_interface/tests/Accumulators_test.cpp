@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The ESPResSo project
+ * Copyright (C) 2022-2025 The ESPResSo project
  *
  * This file is part of ESPResSo.
  *
@@ -26,6 +26,7 @@
 
 #include "script_interface/GlobalContext.hpp"
 
+#include "script_interface/accumulators/ContactTimes.hpp"
 #include "script_interface/accumulators/Correlator.hpp"
 #include "script_interface/accumulators/MeanVarianceCalculator.hpp"
 #include "script_interface/accumulators/TimeSeries.hpp"
@@ -70,6 +71,7 @@ using TestObs = ScriptInterface::Observables::MockObservable;
 using TestObsPtr = std::shared_ptr<TestObs>;
 using TimeSeries = ScriptInterface::Accumulators::TimeSeries;
 using Correlator = ScriptInterface::Accumulators::Correlator;
+using ContactTimes = ScriptInterface::Accumulators::ContactTimes;
 using MeanVarianceCalculator =
     ScriptInterface::Accumulators::MeanVarianceCalculator;
 
@@ -80,6 +82,7 @@ auto make_global_context(std::shared_ptr<Communication::MpiCallbacks> &cb) {
   factory.register_new<TestObs>("TestObs");
   factory.register_new<TimeSeries>("TimeSeries");
   factory.register_new<Correlator>("Correlator");
+  factory.register_new<ContactTimes>("ContactTimes");
   factory.register_new<MeanVarianceCalculator>("MeanVarianceCalculator");
 
   return std::make_shared<ScriptInterface::GlobalContext>(
@@ -128,6 +131,52 @@ BOOST_AUTO_TEST_CASE(time_series) {
       auto const series = get_value<std::vector<double>>(time_series[0]);
       auto const series_ref = std::vector<double>{1., 2., 3., 4.};
       BOOST_TEST(series == series_ref, boost::test_tools::per_element());
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(contact_times) {
+  boost::mpi::communicator world;
+  auto cb =
+      std::make_shared<Communication::MpiCallbacks>(world, ::mpi_env.lock());
+  auto ctx = make_global_context(cb);
+
+  if (world.rank() != 0) {
+    cb->loop();
+  } else {
+    auto const obs = ctx->make_shared("TestObs", {});
+    BOOST_REQUIRE(obs != nullptr);
+    BOOST_CHECK_EQUAL(obs->context(), ctx.get());
+
+    auto const acc_si = ctx->make_shared(
+        "ContactTimes",
+        {{"obs", obs}, {"delta_N", 2}, {"contact_threshold", 2.}});
+    BOOST_REQUIRE(acc_si != nullptr);
+    auto const acc = std::dynamic_pointer_cast<ContactTimes>(acc_si);
+    BOOST_REQUIRE(acc != nullptr);
+
+    acc_si->call_method("update", VariantMap{});
+    {
+      BOOST_CHECK_EQUAL(get_value<int>(acc_si->get_parameter("delta_N")), 2);
+      BOOST_CHECK_EQUAL(get_value<TestObsPtr>(acc_si->get_parameter("obs")),
+                        obs);
+      BOOST_CHECK_EQUAL(
+          get_value<double>(acc_si->get_parameter("contact_threshold")), 2.);
+    }
+    {
+      auto const shape_ref = std::vector<int>(1, 0);
+      // check non-const access
+      auto const variant = acc_si->call_method("shape", VariantMap{});
+      auto const shape = get_value<std::vector<int>>(variant);
+      BOOST_TEST(shape == shape_ref, boost::test_tools::per_element());
+      // check const access
+      auto const shape_const = std::as_const(*acc).accumulator()->shape();
+      BOOST_TEST(shape_const == shape_ref, boost::test_tools::per_element());
+    }
+    {
+      auto const variant = acc_si->call_method("contact_times", VariantMap{});
+      auto const contact_times = get_value<std::vector<double>>(variant);
+      BOOST_REQUIRE_EQUAL(contact_times.size(), 0u);
     }
   }
 }
