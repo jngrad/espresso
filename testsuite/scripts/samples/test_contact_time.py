@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2017-2022 The ESPResSo project
+# Copyright (C) 2025 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -17,10 +17,23 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-target_sources(
-  espresso_core
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Correlator.cpp
-          ${CMAKE_CURRENT_SOURCE_DIR}/AutoUpdateAccumulators.cpp
-          ${CMAKE_CURRENT_SOURCE_DIR}/MeanVarianceCalculator.cpp
-          ${CMAKE_CURRENT_SOURCE_DIR}/ContactTimes.cpp
-          ${CMAKE_CURRENT_SOURCE_DIR}/TimeSeries.cpp)
+import numpy as np
+import unittest as ut
+import importlib_wrapper
+
+sample, skipIfMissingFeatures = importlib_wrapper.configure_and_import(
+    "@SAMPLES_DIR@/contact_time.py")
+
+
+@skipIfMissingFeatures
+class Sample(ut.TestCase):
+    system = sample.system
+
+    def test_contact_time(self):
+        ref = [0.05, 0.05, 0.05, 0.06, 0.04]
+        contact_times = np.copy(sample.contact_times)
+        np.testing.assert_allclose(contact_times, ref, rtol=1e-7)
+
+
+if __name__ == "__main__":
+    ut.main()

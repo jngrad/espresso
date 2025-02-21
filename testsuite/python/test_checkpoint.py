@@ -803,6 +803,13 @@ class CheckpointTest(ut.TestCase):
         expected[0:2] = [[[1, 2.5, 5], [1, 1, 4]], [[1, 2, 3], [1, 1, 4]]]
         np.testing.assert_array_equal(acc_correlator.result(), expected)
 
+    def test_contact_times(self):
+        acc = system.auto_update_accumulators[3]
+        np.testing.assert_array_equal(acc.obs.ids, [0, 2, 1])
+        np.testing.assert_array_equal(acc.obs.target_ids, [4, 3])
+        self.assertEqual(len(acc.contact_times()), 0)
+        self.assertAlmostEqual(acc.contact_threshold, 0.2, delta=1e-7)
+
     @utx.skipIfMissingFeatures('H5MD')
     @utx.skipIfMissingModules("h5py")
     def test_h5md(self):

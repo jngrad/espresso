@@ -21,6 +21,7 @@
 #include "CylindricalLBProfileObservable.hpp"
 #include "CylindricalPidProfileObservable.hpp"
 #include "LBProfileObservable.hpp"
+#include "PairwiseDistances.hpp"
 #include "ParamlessObservable.hpp"
 #include "PidObservable.hpp"
 #include "PidProfileObservable.hpp"
@@ -42,6 +43,7 @@
 #include "core/observables/DipoleMoment.hpp"
 #include "core/observables/LBVelocityProfile.hpp"
 #include "core/observables/MagneticDipoleMoment.hpp"
+#include "core/observables/PairwiseDistances.hpp"
 #include "core/observables/ParticleAngularVelocities.hpp"
 #include "core/observables/ParticleBodyAngularVelocities.hpp"
 #include "core/observables/ParticleBodyVelocities.hpp"
@@ -105,6 +107,10 @@ namespace Observables {
       "Observables::" #name "");
 /**@}*/
 
+#define REGISTER_PAIRWISE_DISTANCES(name)                                      \
+  om->register_new<PairwiseDistances<::Observables::name>>(                    \
+      "Observables::" #name "");
+
 void initialize(Utils::Factory<ObjectHandle> *om) {
   // Manual registration:
   //  om->register_new<ScriptInterface::Observables::ParticleVelocities>::
@@ -142,6 +148,8 @@ void initialize(Utils::Factory<ObjectHandle> *om) {
   REGISTER_CYLPID_PROFILE_OBS(CylindricalDensityProfile);
   REGISTER_CYLPID_PROFILE_OBS(CylindricalVelocityProfile);
   REGISTER_CYLPID_PROFILE_OBS(CylindricalFluxDensityProfile);
+  REGISTER_PAIRWISE_DISTANCES(PairwiseDistances);
+
 #ifdef DPD
   REGISTER(DPDStress)
 #endif
