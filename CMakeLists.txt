@@ -21,14 +21,6 @@
 
 cmake_minimum_required(VERSION 3.25.1)
 cmake_policy(VERSION 3.25.1)
-if(POLICY CMP0167)
-  # use BoostConfig.cmake shipped with Boost 1.70+ instead of the one in CMake
-  cmake_policy(SET CMP0167 NEW)
-endif()
-if(POLICY CMP0169)
-  # use deprecated FetchContent_Populate function for h5xx dependency
-  cmake_policy(SET CMP0169 OLD)
-endif()
 message(STATUS "CMake version: ${CMAKE_VERSION}")
 # CMake modules/macros are in a subdirectory to keep this file cleaner
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -64,6 +56,7 @@ endif()
 
 include(FeatureSummary)
 include(GNUInstallDirs)
+include(ExternalProject)
 include(FetchContent)
 include(espresso_option_enum)
 include(espresso_enable_avx2_support)
@@ -113,11 +106,6 @@ FetchContent_Declare(
   stokesian_dynamics
   GIT_REPOSITORY https://github.com/hmenke/espresso-stokesian-dynamics.git
   GIT_TAG        90f6de70d1c0ac9cf468f2fc90f9c601139e4c88
-)
-FetchContent_Declare(
-  h5xx
-  GIT_REPOSITORY https://github.com/h5md/h5xx.git
-  GIT_TAG        0.9.1
 )
 FetchContent_Declare(
   caliper
@@ -509,19 +497,27 @@ if(ESPRESSO_BUILD_WITH_HDF5)
       )
     endif()
   endif()
-  # We need to define our own h5xx target, since the project version we depend
-  # on is not fully compatible with modern CMake.
-  FetchContent_GetProperties(h5xx)
-  if(NOT h5xx_POPULATED)
-    FetchContent_Populate(h5xx)
-  endif()
-  add_library(h5xx INTERFACE)
   add_library(hdf5 INTERFACE)
   target_link_libraries(hdf5 INTERFACE $<BUILD_INTERFACE:${HDF5_LIBRARIES}>)
   target_include_directories(hdf5
                              INTERFACE $<BUILD_INTERFACE:${HDF5_INCLUDE_DIRS}>)
-  target_include_directories(h5xx
-                             INTERFACE $<BUILD_INTERFACE:${h5xx_SOURCE_DIR}>)
+  # We need to define our own h5xx target, since the project version we depend
+  # on is not fully compatible with modern CMake.
+  add_library(h5xx INTERFACE)
+  # cmake-format: off
+  ExternalProject_Add(
+    h5xx_library
+    GIT_REPOSITORY    https://github.com/h5md/h5xx.git
+    GIT_TAG           0.9.1
+    PREFIX            lib_h5xx
+    # header-only library: disable configuration/build/install steps
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND     ""
+    INSTALL_COMMAND   ""
+  )
+  # cmake-format: on
+  ExternalProject_Get_Property(h5xx_library SOURCE_DIR)
+  target_include_directories(h5xx INTERFACE $<BUILD_INTERFACE:${SOURCE_DIR}>)
   target_compile_features(h5xx INTERFACE cxx_std_11)
   target_compile_definitions(h5xx INTERFACE H5XX_USE_MPI)
   add_library(espresso_h5xx_cpp_flags INTERFACE)
@@ -669,6 +665,11 @@ endif()
 #
 # Boost
 #
+
+if(POLICY CMP0167)
+  # use BoostConfig.cmake shipped with Boost 1.70+ instead of the one in CMake
+  cmake_policy(SET CMP0167 NEW)
+endif()
 
 list(APPEND BOOST_COMPONENTS mpi serialization filesystem system)
 
