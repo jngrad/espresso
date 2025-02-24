@@ -52,7 +52,6 @@ are required to be able to compile and use |es|:
 
     Boost
         A number of advanced C++ features used by |es| are provided by Boost.
-        We strongly recommend to use at least Boost 1.71.
 
     FFTW
         For some algorithms like P\ :math:`^3`\ M, |es| needs the FFTW library
@@ -162,10 +161,10 @@ to activate CUDA. These commands may need to be adapted depending on which
 operating system and CUDA version you are using.
 
 You can control the list of CUDA architectures to generate device code for.
-For example, ``CUDAARCHS="61;75" cmake .. -D ESPRESSO_BUILD_WITH_CUDA=ON``
-will generate device code for both sm_61 and sm_75 architectures.
+For example, ``CUDAARCHS="75;86" cmake .. -D ESPRESSO_BUILD_WITH_CUDA=ON``
+will generate device code for both sm_75 and sm_86 architectures.
 
-On Ubuntu 24.04, the default GCC compiler may too recent for nvcc.
+On Ubuntu 24.04, the default GCC compiler may be too recent for nvcc.
 You can either use GCC 12:
 
 .. code-block:: bash
@@ -175,11 +174,11 @@ You can either use GCC 12:
       -D CUDAToolkit_ROOT=/usr/local/cuda-12.0 \
       -D CMAKE_CUDA_FLAGS="--compiler-bindir=/usr/bin/g++-12"
 
-or alternatively install Clang 18 as a replacement for nvcc and GCC:
+or alternatively install Clang 19 as a replacement for nvcc and GCC:
 
 .. code-block:: bash
 
-    CC=clang-18 CXX=clang++-18 CUDACXX=clang++-18 cmake .. \
+    CC=clang-19 CXX=clang++-19 CUDACXX=clang++-19 cmake .. \
       -D ESPRESSO_BUILD_WITH_CUDA=ON \
       -D CUDAToolkit_ROOT=/usr/local/cuda-12.0 \
       -D CMAKE_CXX_FLAGS="-I/usr/include/x86_64-linux-gnu/c++/12 -I/usr/include/c++/12 --cuda-path=/usr/local/cuda-12.0" \
@@ -234,7 +233,6 @@ The tutorials are written in the
 * `JupyterLab <https://jupyterlab.readthedocs.io/en/stable/>`__
 * `VS Code Jupyter <https://github.com/microsoft/vscode-jupyter>`__
 * `Jupyter Notebook <https://jupyter-notebook.readthedocs.io/en/stable/notebook.html>`__
-* `IPython <https://ipython.org/>`__ (not recommended)
 
 To check whether one of them is installed, run these commands:
 
@@ -242,7 +240,6 @@ To check whether one of them is installed, run these commands:
 
     jupyter lab --version
     jupyter notebook --version
-    ipython --version
     code --version
 
 If you don't have any of these tools installed and aren't sure which one
@@ -251,7 +248,7 @@ to use, we recommend installing JupyterLab:
 .. code-block:: bash
 
     python3 -m pip install -c requirements.txt \
-        jupyterlab>=4.3 nbformat nbconvert lxml[html_clean]
+        "jupyterlab>=4.3" nbformat nbconvert "lxml[html_clean]" jupyter_console
 
 If you prefer the look and feel of Jupyter Classic, install the following extra package:
 
@@ -588,14 +585,6 @@ Finally, there is a flag for debugging:
 -  ``ADDITIONAL_CHECKS`` Enables numerous additional checks which can detect
    inconsistencies especially in the cell systems. These checks are however
    too slow to be enabled in production runs.
-
-   .. note::
-      Because of a bug in OpenMPI versions 2.0-2.1, 3.0.0-3.0.2 and 3.1.0-3.1.2
-      that causes a segmentation fault when running the |es| OpenGL visualizer
-      with feature ``ADDITIONAL_CHECKS`` enabled together with either
-      ``ELECTROSTATICS`` or ``DIPOLES``, the subset of additional checks for
-      those two features are disabled if an unpatched version of OpenMPI is
-      detected during compilation.
 
 
 .. _External features:

@@ -106,13 +106,13 @@ set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 FetchContent_Declare(
   walberla
   GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla.git
-  GIT_TAG        f36fa0a68bae59f0b516f6587ea8fa7c24a41141
+  GIT_TAG        0aab9c0af2335b1f6fec75deae06e514ccb233ab
   PATCH_COMMAND  patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/cmake/walberla.patch
 )
 FetchContent_Declare(
   stokesian_dynamics
   GIT_REPOSITORY https://github.com/hmenke/espresso-stokesian-dynamics.git
-  GIT_TAG        862a7537a366f0c32f0c25e46bd107bea590faea
+  GIT_TAG        90f6de70d1c0ac9cf468f2fc90f9c601139e4c88
 )
 FetchContent_Declare(
   h5xx
@@ -765,7 +765,7 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   set(WALBERLA_BUILD_WITH_FASTMATH off CACHE BOOL "")
   if(NOT walberla_POPULATED)
     set(BUILD_SHARED_LIBS ON)
-    set(CMAKE_SHARED_LIBRARY_PREFIX "libwalberla_")
+    set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
     FetchContent_MakeAvailable(walberla)
     set(BUILD_SHARED_LIBS ${ESPRESSO_BUILD_SHARED_LIBS_DEFAULT})
     set(CMAKE_SHARED_LIBRARY_PREFIX "${ESPRESSO_SHARED_LIBRARY_PREFIX}")
@@ -782,8 +782,8 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   endif()
   set(WALBERLA_LIBS_EXPORT
       ${WALBERLA_LIBS}
-      walberla::lodepng
-      walberla::sqlite3
+      lodepng
+      sqlite3
       walberla::lbm_generated
       walberla::pe
       walberla::pe_coupling
@@ -794,19 +794,13 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
       walberla::executiontree
       walberla::geometry
       walberla::postprocessing
-      walberla::gather
-      walberla::gui)
-  # workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/21283
-  foreach(target_w_namespace IN LISTS WALBERLA_LIBS)
-    string(REPLACE "walberla::" "" target_wo_namespace ${target_w_namespace})
-    add_library(${target_w_namespace} ALIAS ${target_wo_namespace})
-  endforeach()
+      walberla::gather)
   # install all waLBerla shared objects
-  foreach(target_w_namespace IN LISTS WALBERLA_LIBS_EXPORT)
-    string(REPLACE "walberla::" "" target_wo_namespace ${target_w_namespace})
-    get_target_property(target_type ${target_wo_namespace} TYPE)
+  foreach(target_alias IN LISTS WALBERLA_LIBS_EXPORT)
+    string(REPLACE "::" "_" target_name ${target_alias})
+    get_target_property(target_type ${target_name} TYPE)
     if(${target_type} STREQUAL "SHARED_LIBRARY")
-      install(TARGETS ${target_wo_namespace}
+      install(TARGETS ${target_name}
               LIBRARY DESTINATION "${ESPRESSO_INSTALL_LIBDIR}")
     endif()
   endforeach()
