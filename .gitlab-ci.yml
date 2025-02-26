@@ -373,6 +373,36 @@ tutorials-samples-no-gpu:
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
 
+rtx4090:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
+     myconfig: 'maxset'
+     with_cuda: 'true'
+     with_coverage: 'false'
+     with_scafacos: 'true'
+     with_walberla: 'true'
+     with_walberla_avx: 'true'
+     with_stokesian_dynamics: 'true'
+     with_caliper: 'true'
+     build_type: 'Release'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+    - cd build
+    - make check_samples
+    - make check_tutorials
+  tags:
+    - espresso
+    - cuda
+    - avx2
+    - sfb1313
+  rules:
+    - if: $CI_COMMIT_BRANCH == "python"
+      when: manual
+
 installation:
   <<: *global_job_definition
   stage: build
