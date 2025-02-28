@@ -426,7 +426,7 @@ installation:
     - cd build
     - make install
     - cmake . -D ESPRESSO_BUILD_TESTS=ON
-    - sed -i "s|$(pwd)/pypresso|/tmp/espresso-unit-tests/bin/pypresso|" testsuite/{python,scripts/samples,scripts/tutorials}/CTestTestfile.cmake
+    - sed -i "s|$(pwd)/pypresso|/tmp/espresso-unit-tests/bin/pypresso|" testsuite/{python,samples,tutorials}/CTestTestfile.cmake
     - make check_python_skip_long
     - make check_samples
     - make check_tutorials
@@ -470,7 +470,6 @@ check_sphinx:
     - cd ${CI_PROJECT_DIR}/build
     - make -t && make sphinx
     - make -j2 tutorials
-    - make check_utils
     - bash ${CI_PROJECT_DIR}/maintainer/CI/doc_warnings.sh
     - python3 ${CI_PROJECT_DIR}/maintainer/CI/jupyter_warnings.py
   artifacts:
