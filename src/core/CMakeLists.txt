@@ -22,6 +22,7 @@
 add_library(
   espresso_core SHARED
   bond_error.cpp
+  bonds.cpp
   cells.cpp
   communication.cpp
   dpd.cpp
