@@ -17,25 +17,26 @@
 
 import unittest as ut
 import importlib_wrapper
+import numpy as np
+import contextlib
 
-try:
-    import pint  # pylint: disable=unused-import
-except ImportError:
-    tutorial = importlib_wrapper.MagicMock()
-    skipIfMissingFeatures = ut.skip(
-        "Python module pint not available, skipping test!")
-else:
+skipIfMissingFeatures = ut.skip("missing Python packages")
+with contextlib.suppress(ImportError):
     tutorial, skipIfMissingFeatures = importlib_wrapper.configure_and_import(
-        "@TUTORIALS_DIR@/constant_pH/constant_pH.py", script_suffix="interactions",
-        USE_WCA=True, USE_ELECTROSTATICS=True, NUM_PHS=8, NUM_SAMPLES=10)
+        "@TUTORIALS_DIR@/constant_pH/constant_pH.py", script_suffix="ideal",
+        USE_WCA=False, USE_ELECTROSTATICS=False, NUM_PHS=10)
 
 
 @skipIfMissingFeatures
 class Tutorial(ut.TestCase):
-    system = tutorial.system
 
     def test(self):
-        pass
+        ref_values = 1. / (1 + 10**(tutorial.pKa - tutorial.pHs))
+        sim_values = tutorial.av_alpha
+        sim_values_error = tutorial.err_alpha
+        # test alpha +/- 0.02 and standard error of alpha less than 0.02
+        np.testing.assert_allclose(sim_values, ref_values, rtol=0., atol=0.02)
+        np.testing.assert_array_less(sim_values_error, 0.02)
 
 
 if __name__ == "__main__":
