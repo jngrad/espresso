@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013-2022 The ESPResSo project
+# Copyright (C) 2013-2025 The ESPResSo project
 #
 # This file is part of ESPResSo.
 #
@@ -350,6 +350,80 @@ class TabulatedNonBonded(NonBondedInteraction):
 
         """
         return {}
+
+    def set_analytical(self, dist_param="r", **kwargs):
+        """
+        Set new parameters from a function :math:`f(r)` that evaluates the
+        force magnitude for a given inter-particle distance :math:`r`.
+
+        Parameters
+        ----------
+        min : :obj:`float`
+            The minimal interaction distance.
+        max : :obj:`float`
+            The maximal interaction distance.
+        energy_expr: :obj:`str` or :obj:`sympy.Expr` or :obj:`sympy.Piecewise`
+            Analytical expression for the inter-atomic potential.
+        dist_param: :obj:`str` or :obj:`sympy.Symbol`, optional
+            Symbol for the inter-particle distance variable in ``energy_expr``.
+        steps: :obj:`int`
+            Number of values in the force and energy arrays.
+        \\*\\*kwargs:
+            All mathematical constants that appear in ``energy_expr``.
+            Argument names are used as symbols.
+
+        """
+        import sympy as sp
+        import numpy as np
+
+        min_val = kwargs.pop("min")
+        max_val = kwargs.pop("max")
+        steps = kwargs.pop("steps")
+        expression = kwargs.pop("energy_expr")
+
+        if isinstance(expression, (sp.Expr, sp.Piecewise)):
+            energy = expression.copy()
+            if type(energy) is sp.Expr:
+                assert len(energy.args) == 1
+                energy = energy.args[0].copy()
+        elif isinstance(expression, str):
+            energy = sp.sympify(expression)
+        else:
+            raise TypeError("Parameter 'energy_expr' isn't sympy-compatible")
+
+        if isinstance(dist_param, str):
+            r = sp.symbols(dist_param)
+        elif isinstance(dist_param, sp.Symbol):
+            r = dist_param
+        else:
+            raise TypeError("Parameter 'dist_param' isn't sympy-compatible")
+
+        if r not in energy.free_symbols:
+            raise ValueError(
+                f"Parameter 'energy_expr' isn't a function of '{r}'")
+
+        for var, value in kwargs.items():
+            symbol = sp.symbols(var)
+            if symbol not in energy.free_symbols:
+                raise ValueError(
+                    f"Parameter '{var}' isn't a constant in 'energy_expr'")
+            energy = energy.subs(symbol, value)
+
+        def evaluate_tab(expr, xdata):
+            tabulated = []
+            for x in xdata:
+                result = expr.subs(r, x)
+                assert not result.has(sp.oo, sp.nan)
+                tabulated.append(float(result))
+            return tabulated
+
+        force = -energy.diff(r)
+        xdata = np.linspace(min_val, max_val, steps)
+        energy_tab = evaluate_tab(energy, xdata)
+        force_tab = evaluate_tab(force, xdata)
+
+        self.set_params(min=min_val, max=max_val,
+                        energy=energy_tab, force=force_tab)
 
     @property
     def cutoff(self):

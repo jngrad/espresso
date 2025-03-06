@@ -98,6 +98,22 @@ The values of :math:`r` are assumed to be equally distributed between
 :math:`r_\mathrm{min}` and :math:`r_\mathrm{max}` with a fixed distance
 of :math:`(r_\mathrm{max}-r_\mathrm{min})/(N_\mathrm{points}-1)`.
 
+Alternatively, one can generate the tabulated interaction from an analytical
+expression of the potential. The expression of the force is automatically
+determined through symbolic differentiation, via method
+:meth:`~espressomd.interactions.TabulatedNonBonded.set_analytical()`::
+
+    system.non_bonded_inter[type1, type2].tabulated.set_analytical(
+        min=0., max=8., steps=100, sigma=1., epsilon=4.,
+        energy_expr="4*epsilon*((sigma/r)**12-(sigma/r)**6)")
+
+    # optional: plot tabulated values
+    import matplotlib.pyplot as plt
+    plt.plot(system.non_bonded_inter[type1, type2].tabulated.force, label="force")
+    plt.plot(system.non_bonded_inter[type1, type2].tabulated.energy, label="energy")
+    plt.legend()
+    plt.show()
+
 .. _Lennard-Jones interaction:
 
 Lennard-Jones interaction
