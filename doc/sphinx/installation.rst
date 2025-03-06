@@ -118,8 +118,8 @@ To compile |es| on Ubuntu 24.04 LTS, install the following dependencies:
 .. code-block:: bash
 
     sudo apt install build-essential cmake cython3 python3-dev openmpi-bin \
-      libboost-all-dev fftw3-dev libfftw3-mpi-dev libhdf5-dev libhdf5-openmpi-dev \
-      python3-pip python3-numpy python3-scipy python3-opengl libgsl-dev freeglut3
+      libboost-all-dev libfftw3-dev libfftw3-mpi-dev libhdf5-dev libhdf5-openmpi-dev \
+      python3-pip python3-numpy python3-scipy python3-opengl libgsl-dev freeglut3-dev
 
 Optionally the ccmake utility can be installed for easier configuration:
 
