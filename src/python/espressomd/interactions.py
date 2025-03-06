@@ -331,9 +331,9 @@ class TabulatedNonBonded(NonBondedInteraction):
 
         Parameters
         ----------
-        min : :obj:`float`,
+        min : :obj:`float`
             The minimal interaction distance.
-        max : :obj:`float`,
+        max : :obj:`float`
             The maximal interaction distance.
         energy: array_like of :obj:`float`
             The energy table.
@@ -1030,11 +1030,10 @@ class TabulatedAngle(BondedInteraction):
     _so_feature = "TABULATED"
     _type_number = BONDED_IA.TABULATED_ANGLE
 
-    pi = 3.14159265358979
-
     def __init__(self, *args, **kwargs):
+        pi = 3.14159265358979
         if len(args) == 0 and "sip" not in kwargs:
-            kwargs.update({"min": 0., "max": self.pi})
+            kwargs.update({"min": 0., "max": pi})
         super().__init__(*args, **kwargs)
 
     def get_default_params(self):
@@ -1064,11 +1063,10 @@ class TabulatedDihedral(BondedInteraction):
     _so_feature = "TABULATED"
     _type_number = BONDED_IA.TABULATED_DIHEDRAL
 
-    pi = 3.14159265358979
-
     def __init__(self, *args, **kwargs):
+        pi = 3.14159265358979
         if len(args) == 0 and "sip" not in kwargs:
-            kwargs.update({"min": 0., "max": 2. * self.pi})
+            kwargs.update({"min": 0., "max": 2. * pi})
         super().__init__(*args, **kwargs)
 
     def get_default_params(self):

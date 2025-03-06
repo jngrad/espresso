@@ -23,6 +23,7 @@ import espressomd.interactions
 import numpy as np
 
 
+@utx.skipIfMissingFeatures("TABULATED")
 class TabulatedTest(ut.TestCase):
     system = espressomd.System(box_l=3 * [10.])
     system.time_step = 0.01
@@ -31,15 +32,14 @@ class TabulatedTest(ut.TestCase):
     def setUp(self):
         self.min_ = 1.
         self.max_ = 2.
-        self.dx = (self.max_ - self.min_) / 99.
-        self.force = 5 + np.arange(0, 100) * 2.3 * self.dx
-        self.energy = 5 - np.arange(0, 100) * 2.3 * self.dx
 
         self.system.part.add(type=0, pos=[5., 5., 5.0])
         self.system.part.add(type=0, pos=[5., 5., 5.5])
 
     def tearDown(self):
         self.system.part.clear()
+        self.system.non_bonded_inter.reset()
+        self.system.bonded_inter.clear()
 
     def check(self):
         p0, p1 = self.system.part.all()
@@ -55,16 +55,18 @@ class TabulatedTest(ut.TestCase):
             self.assertAlmostEqual(
                 self.system.analysis.energy()['total'], 5. - z * 2.3)
 
-    @utx.skipIfMissingFeatures("TABULATED")
     def test_non_bonded(self):
+        dx = (self.max_ - self.min_) / 99.
+        ref_force = 5. + np.arange(0, 100) * 2.3 * dx
+        ref_energy = 5. - np.arange(0, 100) * 2.3 * dx
         self.system.non_bonded_inter[0, 0].tabulated.set_params(
-            min=self.min_, max=self.max_, energy=self.energy, force=self.force)
+            min=self.min_, max=self.max_, energy=ref_energy, force=ref_force)
         self.assertEqual(
             self.system.non_bonded_inter[0, 0].tabulated.cutoff, self.max_)
 
         params = self.system.non_bonded_inter[0, 0].tabulated.get_params()
-        np.testing.assert_allclose(params['force'], self.force)
-        np.testing.assert_allclose(params['energy'], self.energy)
+        np.testing.assert_allclose(params['force'], ref_force)
+        np.testing.assert_allclose(params['energy'], ref_energy)
         self.assertAlmostEqual(params['min'], self.min_)
         self.assertAlmostEqual(params['max'], self.max_)
 
@@ -75,6 +77,7 @@ class TabulatedTest(ut.TestCase):
         self.assertEqual(
             self.system.non_bonded_inter[0, 0].tabulated.cutoff, -1.)
 
+    def test_non_bonded_exceptions(self):
         with self.assertRaisesRegex(ValueError, "TabulatedPotential parameter 'max' must be larger than or equal to parameter 'min'"):
             espressomd.interactions.TabulatedNonBonded(
                 min=1., max=0., energy=[0.], force=[0.])
@@ -88,14 +91,16 @@ class TabulatedTest(ut.TestCase):
             espressomd.interactions.TabulatedNonBonded(
                 min=1., max=2., energy=[0.], force=[0., 0.])
 
-    @utx.skipIfMissingFeatures("TABULATED")
     def test_bonded(self):
+        dx = (self.max_ - self.min_) / 99.
+        ref_force = 5. + np.arange(0, 100) * 2.3 * dx
+        ref_energy = 5. - np.arange(0, 100) * 2.3 * dx
         tb = espressomd.interactions.TabulatedDistance(
-            min=self.min_, max=self.max_, energy=self.energy, force=self.force)
+            min=self.min_, max=self.max_, energy=ref_energy, force=ref_force)
         self.system.bonded_inter.add(tb)
 
-        np.testing.assert_allclose(tb.params['force'], self.force)
-        np.testing.assert_allclose(tb.params['energy'], self.energy)
+        np.testing.assert_allclose(tb.params['force'], ref_force)
+        np.testing.assert_allclose(tb.params['energy'], ref_energy)
         self.assertAlmostEqual(tb.params['min'], self.min_)
         self.assertAlmostEqual(tb.params['max'], self.max_)
 

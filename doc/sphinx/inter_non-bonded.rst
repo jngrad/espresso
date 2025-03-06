@@ -78,8 +78,12 @@ The interface for tabulated interactions are implemented in the
 :class:`~espressomd.interactions.TabulatedNonBonded` class. They can be configured
 via the following syntax::
 
-  system.non_bonded_inter[type1, type2].tabulated.set_params(
-      min='min', max='max', energy='energy', force='force')
+    import numpy as np
+    r = np.linspace(0., 8., 100)
+    energy = 4 * eps * ((sig / r)**12 - (sig / r)**6)
+    force = -4 * eps * (-12 / r * (sig / r)**12 + 6 / r * (sig / r)**6)
+    system.non_bonded_inter[type1, type2].tabulated.set_params(
+        min=0., max=8., energy=energy, force=force)
 
 This defines an interaction between particles of the types ``type1`` and
 ``type2`` according to an arbitrary tabulated pair potential by linear interpolation.
