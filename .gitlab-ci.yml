@@ -499,7 +499,8 @@ run_doxygen:
     - numa
     - reuse-artifacts-same-arch
   rules:
-    - if: $CI_PIPELINE_SOURCE == "python"
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 maxset_no_gpu:
   <<: *global_job_definition
@@ -566,7 +567,7 @@ notify_success:
   stage: result
   script: sh maintainer/gh_close_issue.sh
   rules:
-    - if: $CI_PIPELINE_SOURCE == "python"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: on_success
 
 notify_failure:
@@ -574,5 +575,5 @@ notify_failure:
   stage: result
   script: sh maintainer/gh_create_issue.sh
   rules:
-    - if: $CI_PIPELINE_SOURCE == "python"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: on_failure
