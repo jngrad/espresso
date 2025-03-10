@@ -652,6 +652,8 @@ class Analysis(ScriptInterfaceHelper):
             reduction(out, "dipolar")
         if has_features("VIRTUAL_SITES"):
             reduction(out, "virtual_sites")
+        if has_features("DPD"):
+            reduction(out, "dpd")
 
         if dim == 1 or calc_sp:
             return out

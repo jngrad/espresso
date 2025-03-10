@@ -44,6 +44,7 @@ class DPDThermostat(ut.TestCase):
         self.system.constraints.clear()
         self.system.thermostat.turn_off()
         self.system.integrator.set_vv()
+        self.system.non_bonded_inter.reset()
 
     def test_01__rng(self):
         """Test for RNG consistency."""
@@ -394,9 +395,11 @@ class DPDThermostat(ut.TestCase):
 
             dpd_obs = espressomd.observables.DPDStress()
             obs_stress = dpd_obs.calculate()
+            pressure = system.analysis.pressure_tensor()["dpd"]
 
             np.testing.assert_array_almost_equal(np.copy(dpd_stress), stress)
             np.testing.assert_array_almost_equal(np.copy(obs_stress), stress)
+            np.testing.assert_array_almost_equal(np.copy(pressure), -stress)
 
     def test_momentum_conservation(self):
         r_cut = 1.0
