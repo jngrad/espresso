@@ -85,7 +85,7 @@ are required to be able to compile and use |es|:
 
         We strongly recommend using Python environments to isolate
         packages required by |es| from packages installed system-wide.
-        This can be achieved using venv [7]_, conda [8]_, or any similar tool.
+        This can be achieved using venv [7]_, conda [8]_, uv [9]_, or any similar tool.
         Inside an environment, commands of the form
         ``sudo apt install python3-numpy python3-scipy``
         can be rewritten as ``python3 -m pip install numpy scipy``,
@@ -296,51 +296,40 @@ To run |es| on Windows, use the Linux subsystem. For that you need to
 Installing requirements on macOS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To build |es| on macOS 10.15 or higher, you need to install its dependencies.
-There are two possibilities for this, MacPorts and Homebrew. We strongly
-recommend Homebrew, but if you already have MacPorts installed, you can use
-that too, although we do not provide MacPorts installation instructions.
+The first step is to install a C++ compiler, such as Xcode [10]_.
 
-To check whether you already have one or the other installed, run the
-following commands:
+To install libraries, a package manager will be needed.
+While our instructions below are specific to Homebrew,
+they should be fairly easy to adapt for other package managers.
+If Homebrew isn't available, it can be installed with
+`these instructions <https://docs.brew.sh/Installation>`__,
+but bear in mind that it might conflict with other installed managers,
+such as MacPorts.
 
-.. code-block:: bash
-
-    test -e /opt/local/bin/port && echo "MacPorts is installed"
-    test -e /usr/local/bin/brew && echo "Homebrew is installed"
-
-If Homebrew is already installed, you should resolve any problems reported by
-the command
+If Homebrew is already installed, resolve any problems reported by the command:
 
 .. code-block:: bash
 
     brew doctor
 
-If you want to install Homebrew, follow the installation instructions at
-https://docs.brew.sh/Installation, but bear in mind that MacPorts and Homebrew
-may conflict with one another.
-
-If Anaconda Python or the Python from www.python.org are installed, you
-will likely not be able to run |es|. Therefore, please uninstall them
-using the following commands:
+Install the following libraries:
 
 .. code-block:: bash
 
-    sudo rm -r ~/anaconda[23]
-    sudo rm -r /Library/Python
+    brew install boost boost-mpi fftw gsl freeglut hdf5-mpi
 
-Installing packages using Homebrew
-""""""""""""""""""""""""""""""""""
-
-Run the following commands:
+For the last step, we will use the uv utility
+(`installation instructions <https://docs.astral.sh/uv/getting-started/installation/>`__)
+to install the Python interpreter and all required Python packages
+in a virtual environment:
 
 .. code-block:: bash
 
-    brew install cmake python cython boost boost-mpi fftw \
-      doxygen gsl numpy scipy ipython jupyter freeglut
-    brew install hdf5-mpi
-    brew link --force cython
-    python -m pip install -c requirements.txt PyOpenGL matplotlib
+    uv venv --python 3.13
+    . .venv/bin/activate
+    uv pip install -c requirements.txt \
+      cmake cython numpy scipy matplotlib tqdm packaging setuptools h5py \
+      PyOpenGL "jupyterlab>=4.3" nbformat nbconvert "lxml[html_clean]"
 
 .. _Quick installation:
 
@@ -1001,3 +990,9 @@ ____
 
 .. [8]
    https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+
+.. [9]
+   https://docs.astral.sh/uv/
+
+.. [10]
+   https://developer.apple.com/xcode/
