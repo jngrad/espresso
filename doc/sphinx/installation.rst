@@ -54,11 +54,11 @@ are required to be able to compile and use |es|:
         A number of advanced C++ features used by |es| are provided by Boost.
 
     FFTW
-        For some algorithms like P\ :math:`^3`\ M, |es| needs the FFTW library
+        For some algorithms like |p3m|, |es| needs the FFTW library
         version 3 or later [5]_ for Fourier transforms, including header files.
 
     CUDA
-        For some algorithms like P\ :math:`^3`\ M,
+        For some algorithms like |p3m|,
         |es| provides GPU-accelerated implementations for NVIDIA GPUs.
         We strongly recommend CUDA 12.0 or later [6]_.
 
@@ -90,6 +90,8 @@ are required to be able to compile and use |es|:
         ``sudo apt install python3-numpy python3-scipy``
         can be rewritten as ``python3 -m pip install numpy scipy``,
         and thus do not require root privileges.
+        Whenever this documentation refers to :file:`requirements.txt`,
+        it is the one located in the top-level directory of the project.
 
         Depending on your needs, you may choose to install all |es|
         dependencies inside the environment, or only the subset of
@@ -108,24 +110,27 @@ are required to be able to compile and use |es|:
         include paths to find the correct :file:`Python.h` header file.
 
 
-.. _Installing requirements on Ubuntu Linux:
+.. _Installing requirements on Ubuntu:
 
-Installing requirements on Ubuntu Linux
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Installing requirements on Ubuntu
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To compile |es| on Ubuntu 24.04 LTS, install the following dependencies:
+To compile |es| on Ubuntu 24.04 LTS, install the following build dependencies:
 
 .. code-block:: bash
 
-    sudo apt install build-essential cmake cython3 python3-dev openmpi-bin \
+    sudo apt install build-essential cmake cmake-curses-gui python3-dev openmpi-bin \
       libboost-all-dev libfftw3-dev libfftw3-mpi-dev libhdf5-dev libhdf5-openmpi-dev \
-      python3-pip python3-numpy python3-scipy python3-opengl libgsl-dev freeglut3-dev
+      python3-pip libgsl-dev freeglut3-dev
 
-Optionally the ccmake utility can be installed for easier configuration:
+To run |es|, install the following Python dependencies:
 
 .. code-block:: bash
 
-    sudo apt install cmake-curses-gui
+    python3 -m venv espresso_env # here other virtual environment tools are also ok
+    . espresso_env/bin/activate
+    python3 -m pip install -c requirements.txt \
+      cmake cython numpy scipy packaging setuptools h5py PyOpenGL
 
 To install the ZnDraw visualizer:
 
@@ -138,8 +143,8 @@ To install the ZnDraw visualizer:
 Nvidia GPU acceleration
 """""""""""""""""""""""
 
-If your computer has an Nvidia graphics card, you should also download and install the
-CUDA SDK to make use of GPU computation:
+If your computer has an Nvidia graphics card and you would like to leverage
+|es|'s GPU algorithms, you should also download and install the CUDA SDK:
 
 .. code-block:: bash
 
@@ -224,7 +229,8 @@ To run the samples and tutorials, start by installing the following packages:
 
 .. code-block:: bash
 
-    sudo apt install python3-matplotlib python3-pint python3-tqdm ffmpeg
+    sudo apt install ffmpeg
+    python3 -m pip install -c requirements.txt matplotlib pint tqdm
 
 The tutorials are written in the
 `Notebook Format <https://nbformat.readthedocs.io/en/latest/>`__
@@ -281,7 +287,7 @@ required to compile |es| on other Linux distributions:
 Installing requirements on Windows via WSL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To run |es| on Windows, use the Linux subsystem. For that you need to
+To run |es| on Windows, use the Linux subsystem (WSL). For that you need to
 
 * follow `these instructions <https://learn.microsoft.com/en-us/windows/wsl/install>`__ to install Ubuntu
 * start Ubuntu (or open an Ubuntu tab in `Windows Terminal <https://apps.microsoft.com/detail/9n0dx20hk701?hl=en-us&gl=US>`__)
@@ -289,7 +295,7 @@ To run |es| on Windows, use the Linux subsystem. For that you need to
 * optional step: If you have a NVIDIA graphics card available and want to make
   use of |es|'s GPU acceleration, follow `these instructions <https://docs.nvidia.com/cuda/wsl-user-guide/index.html>`__
   to set up CUDA.
-* follow the instructions for :ref:`Installing requirements on Ubuntu Linux`
+* follow the instructions for :ref:`Installing requirements on Ubuntu`
 
 .. _Installing requirements on macOS:
 
@@ -358,7 +364,7 @@ the :file:`build` directory to :file:`myconfig.hpp` and only uncomment
 the features you want to use in your simulation.
 
 The ``cmake`` command looks for libraries and tools needed by |es|.
-So |es| can only be built if ``cmake`` reports no errors.
+The application can only be built if CMake reports no errors.
 
 The command ``make`` will compile the source code. Depending on the
 options passed to the program, ``make`` can also be used for a number of
@@ -785,7 +791,7 @@ The following options control how the project is built and tested:
 * ``ESPRESSO_BUILD_WITH_CCACHE``: Enable compiler cache for faster rebuilds.
 * ``ESPRESSO_BUILD_TESTS``: Enable C++ and Python tests.
 * ``ESPRESSO_BUILD_BENCHMARKS``: Enable benchmarks.
-* ``ESPRESSO_CTEST_ARGS`` (string): Arguments passed to the ``ctest`` command.
+* ``ESPRESSO_CTEST_ARGS`` (string): Arguments passed to the ``ctest`` command (semicolon-separated list).
 * ``ESPRESSO_TEST_TIMEOUT``: Test timeout.
 * ``ESPRESSO_ADD_OMPI_SINGLETON_WARNING``: Add a runtime warning in the
   pypresso and ipypresso scripts that is triggered in singleton mode
@@ -911,12 +917,11 @@ When no target is given, the target ``all`` is used. The following
 targets are available:
 
 ``all``
-    Compiles the complete source code. The variable can be used to
-    specify the name of the configuration header to be used.
+    Compiles the complete source code.
 
 ``check``
-    Runs the testsuite. By default, all available tests will be run on
-    1, 2, 3, 4, 6, or 8 processors.
+    Runs the full testsuite. More fine-grained testsuites are available,
+    such as ``check_unit_tests`` and ``check_python_skip_long``.
 
 ``test``
     Do not use this target, it is a broken feature

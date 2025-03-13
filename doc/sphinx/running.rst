@@ -68,7 +68,8 @@ which is also located in the build directory:
 
     ./ipypresso console
 
-The name comes from the IPython interpreter, today known as Jupyter.
+The name comes from the IPython interpreter :cite:`perez07a`,
+whose notebook feature is today known as Jupyter :cite:`kluyver16a`.
 
 Interactive notebooks
 ~~~~~~~~~~~~~~~~~~~~~
