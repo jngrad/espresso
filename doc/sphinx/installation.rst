@@ -33,6 +33,26 @@ on the `Gitpod <https://gitpod.io>`__ platform can build the software
 automatically in the cloud and skip this chapter. For more details on
 running |es| in Gitpod, go to section :ref:`Running in the cloud`.
 
+Quickstart
+----------
+
+Installing |es| usually involves the following steps:
+
+#. downloading the source code: one of the
+   `stable releases <https://github.com/espressomd/espresso/releases>`__
+   (.zip files, or .tar.gz files before 2025) or the development version
+   (``git clone -b python https://github.com/espressomd/espresso.git``)
+#. installing dependencies on
+   :ref:`Ubuntu <Installing requirements on Ubuntu>`,
+   :ref:`macOS <Installing requirements on macOS>`,
+   :ref:`Windows <Installing requirements on Windows via WSL>`,
+   or :ref:`other Linux distributions <Installing requirements on other Linux distributions>`
+#. building the application: default build (:ref:`Quick installation`)
+   or custom build (requires :ref:`Configuring`)
+
+A troubleshooting guide is available on the project
+`GitHub wiki <https://github.com/espressomd/espresso/wiki/Installation-FAQ>`__,
+featuring contributed patches for compiler-related and library-related issues.
 
 .. _Requirements:
 
@@ -130,13 +150,11 @@ To run |es|, install the following Python dependencies:
     python3 -m venv espresso_env # here other virtual environment tools are also ok
     . espresso_env/bin/activate
     python3 -m pip install -c requirements.txt \
-      cmake cython numpy scipy packaging setuptools h5py PyOpenGL
+      cmake cython numpy scipy packaging setuptools h5py
 
-To install the ZnDraw visualizer:
-
-.. code-block:: bash
-
-    python3 -m pip install -c requirements.txt 'zndraw==0.4.6'
+These are the only hard requirements. In the following subsections,
+only optional dependencies will be discussed. Unless you need extra features,
+you can jump directly to the next section :ref:`Quick installation`.
 
 .. _Nvidia GPU acceleration:
 
@@ -202,24 +220,6 @@ GCC version, which is GCC 13 on Ubuntu 24.04. It is not possible to install
 the NVIDIA driver without GCC 13 due to a dependency resolution issue
 (``nvidia-dkms`` depends on ``dkms`` which depends on ``gcc-13``).
 
-.. _Requirements for building the documentation:
-
-Requirements for building the documentation
-"""""""""""""""""""""""""""""""""""""""""""
-
-To generate the Sphinx documentation, install the following packages:
-
-.. code-block:: bash
-
-    python3 -m pip install -c requirements.txt \
-        sphinx sphinxcontrib-bibtex sphinx-toggleprompt
-
-To generate the Doxygen documentation, install the following packages:
-
-.. code-block:: bash
-
-    sudo apt install doxygen graphviz
-
 .. _Setting up a Jupyter environment:
 
 Setting up a Jupyter environment
@@ -270,6 +270,41 @@ Alternatively, to use VS Code Jupyter, install the following extensions:
     code --install-extension ms-toolsai.jupyter
     code --install-extension ms-toolsai.jupyter-keymap
     code --install-extension ms-toolsai.jupyter-renderers
+
+.. _Requirements for visualizers:
+
+Requirements for visualizers
+""""""""""""""""""""""""""""
+
+To install the OpenGL visualizer:
+
+.. code-block:: bash
+
+    python3 -m pip install -c requirements.txt PyOpenGL
+
+To install the ZnDraw visualizer:
+
+.. code-block:: bash
+
+    python3 -m pip install -c requirements.txt 'zndraw==0.4.6'
+
+.. _Requirements for building the documentation:
+
+Requirements for building the documentation
+"""""""""""""""""""""""""""""""""""""""""""
+
+To generate the Sphinx documentation, install the following packages:
+
+.. code-block:: bash
+
+    python3 -m pip install -c requirements.txt \
+        sphinx sphinxcontrib-bibtex sphinx-toggleprompt
+
+To generate the Doxygen documentation, install the following packages:
+
+.. code-block:: bash
+
+    sudo apt install doxygen graphviz
 
 .. _Installing requirements on other Linux distributions:
 
