@@ -439,10 +439,11 @@ double DipolarP3MImpl<FloatType, Architecture>::long_range_kernel(
       energy += surface_term;
     }
   }
+#ifdef NPT
   if (npt_flag) {
-    npt_add_virial_contribution(energy);
-    fprintf(stderr, "dipolar_P3M at this moment is added to p_vir[0]\n");
+    get_system().npt_add_virial_contribution(energy);
   }
+#endif
   if (not energy_flag) {
     energy = 0.;
   }
@@ -913,8 +914,10 @@ void DipolarP3MImpl<FloatType, Architecture>::calc_energy_correction() {
 }
 
 #ifdef NPT
-void npt_add_virial_magnetic_contribution(double energy) {
-  npt_add_virial_contribution(energy);
+template <typename FloatType, Arch Architecture>
+void DipolarP3MImpl<FloatType, Architecture>::npt_add_virial_contribution(
+    double energy) const {
+  get_system().npt_add_virial_contribution(energy);
 }
 #endif // NPT
 

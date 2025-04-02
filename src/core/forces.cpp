@@ -147,7 +147,10 @@ void System::System::calculate_forces() {
   }
 #endif // ELECTROSTATICS
 #ifdef NPT
-  npt_reset_instantaneous_virials();
+  if (propagation->used_propagations & PropagationMode::TRANS_LANGEVIN_NPT) {
+    // reset virial part of instantaneous pressure
+    npt_inst_pressure->p_vir = Utils::Vector3d{};
+  }
 #endif
   init_forces(particles, ghost_particles);
   thermostat_force_init();
@@ -267,6 +270,6 @@ void calc_long_range_forces(const ParticleRange &particles) {
 #ifdef NPT
 void npt_add_virial_force_contribution(const Utils::Vector3d &force,
                                        const Utils::Vector3d &d) {
-  npt_add_virial_contribution(force, d);
+  ::System::get_system().npt_add_virial_contribution(force, d);
 }
 #endif

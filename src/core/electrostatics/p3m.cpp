@@ -586,7 +586,7 @@ double CoulombP3MImpl<FloatType, Architecture>::long_range_kernel(
     energy *= prefactor;
 #ifdef NPT
     if (npt_flag) {
-      npt_add_virial_contribution(energy);
+      get_system().npt_add_virial_contribution(energy);
     }
 #endif
     if (not energy_flag) {
@@ -923,8 +923,7 @@ void CoulombP3MImpl<FloatType, Architecture>::add_long_range_forces_gpu(
   if constexpr (Architecture == Arch::GPU) {
 #ifdef NPT
     if (get_system().propagation->integ_switch == INTEG_METHOD_NPT_ISO) {
-      auto const energy = long_range_energy(particles);
-      npt_add_virial_contribution(energy);
+      get_system().npt_add_virial_contribution(long_range_energy(particles));
     }
 #else
     static_cast<void>(particles);
