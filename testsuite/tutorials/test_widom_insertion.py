@@ -23,7 +23,7 @@ import numpy as np
 
 tutorial, skipIfMissingFeatures = importlib_wrapper.configure_and_import(
     "@TUTORIALS_DIR@/widom_insertion/widom_insertion.py", sample_size=50,
-    ci_params={"mesh": (12, 12, 12), "cao": 6, "tune": True}
+    ci_params={"mesh": (14, 14, 14), "cao": 7, "tune": True}
 )
 
 
