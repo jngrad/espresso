@@ -44,6 +44,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <concepts>
 #include <iterator>
 #include <memory>
 #include <optional>
@@ -52,6 +53,11 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
+template <typename Callable>
+concept ParticleCallback = requires(Callable c, Particle &p) {
+  { c(p) } -> std::same_as<void>;
+};
 
 namespace Cells {
 enum Resort : unsigned {
@@ -273,6 +279,30 @@ public:
 
   ParticleRange ghost_particles() const {
     return Cells::particles(decomposition().ghost_cells());
+  }
+
+  /**
+   * @brief Run a kernel on all local particles.
+   * The kernel is assumed to be thread-safe.
+   */
+  template <typename Kernel>
+    requires ParticleCallback<Kernel>
+  void for_each_local_particle(Kernel f) const {
+    for (auto &p : local_particles()) {
+      f(p);
+    }
+  }
+
+  /**
+   * @brief Run a kernel on all ghost particles.
+   * The kernel is assumed to be thread-safe.
+   */
+  template <typename Kernel>
+    requires ParticleCallback<Kernel>
+  void for_each_ghost_particle(Kernel f) const {
+    for (auto &p : ghost_particles()) {
+      f(p);
+    }
   }
 
 private:
