@@ -50,6 +50,10 @@ add_library(
 add_library(espresso::core ALIAS espresso_core)
 set_target_properties(espresso_core PROPERTIES CXX_CLANG_TIDY
                                                "${ESPRESSO_CXX_CLANG_TIDY}")
+if(ESPRESSO_BUILD_WITH_FFTW AND ESPRESSO_BUILD_WITH_CLANG_TIDY)
+  set_target_properties(espresso_core PROPERTIES CXX_CLANG_TIDY
+                                                 "${HEFFTE_CXX_CLANG_TIDY}")
+endif()
 
 if(ESPRESSO_BUILD_WITH_CUDA)
   target_sources(espresso_core PRIVATE cuda/init.cpp)
@@ -94,6 +98,7 @@ endif()
 
 if(ESPRESSO_BUILD_WITH_FFTW)
   add_subdirectory(fft)
+  add_subdirectory(p3m)
 endif()
 
 add_subdirectory(accumulators)
@@ -116,7 +121,6 @@ add_subdirectory(magnetostatics)
 add_subdirectory(nonbonded_interactions)
 add_subdirectory(object-in-fluid)
 add_subdirectory(observables)
-add_subdirectory(p3m)
 add_subdirectory(reaction_methods)
 add_subdirectory(scafacos)
 add_subdirectory(stokesian_dynamics)
