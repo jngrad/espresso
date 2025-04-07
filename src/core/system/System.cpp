@@ -295,6 +295,8 @@ void System::on_short_range_ia_change() {
 void System::on_non_bonded_ia_change() {
   nonbonded_ias->recalc_maximal_cutoffs();
   rebuild_cell_structure();
+  thermostat->recalc_prefactors(time_step);
+  reinit_thermo = false;
   propagation->recalc_forces = true;
 }
 

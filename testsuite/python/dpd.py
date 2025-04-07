@@ -170,6 +170,20 @@ class DPDThermostat(ut.TestCase):
             np.copy(p0.f), gamma * v, rtol=0, atol=1e-11)
         np.testing.assert_array_equal(np.copy(p0.f), -np.copy(p1.f))
 
+        # check prefactors are recalculated when non-bonded IAs are modified
+        # *before* a particle of the matching type exists in the system
+        system.non_bonded_inter[2, 0].dpd.set_params(
+            weight_function=0, gamma=1.5 * gamma, r_cut=1.2,
+            trans_weight_function=0, trans_gamma=1.5 * gamma, trans_r_cut=1.4)
+        p1.type = 2
+        p1.pos = [5. - 1.1, 5, 5]
+
+        system.integrator.run(0)
+
+        np.testing.assert_allclose(
+            np.copy(p0.f), 1.5 * gamma * v, rtol=0, atol=1e-11)
+        np.testing.assert_array_equal(np.copy(p0.f), -np.copy(p1.f))
+
     def test_linear_weight_function(self):
         system = self.system
         kT = 0.
