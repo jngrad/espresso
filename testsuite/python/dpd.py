@@ -184,6 +184,17 @@ class DPDThermostat(ut.TestCase):
             np.copy(p0.f), 1.5 * gamma * v, rtol=0, atol=1e-11)
         np.testing.assert_array_equal(np.copy(p0.f), -np.copy(p1.f))
 
+        # check prefactors are recalculated when time step changes
+        force_without_noise = np.copy(p0.f)
+        system.thermostat.set_dpd(kT=1, seed=42)
+        system.integrator.run(0)
+        old_noise = np.copy(p0.f) - force_without_noise
+        system.time_step = 2. * system.time_step
+        system.integrator.run(0)
+        new_noise = np.copy(p0.f) - force_without_noise
+        np.testing.assert_array_almost_equal(
+            new_noise, old_noise / np.sqrt(2.))
+
     def test_linear_weight_function(self):
         system = self.system
         kT = 0.
