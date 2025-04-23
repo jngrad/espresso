@@ -116,12 +116,13 @@ FetchContent_Declare(
   heffte
   GIT_REPOSITORY https://github.com/icl-utk-edu/heffte.git
   GIT_TAG        v2.4.1
+  PATCH_COMMAND  patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/cmake/heffte.patch
 )
 FetchContent_Declare(
   cabana
   GIT_REPOSITORY https://github.com/ECP-copa/Cabana.git
   GIT_TAG        7914d28708b1c67b40d5743c1fbc09e221144dd3
-  PATCH_COMMAND  patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch_cabana_doxygen.diff
+  PATCH_COMMAND  patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cabana.patch
 )
 # cmake-format: on
 
@@ -143,7 +144,8 @@ option(ESPRESSO_BUILD_WITH_WALBERLA
 option(ESPRESSO_BUILD_WITH_WALBERLA_AVX
        "Build waLBerla lattice-Boltzmann with AVX vectorization" OFF)
 option(ESPRESSO_BUILD_WITH_WALBERLA_FFT "Build waLBerla with FFT support" OFF)
-option(ESPRESSO_BUILD_WITH_CABANA "Build with Cabana and Kokkos packages" OFF)
+option(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM
+       "Build with shared memory parallelism support" OFF)
 option(ESPRESSO_BUILD_BENCHMARKS "Enable benchmarks" OFF)
 option(ESPRESSO_BUILD_WITH_VALGRIND "Build with Valgrind instrumentation" OFF)
 option(ESPRESSO_BUILD_WITH_CALIPER "Build with Caliper instrumentation" OFF)
@@ -482,19 +484,13 @@ endif()
 # Libraries
 #
 
-if(ESPRESSO_BUILD_WITH_CABANA)
-  # Find kokkos
-  if(NOT EXISTS Kokkos_DIR)
-    message(
-      FATAL_ERROR
-        "Kokkos_DIR not set. Please set it to the directory containing KokkosConfig.cmake (typically the Kokkos build folder)"
-    )
-  endif()
-
-  # Fetch Cabana 0.7.0 Cabana already uses find_package(Kokkos) internally
+if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
+  FetchContent_GetProperties(cabana)
+  set(Cabana_REQUIRE_HEFFTE OFF CACHE BOOL "")
   if(NOT cabana_POPULATED)
     FetchContent_MakeAvailable(cabana)
   endif()
+  find_package(Kokkos REQUIRED)
 endif()
 
 if(ESPRESSO_BUILD_WITH_FFTW)

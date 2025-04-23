@@ -1,8 +1,7 @@
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index c228d50a..00693256 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -216,12 +216,6 @@ if(Cabana_ENABLE_TESTING)
+https://github.com/ECP-copa/Cabana/pull/815
+--- CMakeLists.txt
++++ CMakeLists.txt
+@@ -216,12 +216,6 @@
    enable_testing()
  endif()
  

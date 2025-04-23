@@ -38,8 +38,11 @@ if(ESPRESSO_BUILD_WITH_FFTW)
   )
   target_link_libraries(
     espresso_p3m
-    PRIVATE Heffte espresso::cpp_flags espresso::p3m::cpp_flags espresso::utils
-            espresso::config espresso::instrumentation MPI::MPI_CXX Boost::mpi)
+    PRIVATE
+      Heffte espresso::cpp_flags espresso::p3m::cpp_flags espresso::utils
+      espresso::config espresso::instrumentation MPI::MPI_CXX Boost::mpi
+      $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:Kokkos::kokkos>
+      $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:Cabana::Core>)
   set_target_properties(espresso_p3m PROPERTIES POSITION_INDEPENDENT_CODE ON)
   target_link_libraries(espresso_core PUBLIC espresso_p3m)
   install(TARGETS espresso_p3m
