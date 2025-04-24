@@ -503,6 +503,8 @@ if(ESPRESSO_BUILD_WITH_FFTW)
 endif()
 
 if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
+  find_package(OpenMP REQUIRED)
+
   if(NOT EXISTS ${FETCHCONTENT_BASE_DIR}/kokkos-src)
     find_package(Kokkos 4.3 QUIET)
   endif()
