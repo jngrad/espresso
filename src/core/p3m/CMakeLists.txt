@@ -17,13 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-target_sources(
-  espresso_core PRIVATE common.cpp send_mesh.cpp TuningAlgorithm.cpp
-                        FFTBackendLegacy.cpp FFTBuffersLegacy.cpp)
-
 if(ESPRESSO_BUILD_WITH_FFTW)
   add_library(espresso_p3m OBJECT)
   add_library(espresso::p3m ALIAS espresso_p3m)
+  target_include_directories(espresso_p3m
+                             PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
   if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
     set_target_properties(espresso_p3m PROPERTIES CXX_CLANG_TIDY
                                                   "${HEFFTE_CXX_CLANG_TIDY}")
@@ -44,7 +42,8 @@ if(ESPRESSO_BUILD_WITH_FFTW)
       $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:Kokkos::kokkos>
       $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:Cabana::Core>)
   set_target_properties(espresso_p3m PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  target_link_libraries(espresso_core PUBLIC espresso_p3m)
-  install(TARGETS espresso_p3m
-          LIBRARY DESTINATION ${ESPRESSO_INSTALL_PYTHON}/espressomd)
+  target_link_libraries(espresso_core PRIVATE espresso_p3m)
+  target_sources(
+    espresso_p3m PRIVATE common.cpp send_mesh.cpp TuningAlgorithm.cpp
+                         FFTBackendLegacy.cpp FFTBuffersLegacy.cpp)
 endif()

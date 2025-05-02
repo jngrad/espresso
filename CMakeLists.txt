@@ -511,7 +511,7 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     FetchContent_Declare(
       kokkos
       GIT_REPOSITORY https://github.com/kokkos/kokkos.git
-      GIT_TAG        4.3.00
+      GIT_TAG        b4f7c84 # version 4.6.1 with patches
       OVERRIDE_FIND_PACKAGE
     )
     # cmake-format: on
@@ -530,25 +530,6 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
       endif()
     endforeach()
   endif()
-  if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
-    set(KOKKOS_CXX_CLANG_TIDY "${ESPRESSO_CXX_CLANG_TIDY}")
-    set(SKIP_CLANG_TIDY_CHECKS "")
-    set(SKIP_CLANG_TIDY_CHECKS_CXX "")
-    # silence heFFTe diagnostics
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-*")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-*")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-clang-diagnostic-float-conversion")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS
-         "-clang-diagnostic-implicit-int-float-conversion")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS
-         "-bugprone-return-const-ref-from-parameter")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-narrowing-conversions")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-sizeof-expression")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-fold-init-type")
-    espresso_override_clang_tidy_checks(
-      KOKKOS_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
-      "${SKIP_CLANG_TIDY_CHECKS_CXX}")
-  endif()
 
   if(NOT EXISTS ${FETCHCONTENT_BASE_DIR}/cabana-src)
     find_package(Cabana 0.7.0 QUIET)
@@ -559,10 +540,37 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
       cabana
       GIT_REPOSITORY https://github.com/ECP-copa/Cabana.git
       GIT_TAG        6647fed3 # 0.7.0 with patches
+      PATCH_COMMAND  patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cabana.patch
     )
     # cmake-format: on
     set(Cabana_REQUIRE_HEFFTE ${ESPRESSO_BUILD_WITH_FFTW} CACHE BOOL "")
     FetchContent_MakeAvailable(cabana)
+  endif()
+
+  if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
+    # silence Kokkos and Cabana diagnostics
+    set(CABANA_CXX_CLANG_TIDY "${ESPRESSO_CXX_CLANG_TIDY}")
+    set(CABANA_CUDA_CLANG_TIDY "${ESPRESSO_CUDA_CLANG_TIDY}")
+    unset(SKIP_CLANG_TIDY_CHECKS)
+    unset(SKIP_CLANG_TIDY_CHECKS_CXX)
+    unset(SKIP_CLANG_TIDY_CHECKS_CUDA)
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-*")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-*")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-clang-diagnostic-float-conversion")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS
+         "-clang-diagnostic-implicit-int-float-conversion")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS
+         "-bugprone-return-const-ref-from-parameter")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-narrowing-conversions")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-sizeof-expression")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-fold-init-type")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS_CUDA "-bugprone-branch-clone")
+    espresso_override_clang_tidy_checks(
+      CABANA_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
+      "${SKIP_CLANG_TIDY_CHECKS_CXX}")
+    espresso_override_clang_tidy_checks(
+      CABANA_CUDA_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
+      "${SKIP_CLANG_TIDY_CHECKS_CUDA}")
   endif()
 endif()
 
