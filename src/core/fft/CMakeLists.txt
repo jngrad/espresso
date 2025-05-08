@@ -21,5 +21,5 @@ if(ESPRESSO_BUILD_WITH_FFTW)
   target_link_libraries(
     espresso_p3m PRIVATE $<$<BOOL:${fftw3_FOUND}>:espresso::fftw3>
                          $<$<BOOL:${fftw3_omp_FOUND}>:espresso::fftw3_omp>)
-  target_sources(espresso_p3m PRIVATE fft.cpp)
+  target_sources(espresso_p3m PRIVATE fft.cpp init.cpp)
 endif()
