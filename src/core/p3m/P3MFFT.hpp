@@ -75,7 +75,7 @@ public:
     auto const n_procs = Utils::product(node_grid);
     auto best_grid = node_grid;
     for (auto i : {0u, 1u, 2u}) {
-      if (m_global_mesh[i] % 2 * n_procs == 0) {
+      if (m_global_mesh[i] % (2 * n_procs) == 0) {
         best_grid = {n_procs, 1, 1};
         break;
       }
