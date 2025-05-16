@@ -114,22 +114,6 @@ FloatType complex_norm2(std::complex<FloatType> const &z) {
   return Utils::sqr(z.real()) + Utils::sqr(z.imag());
 }
 
-template <Utils::MemoryOrder order_in, Utils::MemoryOrder order_out, typename T>
-auto transpose(std::span<T> const &flat_array, Utils::Vector3i const &shape) {
-  auto constexpr mesh_start = Utils::Vector3i::broadcast(0);
-  std::size_t index_out{};
-  Utils::Vector3i indices{};
-  std::vector<T> flat_array_t(flat_array.size());
-  for_each_3d_lin<order_out>(mesh_start, shape, indices, index_out, [&]() {
-    auto const index_in = Utils::get_linear_index<order_in>(indices, shape);
-#ifdef ADDITIONAL_CHECKS
-    assert(index_out == Utils::get_linear_index<order_out>(indices, shape));
-#endif
-    flat_array_t[index_out] = flat_array[index_in];
-  });
-  return flat_array_t;
-}
-
 static bool is_node_grid_compatible_with_mesh(Utils::Vector3i const &node_grid,
                                               Utils::Vector3i const &mesh) {
   return mesh[0u] % node_grid[0u] == 0 and mesh[1u] % node_grid[1u] == 0 and
@@ -473,7 +457,6 @@ void CoulombP3MImpl<FloatType, Architecture>::kernel_rs_electric_field() {
   auto const mesh_start = p3m.fft->ks_local_ld_index();
   auto const mesh_stop = mesh_start + p3m.fft->ks_local_size();
   auto const &box_geo = *get_system().box_geo;
-  Utils::Vector3i indices{};
 
   // hold electric field in k-space
   std::array<std::span<std::complex<FloatType>>, 3> ks_E_fields;
@@ -489,13 +472,13 @@ void CoulombP3MImpl<FloatType, Architecture>::kernel_rs_electric_field() {
       Utils::Vector3<FloatType>((2. * std::numbers::pi) * box_geo.length_inv());
 
   // compute electric field, Eq. (3.49) @cite deserno00b
-  std::size_t local_index{};
   for_each_3d_lin<Utils::MemoryOrder::COLUMN_MAJOR>(
-      mesh_start, mesh_stop, indices, local_index, [&]() {
+      mesh_start, mesh_stop,
+      [&](const Utils::Vector3i &indices, int local_index) {
 #ifdef ADDITIONAL_CHECKS
         assert(local_index ==
                Utils::get_linear_index<Utils::MemoryOrder::COLUMN_MAJOR>(
-                   indices - mesh_start, mesh_stop - mesh_start));
+                   indices - mesh_start, p3m.fft->ks_local_size()));
 #endif
         auto const phi_hat = multiply_complex_by_real(
             p3m.ks_charge_density[local_index], p3m.g_force[local_index]);
@@ -521,11 +504,11 @@ void CoulombP3MImpl<FloatType, Architecture>::kernel_rs_electric_field() {
     auto const offset = d * rs_mesh_size_no_halo;
     auto const begin = p3m.rs_E_fields_no_halo.begin() + offset;
     auto f = std::span<std::complex<FloatType>>(begin, rs_mesh_size_no_halo);
-    auto f_t = transpose<Utils::MemoryOrder::COLUMN_MAJOR,
-                         Utils::MemoryOrder::ROW_MAJOR>(f, size);
-    p3m.rs_E_fields[d] = pad_with_zeros_discard_imag(
-        std::span<std::complex<FloatType>>(f_t), p3m.local_mesh.dim_no_halo,
-        p3m.local_mesh.n_halo_ld, p3m.local_mesh.n_halo_ur);
+    p3m.rs_E_fields[d] =
+        pad_with_zeros_discard_imag<Utils::MemoryOrder::COLUMN_MAJOR,
+                                    Utils::MemoryOrder::ROW_MAJOR>(
+            std::span<std::complex<FloatType>>(f), p3m.local_mesh.dim_no_halo,
+            p3m.local_mesh.n_halo_ld, p3m.local_mesh.n_halo_ur);
   }
 
   // ghost communicate the boundary layers of the E-field in real space

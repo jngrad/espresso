@@ -51,9 +51,11 @@ BOOST_AUTO_TEST_CASE(add_remove_halo) {
 
   // add halo
   auto const shape_with_halo = shape + halo_left + halo_right;
-  auto const with_halo = pad_with_zeros_discard_imag(
-      std::span{without_halo_orig.data(), without_halo_orig.size()}, shape,
-      halo_left, halo_right);
+  auto const with_halo =
+      pad_with_zeros_discard_imag<Utils::MemoryOrder::ROW_MAJOR,
+                                  Utils::MemoryOrder::ROW_MAJOR>(
+          std::span{without_halo_orig.data(), without_halo_orig.size()}, shape,
+          halo_left, halo_right);
 
   BOOST_CHECK_EQUAL(with_halo.size(), shape_with_halo[0] * shape_with_halo[1] *
                                           shape_with_halo[2]);
