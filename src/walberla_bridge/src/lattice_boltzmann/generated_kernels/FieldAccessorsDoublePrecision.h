@@ -1092,7 +1092,6 @@ inline auto reduce(GhostLayerField<double, uint_t{19u}> const *pdf_field,
     for (uint_t y = 0; y < pdf_field->ySize(); ++y) {
       for (uint_t x = 0; x < pdf_field->xSize(); ++x) {
         const double &xyz0 = pdf_field->get(x, y, z, uint_t{0u});
-        const double f_0 = pdf_field->getF(&xyz0, uint_t{0u});
         const double f_1 = pdf_field->getF(&xyz0, uint_t{1u});
         const double f_2 = pdf_field->getF(&xyz0, uint_t{2u});
         const double f_3 = pdf_field->getF(&xyz0, uint_t{3u});
@@ -1119,8 +1118,6 @@ inline auto reduce(GhostLayerField<double, uint_t{19u}> const *pdf_field,
         const double vel2Term = f_12 + f_13 + f_5;
         const double momdensity_2 =
             f_11 + f_14 - f_15 - f_16 - f_17 - f_18 - f_6 + vel2Term;
-        const double rho = f_0 + f_16 + f_17 + f_2 + f_3 + f_6 + f_9 +
-                           vel0Term + vel1Term + vel2Term;
         const double md_0 =
             force_field->get(x, y, z, 0) * 0.50000000000000000 + momdensity_0;
         const double md_1 =
@@ -1142,7 +1139,6 @@ namespace PressureTensor {
 inline auto get(GhostLayerField<double, uint_t{19u}> const *pdf_field,
                 Cell const &cell) {
   const double &xyz0 = pdf_field->get(cell, uint_t{0u});
-  const double f_0 = pdf_field->getF(&xyz0, uint_t{0u});
   const double f_1 = pdf_field->getF(&xyz0, uint_t{1u});
   const double f_2 = pdf_field->getF(&xyz0, uint_t{2u});
   const double f_3 = pdf_field->getF(&xyz0, uint_t{3u});
@@ -1198,7 +1194,6 @@ inline auto get(GhostLayerField<double, uint_t{19u}> const *pdf_field,
     for (auto y = ci.yMin(); y <= ci.yMax(); ++y) {
       for (auto z = ci.zMin(); z <= ci.zMax(); ++z) {
         const double &xyz0 = pdf_field->get(x, y, z, uint_t{0u});
-        const double f_0 = pdf_field->getF(&xyz0, uint_t{0u});
         const double f_1 = pdf_field->getF(&xyz0, uint_t{1u});
         const double f_2 = pdf_field->getF(&xyz0, uint_t{2u});
         const double f_3 = pdf_field->getF(&xyz0, uint_t{3u});
@@ -1253,7 +1248,6 @@ inline auto reduce(GhostLayerField<double, uint_t{19u}> const *pdf_field) {
     for (uint_t y = 0; y < pdf_field->ySize(); ++y) {
       for (uint_t x = 0; x < pdf_field->xSize(); ++x) {
         const double &xyz0 = pdf_field->get(x, y, z, uint_t{0u});
-        const double f_0 = pdf_field->getF(&xyz0, uint_t{0u});
         const double f_1 = pdf_field->getF(&xyz0, uint_t{1u});
         const double f_2 = pdf_field->getF(&xyz0, uint_t{2u});
         const double f_3 = pdf_field->getF(&xyz0, uint_t{3u});

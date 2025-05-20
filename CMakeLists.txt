@@ -19,8 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.25.1)
-cmake_policy(VERSION 3.25.1)
+cmake_minimum_required(VERSION 3.27.6)
+cmake_policy(VERSION 3.27.6)
 message(STATUS "CMake version: ${CMAKE_VERSION}")
 # CMake modules/macros are in a subdirectory to keep this file cleaner
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -205,7 +205,6 @@ add_library(espresso::avx_flags ALIAS espresso_avx_flags)
 
 # CUDA compiler
 if(ESPRESSO_BUILD_WITH_CUDA)
-  cmake_minimum_required(VERSION 3.25.2)
   include(CheckLanguage)
   enable_language(CUDA)
   check_language(CUDA)
@@ -244,7 +243,7 @@ endif()
 # Python interpreter and Cython interface library
 if(ESPRESSO_BUILD_WITH_PYTHON)
   find_package(Python 3.11 REQUIRED COMPONENTS Interpreter Development NumPy)
-  find_package(Cython 0.29.28...<3.0.12 REQUIRED)
+  find_package(Cython 3.0.8...<3.1.0 REQUIRED)
   find_program(IPYTHON_EXECUTABLE NAMES jupyter ipython3 ipython)
 endif()
 
@@ -318,6 +317,7 @@ target_compile_options(
     $<$<AND:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},arm>>:-Wno-psabi>
     $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:-Wno-implicit-int-float-conversion>
     $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:-Wno-float-conversion>
+    $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:$<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wno-implicit-float-conversion>>
     # warnings are errors
     $<$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>:-Werror>)
 
@@ -405,9 +405,9 @@ if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
   find_package(ClangTidy "${CMAKE_CXX_COMPILER_VERSION}" EXACT REQUIRED)
   set(ESPRESSO_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
   set(ESPRESSO_CUDA_CLANG_TIDY "${CLANG_TIDY_EXE};--extra-arg=--cuda-host-only")
-  set(SKIP_CLANG_TIDY_CHECKS "")
-  set(SKIP_CLANG_TIDY_CHECKS_CXX "")
-  set(SKIP_CLANG_TIDY_CHECKS_CUDA "")
+  unset(SKIP_CLANG_TIDY_CHECKS)
+  unset(SKIP_CLANG_TIDY_CHECKS_CXX)
+  unset(SKIP_CLANG_TIDY_CHECKS_CUDA)
   if(ESPRESSO_BUILD_WITH_CALIPER)
     # Clang-Tidy sometimes emits diagnostics in code enclosed in `extern "C"`
     # that are not always actionable, since they may rely on keywords only
@@ -488,9 +488,11 @@ if(ESPRESSO_BUILD_WITH_FFTW)
     target_link_libraries(Heffte::Heffte INTERFACE Heffte)
     install(TARGETS Heffte LIBRARY DESTINATION "${ESPRESSO_INSTALL_LIBDIR}")
     if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
-      set(HEFFTE_CXX_CLANG_TIDY "${ESPRESSO_CXX_CLANG_TIDY}")
-      set(SKIP_CLANG_TIDY_CHECKS "")
-      set(SKIP_CLANG_TIDY_CHECKS_CXX "")
+      set(P3M_CXX_CLANG_TIDY "${ESPRESSO_CXX_CLANG_TIDY}")
+      set(P3M_CUDA_CLANG_TIDY "${ESPRESSO_CUDA_CLANG_TIDY}")
+      unset(SKIP_CLANG_TIDY_CHECKS)
+      unset(SKIP_CLANG_TIDY_CHECKS_CXX)
+      unset(SKIP_CLANG_TIDY_CHECKS_CUDA)
       # silence heFFTe diagnostics
       list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-exception-escape")
       list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-narrowing-conversions")
@@ -502,8 +504,11 @@ if(ESPRESSO_BUILD_WITH_FFTW)
       list(APPEND SKIP_CLANG_TIDY_CHECKS
            "-readability-avoid-const-params-in-decls")
       espresso_override_clang_tidy_checks(
-        HEFFTE_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
+        P3M_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
         "${SKIP_CLANG_TIDY_CHECKS_CXX}")
+      espresso_override_clang_tidy_checks(
+        P3M_CUDA_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
+        "${SKIP_CLANG_TIDY_CHECKS_CUDA}")
     endif()
   endif()
 endif()
@@ -519,7 +524,7 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     FetchContent_Declare(
       kokkos
       GIT_REPOSITORY https://github.com/kokkos/kokkos.git
-      GIT_TAG        b4f7c84 # version 4.6.1 with patches
+      GIT_TAG        0c0dfa7 # version 4.6.1 with patches
       OVERRIDE_FIND_PACKAGE
     )
     # cmake-format: on
@@ -530,9 +535,11 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     set(CMAKE_SHARED_LIBRARY_PREFIX "${ESPRESSO_SHARED_LIBRARY_PREFIX}")
     install(TARGETS kokkos LIBRARY DESTINATION "${ESPRESSO_INSTALL_LIBDIR}")
     # install all kokkos shared objects
-    foreach(target_name IN LISTS KOKKOS_COMPONENT_LIBRARIES)
+    get_target_property(ESPRESSO_KOKKOS_LIBS kokkos INTERFACE_LINK_LIBRARIES)
+    foreach(target_name IN LISTS ESPRESSO_KOKKOS_LIBS)
       get_target_property(target_type ${target_name} TYPE)
-      if(${target_type} STREQUAL "SHARED_LIBRARY")
+      if(${target_type} STREQUAL "SHARED_LIBRARY" AND ${target_name} MATCHES
+                                                      "^kokkos[a-zA-Z0-9_]+$")
         install(TARGETS ${target_name}
                 LIBRARY DESTINATION "${ESPRESSO_INSTALL_LIBDIR}")
       endif()
@@ -547,7 +554,7 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     FetchContent_Declare(
       cabana
       GIT_REPOSITORY https://github.com/ECP-copa/Cabana.git
-      GIT_TAG        6647fed3 # 0.7.0 with patches
+      GIT_TAG        e6bad66 # 0.7.0 with patches
       PATCH_COMMAND  patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cabana.patch
     )
     # cmake-format: on
@@ -562,16 +569,25 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     unset(SKIP_CLANG_TIDY_CHECKS)
     unset(SKIP_CLANG_TIDY_CHECKS_CXX)
     unset(SKIP_CLANG_TIDY_CHECKS_CUDA)
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-*")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-*")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-clang-diagnostic-float-conversion")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS
-         "-clang-diagnostic-implicit-int-float-conversion")
     list(APPEND SKIP_CLANG_TIDY_CHECKS
          "-bugprone-return-const-ref-from-parameter")
     list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-narrowing-conversions")
     list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-sizeof-expression")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-fold-init-type")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-exception-escape")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-auto")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-override")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-bool-literals")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-equals-delete")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-equals-default")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-pass-by-value")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-loop-convert")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-equals-delete")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-return-braced-init-list")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-else-after-return")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-non-const-parameter")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-simplify-boolean-expr")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS
+         "-readability-avoid-const-params-in-decls")
     list(APPEND SKIP_CLANG_TIDY_CHECKS_CUDA "-bugprone-branch-clone")
     espresso_override_clang_tidy_checks(
       CABANA_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
@@ -579,6 +595,14 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     espresso_override_clang_tidy_checks(
       CABANA_CUDA_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
       "${SKIP_CLANG_TIDY_CHECKS_CUDA}")
+    if(ESPRESSO_BUILD_WITH_FFTW)
+      espresso_override_clang_tidy_checks(
+        P3M_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
+        "${SKIP_CLANG_TIDY_CHECKS_CXX}")
+      espresso_override_clang_tidy_checks(
+        P3M_CUDA_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
+        "${SKIP_CLANG_TIDY_CHECKS_CUDA}")
+    endif()
   endif()
 endif()
 
@@ -732,7 +756,7 @@ if(ESPRESSO_BUILD_TESTS)
   list(APPEND BOOST_COMPONENTS unit_test_framework)
 endif()
 
-find_package(Boost 1.74.0 REQUIRED ${BOOST_COMPONENTS})
+find_package(Boost 1.81.0 REQUIRED ${BOOST_COMPONENTS})
 
 # Patches for older Boost releases compiled with C++17 or above; while
 # originally meant for MSVC, the Clang compiler is also affected.
@@ -806,8 +830,7 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
     walberla
     GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla.git
                    https://github.com/lssfau/walberla.git
-    GIT_TAG        0aab9c0af2335b1f6fec75deae06e514ccb233ab
-    PATCH_COMMAND  patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/cmake/walberla.patch
+    GIT_TAG        36d73fd # v7.1 with patches
   )
   # cmake-format: on
   string(REGEX REPLACE "([/\\]walberla)-src$" "\\1-build" walberla_BINARY_DIR
@@ -844,31 +867,14 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   set(CMAKE_SHARED_LIBRARY_PREFIX "${ESPRESSO_SHARED_LIBRARY_PREFIX}")
   set(WALBERLA_LIBS
       walberla::core walberla::domain_decomposition walberla::blockforest
-      walberla::boundary walberla::field walberla::lbm walberla::timeloop
-      walberla::vtk)
+      walberla::communication walberla::field walberla::stencil walberla::vtk)
   if(WALBERLA_BUILD_WITH_FFTW)
     list(APPEND WALBERLA_LIBS walberla::fft)
   endif()
   if(WALBERLA_BUILD_WITH_CUDA)
     list(APPEND WALBERLA_LIBS walberla::gpu)
   endif()
-  set(WALBERLA_LIBS_EXPORT
-      ${WALBERLA_LIBS}
-      lodepng
-      sqlite3
-      walberla::lbm_generated
-      walberla::pe
-      walberla::pe_coupling
-      walberla::pde
-      walberla::mesa_pd
-      walberla::lbm_mesapd_coupling
-      walberla::sqlite
-      walberla::executiontree
-      walberla::geometry
-      walberla::postprocessing
-      walberla::gather)
-  # install all waLBerla shared objects
-  foreach(target_alias IN LISTS WALBERLA_LIBS_EXPORT)
+  foreach(target_alias IN LISTS WALBERLA_LIBS)
     string(REPLACE "::" "_" target_name ${target_alias})
     get_target_property(target_type ${target_name} TYPE)
     if(${target_type} STREQUAL "SHARED_LIBRARY")
@@ -891,7 +897,7 @@ if(ESPRESSO_BUILD_WITH_CALIPER)
   FetchContent_Declare(
     caliper
     GIT_REPOSITORY https://github.com/LLNL/Caliper.git
-    GIT_TAG        v2.12.1
+    GIT_TAG        142a2fe # v2.12.1 with patches
   )
   # cmake-format: on
   set(CALIPER_OPTION_PREFIX on CACHE BOOL "")
@@ -910,13 +916,10 @@ if(ESPRESSO_BUILD_WITH_CALIPER)
   target_compile_options(caliper-common
                          PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wno-restrict>)
   target_compile_options(
-    caliper-services
-    PRIVATE
-      $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wno-deprecated-declarations>)
-  target_compile_options(
     caliper-runtime
     PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>
             $<$<CXX_COMPILER_ID:GNU>:-Wno-volatile>
+            -Wno-deprecated-enum-enum-conversion
             $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-deprecated-volatile>)
   set_target_properties(caliper-runtime PROPERTIES CXX_CLANG_TIDY "")
 endif()

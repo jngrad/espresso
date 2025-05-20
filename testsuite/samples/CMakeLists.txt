@@ -100,6 +100,7 @@ sample_test(FILE test_immersed_boundary.py)
 
 add_custom_target(
   check_samples
+  JOB_POOL console
   COMMAND ${CMAKE_CTEST_COMMAND} --timeout ${ESPRESSO_TEST_TIMEOUT}
           ${ESPRESSO_CTEST_ARGS} --output-on-failure)
 

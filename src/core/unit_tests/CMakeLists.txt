@@ -53,6 +53,8 @@ espresso_unit_test(SRC field_coupling_force_field_test.cpp DEPENDS
 espresso_unit_test(
   SRC field_layout_helpers_test.cpp DEPENDS espresso::utils espresso::core
   $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:Kokkos::kokkos>)
+set_target_properties(field_layout_helpers_test
+                      PROPERTIES CXX_CLANG_TIDY "${CABANA_CXX_CLANG_TIDY}")
 
 espresso_unit_test(SRC periodic_fold_test.cpp)
 espresso_unit_test(SRC grid_test.cpp DEPENDS espresso::core)
@@ -91,6 +93,8 @@ if(ESPRESSO_BUILD_WITH_FFTW)
   espresso_unit_test(
     SRC fft_test.cpp DEPENDS espresso::utils espresso::core
     $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:Kokkos::kokkos>)
+  set_target_properties(fft_test PROPERTIES CXX_CLANG_TIDY
+                                            "${CABANA_CXX_CLANG_TIDY}")
   espresso_unit_test(SRC math_test.cpp DEPENDS espresso::utils espresso::core)
 endif()
 
