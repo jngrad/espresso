@@ -25,6 +25,7 @@ set(SKIP_CLANG_TIDY_CHECKS "")
 set(SKIP_CLANG_TIDY_CHECKS_CXX "")
 set(SKIP_CLANG_TIDY_CHECKS_CUDA "")
 # silence waLBerla diagnostics
+list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-auto") # TODO: remove
 list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-avoid-const-params-in-decls")
 list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-else-after-return")
 list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-simplify-boolean-expr")
@@ -118,6 +119,13 @@ target_link_libraries(
   espresso_walberla_cuda_flags
   INTERFACE espresso::cuda_flags
             $<$<BOOL:${ESPRESSO_BUILD_WITH_WALBERLA_AVX}>:espresso::avx_flags>)
+add_library(espresso_walberla_codegen_cpp_flags INTERFACE)
+add_library(espresso::walberla_codegen::cpp_flags ALIAS
+            espresso_walberla_codegen_cpp_flags)
+target_compile_options(
+  espresso_walberla_codegen_cpp_flags
+  INTERFACE -Wno-cast-align
+            $<$<CXX_COMPILER_ID:GNU>:-Wno-shadow=compatible-local>)
 
 add_library(espresso_walberla SHARED)
 add_library(espresso_walberla_codegen OBJECT)
@@ -130,8 +138,9 @@ espresso_configure_walberla_target(espresso_walberla_codegen)
 target_link_libraries(
   espresso_walberla PUBLIC MPI::MPI_CXX espresso::utils
   PRIVATE espresso::walberla::cpp_flags espresso::walberla_codegen)
-target_link_libraries(espresso_walberla_codegen
-                      PRIVATE espresso::walberla::cpp_flags)
+target_link_libraries(
+  espresso_walberla_codegen PRIVATE espresso::walberla::cpp_flags
+                                    espresso::walberla_codegen::cpp_flags)
 
 if(WALBERLA_BUILD_WITH_CUDA)
   espresso_add_gpu_library(espresso_walberla_cuda SHARED)

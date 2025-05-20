@@ -175,6 +175,7 @@ clang-sanitizer:
      with_scafacos: 'true'
      with_walberla: 'true'
      with_stokesian_dynamics: 'true'
+     with_shared_memory_parallelism: 'true'
      with_coverage: 'false'
      with_coverage_python: 'false'
   script:

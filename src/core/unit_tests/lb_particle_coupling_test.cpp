@@ -371,14 +371,16 @@ BOOST_DATA_TEST_CASE_F(CleanupActorLB, coupling_particle_lattice_ia,
 #endif
 
   LB::ParticleCoupling coupling{thermostat, lb, box_geo, local_box};
-  auto const p_opt = copy_particle_to_head_node(comm, system, pid);
   auto expected = Utils::Vector3d{};
-  if (rank == 0) {
-    auto const &p = *p_opt;
-    expected += coupling.get_noise_term(p);
+  {
+    auto const p_opt = copy_particle_to_head_node(comm, system, pid);
+    if (rank == 0) {
+      auto const &p = *p_opt;
+      expected += coupling.get_noise_term(p);
 #ifdef LB_ELECTROHYDRODYNAMICS
-    expected += gamma * p.mu_E();
+      expected += gamma * p.mu_E();
 #endif
+    }
   }
   boost::mpi::broadcast(comm, expected, 0);
   auto const p_pos = first_lb_node + Utils::Vector3d::broadcast(0.5);
