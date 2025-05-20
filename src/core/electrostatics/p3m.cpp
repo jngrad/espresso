@@ -61,6 +61,7 @@
 #include "integrators/Propagation.hpp"
 #include "npt.hpp"
 #include "p3m/send_mesh.hpp"
+#include "particle_reduction.hpp"
 #include "system/GpuParticleData.hpp"
 #include "system/System.hpp"
 #include "tuning.hpp"
@@ -129,21 +130,32 @@ static auto get_size_from_shape(Utils::Vector3i const &shape) {
 
 template <typename FloatType, Arch Architecture>
 void CoulombP3MImpl<FloatType, Architecture>::count_charged_particles() {
-  auto local_n = std::size_t{0u};
-  auto local_q2 = 0.0;
-  auto local_q = 0.0;
-
-  for (auto const &p : get_system().cell_structure->local_particles()) {
+  struct Res {
+    std::size_t local_n = std::size_t{0u};
+    double local_q = 0.0;
+    double local_q2 = 0.0;
+  };
+  Reduction::AddPartialResultKernel<Res> kernel = [](Particle const &p,
+                                                     Res &res) {
     if (p.q() != 0.0) {
-      local_n++;
-      local_q2 += Utils::sqr(p.q());
-      local_q += p.q();
+      res.local_n++;
+      res.local_q2 += Utils::sqr(p.q());
+      res.local_q += p.q();
     }
-  }
+  };
 
-  boost::mpi::all_reduce(comm_cart, local_n, p3m.sum_qpart, std::plus<>());
-  boost::mpi::all_reduce(comm_cart, local_q2, p3m.sum_q2, std::plus<>());
-  boost::mpi::all_reduce(comm_cart, local_q, p3m.square_sum_q, std::plus<>());
+  Reduction::ReductionOp<Res> reduce = [](Res &a, Res const &b) {
+    a.local_n += b.local_n;
+    a.local_q += b.local_q;
+    a.local_q2 += b.local_q2;
+  };
+  auto res = reduce_over_local_particles(*(get_system().cell_structure), kernel,
+                                         reduce);
+
+  boost::mpi::all_reduce(comm_cart, res.local_n, p3m.sum_qpart, std::plus<>());
+  boost::mpi::all_reduce(comm_cart, res.local_q2, p3m.sum_q2, std::plus<>());
+  boost::mpi::all_reduce(comm_cart, res.local_q, p3m.square_sum_q,
+                         std::plus<>());
   p3m.square_sum_q = Utils::sqr(p3m.square_sum_q);
 }
 
