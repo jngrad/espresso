@@ -77,7 +77,7 @@ using Communication::mpiCallbacks;
 int this_node = -1;
 
 static std::weak_ptr<boost::mpi::environment> mpi_env_observer;
-void f1(void) {
+void f1() {
   printf("%i: atexit() use_count=%li\n", this_node, mpi_env_observer.use_count());
 }
 
