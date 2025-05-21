@@ -260,7 +260,7 @@ fi
 if [ -z "${cmake_param_protected}" ]; then
   cmake -G Ninja "${srcdir}" ${cmake_params} || exit 1
 else
-  cmake -G Ninja "${srcdir}" ${cmake_params} "${cmake_param_protected}" || exit 1
+  cmake -G Ninja "${srcdir}" ${cmake_params} "${cmake_param_protected}" -DESPRESSO_MPIEXEC_PREFLAGS="--mca pml ob1 --mca btl self,sm,tcp" || exit 1
 fi
 end "CONFIGURE"
 

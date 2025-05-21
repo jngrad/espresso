@@ -83,7 +83,6 @@ jobs:
           make_check_python: 'false'
           OMPI_ALLOW_RUN_AS_ROOT: 1
           OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
-          cmake_params: '-DESPRESSO_MPIEXEC_PREFLAGS="--mca pml ob1 --mca btl self,sm,tcp"'
 
   ubuntu:
     runs-on: ubuntu-latest
