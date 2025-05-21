@@ -888,13 +888,8 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
     list(APPEND WALBERLA_LIBS walberla::gpu)
   endif()
   set(WALBERLA_LIBS_EXPORT
-      ${WALBERLA_LIBS}
-      lodepng
-      walberla::boundary
-      walberla::executiontree
-      walberla::geometry
-      walberla::lbm
-      walberla::timeloop)
+      ${WALBERLA_LIBS} lodepng walberla::boundary walberla::executiontree
+      walberla::geometry walberla::lbm walberla::timeloop)
   # install all waLBerla shared objects
   foreach(target_alias IN LISTS WALBERLA_LIBS_EXPORT)
     string(REPLACE "::" "_" target_name ${target_alias})
