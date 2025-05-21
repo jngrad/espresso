@@ -76,11 +76,16 @@ using Communication::mpiCallbacks;
 
 int this_node = -1;
 
-void f1(void) { puts("atexit()"); }
+static std::weak_ptr<boost::mpi::environment> mpi_env_observer;
+void f1(void) {
+  printf("%i: atexit() use_count=%li\n", this_node, mpi_env_observer.use_count());
+}
+
 
 namespace Communication {
 void init(std::shared_ptr<boost::mpi::environment> mpi_env) {
   atexit(f1);
+  mpi_env_observer = mpi_env;
   puts("init(std::shared_ptr<boost::mpi::environment> mpi_env)");
   communicator.full_initialization();
 
@@ -113,8 +118,9 @@ void deinit() {
 #ifdef SHARED_MEMORY_PARALLELISM
   Kokkos::finalize();
 #endif
-  puts("deinit() end");
+  printf("%i: deinit() before sleep use_count=%li\n", this_node, mpi_env_observer.use_count());
   std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  printf("%i: deinit() after sleep use_count=%li\n", this_node, mpi_env_observer.use_count());
 }
 } // namespace Communication
 
