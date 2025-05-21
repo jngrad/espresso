@@ -80,7 +80,7 @@ bool mpi_init_override = false;
 
 static std::weak_ptr<boost::mpi::environment> mpi_env_observer;
 void f1() {
-  printf("%i: atexit() use_count=%li\n", this_node, mpi_env_observer.use_count());
+  printf("%i: atexit() mpi_env.use_count=%li m_callbacks.use_count=%li\n", this_node, mpi_env_observer.use_count(), Communication::m_callbacks.use_count());
 }
 
 
