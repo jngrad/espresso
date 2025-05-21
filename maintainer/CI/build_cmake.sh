@@ -294,7 +294,7 @@ if [ "${run_checks}" = true ]; then
     # unit tests
     if [ "${make_check_unit_tests}" = true ]; then
       for i in {1..60}; do
-        ninja -j${build_procs} check_unit_tests ${ninja_params} || exit 0
+        ninja -j${build_procs} check_unit_tests ${ninja_params} || true
       done
     fi
 
