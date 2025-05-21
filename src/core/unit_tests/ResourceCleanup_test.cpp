@@ -40,7 +40,7 @@
 struct GlobalConfig  {
   std::shared_ptr<boost::mpi::environment> m_mpi_env;
   GlobalConfig(int argc, char **argv) {
-  ::this_node=-2;
+  //::this_node=-2;
     m_mpi_env = std::make_shared<boost::mpi::environment>(
         argc,
         argv,
