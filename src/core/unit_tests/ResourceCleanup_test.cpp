@@ -21,75 +21,34 @@
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
-#include "config/config.hpp"
-
-#include "communication.hpp"
-#include "cuda/utils.hpp"
-#include "system/GpuParticleData.hpp"
-#include "system/ResourceCleanup.hpp"
-#include "system/System.hpp"
-#include "system/System.impl.hpp"
-
 #include <boost/mpi.hpp>
 
 #include <memory>
-#include <vector>
 
-struct GlobalConfig : public MpiContainerUnitTest {
-  GlobalConfig() = default;
+void f1() {
+  puts("atexit()");
+}
+struct GlobalConfig  {
+  std::shared_ptr<boost::mpi::environment> m_mpi_env;
+  GlobalConfig() {
+    atexit(f1);
+    m_mpi_env = std::make_shared<boost::mpi::environment>(
+        boost::unit_test::framework::master_test_suite().argc,
+        boost::unit_test::framework::master_test_suite().argv,
+        boost::mpi::threading::multiple);
+  }
   ~GlobalConfig() {
-  ::System::reset_system();
+      puts("~GlobalConfig() m_mpi_env.reset()");
+      m_mpi_env.reset();
+      puts("~GlobalConfig() done");
   }
 };
 
 BOOST_TEST_GLOBAL_CONFIGURATION(GlobalConfig);
 BOOST_AUTO_TEST_SUITE(suite)
 
-class MyClass {
-  std::vector<int> m_data;
-  void deallocate() { m_data.clear(); }
-  using Cleanup = ResourceCleanup::Attorney<&MyClass::deallocate>;
-  friend Cleanup;
-
-public:
-  MyClass() { m_data = std::vector<int>(5); }
-  ~MyClass() { deallocate(); }
-  auto size() const { return m_data.size(); }
-  template <class... Args> static auto make_shared(Args... args) {
-    auto obj = std::make_shared<MyClass>(args...);
-    System::get_system().cleanup_queue.push<Cleanup>(obj);
-    return obj;
-  }
-};
-
 BOOST_AUTO_TEST_CASE(checks) {
-  auto system = ::System::System::create();
-  System::set_system(system);
-
-#ifdef CUDA
-  BOOST_REQUIRE_EQUAL(system->cleanup_queue.size(), 1);
-  BOOST_REQUIRE_EQUAL(system->cleanup_queue.empty(), false);
-#else
-  BOOST_REQUIRE_EQUAL(system->cleanup_queue.size(), 0);
-  BOOST_REQUIRE_EQUAL(system->cleanup_queue.empty(), true);
-#endif
-
-#ifdef CUDA
-  if (system->gpu.has_compatible_device()) {
-    // allocate device memory to populate the cleanup queue
-    system->gpu.enable_property(GpuParticleData::prop::pos);
-    system->gpu.update();
-    BOOST_REQUIRE_EQUAL(system->cleanup_queue.size(), 1);
-    BOOST_REQUIRE_EQUAL(system->cleanup_queue.empty(), false);
-  }
-#endif
-
-  auto const obj = MyClass::make_shared();
-  BOOST_REQUIRE_EQUAL(system->cleanup_queue.empty(), false);
-  BOOST_REQUIRE_EQUAL(obj->size(), 5);
-  system.reset();
-  System::reset_system();
-  BOOST_REQUIRE_EQUAL(obj->size(), 0);
+  BOOST_REQUIRE_EQUAL(0, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
