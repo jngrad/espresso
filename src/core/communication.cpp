@@ -92,11 +92,14 @@ void init(std::shared_ptr<boost::mpi::environment> mpi_env) {
   puts("init(std::shared_ptr<boost::mpi::environment> mpi_env)");
   communicator.full_initialization();
 
-if (not ::mpi_init_override) {
+if ( ::mpi_init_override) {
+puts("custom init");
+}
+
   Communication::m_callbacks =
       std::make_shared<Communication::MpiCallbacks>(comm_cart, mpi_env);
 
-puts("custom init");
+if (not ::mpi_init_override) {
   ErrorHandling::init_error_handling(Communication::m_callbacks);
 
 #ifdef WALBERLA
@@ -121,8 +124,10 @@ void deinit() {
   puts("deinit()");
 if (not ::mpi_init_override) {
   ErrorHandling::deinit_error_handling();
+  }
   Communication::m_callbacks.reset();
 
+if (not ::mpi_init_override) {
 #ifdef SHARED_MEMORY_PARALLELISM
   Kokkos::finalize();
 #endif

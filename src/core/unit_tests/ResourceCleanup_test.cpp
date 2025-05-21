@@ -35,12 +35,22 @@
 #include <memory>
 #include <vector>
 
-struct GlobalConfig : public MpiContainerUnitTest {
+struct GlobalConfig  {
+  std::shared_ptr<boost::mpi::environment> m_mpi_env;
   GlobalConfig() {
   ::this_node=-2;
+    m_mpi_env = std::make_shared<boost::mpi::environment>(
+        boost::unit_test::framework::master_test_suite().argc,
+        boost::unit_test::framework::master_test_suite().argv,
+        boost::mpi::threading::multiple);
+    Communication::init(m_mpi_env);
   }
   ~GlobalConfig() {
-  ::System::reset_system();
+      printf("%i: ~MpiContainerUnitTest() Communication::deinit() use_count=%li\n", this_node, m_mpi_env.use_count());
+      Communication::deinit();
+      printf("%i: ~MpiContainerUnitTest() m_mpi_env.reset()       use_count=%li\n", this_node, m_mpi_env.use_count());
+      m_mpi_env.reset();
+      printf("%i: ~MpiContainerUnitTest() ending                  use_count=%li\n", this_node, m_mpi_env.use_count());
   }
 };
 
