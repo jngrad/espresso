@@ -86,6 +86,21 @@ void f1() {
 
 
 namespace Communication {
+MpiCallbacks::~MpiCallbacks() {
+    puts("~MpiCallbacks()");
+    /* Release the clients on exit */
+    if (m_comm.rank() == 0) {
+      try {
+        abort_loop();
+      } catch (...) { // NOLINT(bugprone-empty-catch)
+      puts("something unexpected happened");
+      }
+    }
+    m_comm.barrier();
+  printf("%i: ~MpiCallbacks() mpi_env.use_count=%li m_callbacks.use_count=%li\n", this_node, mpi_env_observer.use_count(), ::Communication::m_callbacks.use_count());
+    m_mpi_env.reset();
+  }
+
 void init(std::shared_ptr<boost::mpi::environment> mpi_env) {
     ::mpi_init_override = ::this_node == -2;
   atexit(f1);

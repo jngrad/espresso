@@ -29,10 +29,10 @@ espresso_unit_test(SRC get_value_test.cpp DEPENDS espresso::script_interface)
 espresso_unit_test(SRC None_test.cpp DEPENDS espresso::script_interface)
 espresso_unit_test(SRC reduction_test.cpp DEPENDS espresso::script_interface
                    Boost::mpi MPI::MPI_CXX NUM_PROC 4)
-espresso_unit_test(SRC LocalContext_test.cpp DEPENDS espresso::script_interface
+espresso_unit_test(SRC LocalContext_test.cpp DEPENDS espresso::core espresso::script_interface
                    Boost::mpi MPI::MPI_CXX NUM_PROC 1)
 espresso_unit_test(
-  SRC GlobalContext_test.cpp DEPENDS espresso::script_interface Boost::mpi
+  SRC GlobalContext_test.cpp DEPENDS espresso::core espresso::script_interface Boost::mpi
   MPI::MPI_CXX NUM_PROC 2)
 espresso_unit_test(SRC Exception_test.cpp DEPENDS espresso::script_interface)
 espresso_unit_test(
