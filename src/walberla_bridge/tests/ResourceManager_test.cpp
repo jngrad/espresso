@@ -40,7 +40,10 @@ public:
 
 } // namespace Testing
 
+void f1(void) { puts("atexit()"); }
+
 BOOST_AUTO_TEST_CASE(destruction_order) {
+  atexit(f1);
   // instantiate three resources in a specific order
   auto obj_a = std::make_shared<Testing::LogWriter<'A'>>();
   auto obj_b = std::make_shared<Testing::LogWriter<'B'>>();
@@ -68,10 +71,12 @@ BOOST_AUTO_TEST_CASE(destruction_order) {
   BOOST_REQUIRE_EQUAL(Testing::logger.size(), 4ul);
 
   // the manager should free the resources in the reverse order of their locking
+  puts("manager.reset();");
   manager.reset();
   BOOST_REQUIRE_EQUAL(Testing::logger.size(), 8ul);
   BOOST_CHECK_EQUAL(Testing::logger[4], "~B()");
   BOOST_CHECK_EQUAL(Testing::logger[5], "~D()");
   BOOST_CHECK_EQUAL(Testing::logger[6], "~A()");
   BOOST_CHECK_EQUAL(Testing::logger[7], "~C()");
+  puts("~destruction_order();");
 }

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <cstdio>
 #include <list>
 #include <memory>
 #include <stack>
@@ -61,7 +62,10 @@ class ResourceManager {
   public:
     explicit ResourceLockImpl(std::shared_ptr<T> resource)
         : m_resource(std::move(resource)) {}
-    ~ResourceLockImpl() override { m_resource.reset(); }
+    ~ResourceLockImpl() override {
+      puts("~ResourceLockImpl()");
+      m_resource.reset();
+    }
   };
 
   template <typename T> using LifoList = std::stack<T, std::list<T>>;
@@ -72,6 +76,7 @@ public:
   ResourceManager() = default;
 
   ~ResourceManager() {
+    puts("~ResourceManager()");
     while (not m_resources.empty()) {
       m_resources.pop();
     }
