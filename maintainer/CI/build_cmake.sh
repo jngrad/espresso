@@ -293,6 +293,14 @@ if [ "${run_checks}" = true ]; then
 
     # unit tests
     if [ "${make_check_unit_tests}" = true ]; then
+        ninja -j${build_procs} check_unit_tests ${ninja_params} || true
+      for mpinproc in 1 2 4; do
+      for ompnt in 1 2; do
+      for i in {1..20}; do
+        OMP_NUM_THREADS=${ompnt} mpiexec -n ${mpinproc} src/core/unit_tests/ResourceCleanup_test
+      done
+      done
+      done
       for i in {1..60}; do
         ninja -j${build_procs} check_unit_tests ${ninja_params} || true
       done
