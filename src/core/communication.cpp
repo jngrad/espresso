@@ -119,8 +119,8 @@ void deinit() {
   Kokkos::finalize();
 #endif
   printf("%i: deinit() before sleep use_count=%li\n", this_node, mpi_env_observer.use_count());
-  std::this_thread::sleep_for(std::chrono::milliseconds(200));
-  printf("%i: deinit() after sleep use_count=%li\n", this_node, mpi_env_observer.use_count());
+//  std::this_thread::sleep_for(std::chrono::milliseconds(200));
+//  printf("%i: deinit() after sleep use_count=%li\n", this_node, mpi_env_observer.use_count());
 }
 } // namespace Communication
 

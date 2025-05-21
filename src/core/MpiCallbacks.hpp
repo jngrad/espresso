@@ -267,6 +267,7 @@ public:
       } catch (...) { // NOLINT(bugprone-empty-catch)
       }
     }
+    m_mpi_env.reset();
   }
 
 private:
