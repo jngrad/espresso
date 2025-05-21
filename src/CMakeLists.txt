@@ -19,13 +19,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# Target for the unit tests
-add_custom_target(
-  check_unit_tests
-  COMMAND ${CMAKE_CTEST_COMMAND} --timeout ${ESPRESSO_TEST_TIMEOUT}
-          ${ESPRESSO_CTEST_ARGS} --output-on-failure)
-
 if(ESPRESSO_BUILD_TESTS)
+  set(ESPRESSO_CTEST_ARGS_UNIT_TESTS "${ESPRESSO_CTEST_ARGS}")
+  if(ESPRESSO_INSIDE_DOCKER AND "${ESPRESSO_MPIEXEC_VENDOR}" STREQUAL "OpenMPI"
+     AND ${ESPRESSO_MPIEXEC_VERSION} VERSION_GREATER_EQUAL 5.0)
+    # workaround for a race condition between the MPI environment object
+    # destruction and Boost unit tests global state destruction that leads to
+    # "prterun noticed that process rank ... exited on signal 13 (Broken pipe)"
+    # or "[warn] Epoll MOD(4) on fd 21 failed. Bad file descriptor" at random
+    string(REGEX REPLACE "(;|\"|^)-j *[0-9]+(;|\"|$)" "\\1-j1\\2"
+           ESPRESSO_CTEST_ARGS_UNIT_TESTS "${ESPRESSO_CTEST_ARGS_UNIT_TESTS}")
+  endif()
+  # Target for the unit tests
+  add_custom_target(
+    check_unit_tests
+    COMMAND ${CMAKE_CTEST_COMMAND} --timeout ${ESPRESSO_TEST_TIMEOUT}
+            ${ESPRESSO_CTEST_ARGS_UNIT_TESTS} --output-on-failure)
+  unset(ESPRESSO_CTEST_ARGS_UNIT_TESTS)
+
   # Run unit tests on check
   add_dependencies(check check_unit_tests)
 endif()
