@@ -80,9 +80,10 @@ jobs:
           with_scafacos: 'false'
           with_stokesian_dynamics: 'false'
           make_check_unit_tests: 'true'
-          make_check_python: 'false'
+          make_check_python: 'true'
           OMPI_ALLOW_RUN_AS_ROOT: 1
           OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+          check_skip_long: 'true'
 
   ubuntu:
     runs-on: ubuntu-latest

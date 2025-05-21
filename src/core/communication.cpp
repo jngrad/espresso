@@ -49,6 +49,8 @@
 #include <memory>
 #include <tuple>
 #include <utility>
+#include <chrono>
+#include <thread>
 
 boost::mpi::communicator comm_cart;
 Communicator communicator{};
@@ -112,6 +114,7 @@ void deinit() {
   Kokkos::finalize();
 #endif
   puts("deinit() end");
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
 } // namespace Communication
 
