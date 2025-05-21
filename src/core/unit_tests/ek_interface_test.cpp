@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(ek_interface_none) {
 BOOST_AUTO_TEST_SUITE_END()
 
 int main(int argc, char **argv) {
-  auto const mpi_handle = MpiContainerUnitTest(argc, argv);
+  auto mpi_handle = std::make_unique<MpiContainerUnitTest>(argc, argv);
   espresso::system = System::System::create();
   espresso::system->set_box_l(params.box_dimensions);
   espresso::system->set_time_step(params.time_step);
@@ -248,5 +248,7 @@ int main(int argc, char **argv) {
   boost::mpi::communicator world;
   assert(world.size() <= 2);
 
-  return boost::unit_test::unit_test_main(init_unit_test, argc, argv);
+  auto const retval = boost::unit_test::unit_test_main(init_unit_test, argc, argv);
+  mpi_handle.reset();
+  return retval;
 }

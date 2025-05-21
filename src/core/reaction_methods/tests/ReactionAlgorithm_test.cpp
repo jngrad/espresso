@@ -330,9 +330,11 @@ BOOST_FIXTURE_TEST_CASE(ReactionAlgorithm_test, ParticleFactory) {
 }
 
 int main(int argc, char **argv) {
-  auto const mpi_handle = MpiContainerUnitTest(argc, argv);
+  auto mpi_handle = std::make_unique<MpiContainerUnitTest>(argc, argv);
   espresso::system = System::System::create();
   espresso::system->set_cell_structure_topology(CellStructureType::REGULAR);
   ::System::set_system(espresso::system);
-  return boost::unit_test::unit_test_main(init_unit_test, argc, argv);
+  auto const retval = boost::unit_test::unit_test_main(init_unit_test, argc, argv);
+  mpi_handle.reset();
+  return retval;
 }
