@@ -307,7 +307,7 @@ target_compile_options(
     -Wunused-macros
     -Wpointer-arith
     -Winit-self
-    -Wformat-signedness
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-Wformat-signedness>
     $<$<CXX_COMPILER_ID:GNU>:-Wformat=2>
     $<$<CXX_COMPILER_ID:GNU>:-Wduplicated-branches>
     $<$<CXX_COMPILER_ID:GNU>:-Wshadow=compatible-local>
@@ -329,6 +329,7 @@ target_compile_options(
     $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:-Wno-implicit-int-float-conversion>
     $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:-Wno-float-conversion>
     $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:$<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wno-implicit-float-conversion>>
+    $<$<BOOL:${ESPRESSO_BUILD_WITH_HDF5}>:-Wno-cast-qual>
     # warnings are errors
     $<$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>:-Werror>)
 
@@ -599,7 +600,6 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-simplify-boolean-expr")
     list(APPEND SKIP_CLANG_TIDY_CHECKS
          "-readability-avoid-const-params-in-decls")
-    list(APPEND SKIP_CLANG_TIDY_CHECKS_CUDA "-bugprone-branch-clone")
     espresso_override_clang_tidy_checks(
       CABANA_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
       "${SKIP_CLANG_TIDY_CHECKS_CXX}")
@@ -843,6 +843,7 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
     GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla.git
                    https://github.com/lssfau/walberla.git
     GIT_TAG        36d73fd # v7.1 with patches
+    PATCH_COMMAND  patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/cmake/walberla.patch
   )
   # cmake-format: on
   string(REGEX REPLACE "([/\\]walberla)-src$" "\\1-build" walberla_BINARY_DIR
@@ -886,7 +887,16 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   if(WALBERLA_BUILD_WITH_CUDA)
     list(APPEND WALBERLA_LIBS walberla::gpu)
   endif()
-  foreach(target_alias IN LISTS WALBERLA_LIBS)
+  set(WALBERLA_LIBS_EXPORT
+      ${WALBERLA_LIBS}
+      lodepng
+      walberla::boundary
+      walberla::executiontree
+      walberla::geometry
+      walberla::lbm
+      walberla::timeloop)
+  # install all waLBerla shared objects
+  foreach(target_alias IN LISTS WALBERLA_LIBS_EXPORT)
     string(REPLACE "::" "_" target_name ${target_alias})
     get_target_property(target_type ${target_name} TYPE)
     if(${target_type} STREQUAL "SHARED_LIBRARY")
