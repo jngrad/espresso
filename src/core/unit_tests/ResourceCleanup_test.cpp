@@ -56,8 +56,51 @@ struct GlobalConfig  {
   }
 };
 
+class MyClass {
+  std::vector<int> m_data;
+  void deallocate() { m_data.clear(); }
+  using Cleanup = ResourceCleanup::Attorney<&MyClass::deallocate>;
+  friend Cleanup;
+
+public:
+  MyClass() { m_data = std::vector<int>(5); }
+  ~MyClass() { deallocate(); }
+  auto size() const { return m_data.size(); }
+  template <class... Args> static auto make_shared(Args... args) {
+    auto obj = std::make_shared<MyClass>(args...);
+    System::get_system().cleanup_queue.push<Cleanup>(obj);
+    return obj;
+  }
+};
+
 BOOST_AUTO_TEST_CASE(checks) {
-  BOOST_REQUIRE_EQUAL(0, 0);
+  auto system = ::System::System::create();
+  System::set_system(system);
+
+#ifdef CUDA
+  BOOST_REQUIRE_EQUAL(system->cleanup_queue.size(), 1);
+  BOOST_REQUIRE_EQUAL(system->cleanup_queue.empty(), false);
+#else
+  BOOST_REQUIRE_EQUAL(system->cleanup_queue.size(), 0);
+  BOOST_REQUIRE_EQUAL(system->cleanup_queue.empty(), true);
+#endif
+
+#ifdef CUDA
+  if (system->gpu.has_compatible_device()) {
+    // allocate device memory to populate the cleanup queue
+    system->gpu.enable_property(GpuParticleData::prop::pos);
+    system->gpu.update();
+    BOOST_REQUIRE_EQUAL(system->cleanup_queue.size(), 1);
+    BOOST_REQUIRE_EQUAL(system->cleanup_queue.empty(), false);
+  }
+#endif
+
+  auto const obj = MyClass::make_shared();
+  BOOST_REQUIRE_EQUAL(system->cleanup_queue.empty(), false);
+  BOOST_REQUIRE_EQUAL(obj->size(), 5);
+  system.reset();
+  System::reset_system();
+  BOOST_REQUIRE_EQUAL(obj->size(), 0);
 }
 
 int main(int argc, char **argv) {
