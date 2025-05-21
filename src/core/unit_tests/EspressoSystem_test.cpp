@@ -67,13 +67,12 @@ boost::test_tools::assertion_result has_gpu(boost::unit_test::test_unit_id) {
 
 BOOST_FIXTURE_TEST_CASE(check_with_gpu, ParticleFactory,
                         *boost::unit_test::precondition(has_gpu)) {
+#ifdef CUDA
   auto const rank = boost::mpi::communicator().rank();
 
   auto system = ::System::System::create();
   System::set_system(system);
   system->set_cell_structure_topology(CellStructureType::REGULAR);
-
-#ifdef CUDA
   auto &gpu = system->gpu;
 
   // check uninitialized device pointers
@@ -154,10 +153,10 @@ BOOST_FIXTURE_TEST_CASE(check_with_gpu, ParticleFactory,
   remove_particle(p_id);
   gpu.update();
   BOOST_CHECK_EQUAL(gpu.n_particles(), 0);
-#endif // CUDA
 
   clear_particles();
   System::reset_system();
+#endif // CUDA
 }
 
 BOOST_AUTO_TEST_SUITE_END()

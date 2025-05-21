@@ -57,6 +57,17 @@ if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
   endif()
 endif()
 
+if(ESPRESSO_INSIDE_DOCKER AND "${ESPRESSO_MPIEXEC_VENDOR}" STREQUAL "OpenMPI"
+   AND ${ESPRESSO_MPIEXEC_VERSION} VERSION_GREATER_EQUAL 5.0)
+  # workaround for a race condition between the MPI environment object
+  # destruction and Boost unit tests global state destruction that leads to
+  # "prterun noticed that process rank ... exited on signal 13 (Broken pipe)"
+  # or "[warn] Epoll MOD(4) on fd 21 failed. Bad file descriptor" at random
+  set_source_files_properties(
+    communication.cpp PROPERTIES COMPILE_OPTIONS -DESPRESSO_DELAY_OMPI_DEINIT
+                                       DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
+
 if(ESPRESSO_BUILD_WITH_CUDA)
   target_sources(espresso_core PRIVATE cuda/init.cpp)
   espresso_add_gpu_library(

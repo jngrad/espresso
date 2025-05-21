@@ -822,15 +822,6 @@ if(ESPRESSO_BUILD_TESTS)
       INTERFACE $<$<CXX_COMPILER_ID:GNU>:-fno-default-inline>
                 $<$<CXX_COMPILER_ID:GNU>:-fno-elide-constructors>)
   endif()
-  if(ESPRESSO_INSIDE_DOCKER AND "${ESPRESSO_MPIEXEC_VENDOR}" STREQUAL "OpenMPI"
-     AND ${ESPRESSO_MPIEXEC_VERSION} VERSION_GREATER_EQUAL 5.0)
-    # workaround for a race condition between the MPI environment object
-    # destruction and Boost unit tests global state destruction that leads to
-    # "prterun noticed that process rank ... exited on signal 13 (Broken pipe)"
-    # or "[warn] Epoll MOD(4) on fd 21 failed. Bad file descriptor" at random
-    target_compile_options(espresso_tests_cpp_flags
-                           INTERFACE -DESPRESSO_DELAY_OMPI_DEINIT)
-  endif()
   if(ESPRESSO_BUILD_WITH_PYTHON)
     add_subdirectory(testsuite)
   endif()
