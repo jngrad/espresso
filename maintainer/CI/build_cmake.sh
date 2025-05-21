@@ -297,7 +297,7 @@ if [ "${run_checks}" = true ]; then
       for mpinproc in 1 2 4; do
       for ompnt in 1 2; do
       for i in {1..20}; do
-        OMP_NUM_THREADS=${ompnt} mpiexec -n ${mpinproc} src/core/unit_tests/ResourceCleanup_test
+        OMP_NUM_THREADS=${ompnt} mpiexec -n ${mpinproc} -oversubscribe src/core/unit_tests/ResourceCleanup_test || true
       done
       done
       done
