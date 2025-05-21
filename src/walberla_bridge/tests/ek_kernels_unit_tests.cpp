@@ -78,10 +78,7 @@ bool operator!=(
   return not(lhs == rhs);
 }
 
-void f1(void) { puts("atexit()"); }
 BOOST_AUTO_TEST_CASE(dirichlet_density) {
-
-  atexit(f1);
   using Dirichlet_f = walberla::pystencils::Dirichlet_single_precision;
   using Dirichlet_d = walberla::pystencils::Dirichlet_double_precision;
 

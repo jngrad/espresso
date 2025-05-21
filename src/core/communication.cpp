@@ -74,8 +74,12 @@ using Communication::mpiCallbacks;
 
 int this_node = -1;
 
+void f1(void) { puts("atexit()"); }
+
 namespace Communication {
 void init(std::shared_ptr<boost::mpi::environment> mpi_env) {
+  atexit(f1);
+  puts("init(std::shared_ptr<boost::mpi::environment> mpi_env)");
   communicator.full_initialization();
 
   Communication::m_callbacks =
@@ -101,11 +105,13 @@ void init(std::shared_ptr<boost::mpi::environment> mpi_env) {
 }
 
 void deinit() {
+  puts("deinit()");
   Communication::m_callbacks.reset();
 
 #ifdef SHARED_MEMORY_PARALLELISM
   Kokkos::finalize();
 #endif
+  puts("deinit() end");
 }
 } // namespace Communication
 
