@@ -633,6 +633,8 @@ int main(int argc, char **argv) {
   ::System::set_system(espresso::system);
 
   auto const retval = boost::unit_test::unit_test_main(init_unit_test, argc, argv);
+  espresso::system.reset();
+  reset_system();
   mpi_handle.reset();
   return retval;
 }

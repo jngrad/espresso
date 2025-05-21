@@ -284,6 +284,8 @@ int main(int argc, char **argv) {
   if (world.size() == 4) {
     error_code = boost::unit_test::unit_test_main(init_unit_test, argc, argv);
   }
+  espresso::system.reset();
+  reset_system();
   mpi_handle.reset();
   return error_code;
 }
