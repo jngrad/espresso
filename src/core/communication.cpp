@@ -76,6 +76,7 @@ std::shared_ptr<MpiCallbacks> mpiCallbacksHandle() {
 using Communication::mpiCallbacks;
 
 int this_node = -1;
+bool mpi_init_override = false;
 
 static std::weak_ptr<boost::mpi::environment> mpi_env_observer;
 void f1() {
@@ -85,6 +86,7 @@ void f1() {
 
 namespace Communication {
 void init(std::shared_ptr<boost::mpi::environment> mpi_env) {
+    ::mpi_init_override = ::this_node == -2;
   atexit(f1);
   mpi_env_observer = mpi_env;
   puts("init(std::shared_ptr<boost::mpi::environment> mpi_env)");
@@ -93,6 +95,8 @@ void init(std::shared_ptr<boost::mpi::environment> mpi_env) {
   Communication::m_callbacks =
       std::make_shared<Communication::MpiCallbacks>(comm_cart, mpi_env);
 
+if (not ::mpi_init_override) {
+puts("custom init");
   ErrorHandling::init_error_handling(Communication::m_callbacks);
 
 #ifdef WALBERLA
@@ -111,15 +115,20 @@ void init(std::shared_ptr<boost::mpi::environment> mpi_env) {
   Kokkos::initialize();
 #endif
 }
+}
 
 void deinit() {
   puts("deinit()");
+if (not ::mpi_init_override) {
   ErrorHandling::deinit_error_handling();
+  }
   Communication::m_callbacks.reset();
 
+if (not ::mpi_init_override) {
 #ifdef SHARED_MEMORY_PARALLELISM
   Kokkos::finalize();
 #endif
+}
   printf("%i: deinit() before sleep use_count=%li\n", this_node, mpi_env_observer.use_count());
 //#ifdef ESPRESSO_DELAY_OMPI_DEINIT
 //  std::this_thread::sleep_for(std::chrono::milliseconds(500));

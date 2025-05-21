@@ -36,7 +36,9 @@
 #include <vector>
 
 struct GlobalConfig : public MpiContainerUnitTest {
-  GlobalConfig() = default;
+  GlobalConfig() {
+  ::this_node=-2;
+  }
   ~GlobalConfig() {
   ::System::reset_system();
   }
