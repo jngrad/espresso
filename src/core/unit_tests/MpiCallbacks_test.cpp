@@ -20,13 +20,12 @@
 
 /* Unit tests for the MpiCallbacks class. */
 
-#define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_MODULE MpiCallbacks test
-#define BOOST_TEST_ALTERNATIVE_INIT_API
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
 #include "MpiCallbacks.hpp"
+#include "communication.hpp"
 
 #include <boost/mpi.hpp>
 #include <boost/mpi/environment.hpp>
@@ -38,6 +37,14 @@
 
 static std::weak_ptr<boost::mpi::environment> mpi_env;
 static bool called = false;
+
+struct GlobalConfig : public MpiContainerUnitTest {
+  GlobalConfig() { ::mpi_env = mpi_env; }
+  ~GlobalConfig() { ::mpi_env.reset(); }
+};
+
+BOOST_TEST_GLOBAL_CONFIGURATION(GlobalConfig);
+BOOST_AUTO_TEST_SUITE(suite)
 
 BOOST_AUTO_TEST_CASE(invoke_test) {
   using Communication::detail::invoke;
@@ -240,9 +247,4 @@ BOOST_AUTO_TEST_CASE(check_exceptions) {
   }
 }
 
-int main(int argc, char **argv) {
-  auto const mpi_env = std::make_shared<boost::mpi::environment>(argc, argv);
-  ::mpi_env = mpi_env;
-
-  return boost::unit_test::unit_test_main(init_unit_test, argc, argv);
-}
+BOOST_AUTO_TEST_SUITE_END()

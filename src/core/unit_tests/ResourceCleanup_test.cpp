@@ -17,9 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_MODULE ResourceCleanup test
-#define BOOST_TEST_ALTERNATIVE_INIT_API
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
@@ -36,6 +34,16 @@
 
 #include <memory>
 #include <vector>
+
+struct GlobalConfig : public MpiContainerUnitTest {
+  GlobalConfig() = default;
+  ~GlobalConfig() {
+  ::System::reset_system();
+  }
+};
+
+BOOST_TEST_GLOBAL_CONFIGURATION(GlobalConfig);
+BOOST_AUTO_TEST_SUITE(suite)
 
 class MyClass {
   std::vector<int> m_data;
@@ -84,9 +92,4 @@ BOOST_AUTO_TEST_CASE(checks) {
   BOOST_REQUIRE_EQUAL(obj->size(), 0);
 }
 
-int main(int argc, char **argv) {
-  auto mpi_env = mpi_init(argc, argv);
-  Communication::init(mpi_env);
-
-  return boost::unit_test::unit_test_main(init_unit_test, argc, argv);
-}
+BOOST_AUTO_TEST_SUITE_END()

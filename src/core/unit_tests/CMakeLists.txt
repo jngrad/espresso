@@ -36,7 +36,7 @@ espresso_unit_test(SRC EspressoSystem_test.cpp DEPENDS espresso::core
                    Boost::mpi NUM_PROC 2)
 espresso_unit_test(SRC ResourceCleanup_test.cpp DEPENDS espresso::core
                    Boost::mpi NUM_PROC 2)
-espresso_unit_test(SRC MpiCallbacks_test.cpp DEPENDS espresso::utils Boost::mpi
+espresso_unit_test(SRC MpiCallbacks_test.cpp DEPENDS espresso::utils Boost::mpi espresso::core # TODO: remove core
                    MPI::MPI_CXX NUM_PROC 2)
 espresso_unit_test(SRC ParticleIterator_test.cpp DEPENDS espresso::utils)
 espresso_unit_test(SRC link_cell_test.cpp DEPENDS espresso::utils)
