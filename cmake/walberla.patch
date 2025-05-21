@@ -1,12 +1,11 @@
 compatibility patch for nvcc 12.0 to 12.3
 --- src/domain_decomposition/BlockStorage.h
 +++ src/domain_decomposition/BlockStorage.h
-@@ -725,6 +725,6 @@ inline void BlockStorage::clearBlockData( const BlockDataID & id )
+@@ -725,6 +725,5 @@ inline void BlockStorage::clearBlockData( const BlockDataID & id )
     //also delete block data from data handling vector
 -   auto ret = std::ranges::remove_if(blockDataItem_,
-+   auto elementToErase = std::remove_if(blockDataItem_.begin(), blockDataItem_.end(),
++   std::erase_if(blockDataItem_,
                                   [id](const internal::BlockDataItem& dataItem)
                                   { return dataItem.getId() == id; });
 -   blockDataItem_.erase(ret.begin(), ret.end());
-+   blockDataItem_.erase(elementToErase, blockDataItem_.end());
  }
