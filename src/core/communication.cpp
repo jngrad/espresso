@@ -149,7 +149,6 @@ void Communicator::init_comm_cart() {
 }
 
 void Communicator::full_initialization() {
-  assert(this_node == -1);
   assert(size == -1);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   node_grid = Utils::Mpi::dims_create<3>(size);
