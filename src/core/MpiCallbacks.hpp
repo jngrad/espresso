@@ -260,6 +260,7 @@ public:
   }
 
   ~MpiCallbacks() {
+    puts("~MpiCallbacks()");
     /* Release the clients on exit */
     if (m_comm.rank() == 0) {
       try {
@@ -267,6 +268,7 @@ public:
       } catch (...) { // NOLINT(bugprone-empty-catch)
       }
     }
+    printf("~MpiCallbacks(): m_mpi_env.reset() old use_count=%li\n", m_mpi_env.use_count());
     m_mpi_env.reset();
   }
 

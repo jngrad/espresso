@@ -137,6 +137,6 @@ struct MpiContainerUnitTest {
     m_mpi_env = mpi_init(argc, argv);
     Communication::init(m_mpi_env);
   }
-  ~MpiContainerUnitTest() { Communication::deinit(); }
+  ~MpiContainerUnitTest() { printf("%i: ~MpiContainerUnitTest() use_count=%li\n", this_node, m_mpi_env.use_count());Communication::deinit();m_mpi_env.reset();printf("%i: ~MpiContainerUnitTest() use_count=%li\n", this_node, m_mpi_env.use_count()); }
 };
 #endif
