@@ -19,7 +19,6 @@
 
 #define BOOST_TEST_MODULE LB particle coupling test
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_NO_MAIN
 #include <boost/test/data/monomorphic.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -121,6 +120,25 @@ static void set_lb_kT(double kT) {
 }
 } // namespace espresso
 
+struct GlobalConfig : public MpiContainerUnitTest {
+  GlobalConfig() {
+  espresso::system = System::System::create();
+  espresso::system->set_box_l(params.box_dimensions);
+  espresso::system->set_time_step(params.time_step);
+  espresso::system->set_cell_structure_topology(CellStructureType::REGULAR);
+  espresso::system->cell_structure->set_verlet_skin(params.skin);
+  espresso::system->thermostat->lb = std::make_shared<LBThermostat>();
+  ::System::set_system(espresso::system);
+
+  boost::mpi::communicator world;
+  assert(world.size() <= 2);
+  }
+  ~GlobalConfig() {
+  espresso::system.reset();
+  ::System::reset_system();
+  }
+};
+
 namespace LB {
 static auto get_force_to_be_applied(Utils::Vector3d const &pos) {
   auto const agrid = espresso::lb_params->get_agrid();
@@ -151,6 +169,7 @@ struct CleanupActorLB : public ParticleFactory {
   ~CleanupActorLB() { espresso::remove_lb_actor(); }
 };
 
+BOOST_TEST_GLOBAL_CONFIGURATION(GlobalConfig);
 BOOST_FIXTURE_TEST_SUITE(suite, CleanupActorLB)
 
 BOOST_AUTO_TEST_CASE(lb_reactivate) {
@@ -630,23 +649,4 @@ BOOST_AUTO_TEST_CASE(lb_exceptions) {
     lb.reset();
   }
 }
-
-int main(int argc, char **argv) {
-  auto const mpi_handle = MpiContainerUnitTest(argc, argv);
-  espresso::system = System::System::create();
-  espresso::system->set_box_l(params.box_dimensions);
-  espresso::system->set_time_step(params.time_step);
-  espresso::system->set_cell_structure_topology(CellStructureType::REGULAR);
-  espresso::system->cell_structure->set_verlet_skin(params.skin);
-  espresso::system->thermostat->lb = std::make_shared<LBThermostat>();
-  ::System::set_system(espresso::system);
-
-  boost::mpi::communicator world;
-  assert(world.size() <= 2);
-
-  return boost::unit_test::unit_test_main(init_unit_test, argc, argv);
-}
-
-#else // WALBERLA
-int main(int argc, char **argv) {}
 #endif

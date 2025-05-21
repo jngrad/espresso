@@ -42,6 +42,7 @@
 #include <boost/mpi.hpp>
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi/environment.hpp>
+#include "boost/test/unit_test.hpp"
 
 #include <mpi.h>
 
@@ -155,6 +156,21 @@ Utils::Vector3i Communicator::calc_node_index() const {
 std::shared_ptr<boost::mpi::environment> mpi_init(int argc, char **argv) {
   return std::make_shared<boost::mpi::environment>(argc, argv);
 }
+
+  MpiContainerUnitTest::MpiContainerUnitTest() {
+    m_mpi_env = std::make_shared<boost::mpi::environment>(
+        boost::unit_test::framework::master_test_suite().argc,
+        boost::unit_test::framework::master_test_suite().argv,
+        boost::mpi::threading::multiple);
+    Communication::init(m_mpi_env);
+  }
+  MpiContainerUnitTest::~MpiContainerUnitTest() {
+      printf("%i: ~MpiContainerUnitTest() Communication::deinit() use_count=%li\n", this_node, m_mpi_env.use_count());
+      Communication::deinit();
+      printf("%i: ~MpiContainerUnitTest() m_mpi_env.reset()       use_count=%li\n", this_node, m_mpi_env.use_count());
+      m_mpi_env.reset();
+      printf("%i: ~MpiContainerUnitTest() ending                  use_count=%li\n", this_node, m_mpi_env.use_count());
+  }
 
 void mpi_loop() {
   if (this_node != 0)

@@ -17,9 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_MODULE System test
-#define BOOST_TEST_ALTERNATIVE_INIT_API
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
@@ -46,6 +44,16 @@
 
 #include <cassert>
 #include <memory>
+
+struct GlobalConfig : public MpiContainerUnitTest {
+  GlobalConfig() = default;
+  ~GlobalConfig() {
+  ::System::reset_system();
+  }
+};
+
+BOOST_TEST_GLOBAL_CONFIGURATION(GlobalConfig);
+BOOST_AUTO_TEST_SUITE(suite)
 
 /* Decorator to run a unit test depending on GPU availability. */
 boost::test_tools::assertion_result has_gpu(boost::unit_test::test_unit_id) {
@@ -149,14 +157,6 @@ BOOST_FIXTURE_TEST_CASE(check_with_gpu, ParticleFactory,
   System::reset_system();
 }
 
-int main(int argc, char **argv) {
-  auto mpi_handle = std::make_unique<MpiContainerUnitTest>(argc, argv);
+BOOST_AUTO_TEST_SUITE_END()
 
-  auto const retval = boost::unit_test::unit_test_main(init_unit_test, argc, argv);
-  mpi_handle.reset();
-  return retval;
-}
-
-#else // CUDA
-int main(int argc, char **argv) {}
 #endif

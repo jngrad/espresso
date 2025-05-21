@@ -133,10 +133,14 @@ void deinit();
 
 struct MpiContainerUnitTest {
   std::shared_ptr<boost::mpi::environment> m_mpi_env;
+  ~MpiContainerUnitTest();
+  MpiContainerUnitTest();
+  /*
   MpiContainerUnitTest(int argc, char **argv) {
     m_mpi_env = mpi_init(argc, argv);
     Communication::init(m_mpi_env);
   }
   ~MpiContainerUnitTest() { printf("%i: ~MpiContainerUnitTest() use_count=%li\n", this_node, m_mpi_env.use_count());Communication::deinit();printf("%i: ~MpiContainerUnitTest() use_count=%li\n", this_node, m_mpi_env.use_count());m_mpi_env.reset();printf("%i: ~MpiContainerUnitTest() use_count=%li\n", this_node, m_mpi_env.use_count()); }
+  */
 };
 #endif

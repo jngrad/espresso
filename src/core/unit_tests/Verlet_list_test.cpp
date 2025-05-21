@@ -24,8 +24,6 @@
 #ifdef LENNARD_JONES
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_NO_MAIN
-#define BOOST_TEST_ALTERNATIVE_INIT_API
 #include <boost/test/data/monomorphic.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -63,6 +61,21 @@ namespace espresso {
 // ESPResSo system instance
 static std::shared_ptr<System::System> system;
 } // namespace espresso
+
+struct GlobalConfig : public MpiContainerUnitTest {
+  GlobalConfig() {
+  espresso::system = System::System::create();
+  espresso::system->set_cell_structure_topology(CellStructureType::REGULAR);
+  ::System::set_system(espresso::system);
+  }
+  ~GlobalConfig() {
+  espresso::system.reset();
+  ::System::reset_system();
+  }
+};
+
+BOOST_TEST_GLOBAL_CONFIGURATION(GlobalConfig);
+BOOST_AUTO_TEST_SUITE(suite)
 
 namespace Testing {
 /**
@@ -159,6 +172,10 @@ BOOST_DATA_TEST_CASE_F(ParticleFactory, verlet_list_update,
   auto constexpr tol = 8. * 100. * std::numeric_limits<double>::epsilon();
   auto const comm = boost::mpi::communicator();
   auto const rank = comm.rank();
+  // the test case only works for 4 MPI ranks
+  if (comm.size() != 4) {
+    return;
+  }
 
   auto const box_l = 8.;
   auto &system = *espresso::system;
@@ -273,22 +290,5 @@ BOOST_DATA_TEST_CASE_F(ParticleFactory, verlet_list_update,
   }
 }
 
-int main(int argc, char **argv) {
-  auto mpi_handle = std::make_unique<MpiContainerUnitTest>(argc, argv);
-  espresso::system = System::System::create();
-  espresso::system->set_cell_structure_topology(CellStructureType::REGULAR);
-  ::System::set_system(espresso::system);
-  // the test case only works for 4 MPI ranks
-  boost::mpi::communicator world;
-  int error_code = 0;
-  if (world.size() == 4) {
-    error_code = boost::unit_test::unit_test_main(init_unit_test, argc, argv);
-  }
-  espresso::system.reset();
-  ::System::reset_system();
-  mpi_handle.reset();
-  return error_code;
-}
-#else // ifdef LENNARD_JONES
-int main(int argc, char **argv) {}
+BOOST_AUTO_TEST_SUITE_END()
 #endif
