@@ -114,6 +114,7 @@ void init(std::shared_ptr<boost::mpi::environment> mpi_env) {
 
 void deinit() {
   puts("deinit()");
+  ErrorHandling::deinit_error_handling();
   Communication::m_callbacks.reset();
 
 #ifdef SHARED_MEMORY_PARALLELISM

@@ -23,7 +23,7 @@ if(ESPRESSO_BUILD_TESTS)
   set(ESPRESSO_CTEST_ARGS_UNIT_TESTS "${ESPRESSO_CTEST_ARGS}")
   if(ESPRESSO_INSIDE_DOCKER AND "${ESPRESSO_MPIEXEC_VENDOR}" STREQUAL "OpenMPI"
      AND ${ESPRESSO_MPIEXEC_VERSION} VERSION_GREATER_EQUAL 5.0)
-    # workaround for a race condition between the MPI environment object
+    # workaround for a race condition between the Boost MPI environment object
     # destruction and Boost unit tests global state destruction that leads to
     # "prterun noticed that process rank ... exited on signal 13 (Broken pipe)"
     # or "[warn] Epoll MOD(4) on fd 21 failed. Bad file descriptor" at random
