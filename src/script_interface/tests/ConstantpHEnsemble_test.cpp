@@ -71,13 +71,13 @@ public:
 
 struct GlobalConfig : public MpiContainerUnitTest {
   GlobalConfig() {
-  espresso::system = System::System::create();
-  espresso::system->set_cell_structure_topology(CellStructureType::REGULAR);
-  ::System::set_system(espresso::system);
+    espresso::system = System::System::create();
+    espresso::system->set_cell_structure_topology(CellStructureType::REGULAR);
+    ::System::set_system(espresso::system);
   }
   ~GlobalConfig() {
-  espresso::system.reset();
-  ::System::reset_system();
+    espresso::system.reset();
+    ::System::reset_system();
   }
 };
 

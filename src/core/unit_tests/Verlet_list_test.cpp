@@ -21,8 +21,6 @@
 
 #include "config/config.hpp"
 
-#ifdef LENNARD_JONES
-
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/data/monomorphic.hpp>
 #include <boost/test/data/test_case.hpp>
@@ -74,8 +72,17 @@ struct GlobalConfig : public MpiContainerUnitTest {
   }
 };
 
+/* Decorator to run a unit test depending on GPU availability. */
+boost::test_tools::assertion_result has_lj(boost::unit_test::test_unit_id) {
+#ifdef LENNARD_JONES
+  return true;
+#else
+  return false;
+#endif
+}
+
 BOOST_TEST_GLOBAL_CONFIGURATION(GlobalConfig);
-BOOST_AUTO_TEST_SUITE(suite)
+BOOST_AUTO_TEST_SUITE(suite, *boost::unit_test::precondition(has_lj))
 
 namespace Testing {
 /**
@@ -169,6 +176,7 @@ auto const propagators =
 BOOST_DATA_TEST_CASE_F(ParticleFactory, verlet_list_update,
                        bdata::make(node_grids) * bdata::make(propagators),
                        node_grid, integration_helper) {
+#ifdef LENNARD_JONES
   auto constexpr tol = 8. * 100. * std::numeric_limits<double>::epsilon();
   auto const comm = boost::mpi::communicator();
   auto const rank = comm.rank();
@@ -288,7 +296,7 @@ BOOST_DATA_TEST_CASE_F(ParticleFactory, verlet_list_update,
       }
     }
   }
+#endif // LENNARD_JONES
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-#endif

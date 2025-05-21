@@ -74,11 +74,11 @@ if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   espresso_unit_test(SRC specfunc_test.cpp DEPENDS espresso::utils
                      espresso::core)
 endif()
-espresso_unit_test(SRC lb_particle_coupling_test.cpp DEPENDS espresso::core
-                   Boost::mpi MPI::MPI_CXX NUM_PROC 2)
-espresso_unit_test(SRC ek_interface_test.cpp DEPENDS espresso::core Boost::mpi
-                   MPI::MPI_CXX NUM_PROC 2)
 if(ESPRESSO_BUILD_WITH_WALBERLA)
+  espresso_unit_test(SRC lb_particle_coupling_test.cpp DEPENDS espresso::core
+                     Boost::mpi MPI::MPI_CXX NUM_PROC 2)
+  espresso_unit_test(SRC ek_interface_test.cpp DEPENDS espresso::core
+                     Boost::mpi MPI::MPI_CXX NUM_PROC 2)
   target_link_libraries(
     lb_particle_coupling_test PRIVATE espresso::walberla
                                       espresso::walberla::cpp_flags)

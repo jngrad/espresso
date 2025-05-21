@@ -23,8 +23,6 @@
 
 #include "config/config.hpp"
 
-#ifdef CUDA
-
 #include "ParticleFactory.hpp"
 
 #include "Particle.hpp"
@@ -58,10 +56,12 @@ BOOST_AUTO_TEST_SUITE(suite)
 /* Decorator to run a unit test depending on GPU availability. */
 boost::test_tools::assertion_result has_gpu(boost::unit_test::test_unit_id) {
   bool has_compatible_gpu = false;
+#ifdef CUDA
   invoke_skip_cuda_exceptions([&]() {
     cuda_check_device();
     has_compatible_gpu = true;
   });
+#endif // CUDA
   return has_compatible_gpu;
 }
 
@@ -72,6 +72,8 @@ BOOST_FIXTURE_TEST_CASE(check_with_gpu, ParticleFactory,
   auto system = ::System::System::create();
   System::set_system(system);
   system->set_cell_structure_topology(CellStructureType::REGULAR);
+
+#ifdef CUDA
   auto &gpu = system->gpu;
 
   // check uninitialized device pointers
@@ -152,11 +154,10 @@ BOOST_FIXTURE_TEST_CASE(check_with_gpu, ParticleFactory,
   remove_particle(p_id);
   gpu.update();
   BOOST_CHECK_EQUAL(gpu.n_particles(), 0);
+#endif // CUDA
 
   clear_particles();
   System::reset_system();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-#endif
