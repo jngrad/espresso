@@ -17,7 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_MODULE ResourceCleanup test
+#define BOOST_TEST_ALTERNATIVE_INIT_API
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
@@ -37,11 +39,11 @@
 
 struct GlobalConfig  {
   std::shared_ptr<boost::mpi::environment> m_mpi_env;
-  GlobalConfig() {
+  GlobalConfig(int argc, char **argv) {
   ::this_node=-2;
     m_mpi_env = std::make_shared<boost::mpi::environment>(
-        boost::unit_test::framework::master_test_suite().argc,
-        boost::unit_test::framework::master_test_suite().argv,
+        argc,
+        argv,
         boost::mpi::threading::multiple);
     Communication::init(m_mpi_env);
   }
@@ -54,11 +56,12 @@ struct GlobalConfig  {
   }
 };
 
-BOOST_TEST_GLOBAL_CONFIGURATION(GlobalConfig);
-BOOST_AUTO_TEST_SUITE(suite)
-
 BOOST_AUTO_TEST_CASE(checks) {
   BOOST_REQUIRE_EQUAL(0, 0);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+int main(int argc, char **argv) {
+  auto mpi_env = std::make_unique<GlobalConfig>(argc, argv);
+
+  return boost::unit_test::unit_test_main(init_unit_test, argc, argv);
+}
