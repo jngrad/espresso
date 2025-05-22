@@ -1,4 +1,4 @@
-image: ghcr.io/espressomd/docker/ubuntu:77a3823c5c4c2338c39eb0e0f054b5802f0f2a5e
+image: ghcr.io/espressomd/docker/ubuntu:3353f0aa183c420e26fc3a35bde39bd56ca79af8
 
 stages:
   - prepare
@@ -16,7 +16,7 @@ stages:
 
 .notification_job_template: &notification_job_definition
   <<: *global_job_definition
-  image: ghcr.io/espressomd/docker/fedora:77a3823c5c4c2338c39eb0e0f054b5802f0f2a5e
+  image: ghcr.io/espressomd/docker/fedora:3353f0aa183c420e26fc3a35bde39bd56ca79af8
   variables:
     GET_SOURCES_ATTEMPTS: 3
   before_script:
@@ -137,10 +137,10 @@ no_rotation:
     - no-cuda
     - numa
 
-fedora:41:
+fedora:42:
   <<: *global_job_definition
   stage: build
-  image: ghcr.io/espressomd/docker/fedora:77a3823c5c4c2338c39eb0e0f054b5802f0f2a5e
+  image: ghcr.io/espressomd/docker/fedora:3353f0aa183c420e26fc3a35bde39bd56ca79af8
   variables:
      with_cuda: 'false'
      with_gsl: 'false'
@@ -149,7 +149,6 @@ fedora:41:
      myconfig: 'maxset'
      make_check_python: 'true'
      with_stokesian_dynamics: 'true'
-     with_fftw: 'false'
      cmake_params: '-D CMAKE_INCLUDE_PATH=/usr/include/mpich-x86_64 -D CMAKE_PREFIX_PATH=/usr/lib64/mpich/lib/'
   script:
     - bash maintainer/CI/build_cmake.sh
@@ -176,6 +175,7 @@ clang-sanitizer:
      with_scafacos: 'true'
      with_walberla: 'true'
      with_stokesian_dynamics: 'true'
+     with_shared_memory_parallelism: 'true'
      with_coverage: 'false'
      with_coverage_python: 'false'
   script:

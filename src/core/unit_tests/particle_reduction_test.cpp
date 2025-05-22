@@ -17,12 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_MODULE particle_reduction test
-#define BOOST_TEST_ALTERNATIVE_INIT_API
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
+#include "EspressoCoreGlobalConfig.hpp"
 #include "Particle.hpp"
 #include "cell_system/CellStructure.hpp"
 #include "communication.hpp"
@@ -36,8 +35,31 @@
 
 #include <functional>
 
+struct GlobalConfig : public EspressoCoreGlobalConfig {
+  GlobalConfig() {
+    auto system = System::System::create();
+    system->set_box_l(Utils::Vector3d{10., 10., 10.});
+    system->set_cell_structure_topology(CellStructureType::REGULAR);
+    ::System::set_system(system);
+  }
+  ~GlobalConfig() { ::System::reset_system(); }
+};
+
+// Decorator to skip tests if shared-memory parallelism isn't compiled in
+boost::test_tools::assertion_result has_shm(boost::unit_test::test_unit_id) {
 #ifdef SHARED_MEMORY_PARALLELISM
-BOOST_AUTO_TEST_CASE(make_kokkos_reduction_) {
+  return true;
+#else
+  return false;
+#endif
+}
+
+BOOST_TEST_GLOBAL_CONFIGURATION(GlobalConfig);
+BOOST_AUTO_TEST_SUITE(suite)
+
+BOOST_TEST_DECORATOR(*boost::unit_test::precondition(has_shm))
+BOOST_AUTO_TEST_CASE(test_make_kokkos_reduction) {
+#ifdef SHARED_MEMORY_PARALLELISM
   auto &system = System::get_system();
   auto const &cell_structure = *system.cell_structure;
   auto const &cells = cell_structure.decomposition().local_cells();
@@ -70,18 +92,7 @@ BOOST_AUTO_TEST_CASE(make_kokkos_reduction_) {
     // so make sure that both results are equal.
     BOOST_CHECK_EQUAL(ref, res);
   }
+#endif // SHARED_MEMORY_PARALLELISM
 }
 
-int main(int argc, char **argv) {
-  auto const mpi_handle = MpiContainerUnitTest(argc, argv);
-
-  auto system = System::System::create();
-  system->set_box_l(Utils::Vector3d{10., 10., 10.});
-  system->set_cell_structure_topology(CellStructureType::REGULAR);
-  ::System::set_system(system);
-
-  return boost::unit_test::unit_test_main(init_unit_test, argc, argv);
-}
-#else // SHARED_MEMORY_PARALLELISM
-int main(int, char **) {}
-#endif
+BOOST_AUTO_TEST_SUITE_END()
