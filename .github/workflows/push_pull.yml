@@ -24,6 +24,7 @@ jobs:
       - run: |
          brew install boost boost-mpi fftw
          brew list ccache || brew install ccache
+         brew list ninja || brew install ninja
          # https://mac.r-project.org/openmp/
          curl -O https://mac.r-project.org/openmp/openmp-17.0.6-darwin20-Release.tar.gz
          sudo tar fvxz openmp-17.0.6-darwin20-Release.tar.gz -C /

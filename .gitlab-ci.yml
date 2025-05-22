@@ -442,8 +442,8 @@ check_sphinx:
       artifacts: true
   script:
     - cd ${CI_PROJECT_DIR}/build
-    - make -t && make sphinx
-    - make -j2 tutorials
+    - ninja sphinx
+    - ninja -j2 tutorials
     - bash ${CI_PROJECT_DIR}/maintainer/CI/doc_warnings.sh
     - python3 ${CI_PROJECT_DIR}/maintainer/CI/jupyter_warnings.py
   artifacts:
@@ -464,9 +464,9 @@ run_tutorials:
       artifacts: true
   script:
     - cd ${CI_PROJECT_DIR}/build
-    - make -t
-    - make tutorials
-    - make -j1 tutorials_html
+    - ninja -t restat
+    - ninja tutorials
+    - ninja -j1 tutorials_html
     - cd doc/tutorials
     - mkdir html
     - ${CI_PROJECT_DIR}/maintainer/CI/deploy_tutorials.py
@@ -492,7 +492,7 @@ run_doxygen:
       artifacts: true
   script:
     - cd ${CI_PROJECT_DIR}/build
-    - make -t && make doxygen
+    - ninja doxygen
   artifacts:
     paths:
     - build/doc/doxygen
@@ -515,7 +515,8 @@ maxset_no_gpu:
   script:
     - export CUDA_VISIBLE_DEVICES=""
     - cd ${CI_PROJECT_DIR}/build
-    - make -t && make check
+    - ninja -t restat
+    - ninja check
   tags:
     - espresso
     - no-cuda
