@@ -302,6 +302,16 @@ target_compile_options(
     $<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wmissing-variable-declarations>
     $<$<CXX_COMPILER_ID:Clang>:-Wnon-c-typedef-for-linkage>
     -Wdelete-non-virtual-dtor
+    -Wcast-qual
+    -Wcast-align
+    -Wunused-macros
+    -Wpointer-arith
+    -Winit-self
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-Wformat-signedness>
+    $<$<CXX_COMPILER_ID:GNU>:-Wformat=2>
+    $<$<CXX_COMPILER_ID:GNU>:-Wduplicated-branches>
+    $<$<CXX_COMPILER_ID:GNU>:-Wshadow=compatible-local>
+    $<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wshadow-field-in-constructor-modified>
     # disable warnings from -Wall and -Wextra
     -Wno-sign-compare
     -Wno-unused-function
@@ -315,9 +325,11 @@ target_compile_options(
     $<$<NOT:$<CXX_COMPILER_ID:IntelLLVM>>:-Wno-implicit-fallthrough>
     $<$<NOT:$<CXX_COMPILER_ID:IntelLLVM,GNU>>:-Wno-unused-private-field>
     $<$<AND:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},arm>>:-Wno-psabi>
+    $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:-Wno-format-nonliteral>
     $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:-Wno-float-conversion>
     $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:$<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wno-implicit-int-float-conversion>>
     $<$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>:$<$<CXX_COMPILER_ID:Clang,AppleClang,IntelLLVM>:-Wno-implicit-float-conversion>>
+    $<$<BOOL:${ESPRESSO_BUILD_WITH_HDF5}>:-Wno-cast-qual>
     # warnings are errors
     $<$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>:-Werror>)
 
@@ -532,6 +544,8 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     # cmake-format: on
     set(BUILD_SHARED_LIBS ON)
     set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
+    set(Kokkos_ENABLE_SERIAL ON)
+    set(Kokkos_ENABLE_OPENMP ON)
     FetchContent_MakeAvailable(kokkos)
     set(BUILD_SHARED_LIBS ${ESPRESSO_BUILD_SHARED_LIBS_DEFAULT})
     set(CMAKE_SHARED_LIBRARY_PREFIX "${ESPRESSO_SHARED_LIBRARY_PREFIX}")
@@ -803,6 +817,7 @@ if(ESPRESSO_BUILD_TESTS)
                                  "Maximal number of MPI ranks to use per test")
   add_library(espresso_tests_cpp_flags INTERFACE)
   add_library(espresso::tests::cpp_flags ALIAS espresso_tests_cpp_flags)
+  target_compile_options(espresso_tests_cpp_flags INTERFACE -Wno-unused-macros)
   if(ESPRESSO_BUILD_WITH_COVERAGE)
     target_compile_options(
       espresso_tests_cpp_flags

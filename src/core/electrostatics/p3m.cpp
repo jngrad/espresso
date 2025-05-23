@@ -336,10 +336,11 @@ void CoulombP3MImpl<FloatType, Architecture>::init_cpu_kernels() {
 
 namespace {
 template <int cao> struct AssignCharge {
-  void operator()(auto &p3m, double q, InterpolationWeights<cao> const &w) {
+  void operator()(auto &p3m, double q,
+                  InterpolationWeights<cao> const &weights) {
     using value_type =
         typename std::remove_reference_t<decltype(p3m)>::value_type;
-    p3m_interpolate(p3m.local_mesh, w, [q, &p3m](int ind, double w) {
+    p3m_interpolate(p3m.local_mesh, weights, [q, &p3m](int ind, double w) {
       p3m.rs_charge_density[ind] += value_type(w * q);
     });
   }
@@ -348,18 +349,18 @@ template <int cao> struct AssignCharge {
                   p3m_interpolation_cache &inter_weights) {
     auto constexpr memory_order =
         std::remove_reference<decltype(p3m)>::type::memory_order;
-    auto const w = p3m_calculate_interpolation_weights<cao, memory_order>(
+    auto const weights = p3m_calculate_interpolation_weights<cao, memory_order>(
         real_pos, p3m.params.ai, p3m.local_mesh);
-    inter_weights.store(w);
-    this->operator()(p3m, q, w);
+    inter_weights.store(weights);
+    this->operator()(p3m, q, weights);
   }
 
   void operator()(auto &p3m, double q, Utils::Vector3d const &real_pos) {
     auto constexpr memory_order =
         std::remove_reference<decltype(p3m)>::type::memory_order;
-    auto const w = p3m_calculate_interpolation_weights<cao, memory_order>(
+    auto const weights = p3m_calculate_interpolation_weights<cao, memory_order>(
         real_pos, p3m.params.ai, p3m.local_mesh);
-    this->operator()(p3m, q, w);
+    this->operator()(p3m, q, weights);
   }
 
   template <typename combined_ranges>
@@ -414,14 +415,15 @@ template <int cao> struct AssignForces {
       auto &p_force = boost::get<1>(zipped);
       if (p_q != 0.0) {
         auto const pref = p_q * force_prefac;
-        auto const w = p3m.inter_weights.template load<cao>(p_index);
+        auto const weights = p3m.inter_weights.template load<cao>(p_index);
 
         Utils::Vector3d force{};
-        p3m_interpolate(p3m.local_mesh, w, [&force, &p3m](int ind, double w) {
-          force[0u] += w * double(p3m.rs_E_fields[0u][ind]);
-          force[1u] += w * double(p3m.rs_E_fields[1u][ind]);
-          force[2u] += w * double(p3m.rs_E_fields[2u][ind]);
-        });
+        p3m_interpolate(p3m.local_mesh, weights,
+                        [&force, &p3m](int ind, double w) {
+                          force[0u] += w * double(p3m.rs_E_fields[0u][ind]);
+                          force[1u] += w * double(p3m.rs_E_fields[1u][ind]);
+                          force[2u] += w * double(p3m.rs_E_fields[2u][ind]);
+                        });
 
         p_force -= pref * force;
         ++p_index;

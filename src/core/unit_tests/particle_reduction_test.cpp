@@ -33,6 +33,7 @@
 
 #include <boost/mpi.hpp>
 
+#include <cassert>
 #include <functional>
 
 struct GlobalConfig : public EspressoCoreGlobalConfig {
@@ -41,6 +42,13 @@ struct GlobalConfig : public EspressoCoreGlobalConfig {
     system->set_box_l(Utils::Vector3d{10., 10., 10.});
     system->set_cell_structure_topology(CellStructureType::REGULAR);
     ::System::set_system(system);
+    ::make_new_particle(0, Utils::Vector3d{0., 0., 0.});
+    auto *const p = system->cell_structure->get_local_particle(0);
+    assert(p);
+    p->v() = Utils::Vector3d{3., 0., 0.};
+#ifdef MASS
+    p->mass() = 2.;
+#endif
   }
   ~GlobalConfig() { ::System::reset_system(); }
 };
@@ -57,6 +65,8 @@ boost::test_tools::assertion_result has_shm(boost::unit_test::test_unit_id) {
 BOOST_TEST_GLOBAL_CONFIGURATION(GlobalConfig);
 BOOST_AUTO_TEST_SUITE(suite)
 
+auto const reduce_op = []<typename T>(T &a, T const &b) { a = a + b; };
+
 BOOST_TEST_DECORATOR(*boost::unit_test::precondition(has_shm))
 BOOST_AUTO_TEST_CASE(test_make_kokkos_reduction) {
 #ifdef SHARED_MEMORY_PARALLELISM
@@ -64,22 +74,10 @@ BOOST_AUTO_TEST_CASE(test_make_kokkos_reduction) {
   auto const &cell_structure = *system.cell_structure;
   auto const &cells = cell_structure.decomposition().local_cells();
 
-  // Particle setting
-  ::make_new_particle(0, Utils::Vector3d{0., 0., 0.});
-  Particle p;
-  p.id() = 0;
-#ifdef MASS
-  p.mass() = 2.;
-#endif
-  p.v() = {3., 0., 0.};
-
   auto const kernel = [&cells](int i, Utils::Vector3d &res) {
-    for (auto &p : cells[i]->particles()) {
+    for (auto const &p : cells[i]->particles()) {
       res += p.mass() * p.v();
     }
-  };
-  auto const reduce_op = [](Utils::Vector3d &a, Utils::Vector3d const &b) {
-    a = a + b;
   };
   auto const reducer =
       Reduction::make_kokkos_reducer<Utils::Vector3d>(kernel, reduce_op);
@@ -90,9 +88,24 @@ BOOST_AUTO_TEST_CASE(test_make_kokkos_reduction) {
     reducer(i, res);
     // The lambda `kernel(i, res)` is executed inside `reducer(i, res)`,
     // so make sure that both results are equal.
-    BOOST_CHECK_EQUAL(ref, res);
+    BOOST_CHECK_EQUAL(res, ref);
   }
 #endif // SHARED_MEMORY_PARALLELISM
+}
+
+BOOST_AUTO_TEST_CASE(test_reduce_over_local_particles) {
+  auto &system = System::get_system();
+  auto const &cell_structure = *system.cell_structure;
+  auto const *const p = cell_structure.get_local_particle(0);
+  assert(p);
+
+  auto const kernel = [](Particle const &p, Utils::Vector3d &res) {
+    res += p.mass() * p.v();
+  };
+  auto const ref = p->mass() * p->v();
+  auto const res = reduce_over_local_particles<Utils::Vector3d>(
+      cell_structure, kernel, reduce_op);
+  BOOST_CHECK_EQUAL(res, ref);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
