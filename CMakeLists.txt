@@ -828,9 +828,7 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   FetchContent_Declare(
     walberla
     GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla.git
-                   https://github.com/lssfau/walberla.git
-    GIT_TAG        0aab9c0af2335b1f6fec75deae06e514ccb233ab
-    PATCH_COMMAND  patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/cmake/walberla.patch
+    GIT_TAG        59c9b8b1 # v7.1 with patches
   )
   # cmake-format: on
   string(REGEX REPLACE "([/\\]walberla)-src$" "\\1-build" walberla_BINARY_DIR
@@ -867,8 +865,7 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   set(CMAKE_SHARED_LIBRARY_PREFIX "${ESPRESSO_SHARED_LIBRARY_PREFIX}")
   set(WALBERLA_LIBS
       walberla::core walberla::domain_decomposition walberla::blockforest
-      walberla::boundary walberla::field walberla::lbm walberla::timeloop
-      walberla::vtk)
+      walberla::communication walberla::field walberla::stencil walberla::vtk)
   if(WALBERLA_BUILD_WITH_FFTW)
     list(APPEND WALBERLA_LIBS walberla::fft)
   endif()
@@ -876,20 +873,8 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
     list(APPEND WALBERLA_LIBS walberla::gpu)
   endif()
   set(WALBERLA_LIBS_EXPORT
-      ${WALBERLA_LIBS}
-      lodepng
-      sqlite3
-      walberla::lbm_generated
-      walberla::pe
-      walberla::pe_coupling
-      walberla::pde
-      walberla::mesa_pd
-      walberla::lbm_mesapd_coupling
-      walberla::sqlite
-      walberla::executiontree
-      walberla::geometry
-      walberla::postprocessing
-      walberla::gather)
+      ${WALBERLA_LIBS} lodepng walberla::boundary walberla::executiontree
+      walberla::geometry walberla::lbm walberla::timeloop)
   # install all waLBerla shared objects
   foreach(target_alias IN LISTS WALBERLA_LIBS_EXPORT)
     string(REPLACE "::" "_" target_name ${target_alias})

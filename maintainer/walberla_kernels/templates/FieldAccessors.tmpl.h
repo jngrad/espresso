@@ -581,11 +581,11 @@ namespace MomentumDensity
             for(uint_t y = 0; y < pdf_field->ySize(); ++y) {
                 for(uint_t x = 0; x < pdf_field->xSize(); ++x) {
                     const {{dtype}} & xyz0 = pdf_field->get(x, y, z, uint_t{ 0u });
-                    {% for i in range(Q) -%}
+                    {% for i in range(1, Q) -%}
                         const {{dtype}} f_{{i}} = pdf_field->getF( &xyz0, uint_t{ {{i}}u });
                     {% endfor -%}
 
-                    {{momentum_density_getter | substitute_force_getter_cpp | indent(8) }}
+                    {{momentum_density_getter | substitute_force_getter_cpp | remove_intermediate_variable("rho") | indent(8) }}
 
                     {% for i in range(D) -%}
                         momentumDensity[{{i}}u] += md_{{i}};
@@ -604,7 +604,7 @@ namespace PressureTensor
          Cell const & cell )
    {
         const {{dtype}} & xyz0 = pdf_field->get(cell, uint_t{ 0u });
-        {% for i in range(Q) -%}
+        {% for i in range(1, Q) -%}
             const {{dtype}} f_{{i}} = pdf_field->getF( &xyz0, uint_t{ {{i}}u });
         {% endfor -%}
 
@@ -629,7 +629,7 @@ namespace PressureTensor
             for (auto y = ci.yMin(); y <= ci.yMax(); ++y) {
                 for (auto z = ci.zMin(); z <= ci.zMax(); ++z) {
                     const {{dtype}} & xyz0 = pdf_field->get(x, y, z, uint_t{ 0u });
-                    {% for i in range(Q) -%}
+                    {% for i in range(1, Q) -%}
                         const {{dtype}} f_{{i}} = pdf_field->getF( &xyz0, uint_t{ {{i}}u });
                     {% endfor -%}
 
@@ -654,7 +654,7 @@ namespace PressureTensor
             for(uint_t y = 0; y < pdf_field->ySize(); ++y) {
                 for(uint_t x = 0; x < pdf_field->xSize(); ++x) {
                     const {{dtype}} & xyz0 = pdf_field->get(x, y, z, uint_t{ 0u });
-                    {% for i in range(Q) -%}
+                    {% for i in range(1, Q) -%}
                         const {{dtype}} f_{{i}} = pdf_field->getF( &xyz0, uint_t{ {{i}}u });
                     {% endfor -%}
 
