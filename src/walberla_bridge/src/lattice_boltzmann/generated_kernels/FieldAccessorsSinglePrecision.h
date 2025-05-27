@@ -1095,7 +1095,6 @@ inline auto reduce(GhostLayerField<float, uint_t{19u}> const *pdf_field,
     for (uint_t y = 0; y < pdf_field->ySize(); ++y) {
       for (uint_t x = 0; x < pdf_field->xSize(); ++x) {
         const float &xyz0 = pdf_field->get(x, y, z, uint_t{0u});
-        const float f_0 = pdf_field->getF(&xyz0, uint_t{0u});
         const float f_1 = pdf_field->getF(&xyz0, uint_t{1u});
         const float f_2 = pdf_field->getF(&xyz0, uint_t{2u});
         const float f_3 = pdf_field->getF(&xyz0, uint_t{3u});
@@ -1122,8 +1121,6 @@ inline auto reduce(GhostLayerField<float, uint_t{19u}> const *pdf_field,
         const float vel2Term = f_12 + f_13 + f_5;
         const float momdensity_2 =
             f_11 + f_14 - f_15 - f_16 - f_17 - f_18 - f_6 + vel2Term;
-        const float rho = f_0 + f_16 + f_17 + f_2 + f_3 + f_6 + f_9 + vel0Term +
-                          vel1Term + vel2Term;
         const float md_0 =
             force_field->get(x, y, z, 0) * 0.50000000000000000f + momdensity_0;
         const float md_1 =
@@ -1145,7 +1142,6 @@ namespace PressureTensor {
 inline auto get(GhostLayerField<float, uint_t{19u}> const *pdf_field,
                 Cell const &cell) {
   const float &xyz0 = pdf_field->get(cell, uint_t{0u});
-  const float f_0 = pdf_field->getF(&xyz0, uint_t{0u});
   const float f_1 = pdf_field->getF(&xyz0, uint_t{1u});
   const float f_2 = pdf_field->getF(&xyz0, uint_t{2u});
   const float f_3 = pdf_field->getF(&xyz0, uint_t{3u});
@@ -1201,7 +1197,6 @@ inline auto get(GhostLayerField<float, uint_t{19u}> const *pdf_field,
     for (auto y = ci.yMin(); y <= ci.yMax(); ++y) {
       for (auto z = ci.zMin(); z <= ci.zMax(); ++z) {
         const float &xyz0 = pdf_field->get(x, y, z, uint_t{0u});
-        const float f_0 = pdf_field->getF(&xyz0, uint_t{0u});
         const float f_1 = pdf_field->getF(&xyz0, uint_t{1u});
         const float f_2 = pdf_field->getF(&xyz0, uint_t{2u});
         const float f_3 = pdf_field->getF(&xyz0, uint_t{3u});
@@ -1252,11 +1247,10 @@ inline auto get(GhostLayerField<float, uint_t{19u}> const *pdf_field,
 
 inline auto reduce(GhostLayerField<float, uint_t{19u}> const *pdf_field) {
   Matrix3<float> pressureTensor(float{0});
-  for (auto z = 0; z < pdf_field->zSize(); ++z) {
-    for (auto y = 0; y < pdf_field->ySize(); ++y) {
-      for (auto x = 0; x < pdf_field->xSize(); ++x) {
+  for (uint_t z = 0; z < pdf_field->zSize(); ++z) {
+    for (uint_t y = 0; y < pdf_field->ySize(); ++y) {
+      for (uint_t x = 0; x < pdf_field->xSize(); ++x) {
         const float &xyz0 = pdf_field->get(x, y, z, uint_t{0u});
-        const float f_0 = pdf_field->getF(&xyz0, uint_t{0u});
         const float f_1 = pdf_field->getF(&xyz0, uint_t{1u});
         const float f_2 = pdf_field->getF(&xyz0, uint_t{2u});
         const float f_3 = pdf_field->getF(&xyz0, uint_t{3u});

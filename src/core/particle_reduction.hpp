@@ -29,6 +29,7 @@
 #endif
 
 #include <functional>
+#include <utility>
 
 namespace Reduction {
 
@@ -107,7 +108,7 @@ ResultType reduce_over_local_particles(
   if (cells.size() > 1) { // parallel loop over cells
     auto reducer = Reduction::make_kokkos_reducer<ResultType>(
         [&cells, add_partial](int i, ResultType &res) {
-          for (auto &p : cells[i]->particles()) {
+          for (auto const &p : cells[i]->particles()) {
             add_partial(p, res);
           }
         },
@@ -120,7 +121,7 @@ ResultType reduce_over_local_particles(
   auto const &particles = cells.front()->particles();
   auto reducer = Reduction::make_kokkos_reducer<ResultType>(
       [&particles, add_partial](int i, ResultType &res) {
-        add_partial(*(particles.begin() + i), res);
+        add_partial(std::as_const(*(particles.begin() + i)), res);
       },
       reduce_op);
   Kokkos::parallel_reduce( // loop over particles

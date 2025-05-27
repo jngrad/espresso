@@ -17,12 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_MODULE particle_reduction test
-#define BOOST_TEST_ALTERNATIVE_INIT_API
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
+#include "EspressoCoreGlobalConfig.hpp"
 #include "Particle.hpp"
 #include "cell_system/CellStructure.hpp"
 #include "communication.hpp"
@@ -34,30 +33,51 @@
 
 #include <boost/mpi.hpp>
 
+#include <cassert>
 #include <functional>
 
+struct GlobalConfig : public EspressoCoreGlobalConfig {
+  GlobalConfig() {
+    auto system = System::System::create();
+    system->set_box_l(Utils::Vector3d{10., 10., 10.});
+    system->set_cell_structure_topology(CellStructureType::REGULAR);
+    ::System::set_system(system);
+    ::make_new_particle(0, Utils::Vector3d{0., 0., 0.});
+    auto *const p = system->cell_structure->get_local_particle(0);
+    assert(p);
+    p->v() = Utils::Vector3d{3., 0., 0.};
+#ifdef MASS
+    p->mass() = 2.;
+#endif
+  }
+  ~GlobalConfig() { ::System::reset_system(); }
+};
+
+// Decorator to skip tests if shared-memory parallelism isn't compiled in
+boost::test_tools::assertion_result has_shm(boost::unit_test::test_unit_id) {
 #ifdef SHARED_MEMORY_PARALLELISM
-BOOST_AUTO_TEST_CASE(make_kokkos_reduction_) {
+  return true;
+#else
+  return false;
+#endif
+}
+
+BOOST_TEST_GLOBAL_CONFIGURATION(GlobalConfig);
+BOOST_AUTO_TEST_SUITE(suite)
+
+auto const reduce_op = []<typename T>(T &a, T const &b) { a = a + b; };
+
+BOOST_TEST_DECORATOR(*boost::unit_test::precondition(has_shm))
+BOOST_AUTO_TEST_CASE(test_make_kokkos_reduction) {
+#ifdef SHARED_MEMORY_PARALLELISM
   auto &system = System::get_system();
   auto const &cell_structure = *system.cell_structure;
   auto const &cells = cell_structure.decomposition().local_cells();
 
-  // Particle setting
-  ::make_new_particle(0, Utils::Vector3d{0., 0., 0.});
-  Particle p;
-  p.id() = 0;
-#ifdef MASS
-  p.mass() = 2.;
-#endif
-  p.v() = {3., 0., 0.};
-
   auto const kernel = [&cells](int i, Utils::Vector3d &res) {
-    for (auto &p : cells[i]->particles()) {
+    for (auto const &p : cells[i]->particles()) {
       res += p.mass() * p.v();
     }
-  };
-  auto const reduce_op = [](Utils::Vector3d &a, Utils::Vector3d const &b) {
-    a = a + b;
   };
   auto const reducer =
       Reduction::make_kokkos_reducer<Utils::Vector3d>(kernel, reduce_op);
@@ -68,20 +88,24 @@ BOOST_AUTO_TEST_CASE(make_kokkos_reduction_) {
     reducer(i, res);
     // The lambda `kernel(i, res)` is executed inside `reducer(i, res)`,
     // so make sure that both results are equal.
-    BOOST_CHECK_EQUAL(ref, res);
+    BOOST_CHECK_EQUAL(res, ref);
   }
+#endif // SHARED_MEMORY_PARALLELISM
 }
 
-int main(int argc, char **argv) {
-  auto const mpi_handle = MpiContainerUnitTest(argc, argv);
+BOOST_AUTO_TEST_CASE(test_reduce_over_local_particles) {
+  auto &system = System::get_system();
+  auto const &cell_structure = *system.cell_structure;
+  auto const *const p = cell_structure.get_local_particle(0);
+  assert(p);
 
-  auto system = System::System::create();
-  system->set_box_l(Utils::Vector3d{10., 10., 10.});
-  system->set_cell_structure_topology(CellStructureType::REGULAR);
-  ::System::set_system(system);
-
-  return boost::unit_test::unit_test_main(init_unit_test, argc, argv);
+  auto const kernel = [](Particle const &p, Utils::Vector3d &res) {
+    res += p.mass() * p.v();
+  };
+  auto const ref = p->mass() * p->v();
+  auto const res = reduce_over_local_particles<Utils::Vector3d>(
+      cell_structure, kernel, reduce_op);
+  BOOST_CHECK_EQUAL(res, ref);
 }
-#else // SHARED_MEMORY_PARALLELISM
-int main(int, char **) {}
-#endif
+
+BOOST_AUTO_TEST_SUITE_END()

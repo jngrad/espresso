@@ -25,16 +25,10 @@ set(SKIP_CLANG_TIDY_CHECKS "")
 set(SKIP_CLANG_TIDY_CHECKS_CXX "")
 set(SKIP_CLANG_TIDY_CHECKS_CUDA "")
 # silence waLBerla diagnostics
-list(APPEND SKIP_CLANG_TIDY_CHECKS "-clang-analyzer-deadcode.DeadStores")
-list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-non-const-parameter")
 list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-avoid-const-params-in-decls")
 list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-else-after-return")
 list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-simplify-boolean-expr")
-list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-auto")
-list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-loop-convert")
 list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-pass-by-value")
-list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-equals-delete")
-list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-return-braced-init-list")
 list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-crtp-constructor-accessibility")
 list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-narrowing-conversions")
 list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-exception-escape")
@@ -44,6 +38,7 @@ if(WALBERLA_BUILD_WITH_CUDA)
   list(APPEND SKIP_CLANG_TIDY_CHECKS "-bugprone-casting-through-void")
   list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-redundant-void-arg")
   list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-nullptr")
+  list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-non-const-parameter")
   # silence nullptr dereference in cuda::thrust
   list(APPEND SKIP_CLANG_TIDY_CHECKS_CUDA
        "-clang-analyzer-core.NonNullParamChecker")
@@ -59,6 +54,9 @@ if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
 endif()
 
 # codegen-specific Clang-Tidy overrides
+list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-auto")
+list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-non-const-parameter")
+list(APPEND SKIP_CLANG_TIDY_CHECKS_CXX "-clang-analyzer-deadcode.DeadStores")
 list(APPEND SKIP_CLANG_TIDY_CHECKS_CUDA
      "-bugprone-multi-level-implicit-pointer-conversion")
 if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
@@ -120,6 +118,13 @@ target_link_libraries(
   espresso_walberla_cuda_flags
   INTERFACE espresso::cuda_flags
             $<$<BOOL:${ESPRESSO_BUILD_WITH_WALBERLA_AVX}>:espresso::avx_flags>)
+add_library(espresso_walberla_codegen_cpp_flags INTERFACE)
+add_library(espresso::walberla_codegen::cpp_flags ALIAS
+            espresso_walberla_codegen_cpp_flags)
+target_compile_options(
+  espresso_walberla_codegen_cpp_flags
+  INTERFACE -Wno-cast-align
+            $<$<CXX_COMPILER_ID:GNU>:-Wno-shadow=compatible-local>)
 
 add_library(espresso_walberla SHARED)
 add_library(espresso_walberla_codegen OBJECT)
@@ -132,8 +137,9 @@ espresso_configure_walberla_target(espresso_walberla_codegen)
 target_link_libraries(
   espresso_walberla PUBLIC MPI::MPI_CXX espresso::utils
   PRIVATE espresso::walberla::cpp_flags espresso::walberla_codegen)
-target_link_libraries(espresso_walberla_codegen
-                      PRIVATE espresso::walberla::cpp_flags)
+target_link_libraries(
+  espresso_walberla_codegen PRIVATE espresso::walberla::cpp_flags
+                                    espresso::walberla_codegen::cpp_flags)
 
 if(WALBERLA_BUILD_WITH_CUDA)
   espresso_add_gpu_library(espresso_walberla_cuda SHARED)
