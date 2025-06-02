@@ -89,6 +89,7 @@ make_kokkos_reducer(Kernel k, ReductionOp<ResultType> reduce_op) {
 
 /** @brief performs a reduction over all particles
  *
+ * @param cs  cell structure to iterate over
  * @param add_partial is a function that adds a reduction result from a single
  * particle
  * @param reduce_op is a function that joins two reduction results
