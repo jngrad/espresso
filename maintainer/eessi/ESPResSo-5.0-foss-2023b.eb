@@ -1,0 +1,109 @@
+easyblock = 'EB_ESPResSo'
+
+name = 'ESPResSo'
+version = '4b9ccc4'
+
+homepage = 'https://espressomd.org/wordpress'
+description = """A software package for Molecular Dynamics and Monte Carlo
+simulations of bead-spring models, with electrostatics, magnetostatics,
+hydrodynamics and reaction-diffusion-advection solvers."""
+
+sources = [
+{
+    'source_urls': ['https://github.com/jngrad/espresso/archive/%(version)s.tar.gz'],
+    'filename': SOURCELOWER_TAR_GZ,
+    'download_filename': '%(version)s.tar.gz',
+},
+{
+    'source_urls': ['https://i10git.cs.fau.de/api/v4/projects/walberla%2Fwalberla/repository/archive?sha=59c9b8b1'],
+    'filename': 'walberla-59c9b8b1.tar.gz',
+},
+{
+    'source_urls': ['https://github.com/icl-utk-edu/heffte/archive/v2.4.1.tar.gz'],
+    'filename': 'heffte-2.4.1.tar.gz',
+},
+{
+    'source_urls': ['https://github.com/kokkos/kokkos/archive/18b830e.tar.gz'],
+    'filename': 'kokkos-18b830e.tar.gz',
+},
+{
+    'source_urls': ['https://github.com/ECP-copa/Cabana/archive/ebfaa51.tar.gz'],
+    'filename': 'Cabana-ebfaa51.tar.gz',
+},
+{
+    'source_urls': ['https://github.com/highfive-devs/highfive/archive/0103467.tar.gz'],
+    'filename': 'highfive-0103467.tar.gz',
+},
+]
+checksums = [{
+  'espresso-4b9ccc4.tar.gz': 'b793099648c92f8b1241c90a4ec51b8e69f5408e8dcd3b97b9a8b188141bbe87',
+  'walberla-59c9b8b1.tar.gz': 'a709d7299f2c06143946d9bb8033d4ddbb0cf8b9142e4bbaa15fecc78463038f',
+  'heffte-2.4.1.tar.gz': 'de2cf26df5d61baac7841525db3f393cb007f79612ac7534fd4757f154ba3e6c',
+  'kokkos-18b830e.tar.gz': 'dc0127134f47752f61e74c77237bd9ec560535c4283fef8c9643f947b3733063',
+  'Cabana-ebfaa51.tar.gz': 'fe5b1b1d419662b29a80cbd6703994b28c942ccbee3b201eca87e48a13836350',
+  'highfive-0103467.tar.gz': 'd0ce87abd07cdd676c6d6069d3b05f869138d115d8e22b935c9bd43c872c1f3d',
+}]
+patches = [
+  'espresso.patch',
+]
+
+toolchain = {'name': 'foss', 'version': '2023b'}
+toolchainopts = {'usempi': True, 'pic': True}
+
+builddependencies = [('CMake', '3.27.6')]
+
+dependencies = [
+    ('Python', '3.11.5'),
+    ('SciPy-bundle', '2023.11'),
+    ('Boost.MPI', '1.83.0'),
+    ('Mesa', '23.1.9'),
+    ('GSL', '2.7'),
+    ('IPython', '8.17.2'),
+    ('Pint', '0.24'),
+    ('HDF5', '1.14.3'),
+    #('VTK', '9.3.0'), # error: libpython3.10.so.1.0: file not found
+    #('PFFT', '20181230'), # not available in this toolchain
+    #('CUDA', '12.1.1', '', SYSTEM), # deferred for now
+]
+
+# default CUDA compute capabilities to use (override via --cuda-compute-capabilities)
+if any(x[0] == 'CUDA' for x in dependencies):
+    cuda_compute_capabilities = ['5.2', '6.0', '7.0', '7.5', '8.0', '8.6', '9.0']
+
+configopts = f' -DCMAKE_SKIP_RPATH=OFF -DESPRESSO_BUILD_TESTS=ON'
+# make sure the right Python is used (note: -DPython3_EXECUTABLE or -DPython_EXECUTABLE does not work!)
+configopts += ' -D PYTHON_EXECUTABLE=$EBROOTPYTHON/bin/python '
+
+runtest = 'check_unit_tests && make check_python'
+
+modextrapaths = {'PYTHONPATH': ['lib/python%(pyshortver)s/site-packages']}
+
+_binaries = ['ipypresso',  'pypresso']
+_libs = [
+    'espresso_config', 'espresso_core', 'espresso_script_interface',
+    'espresso_shapes', 'script_interface', 'utils', '_init',
+    'espresso_walberla',
+    'libwalberla_core', 'libwalberla_executiontree', 'libwalberla_timeloop',
+    'libwalberla_field', 'libwalberla_blockforest', 'libwalberla_geometry',
+    'libwalberla_lbm', 'libwalberla_vtk', 'libwalberla_domain_decomposition',
+    'libwalberla_boundary', 'liblodepng',
+]
+if any(x[0] == 'PFFT' for x in dependencies):
+    _libs.append('libwalberla_fft')
+if any(x[0] == 'HDF5' for x in dependencies):
+    _libs.append('espresso_hdf5')
+if any(x[0] == 'CUDA' for x in dependencies):
+    _libs += [
+        'espresso_cuda', 'espresso_walberla_cuda', 'libwalberla_gpu',
+    ]
+
+_lib_path = 'lib/python%(pyshortver)s/site-packages/espressomd'
+sanity_check_paths = {
+    'files': ['bin/%s' % x for x in _binaries] +
+             [_lib_path + '/%s.' % x + SHLIB_EXT for x in _libs],
+    'dirs': ['bin', 'lib']
+}
+
+sanity_check_commands = ['pypresso -h', 'ipypresso -h']
+
+moduleclass = 'chem'
