@@ -96,6 +96,10 @@
 #include <utility>
 #include <vector>
 
+#ifdef CALIPER
+#include <caliper/cali.h>
+#endif
+
 template <typename FloatType>
 std::complex<FloatType>
 multiply_complex_by_imaginary(std::complex<FloatType> const &z, FloatType k) {
@@ -618,6 +622,9 @@ template <typename FloatType, Arch Architecture>
 double CoulombP3MImpl<FloatType, Architecture>::long_range_kernel(
     bool force_flag, bool energy_flag, ParticleRange const &particles) {
 
+#ifdef CALIPER
+CALI_CXX_MARK_FUNCTION;
+#endif
   auto const &system = get_system();
   auto const &box_geo = *system.box_geo;
 #ifdef NPT

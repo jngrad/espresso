@@ -48,7 +48,7 @@ args = parser.parse_args()
 
 # process and check arguments
 measurement_steps = int(np.round(5e5 / args.particles_per_core, -1))
-n_iterations = 30
+n_iterations = 10
 assert args.prefactor > 0, "prefactor must be a positive number"
 assert args.volume_fraction > 0, "volume_fraction must be a positive number"
 assert args.volume_fraction < np.pi / (3 * np.sqrt(2)), \
@@ -97,7 +97,7 @@ system.cell_system.set_regular_decomposition(use_verlet_lists=True)
 # Integration parameters
 #############################################################
 system.time_step = 0.01
-system.cell_system.skin = 0.5
+system.cell_system.skin = 0.222
 
 # Interaction setup
 #############################################################
@@ -137,28 +137,12 @@ if args.gpu:
 # tuning and equilibration
 min_skin = 0.2
 max_skin = 1.6
-p3m_params = {"prefactor": args.prefactor, "accuracy": 1e-3}
+p3m_params = {"prefactor": args.prefactor, "accuracy": 1e-3, "mesh": 28, "cao":6}
 p3m = p3m_class(**p3m_params)
 print("Quick equilibration")
-system.integrator.run(min(3 * measurement_steps, 1000))
-print("Tune skin: {:.3f}".format(system.cell_system.tune_skin(
-    min_skin=min_skin, max_skin=max_skin, tol=0.05, int_steps=100,
-    adjust_max_skin=True)))
-print("Equilibration")
-system.integrator.run(min(3 * measurement_steps, 3000))
-print("Tune p3m")
+system.integrator.run(1000)
 system.electrostatics.solver = p3m
-print("Equilibration")
-system.integrator.run(min(3 * measurement_steps, 3000))
-print("Tune skin: {:.3f}".format(system.cell_system.tune_skin(
-    min_skin=min_skin, max_skin=max_skin, tol=0.05, int_steps=100,
-    adjust_max_skin=True)))
-print("Re-tune p3m")
-p3m = p3m_class(**p3m_params)
-system.electrostatics.solver = p3m
-print("Tune skin: {:.3f}".format(system.cell_system.tune_skin(
-    min_skin=min_skin, max_skin=max_skin, tol=0.05, int_steps=100,
-    adjust_max_skin=True)))
+system.integrator.run(100)
 
 
 if args.visualizer:

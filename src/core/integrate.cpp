@@ -479,9 +479,6 @@ int System::System::integrate(int n_steps, int reuse_forces) {
   if (reuse_forces == INTEG_REUSE_FORCES_NEVER or
       ((reuse_forces != INTEG_REUSE_FORCES_ALWAYS) and
        propagation.recalc_forces)) {
-#ifdef CALIPER
-    CALI_MARK_BEGIN("Initial Force Calculation");
-#endif
     thermostat->lb_coupling_deactivate();
 
 #ifdef VIRTUAL_SITES_RELATIVE
@@ -501,9 +498,6 @@ int System::System::integrate(int n_steps, int reuse_forces) {
 #endif
     }
 
-#ifdef CALIPER
-    CALI_MARK_END("Initial Force Calculation");
-#endif
   }
 
   thermostat->lb_coupling_activate();
@@ -534,14 +528,8 @@ int System::System::integrate(int n_steps, int reuse_forces) {
   CALLGRIND_START_INSTRUMENTATION;
 #endif
   // Integration loop
-#ifdef CALIPER
-  CALI_CXX_MARK_LOOP_BEGIN(integration_loop, "Integration loop");
-#endif
   int integrated_steps = 0;
   for (int step = 0; step < n_steps; step++) {
-#ifdef CALIPER
-    CALI_CXX_MARK_LOOP_ITERATION(integration_loop, step);
-#endif
 
 #ifdef BOND_CONSTRAINT
     if (n_rigid_bonds)
@@ -702,9 +690,6 @@ int System::System::integrate(int n_steps, int reuse_forces) {
     lb.ghost_communication();
   }
   lees_edwards->update_box_params(*box_geo, sim_time);
-#ifdef CALIPER
-  CALI_CXX_MARK_LOOP_END(integration_loop);
-#endif
 
 #ifdef VALGRIND
   CALLGRIND_STOP_INSTRUMENTATION;
