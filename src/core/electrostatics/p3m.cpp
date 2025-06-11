@@ -368,9 +368,7 @@ template <int cao> struct AssignCharge {
     for (auto zipped : p_q_pos_range) {
       auto const p_q = boost::get<0>(zipped);
       auto const &p_pos = boost::get<1>(zipped);
-      if (p_q != 0.0) {
-        this->operator()(p3m, p_q, p_pos, p3m.inter_weights);
-      }
+      this->operator()(p3m, p_q, p_pos, p3m.inter_weights);
     }
   }
 };
@@ -407,14 +405,8 @@ template <int cao> struct AssignForces {
 
     assert(cao == p3m.inter_weights.cao());
 
-    /* charged particle counter */
-    auto p_index = std::size_t{0ul};
-
-    for (auto zipped : p_q_force_range) {
-      auto p_q = boost::get<0>(zipped);
-      auto &p_force = boost::get<1>(zipped);
+  auto const kernel = [&p3m, force_prefac](double p_q, auto &p_force, auto p_index) {
       if (p_q != 0.0) {
-        auto const pref = p_q * force_prefac;
         auto const weights = p3m.inter_weights.template load<cao>(p_index);
 
         Utils::Vector3d force{};
@@ -425,9 +417,41 @@ template <int cao> struct AssignForces {
                           force[2u] += w * double(p3m.rs_E_fields[2u][ind]);
                         });
 
-        p_force -= pref * force;
-        ++p_index;
+        p_force -= p_q * force_prefac * force;
       }
+  };
+
+#ifdef SHARED_MEMORY_PARALLELISM
+  if (Kokkos::num_threads() > 1) {
+    std::vector<double> q_vals;
+    std::vector<Utils::Vector3d*> f_ptrs;
+    q_vals.reserve(p3m.inter_weights.size());
+    f_ptrs.reserve(p3m.inter_weights.size());
+    for (auto zipped : p_q_force_range) {
+      q_vals.emplace_back(boost::get<0>(zipped));
+      f_ptrs.emplace_back(&boost::get<1>(zipped));
+    }
+    Kokkos::RangePolicy<> policy(std::size_t{0u}, q_vals.size());
+    auto const *q_vals_data = q_vals.data();
+    auto const *f_ptrs_data = f_ptrs.data();
+    Kokkos::parallel_for(
+        "AssignForces", policy, KOKKOS_LAMBDA(std::size_t p_index) {
+      auto p_q = q_vals_data[p_index];
+      auto &p_force = *f_ptrs_data[p_index];
+      kernel(p_q, p_force, p_index);
+        });
+    return;
+  }
+#endif
+
+    /* charged particle counter */
+    auto p_index = std::size_t{0ul};
+
+    for (auto zipped : p_q_force_range) {
+      auto p_q = boost::get<0>(zipped);
+      auto &p_force = boost::get<1>(zipped);
+      kernel(p_q, p_force, p_index);
+      ++p_index;
     }
   }
 };
