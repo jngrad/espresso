@@ -292,6 +292,20 @@ static double p3m_k_space_error(double pref, Utils::Vector3i const &mesh,
          (box_l[1] * box_l[2]);
 }
 
+#ifdef SHARED_MEMORY_PARALLELISM
+static auto flatten_assign_ranges(auto const &zip_range, std::size_t size) {
+  std::vector<double> q_vals;
+  std::vector<Utils::Vector3d *> f_ptrs;
+  q_vals.reserve(size);
+  f_ptrs.reserve(size);
+  for (auto zipped : zip_range) {
+    q_vals.emplace_back(boost::get<0>(zipped));
+    f_ptrs.emplace_back(&boost::get<1>(zipped));
+  }
+  return std::make_tuple(q_vals, f_ptrs);
+}
+#endif // SHARED_MEMORY_PARALLELISM
+
 template <typename FloatType, Arch Architecture>
 void CoulombP3MImpl<FloatType, Architecture>::init_cpu_kernels() {
   assert(p3m.params.mesh >= Utils::Vector3i::broadcast(1));
@@ -367,8 +381,46 @@ template <int cao> struct AssignCharge {
     this->operator()(p3m, q, weights);
   }
 
-  template <typename combined_ranges>
-  void operator()(auto &p3m, combined_ranges const &p_q_pos_range) {
+  void operator()(auto &p3m, auto const &p_q_pos_range) {
+#ifdef SHARED_MEMORY_PARALLELISM
+    if (Kokkos::num_threads() > 1) {
+      using ResultType = decltype(p3m.rs_charge_density);
+      auto const size = p3m.inter_weights.size();
+      assert(size != 0ul);
+      auto const [q_vals, p_ptrs] = flatten_assign_ranges(p_q_pos_range, size);
+      auto const *q_vals_data = q_vals.data();
+      auto const *p_ptrs_data = p_ptrs.data();
+      auto const reduce_op = [](ResultType &acc, ResultType const &val) {
+        std::ranges::transform(acc, val, acc.begin(), std::plus{});
+      };
+      auto const reducer = Reduction::make_kokkos_reducer<ResultType>(
+          [&p3m, &q_vals_data, &p_ptrs_data](std::size_t const p_index,
+                                             ResultType &res) {
+            if (res.empty()) {
+              res.resize(p3m.rs_charge_density.size());
+            }
+            auto p_q = q_vals_data[p_index];
+            auto &p_pos = *p_ptrs_data[p_index];
+            auto constexpr memory_order =
+                std::remove_reference<decltype(p3m)>::type::memory_order;
+            auto const weights =
+                p3m_calculate_interpolation_weights<cao, memory_order>(
+                    p_pos, p3m.params.ai, p3m.local_mesh);
+            p3m.inter_weights.store_at(p_index, weights);
+            using value_type =
+                typename std::remove_reference_t<decltype(p3m)>::value_type;
+            p3m_interpolate(p3m.local_mesh, weights,
+                            [p_q, &res](int ind, double w) {
+                              res[ind] += value_type(w * p_q);
+                            });
+          },
+          reduce_op);
+      Kokkos::RangePolicy<> policy(std::size_t{0u}, size);
+      Kokkos::parallel_reduce("AssignCharge", policy, reducer,
+                              p3m.rs_charge_density);
+      return;
+    }
+#endif // SHARED_MEMORY_PARALLELISM
     for (auto zipped : p_q_pos_range) {
       auto const p_q = boost::get<0>(zipped);
       auto const &p_pos = boost::get<1>(zipped);
@@ -382,6 +434,17 @@ template <typename FloatType, Arch Architecture>
 void CoulombP3MImpl<FloatType, Architecture>::charge_assign(
     ParticleRange const &particles) {
   prepare_fft_mesh(true);
+
+#ifdef SHARED_MEMORY_PARALLELISM
+  if (Kokkos::num_threads() > 1) {
+    auto const &cs = *get_system().cell_structure;
+    std::size_t size = 0ul;
+    for (auto const *cell : cs.decomposition().local_cells()) {
+      size += cell->particles().size();
+    }
+    p3m.inter_weights.pre_allocate(size);
+  }
+#endif
 
   auto p_q_range = ParticlePropertyRange::charge_range(particles);
   auto p_pos_range = ParticlePropertyRange::pos_range(particles);
@@ -403,13 +466,13 @@ void CoulombP3MImpl<FloatType, Architecture>::assign_charge(
 }
 
 template <int cao> struct AssignForces {
-  template <typename combined_ranges>
   void operator()(auto &p3m, double force_prefac,
-                  combined_ranges const &p_q_force_range) const {
+                  auto const &p_q_force_range) const {
 
     assert(cao == p3m.inter_weights.cao());
 
-  auto const kernel = [&p3m, force_prefac](double p_q, auto &p_force, auto p_index) {
+    auto const kernel = [&p3m, force_prefac](double p_q, auto &p_force,
+                                             auto p_index) {
       if (p_q != 0.0) {
         auto const weights = p3m.inter_weights.template load<cao>(p_index);
 
@@ -423,29 +486,24 @@ template <int cao> struct AssignForces {
 
         p_force -= p_q * force_prefac * force;
       }
-  };
+    };
 
 #ifdef SHARED_MEMORY_PARALLELISM
-  if (Kokkos::num_threads() > 1) {
-    std::vector<double> q_vals;
-    std::vector<Utils::Vector3d*> f_ptrs;
-    q_vals.reserve(p3m.inter_weights.size());
-    f_ptrs.reserve(p3m.inter_weights.size());
-    for (auto zipped : p_q_force_range) {
-      q_vals.emplace_back(boost::get<0>(zipped));
-      f_ptrs.emplace_back(&boost::get<1>(zipped));
+    if (Kokkos::num_threads() > 1) {
+      auto const size = p3m.inter_weights.size();
+      auto const [q_vals, f_ptrs] =
+          flatten_assign_ranges(p_q_force_range, size);
+      auto const *q_vals_data = q_vals.data();
+      auto const *f_ptrs_data = f_ptrs.data();
+      Kokkos::RangePolicy<> policy(std::size_t{0u}, size);
+      Kokkos::parallel_for(
+          "AssignForces", policy, KOKKOS_LAMBDA(std::size_t p_index) {
+            auto p_q = q_vals_data[p_index];
+            auto &p_force = *f_ptrs_data[p_index];
+            kernel(p_q, p_force, p_index);
+          });
+      return;
     }
-    Kokkos::RangePolicy<> policy(std::size_t{0u}, q_vals.size());
-    auto const *q_vals_data = q_vals.data();
-    auto const *f_ptrs_data = f_ptrs.data();
-    Kokkos::parallel_for(
-        "AssignForces", policy, KOKKOS_LAMBDA(std::size_t p_index) {
-      auto p_q = q_vals_data[p_index];
-      auto &p_force = *f_ptrs_data[p_index];
-      kernel(p_q, p_force, p_index);
-        });
-    return;
-  }
 #endif
 
     /* charged particle counter */
@@ -460,9 +518,8 @@ template <int cao> struct AssignForces {
   }
 };
 
-template <typename combined_ranges>
 static auto calc_dipole_moment(boost::mpi::communicator const &comm,
-                               combined_ranges const &p_q_unfolded_pos_range) {
+                               auto const &p_q_unfolded_pos_range) {
   auto const local_dip =
       boost::accumulate(p_q_unfolded_pos_range, Utils::Vector3d{},
                         [](Utils::Vector3d const &dip, auto const &q_pos) {
