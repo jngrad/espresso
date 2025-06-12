@@ -433,6 +433,9 @@ template <int cao> struct AssignCharge {
 template <typename FloatType, Arch Architecture>
 void CoulombP3MImpl<FloatType, Architecture>::charge_assign(
     ParticleRange const &particles) {
+#ifdef CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   prepare_fft_mesh(true);
 
 #ifdef SHARED_MEMORY_PARALLELISM
@@ -456,6 +459,9 @@ void CoulombP3MImpl<FloatType, Architecture>::charge_assign(
 template <typename FloatType, Arch Architecture>
 void CoulombP3MImpl<FloatType, Architecture>::assign_charge(
     double q, Utils::Vector3d const &real_pos, bool skip_cache) {
+#ifdef CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   if (skip_cache) {
     Utils::integral_parameter<int, AssignCharge, 1, 7>(p3m.params.cao, p3m, q,
                                                        real_pos);
@@ -680,7 +686,7 @@ double CoulombP3MImpl<FloatType, Architecture>::long_range_kernel(
     bool force_flag, bool energy_flag, ParticleRange const &particles) {
 
 #ifdef CALIPER
-CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_FUNCTION;
 #endif
   auto const &system = get_system();
   auto const &box_geo = *system.box_geo;
