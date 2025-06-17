@@ -66,17 +66,20 @@ target_include_directories(
                          ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 find_package(Git)
-# Parse repository info from git if available Run this at build time to avoid
+# Parse repository info from git if available. Run this at build time to avoid
 # rebuilds
 add_custom_target(
-  version
+  espresso_version
   COMMAND
     ${CMAKE_COMMAND} -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
     -DPROJECT_VERSION=${PROJECT_VERSION} -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+    -DPROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
+    -DPROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR}
+    -DPROJECT_VERSION_PATCH=${PROJECT_VERSION_PATCH}
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -P
     ${PROJECT_SOURCE_DIR}/cmake/espresso_version.cmake)
 set_property(
   DIRECTORY APPEND
   PROPERTY ADDITIONAL_MAKE_CLEAN_FILES include/config/version.hpp
            include/config/version.hpp.tmp)
-add_dependencies(espresso_config version)
+add_dependencies(espresso_config espresso_version)

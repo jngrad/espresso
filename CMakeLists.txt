@@ -26,11 +26,15 @@ message(STATUS "CMake version: ${CMAKE_VERSION}")
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # project info
-project(ESPResSo)
-set(PROJECT_VERSION "4.3-dev")
+project(
+  ESPResSo
+  VERSION "5.0.0"
+  LANGUAGES C CXX
+  HOMEPAGE_URL "https://espressomd.org"
+  DESCRIPTION
+    "Extensible Simulation Package for Research on Soft Matter Systems")
 
 # C++ standard
-enable_language(CXX)
 set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ standard to be used")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
