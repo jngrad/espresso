@@ -24,8 +24,14 @@ add_custom_target(espressomd)
 file(GLOB cython_SRC *.pyx)
 file(GLOB cython_HEADER *.pxd)
 file(GLOB python_SRC RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" *.py)
+list(REMOVE_ITEM python_SRC __init__.py)
 
 espresso_target_resources(espressomd ${python_SRC})
+
+configure_file("__init__.py" "__init__.py" @ONLY)
+set_property(
+  TARGET espressomd APPEND PROPERTY EspressoResourceFiles
+                                    "${CMAKE_CURRENT_BINARY_DIR}/__init__.py")
 
 add_subdirectory(io)
 add_subdirectory(detail)
