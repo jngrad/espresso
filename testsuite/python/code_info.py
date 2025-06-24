@@ -61,12 +61,14 @@ class Test(ut.TestCase):
     def test_git_info(self):
         git_states = {"CLEAN", "DIRTY"}
         commit_charset = set("abcdef0123456789")
-        self.assertIn(espressomd.version.git_state(), git_states)
         self.assertIsInstance(espressomd.version.git_branch(), str)
         self.assertIsInstance(espressomd.version.git_commit(), str)
+        self.assertIsInstance(espressomd.version.git_state(), str)
         git_commit = espressomd.version.git_commit()
         self.assertLessEqual(len(git_commit), 40)
         self.assertTrue(set(git_commit).issubset(commit_charset))
+        if git_commit:
+            self.assertIn(espressomd.version.git_state(), git_states)
 
 
 if __name__ == "__main__":

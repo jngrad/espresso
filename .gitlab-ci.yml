@@ -398,12 +398,12 @@ installation:
   script:
     - bash maintainer/CI/build_cmake.sh
     - cd build
-    - make install
+    - ninja install
     - cmake . -D ESPRESSO_BUILD_TESTS=ON
     - sed -i "s|$(pwd)/pypresso|/tmp/espresso-unit-tests/bin/pypresso|" testsuite/{python,samples,tutorials}/CTestTestfile.cmake
-    - make check_python_skip_long
-    - make check_samples
-    - make check_tutorials
+    - ninja check_python_skip_long
+    - ninja check_samples
+    - ninja check_tutorials
   tags:
     - espresso
     - cuda
