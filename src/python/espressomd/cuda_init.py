@@ -31,7 +31,7 @@ class CudaInitHandle(ScriptInterfaceHelper):
     Methods
     -------
     list_devices()
-        List devices on head node.
+        List devices on the head node.
 
         Returns
         -------
