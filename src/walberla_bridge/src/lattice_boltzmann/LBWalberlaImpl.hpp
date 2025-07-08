@@ -295,6 +295,8 @@ protected:
   FloatType m_density;
   FloatType m_kT;
   unsigned int m_seed;
+  double m_zc_to_md; // zero-centered conversion factor to MD units
+  double m_zc_to_lb; // zero-centered conversion factor to LB units
 
   // Block data access handles
   BlockDataID m_pdf_field_id;
@@ -493,7 +495,8 @@ public:
   LBWalberlaImpl(std::shared_ptr<LatticeWalberla> lattice, double viscosity,
                  double density)
       : m_viscosity(FloatType_c(viscosity)), m_density(FloatType_c(density)),
-        m_kT(FloatType{0}), m_seed(0u), m_lattice(std::move(lattice)) {
+        m_kT(FloatType{0}), m_seed(0u), m_zc_to_md(density),
+        m_zc_to_lb(1. / density), m_lattice(std::move(lattice)) {
 
     auto const &blocks = m_lattice->get_blocks();
     auto const n_ghost_layers = m_lattice->get_ghost_layers();
@@ -738,8 +741,8 @@ public:
     m_seed = seed;
     auto obj = StreamCollisionModelThermalized(
         m_last_applied_force_field_id, m_pdf_field_id,
-        zero_centered_conversion_value_divide(m_kT), omega, omega, omega_odd,
-        omega, seed, uint32_t{0u});
+        zero_centered_to_lb(m_kT), omega, omega, omega_odd, omega, seed,
+        uint32_t{0u});
     m_collision_model = std::make_shared<CollisionModel>(std::move(obj));
     m_run_stream_collide_sweep = StreamCollideSweepVisitor(blocks);
     setup_streaming_communicator();
@@ -822,30 +825,35 @@ public:
   }
 
   template <typename T>
-  T zero_centered_conversion_vector_multiply(T const &vector) const {
-    T result = vector;
-    std::transform(vector.begin(), vector.end(), result.begin(),
-                   [this](auto value) { return value * m_density; });
-    return result;
+  void zero_centered_transform_impl(T &data, auto const factor) const {
+    if constexpr (std::is_arithmetic_v<T>) {
+      static_assert(std::is_floating_point_v<T>);
+      data *= static_cast<T>(factor);
+    } else {
+      auto const coef = static_cast<typename T::value_type>(factor);
+      std::transform(std::begin(data), std::end(data), std::begin(data),
+                     [coef](auto value) { return value * coef; });
+    }
   }
 
-  template <typename T>
-  T zero_centered_conversion_value_multiply(T const &values) const {
-    return values * m_density;
+  void zero_centered_to_lb_in_place(auto &data) const {
+    zero_centered_transform_impl(data, m_zc_to_lb);
   }
 
-  template <typename T>
-  T zero_centered_conversion_vector_divide(T const &vector) const {
-    T result = vector;
-    std::transform(
-        vector.begin(), vector.end(), result.begin(),
-        [this](auto value) { return value * (FloatType_c(1.0) / m_density); });
-    return result;
+  void zero_centered_to_md_in_place(auto &data) const {
+    zero_centered_transform_impl(data, m_zc_to_md);
   }
 
-  template <typename T>
-  T zero_centered_conversion_value_divide(T const &values) const {
-    return values * (FloatType_c(1.0) / m_density);
+  auto zero_centered_to_lb(auto const &data) const {
+    auto transformed_data = data;
+    zero_centered_to_lb_in_place(transformed_data);
+    return transformed_data;
+  }
+
+  auto zero_centered_to_md(auto const &data) const {
+    auto transformed_data = data;
+    zero_centered_to_md_in_place(transformed_data);
+    return transformed_data;
   }
 
   // Velocity
@@ -1048,7 +1056,7 @@ public:
           host_force.emplace_back(static_cast<FloatType>(vec[i]));
         }
       }
-      host_force = zero_centered_conversion_vector_divide(host_force);
+      zero_centered_to_lb_in_place(host_force);
       auto const gl = lattice.get_ghost_layers();
       auto field = block.template uncheckedFastGetData<VectorField>(
           m_force_to_be_applied_id);
@@ -1162,8 +1170,8 @@ public:
       }
 
       if (bc) {
-        auto const weighted_force = zero_centered_conversion_value_divide(
-            to_vector3<FloatType>(weight * force));
+        auto const weighted_force =
+            to_vector3<FloatType>(zero_centered_to_lb(weight) * force);
         auto force_field =
             bc->block->template uncheckedFastGetData<VectorField>(
                 m_force_to_be_applied_id);
@@ -1183,8 +1191,7 @@ public:
     auto field =
         bc->block->template getData<VectorField>(m_force_to_be_applied_id);
     auto const vec = lbm::accessor::Vector::get(field, bc->cell);
-
-    return zero_centered_conversion_value_multiply(to_vector3d(vec));
+    return zero_centered_to_md(to_vector3d(vec));
   }
 
   std::optional<Utils::Vector3d>
@@ -1198,7 +1205,7 @@ public:
     auto const field =
         bc->block->template getData<VectorField>(m_last_applied_force_field_id);
     auto const vec = lbm::accessor::Vector::get(field, bc->cell);
-    return zero_centered_conversion_value_multiply(to_vector3d(vec));
+    return zero_centered_to_md(to_vector3d(vec));
   }
 
   bool set_node_last_applied_force(Utils::Vector3i const &node,
@@ -1249,7 +1256,8 @@ public:
         }
       }
     }
-    return zero_centered_conversion_vector_multiply(out);
+    zero_centered_to_md_in_place(out);
+    return out;
   }
 
   void set_slice_last_applied_force(Utils::Vector3i const &lower_corner,
@@ -1735,13 +1743,11 @@ public:
 
   // Global external force
   void set_external_force(Utils::Vector3d const &ext_force) override {
-    m_reset_force->set_ext_force(
-        zero_centered_conversion_value_divide(ext_force));
+    m_reset_force->set_ext_force(zero_centered_to_lb(ext_force));
   }
 
   [[nodiscard]] Utils::Vector3d get_external_force() const noexcept override {
-    return zero_centered_conversion_value_multiply(
-        m_reset_force->get_ext_force());
+    return zero_centered_to_md(m_reset_force->get_ext_force());
   }
 
   [[nodiscard]] double get_kT() const noexcept override {
@@ -1888,8 +1894,8 @@ public:
         };
 #endif
     if (flag_observables & static_cast<int>(OutputVTK::density)) {
-      auto const unit_conversion = zero_centered_conversion_value_multiply(
-          FloatType_c(units.at("density")));
+      auto const unit_conversion =
+          FloatType_c(zero_centered_to_md(units.at("density")));
 #if defined(__CUDACC__)
       if constexpr (Architecture == lbmpy::Arch::GPU) {
         auto const &blocks = m_lattice->get_blocks();
@@ -1918,8 +1924,8 @@ public:
           m_velocity_field_id, "velocity_vector", unit_conversion));
     }
     if (flag_observables & static_cast<int>(OutputVTK::pressure_tensor)) {
-      auto const unit_conversion = zero_centered_conversion_value_multiply(
-          FloatType_c(units.at("pressure")));
+      auto const unit_conversion =
+          FloatType_c(zero_centered_to_md(units.at("pressure")));
 #if defined(__CUDACC__)
       if constexpr (Architecture == lbmpy::Arch::GPU) {
         auto const &blocks = m_lattice->get_blocks();
