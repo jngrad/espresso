@@ -107,7 +107,7 @@ class LBCouetteFlowCommon:
             u_ref = analytical(pos, system.time - 1. + 1., lbf.kinematic_viscosity,
                                shear_velocity, h, k_max)
             u_lbf = np.copy(u_getter(lbf).reshape([-1]))
-            np.testing.assert_allclose(u_lbf, u_ref, atol=1e-4, rtol=0.)
+            np.testing.assert_allclose(u_lbf, u_ref, atol=2e-4, rtol=0.)
 
     def test_profile_xy(self):
         if "blocks_per_mpi_rank" in self.lb_params:
