@@ -165,7 +165,7 @@ private:
     return std::ranges::all_of(pos, [&it_limits](U const value) {
       auto const [lower, upper] = *it_limits;
       ++it_limits;
-      return value >= lower and value <= upper;
+      return value >= lower and value < upper;
     });
   }
 
