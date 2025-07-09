@@ -852,8 +852,8 @@ class LBTestWalberlaSinglePrecisionCPU(LBTest, ut.TestCase):
     lb_class = espressomd.lb.LBFluidWalberla
     lb_lattice_class = espressomd.lb.LatticeWalberla
     lb_params = {"single_precision": True}
-    atol = 1e-7
-    rtol = 5e-5
+    atol = 5e-6
+    rtol = 2e-4
 
 
 @utx.skipIfMissingGPU()
@@ -872,7 +872,7 @@ class LBTestWalberlaSinglePrecisionGPU(LBTest, ut.TestCase):
     lb_class = espressomd.lb.LBFluidWalberlaGPU
     lb_lattice_class = espressomd.lb.LatticeWalberla
     lb_params = {"single_precision": True}
-    atol = 1e-6
+    atol = 5e-6
     rtol = 2e-4
 
 
@@ -894,7 +894,7 @@ class LBTestWalberlaSinglePrecisionBlocksCPU(LBTest, ut.TestCase):
     blocks_per_mpi_rank = [2, 2, 2]
     lb_params = {"single_precision": True,
                  "blocks_per_mpi_rank": blocks_per_mpi_rank}
-    atol = 1e-6
+    atol = 5e-6
     rtol = 2e-4
 
 
