@@ -165,7 +165,8 @@ template <typename FT, lbmpy::Arch Architecture> struct Fixture {
   }
 
   void runTest() {
-    auto const bc = walberla::get_block_and_cell(*lattice, {0, 0, 0}, false);
+    auto const node = Utils::Vector3i{0, 0, 0};
+    auto const bc = walberla::get_block_and_cell(*lattice, node, false);
     BOOST_CHECK(bc);
     auto const cell = bc->cell;
     auto const ci = walberla::CellInterval(cell, cell);
