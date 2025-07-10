@@ -1022,8 +1022,9 @@ public:
       return;
     }
     if constexpr (Architecture == lbmpy::Arch::CPU) {
+      auto const kernel = make_force_interpolation_kernel();
       for (std::size_t i = 0ul; i < pos.size(); ++i) {
-        add_force_at_pos(pos[i], forces[i]);
+        kernel(pos[i], forces[i]);
       }
     }
 #if defined(__CUDACC__)
@@ -1057,9 +1058,37 @@ public:
 #endif
   }
 
+  auto make_force_interpolation_kernel() const {
+    auto const &lattice = *m_lattice;
+    auto const &blocks = *lattice.get_blocks();
+    assert(lattice.get_ghost_layers() == 1u);
+    return [&](Utils::Vector3d const &pos, Utils::Vector3d const &force) {
+      if (not get_block_extended(lattice, pos, 1u)) {
+        return;
+      }
+      auto const zc_conv = FloatType{1} / m_density; // zero-centered fields
+      interpolate_bspline_at_pos(
+          pos, [&, zc_conv](std::array<int, 3> const node, double weight) {
+            auto block = get_block_extended(lattice, node, 0u);
+            if (!block)
+              block = get_block_extended(lattice, node, 1u);
+            if (block) {
+              auto cell = to_cell(node);
+              blocks.transformGlobalToBlockLocalCell(cell, *block);
+              weight *= zc_conv;
+              auto const weighted_force = to_vector3<FloatType>(weight * force);
+              auto field = block->template uncheckedFastGetData<VectorField>(
+                  m_force_to_be_applied_id);
+              lbm::accessor::Vector::add(field, weighted_force, cell);
+            }
+          });
+    };
+  }
+
   auto make_velocity_interpolation_kernel() const {
     auto const &lattice = *m_lattice;
     auto const &blocks = *lattice.get_blocks();
+    assert(lattice.get_ghost_layers() == 1u);
     return [&](Utils::Vector3d const &pos) {
       Utils::Vector3d acc{0., 0., 0.};
       interpolate_bspline_at_pos(pos, [&](std::array<int, 3> const node,
@@ -1074,9 +1103,8 @@ public:
           if (m_has_boundaries and m_boundary->node_is_boundary(node)) {
             vel = m_boundary->get_node_value_at_boundary(node);
           } else {
-            Cell cell;
-            Cell global_cell = to_cell(node);
-            blocks.transformGlobalToBlockLocalCell(cell, *block, global_cell);
+            auto cell = to_cell(node);
+            blocks.transformGlobalToBlockLocalCell(cell, *block);
             auto field = block->template uncheckedFastGetData<VectorField>(
                 m_velocity_field_id);
             vel = lbm::accessor::Vector::get(field, cell);
@@ -1164,28 +1192,12 @@ public:
     return {std::move(dens)};
   }
 
-  // Local force
   bool add_force_at_pos(Utils::Vector3d const &pos,
                         Utils::Vector3d const &force) override {
     if (!m_lattice->pos_in_local_halo(pos))
       return false;
-    auto const force_at_node = [this, &force](std::array<int, 3> const node,
-                                              double weight) {
-      auto bc = get_block_and_cell(get_lattice(), Utils::Vector3i(node), false);
-      if (!bc) {
-        bc = get_block_and_cell(get_lattice(), Utils::Vector3i(node), true);
-      }
-
-      if (bc) {
-        auto const weighted_force = zero_centered_conversion_value_divide(
-            to_vector3<FloatType>(weight * force));
-        auto force_field =
-            bc->block->template uncheckedFastGetData<VectorField>(
-                m_force_to_be_applied_id);
-        lbm::accessor::Vector::add(force_field, weighted_force, bc->cell);
-      }
-    };
-    interpolate_bspline_at_pos(pos, force_at_node);
+    auto const kernel = make_force_interpolation_kernel();
+    kernel(pos, force);
     return true;
   }
 
