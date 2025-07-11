@@ -24,9 +24,9 @@
 #include "script_interface/auto_parameters/AutoParameter.hpp"
 
 #include <algorithm>
-#include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -133,14 +133,11 @@ protected:
 
 public:
   /* ObjectHandle implementation */
-  std::span<const boost::string_ref> valid_parameters() const final {
-    static std::vector<boost::string_ref> valid_params;
-    valid_params.clear();
-
+  std::vector<std::string_view> valid_parameters() const final {
+    std::vector<std::string_view> valid_params;
     for (auto const &p : m_parameters) {
       valid_params.emplace_back(p.first);
     }
-
     return valid_params;
   }
 

@@ -30,10 +30,9 @@
 #include "ObjectHandle.hpp"
 #include "Variant.hpp"
 
-#include <boost/utility/string_ref.hpp>
-
 #include <memory>
 #include <string>
+#include <string_view>
 
 namespace boost {
 namespace mpi {
@@ -101,7 +100,7 @@ public:
    *
    *  This returns the name by which the object can be created.
    */
-  virtual boost::string_ref name(const ObjectHandle *o) const = 0;
+  virtual std::string_view name(const ObjectHandle *o) const = 0;
 
   virtual bool is_head_node() const = 0;
   virtual void parallel_try_catch(std::function<void()> const &cb) const = 0;

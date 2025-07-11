@@ -44,6 +44,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 
@@ -166,7 +167,7 @@ public:
   std::shared_ptr<ObjectHandle>
   make_shared(std::string const &name, const VariantMap &parameters) override;
 
-  boost::string_ref name(const ObjectHandle *o) const override;
+  std::string_view name(const ObjectHandle *o) const override;
 
   bool is_head_node() const override { return m_is_head_node; }
   void parallel_try_catch(std::function<void()> const &cb) const override {

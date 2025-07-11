@@ -31,6 +31,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace ScriptInterface {
@@ -71,7 +72,7 @@ public:
     return sp;
   }
 
-  boost::string_ref name(const ObjectHandle *o) const override {
+  std::string_view name(const ObjectHandle *o) const override {
     assert(o);
 
     return factory().type_name(*o);

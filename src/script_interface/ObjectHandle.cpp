@@ -34,6 +34,7 @@
 #include <iterator>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 
@@ -82,7 +83,7 @@ std::string ObjectHandle::serialize() const {
         return std::make_pair(kv.first, kv.second->serialize());
       });
 
-  state.name = name().to_string();
+  state.name = name();
   state.internal_state = get_internal_state();
 
   return Utils::pack(state);
@@ -110,8 +111,8 @@ ObjectRef ObjectHandle::deserialize(const std::string &packed_state,
   return o;
 }
 
-boost::string_ref ObjectHandle::name() const {
-  return context() ? context()->name(this) : boost::string_ref{};
+std::string_view ObjectHandle::name() const {
+  return context() ? context()->name(this) : std::string_view{};
 }
 
 } /* namespace ScriptInterface */

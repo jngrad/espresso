@@ -67,12 +67,9 @@ protected:
   using AutoParameters<BondedInteraction>::context;
   using AutoParameters<BondedInteraction>::valid_parameters;
 
-  virtual std::set<std::string> get_valid_parameters() const {
+  std::set<std::string> get_valid_parameters() const {
     auto const vec = valid_parameters();
-    auto valid_keys = std::set<std::string>();
-    std::ranges::transform(vec, std::inserter(valid_keys, valid_keys.begin()),
-                           [](auto const &key) { return std::string{key}; });
-    return valid_keys;
+    return {vec.begin(), vec.end()};
   }
 
 private:
