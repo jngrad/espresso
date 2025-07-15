@@ -35,6 +35,7 @@
 #include <iterator>
 #include <limits>
 #include <numeric>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <type_traits>
@@ -297,6 +298,20 @@ BOOST_AUTO_TEST_CASE(conversion) {
   auto const expected =
       Vector3f{static_cast<float>(orig[0]), static_cast<float>(orig[1]),
                static_cast<float>(orig[2])};
+
+#if __cpp_lib_containers_ranges
+  // check range-based ctor with STL container
+  {
+    auto const result = Vector3f(std::from_range, expected.as_vector());
+    BOOST_TEST(result == expected);
+  }
+
+  // check range-based ctor with vector container
+  {
+    auto const result = Vector3f(std::from_range, expected);
+    BOOST_TEST(result == expected);
+  }
+#endif
 
   // check cast operator
   {

@@ -95,6 +95,12 @@ public:
   explicit constexpr Vector(Range &&rng)
       : Vector(std::begin(rng), std::end(rng)) {}
 
+#if __cpp_lib_containers_ranges
+  template <std::ranges::input_range Range>
+  Vector(std::from_range_t, Range &&rng)
+      : Vector(std::begin(rng), std::end(rng)) {}
+#endif
+
   explicit constexpr Vector(T const (&v)[N]) noexcept : Base() {
     copy_init(std::begin(v));
   }
