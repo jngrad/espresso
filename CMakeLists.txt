@@ -50,7 +50,7 @@ endmacro()
 
 espresso_minimal_compiler_version("GNU" 12.2.0)
 espresso_minimal_compiler_version("Clang" 18.1.0)
-espresso_minimal_compiler_version("AppleClang" 16.0.0)
+espresso_minimal_compiler_version("AppleClang" 17.0.0)
 espresso_minimal_compiler_version("IntelLLVM" 2023.1)
 
 set(UNSUPPORTED_COMPILERS "Intel;MSVC")
@@ -773,18 +773,7 @@ if(ESPRESSO_BUILD_TESTS)
   list(APPEND BOOST_COMPONENTS unit_test_framework)
 endif()
 
-find_package(Boost 1.81.0 REQUIRED ${BOOST_COMPONENTS})
-
-# Patches for older Boost releases compiled with C++17 or above; while
-# originally meant for MSVC, the Clang compiler is also affected.
-# https://boost-users.boost.narkive.com/h2eXAUzU
-# https://devblogs.microsoft.com/cppblog/c17-feature-removals-and-deprecations/
-# https://github.com/PixarAnimationStudios/OpenUSD/issues/2634
-target_compile_options(
-  espresso_cpp_flags
-  INTERFACE
-    $<$<VERSION_LESS:${Boost_VERSION},1.83.0>:-D_HAS_AUTO_PTR_ETC=0>
-    $<$<VERSION_LESS:${Boost_VERSION},1.81.0>:-DBOOST_NO_CXX98_FUNCTION_BASE>)
+find_package(Boost 1.83.0 REQUIRED ${BOOST_COMPONENTS})
 
 # enable boost::variant with more than 20 types
 target_compile_options(
@@ -918,7 +907,7 @@ if(ESPRESSO_BUILD_WITH_CALIPER)
   FetchContent_Declare(
     caliper
     GIT_REPOSITORY https://github.com/LLNL/Caliper.git
-    GIT_TAG        142a2fe # v2.12.1 with patches
+    GIT_TAG        v2.13.0
   )
   # cmake-format: on
   set(CALIPER_OPTION_PREFIX on CACHE BOOL "")
@@ -934,15 +923,6 @@ if(ESPRESSO_BUILD_WITH_CALIPER)
   set(BUILD_SHARED_LIBS ${ESPRESSO_BUILD_SHARED_LIBS_DEFAULT})
   set(CMAKE_INSTALL_LIBDIR "${ESPRESSO_OLD_CMAKE_INSTALL_LIBDIR}")
   set(CMAKE_SHARED_LIBRARY_PREFIX "${ESPRESSO_SHARED_LIBRARY_PREFIX}")
-  target_compile_options(caliper-common
-                         PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wno-restrict>)
-  target_compile_options(
-    caliper-runtime
-    PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>
-            $<$<CXX_COMPILER_ID:GNU>:-Wno-volatile>
-            -Wno-deprecated-enum-enum-conversion
-            $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-deprecated-volatile>)
-  set_target_properties(caliper-runtime PROPERTIES CXX_CLANG_TIDY "")
 endif()
 
 #
