@@ -45,6 +45,7 @@
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -113,9 +114,8 @@ void CellStructure::remove_particle(int id) {
     }
   };
 
-  for (auto c : decomposition().local_cells()) {
-    auto &parts = c->particles();
-
+  for (auto cell : decomposition().local_cells()) {
+    auto &parts = cell->particles();
     for (auto it = parts.begin(); it != parts.end();) {
       if (it->id() == id) {
         it = parts.erase(it);
@@ -132,7 +132,6 @@ void CellStructure::remove_particle(int id) {
 Particle *CellStructure::add_local_particle(Particle &&p) {
   auto const sort_cell = particle_to_cell(p);
   if (sort_cell) {
-
     return std::addressof(
         append_indexed_particle(sort_cell->particles(), std::move(p)));
   }
@@ -155,15 +154,15 @@ Particle *CellStructure::add_particle(Particle &&p) {
 }
 
 int CellStructure::get_max_local_particle_id() const {
-  auto it = std::find_if(m_particle_index.rbegin(), m_particle_index.rend(),
-                         [](const Particle *p) { return p != nullptr; });
+  auto it = std::ranges::find_if(std::ranges::views::reverse(m_particle_index),
+                                 [](auto const *p) { return p != nullptr; });
 
   return (it != m_particle_index.rend()) ? (*it)->id() : -1;
 }
 
 void CellStructure::remove_all_particles() {
-  for (auto c : decomposition().local_cells()) {
-    c->particles().clear();
+  for (auto cell : decomposition().local_cells()) {
+    cell->particles().clear();
   }
 
   m_particle_index.clear();

@@ -24,6 +24,7 @@
 #include "script_interface/auto_parameters/AutoParameter.hpp"
 
 #include <algorithm>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -117,7 +118,7 @@ protected:
 
   void add_parameters(std::vector<AutoParameter> &&params) {
     for (auto const &p : params) {
-      if (m_parameters.count(p.name)) {
+      if (m_parameters.contains(p.name)) {
         m_parameters.erase(p.name);
         if (auto const it = std::ranges::find(m_key_order, p.name);
             it != m_key_order.end()) {
@@ -134,11 +135,8 @@ protected:
 public:
   /* ObjectHandle implementation */
   std::vector<std::string_view> valid_parameters() const final {
-    std::vector<std::string_view> valid_params;
-    for (auto const &p : m_parameters) {
-      valid_params.emplace_back(p.first);
-    }
-    return valid_params;
+    auto const view = std::views::elements<0>(m_parameters);
+    return {view.begin(), view.end()};
   }
 
   Variant get_parameter(const std::string &name) const final {

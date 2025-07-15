@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef SCRIPT_INTERFACE_LOCAL_CONTEXT_HPP
-#define SCRIPT_INTERFACE_LOCAL_CONTEXT_HPP
+
+#pragma once
 
 #include "Context.hpp"
 #include "ObjectHandle.hpp"
@@ -85,5 +85,3 @@ public:
   boost::mpi::communicator const &get_comm() const override { return m_comm; }
 };
 } // namespace ScriptInterface
-
-#endif

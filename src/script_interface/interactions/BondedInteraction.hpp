@@ -43,6 +43,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -76,14 +77,13 @@ private:
   void check_valid_parameters(VariantMap const &params) const {
     auto const valid_keys = get_valid_parameters();
     for (auto const &key : valid_keys) {
-      if (not params.contains(std::string(key))) {
+      if (not params.contains(key)) {
         throw std::runtime_error("Parameter '" + key + "' is missing");
       }
     }
-    for (auto const &kv : params) {
-      if (not valid_keys.contains(kv.first)) {
-        throw std::runtime_error("Parameter '" + kv.first +
-                                 "' is not recognized");
+    for (auto const &key : std::views::elements<0>(params)) {
+      if (not valid_keys.contains(key)) {
+        throw std::runtime_error("Parameter '" + key + "' is not recognized");
       }
     }
   }

@@ -55,21 +55,19 @@ namespace walberla {
 /** @brief Class that runs and controls the EK on waLBerla. */
 template <std::size_t FluxCount = 13, typename FloatType = double>
 class EKinWalberlaImpl : public EKinWalberlaBase {
-  using ContinuityKernel =
-      typename detail::KernelTrait<FloatType>::ContinuityKernel;
+  using ContinuityKernel = detail::KernelTrait<FloatType>::ContinuityKernel;
   using DiffusiveFluxKernelUnthermalized =
-      typename detail::KernelTrait<FloatType>::DiffusiveFluxKernel;
+      detail::KernelTrait<FloatType>::DiffusiveFluxKernel;
   using DiffusiveFluxKernelThermalized =
-      typename detail::KernelTrait<FloatType>::DiffusiveFluxKernelThermalized;
+      detail::KernelTrait<FloatType>::DiffusiveFluxKernelThermalized;
   using AdvectiveFluxKernel =
-      typename detail::KernelTrait<FloatType>::AdvectiveFluxKernel;
+      detail::KernelTrait<FloatType>::AdvectiveFluxKernel;
   using FrictionCouplingKernel =
-      typename detail::KernelTrait<FloatType>::FrictionCouplingKernel;
+      detail::KernelTrait<FloatType>::FrictionCouplingKernel;
   using DiffusiveFluxKernelElectrostaticUnthermalized =
-      typename detail::KernelTrait<FloatType>::DiffusiveFluxKernelElectrostatic;
-  using DiffusiveFluxKernelElectrostaticThermalized =
-      typename detail::KernelTrait<
-          FloatType>::DiffusiveFluxKernelElectrostaticThermalized;
+      detail::KernelTrait<FloatType>::DiffusiveFluxKernelElectrostatic;
+  using DiffusiveFluxKernelElectrostaticThermalized = detail::KernelTrait<
+      FloatType>::DiffusiveFluxKernelElectrostaticThermalized;
 
   using DiffusiveFluxKernel = std::variant<DiffusiveFluxKernelUnthermalized,
                                            DiffusiveFluxKernelThermalized>;
@@ -77,8 +75,8 @@ class EKinWalberlaImpl : public EKinWalberlaBase {
       std::variant<DiffusiveFluxKernelElectrostaticUnthermalized,
                    DiffusiveFluxKernelElectrostaticThermalized>;
 
-  using Dirichlet = typename detail::KernelTrait<FloatType>::Dirichlet;
-  using FixedFlux = typename detail::KernelTrait<FloatType>::FixedFlux;
+  using Dirichlet = detail::KernelTrait<FloatType>::Dirichlet;
+  using FixedFlux = detail::KernelTrait<FloatType>::FixedFlux;
 
 protected:
   // Type definitions
@@ -101,7 +99,7 @@ public:
   }
 
   [[nodiscard]] bool is_double_precision() const noexcept override {
-    return std::is_same<FloatType, double>::value;
+    return std::is_same_v<FloatType, double>;
   }
 
 private:
@@ -171,8 +169,8 @@ protected:
         blocks, m_flux_field_id, m_flag_field_flux_id);
   }
 
-  using FullCommunicator = blockforest::communication::UniformBufferedScheme<
-      typename stencil::D3Q27>;
+  using FullCommunicator =
+      blockforest::communication::UniformBufferedScheme<stencil::D3Q27>;
   std::shared_ptr<FullCommunicator> m_full_communication;
 
 public:

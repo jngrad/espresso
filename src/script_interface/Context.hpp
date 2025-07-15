@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef ESPRESSO_SCRIPT_INTERFACE_CONTEXT_HPP
-#define ESPRESSO_SCRIPT_INTERFACE_CONTEXT_HPP
+
+#pragma once
 
 /** @file
  *
@@ -109,4 +109,3 @@ public:
   virtual ~Context() = default;
 };
 } // namespace ScriptInterface
-#endif // ESPRESSO_CONTEXT_HPP

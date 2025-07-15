@@ -674,15 +674,13 @@ private:
       if (maybe_box) {
         auto const distance_function =
             detail::MinimalImageDistance{decomposition().box()};
-        for (auto &pair : m_verlet_list) {
-          pair_kernel(*pair.first, *pair.second,
-                      distance_function(*pair.first, *pair.second));
+        for (auto const &[p1, p2] : m_verlet_list) {
+          pair_kernel(*p1, *p2, distance_function(*p1, *p2));
         }
       } else {
         auto const distance_function = detail::EuclidianDistance{};
-        for (auto &pair : m_verlet_list) {
-          pair_kernel(*pair.first, *pair.second,
-                      distance_function(*pair.first, *pair.second));
+        for (auto const &[p1, p2] : m_verlet_list) {
+          pair_kernel(*p1, *p2, distance_function(*p1, *p2));
         }
       }
     }

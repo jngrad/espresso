@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef ESPRESSO_SCRIPT_INTERFACE_OBJECTMANAGER_HPP
-#define ESPRESSO_SCRIPT_INTERFACE_OBJECTMANAGER_HPP
+
+#pragma once
 
 /** @file
  *
@@ -176,5 +176,3 @@ public:
   boost::mpi::communicator const &get_comm() const override { return m_comm; }
 };
 } // namespace ScriptInterface
-
-#endif

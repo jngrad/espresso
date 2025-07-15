@@ -37,6 +37,7 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -94,10 +95,9 @@ private:
         throw std::runtime_error("Parameter '" + key + "' is missing");
       }
     }
-    for (auto const &kv : params) {
-      if (not valid_keys.contains(kv.first)) {
-        throw std::runtime_error("Parameter '" + kv.first +
-                                 "' is not recognized");
+    for (auto const &key : std::views::elements<0>(params)) {
+      if (not valid_keys.contains(key)) {
+        throw std::runtime_error("Parameter '" + key + "' is not recognized");
       }
     }
   }

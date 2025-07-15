@@ -46,7 +46,7 @@ template <class Field>
 class VTKHandleBase : public AutoParameters<VTKHandleBase<Field>> {
 private:
   int m_delta_N;
-  int m_flag_obs;
+  int m_obs_flag;
   std::string m_identifier;
   std::string m_base_folder;
   std::string m_prefix;
@@ -72,20 +72,18 @@ private:
   virtual std::unordered_map<std::string, int> const &get_obs_map() const = 0;
 
   [[nodiscard]] auto get_valid_observable_names() const {
-    std::vector<std::string> names{};
-    for (auto const &kv : get_obs_map()) {
-      names.emplace_back(kv.first);
-    }
+    auto const view = std::views::elements<0>(get_obs_map());
+    std::vector<std::string> names{view.begin(), view.end()};
     std::ranges::sort(names);
     return names;
   }
 
   [[nodiscard]] int
   deserialize_obs_flag(std::vector<std::string> const &names) const {
-    int flag{0};
+    int obs_flag{0};
     auto const &obs_map = get_obs_map();
     for (auto const &name : names) {
-      if (obs_map.count(name) == 0) {
+      if (not obs_map.contains(name)) {
         auto const valid_names = get_valid_observable_names();
         std::stringstream message;
         message << "Only the following VTK observables are supported: ['"
@@ -93,16 +91,16 @@ private:
                 << name << "'";
         throw std::invalid_argument(message.str());
       }
-      flag |= obs_map.at(name);
+      obs_flag |= obs_map.at(name);
     }
-    return flag;
+    return obs_flag;
   }
 
-  [[nodiscard]] Variant serialize_obs_flag(int flag) const {
+  [[nodiscard]] Variant serialize_obs_flag(int obs_flag) const {
     std::vector<Variant> observables{};
-    for (auto const &kv : get_obs_map()) {
-      if (flag & kv.second) {
-        observables.emplace_back(kv.first);
+    for (auto const &[name, flag] : get_obs_map()) {
+      if (flag & obs_flag) {
+        observables.emplace_back(name);
       }
     }
     return observables;
@@ -119,7 +117,7 @@ public:
         {"base_folder", read_only, [this]() { return m_base_folder; }},
         {"prefix", read_only, [this]() { return m_prefix; }},
         {"observables", read_only,
-         [this]() { return serialize_obs_flag(m_flag_obs); }},
+         [this]() { return serialize_obs_flag(m_obs_flag); }},
         {"execution_count", read_only,
          [this]() { return m_vtk_handle->execution_count; }},
         {"units", read_only,
@@ -136,7 +134,7 @@ private:
     auto const is_enabled = get_value<bool>(params, "enabled");
     auto const execution_count = get_value<int>(params, "execution_count");
     ObjectHandle::context()->parallel_try_catch([&]() {
-      m_flag_obs = deserialize_obs_flag(
+      m_obs_flag = deserialize_obs_flag(
           get_value<std::vector<std::string>>(params, "observables"));
       if (m_delta_N < 0) {
         throw std::domain_error("Parameter 'delta_N' must be >= 0");
@@ -211,7 +209,7 @@ public:
     m_field = field;
     auto instance = get_field_instance();
     m_vtk_handle =
-        instance->create_vtk(m_delta_N, execution_count, m_flag_obs, m_units,
+        instance->create_vtk(m_delta_N, execution_count, m_obs_flag, m_units,
                              m_identifier, m_base_folder, m_prefix);
     if (m_delta_N and not is_enabled) {
       instance->switch_vtk(get_vtk_uid(), false);
