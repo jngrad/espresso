@@ -93,8 +93,8 @@ public:
   auto operator()(const std::unordered_map<K, Variant> &map) const {
     std::unordered_map<K, PackedVariant> ret{};
 
-    for (auto const &it : map) {
-      ret.insert({it.first, boost::apply_visitor(*this, it.second)});
+    for (auto const &[key, variant] : map) {
+      ret.emplace(key, boost::apply_visitor(*this, variant));
     }
 
     return ret;
@@ -142,8 +142,8 @@ struct UnpackVisitor : boost::static_visitor<Variant> {
   auto operator()(const std::unordered_map<K, PackedVariant> &map) const {
     std::unordered_map<K, Variant> ret{};
 
-    for (auto const &it : map) {
-      ret.insert({it.first, boost::apply_visitor(*this, it.second)});
+    for (auto const &[key, packed_variant] : map) {
+      ret.emplace(key, boost::apply_visitor(*this, packed_variant));
     }
 
     return ret;

@@ -50,6 +50,14 @@ BOOST_AUTO_TEST_CASE(default_case) {
     BOOST_CHECK_EQUAL((get_value<Utils::Vector3<double>>(var)), vec);
     BOOST_CHECK_EQUAL((get_value<Utils::Vector3d>(var)), vec);
   }
+  {
+    auto const vec = Utils::Vector3i{1, 2, 3};
+    auto const var = Variant{vec};
+    auto const ref = static_cast<Utils::Vector3d>(vec);
+
+    BOOST_CHECK_EQUAL((get_value<Utils::Vector3d>(vec)), ref);
+    BOOST_CHECK_EQUAL((get_value<Utils::Vector3d>(var)), ref);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(conversions) {

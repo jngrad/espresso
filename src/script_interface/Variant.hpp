@@ -79,8 +79,8 @@ template <typename T> Variant make_variant(const T &x) { return Variant(x); }
 template <typename K, typename V>
 auto make_unordered_map_of_variants(std::unordered_map<K, V> const &v) {
   std::unordered_map<K, Variant> ret;
-  for (auto const &it : v) {
-    ret.insert({it.first, Variant(it.second)});
+  for (auto const &[key, value] : v) {
+    ret.emplace(key, value);
   }
   return ret;
 }

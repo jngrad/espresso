@@ -49,6 +49,7 @@
 #include <functional>
 #include <iterator>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -63,6 +64,33 @@ using Vector3hs = Utils::Vector<hsize_t, 3>;
 using Vector1s = Utils::Vector<std::size_t, 1>;
 using Vector2s = Utils::Vector<std::size_t, 2>;
 using Vector3s = Utils::Vector<std::size_t, 3>;
+
+static std::unordered_map<std::string, H5MDOutputFields> const fields_map = {
+    {"all", H5MD_OUT_ALL},
+    {"particle.type", H5MD_OUT_TYPE},
+    {"particle.position", H5MD_OUT_POS},
+    {"particle.image", H5MD_OUT_IMG},
+    {"particle.velocity", H5MD_OUT_VEL},
+    {"particle.force", H5MD_OUT_FORCE},
+    {"particle.bonds", H5MD_OUT_BONDS},
+    {"particle.charge", H5MD_OUT_CHARGE},
+    {"particle.mass", H5MD_OUT_MASS},
+    {"box.length", H5MD_OUT_BOX_L},
+    {"lees_edwards.offset", H5MD_OUT_LE_OFF},
+    {"lees_edwards.direction", H5MD_OUT_LE_DIR},
+    {"lees_edwards.normal", H5MD_OUT_LE_NORMAL},
+};
+
+static auto fields_list_to_bitfield(std::vector<std::string> const &fields) {
+  unsigned int bitfield = H5MD_OUT_NONE;
+  for (auto const &field_name : fields) {
+    if (not fields_map.contains(field_name)) {
+      throw std::invalid_argument("Unknown field '" + field_name + "'");
+    }
+    bitfield |= fields_map.at(field_name);
+  }
+  return bitfield;
+}
 
 static void backup_file(const std::string &from, const std::string &to) {
   /*
@@ -653,6 +681,11 @@ void File::write_connectivity(const ParticleRange &particles) {
 void File::flush() { m_h5md_file->flush(); }
 
 std::string File::file_path() const { return m_h5md_file->getName(); }
+
+std::vector<std::string> File::valid_fields() const {
+  auto const view = std::views::elements<0>(fields_map);
+  return {view.begin(), view.end()};
+}
 
 File::File(std::string file_path, std::string script_path,
            std::vector<std::string> const &output_fields, std::string mass_unit,

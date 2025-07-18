@@ -37,6 +37,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace HighFive {
 class File;
@@ -67,33 +68,6 @@ enum H5MDOutputFields : unsigned int {
   H5MD_OUT_LE_NORMAL = 2048u,
   H5MD_OUT_ALL = 0b1111111111111111u,
 };
-
-static std::unordered_map<std::string, H5MDOutputFields> const fields_map = {
-    {"all", H5MD_OUT_ALL},
-    {"particle.type", H5MD_OUT_TYPE},
-    {"particle.position", H5MD_OUT_POS},
-    {"particle.image", H5MD_OUT_IMG},
-    {"particle.velocity", H5MD_OUT_VEL},
-    {"particle.force", H5MD_OUT_FORCE},
-    {"particle.bonds", H5MD_OUT_BONDS},
-    {"particle.charge", H5MD_OUT_CHARGE},
-    {"particle.mass", H5MD_OUT_MASS},
-    {"box.length", H5MD_OUT_BOX_L},
-    {"lees_edwards.offset", H5MD_OUT_LE_OFF},
-    {"lees_edwards.direction", H5MD_OUT_LE_DIR},
-    {"lees_edwards.normal", H5MD_OUT_LE_NORMAL},
-};
-
-inline auto fields_list_to_bitfield(std::vector<std::string> const &fields) {
-  unsigned int bitfield = H5MD_OUT_NONE;
-  for (auto const &field_name : fields) {
-    if (not fields_map.contains(field_name)) {
-      throw std::invalid_argument("Unknown field '" + field_name + "'");
-    }
-    bitfield |= fields_map.at(field_name);
-  }
-  return bitfield;
-}
 
 /**
  * @brief Class for writing H5MD files.
@@ -192,13 +166,7 @@ public:
    * @brief Build the list of valid output fields.
    * @return The list as a vector of strings.
    */
-  auto valid_fields() const {
-    std::vector<std::string> out = {};
-    for (auto const &kv : fields_map) {
-      out.push_back(kv.first);
-    }
-    return out;
-  }
+  std::vector<std::string> valid_fields() const;
 
   /**
    * @brief Method to enforce flushing the buffer to disk.
