@@ -36,7 +36,7 @@
 #include "ghosts.hpp"
 #include "system/Leaf.hpp"
 
-#include <utils/math/sqr.hpp>
+#include <utils/Vector.hpp>
 
 #include <boost/container/static_vector.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
@@ -434,14 +434,7 @@ public:
    * @return Whether a resort is needed.
    */
   bool
-  check_resort_required(Utils::Vector3d const &additional_offset = {}) const {
-    auto const particles = local_particles();
-    auto const lim = Utils::sqr(m_verlet_skin / 2.) - additional_offset.norm2();
-    return std::any_of(
-        particles.begin(), particles.end(), [lim](const auto &p) {
-          return ((p.pos() - p.pos_at_last_verlet_update()).norm2() > lim);
-        });
-  }
+  check_resort_required(Utils::Vector3d const &additional_offset = {}) const;
 
   auto get_le_pos_offset_at_last_resort() const {
     return m_le_pos_offset_at_last_resort;

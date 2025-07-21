@@ -32,9 +32,12 @@
 #include "cell_system/CellStructureType.hpp"
 #include "communication.hpp"
 #include "lees_edwards/lees_edwards.hpp"
+#include "particle_reduction.hpp"
 #include "system/System.hpp"
 
+#include <utils/Vector.hpp>
 #include <utils/contains.hpp>
+#include <utils/math/sqr.hpp>
 
 #include <boost/mpi/collectives/all_reduce.hpp>
 #include <boost/variant.hpp>
@@ -348,3 +351,21 @@ void CellStructure::parallel_for_each_particle_impl(
   }
 }
 #endif // SHARED_MEMORY_PARALLELISM
+
+bool CellStructure::check_resort_required(
+    Utils::Vector3d const &additional_offset) const {
+  auto const lim = Utils::sqr(m_verlet_skin / 2.) - additional_offset.norm2();
+
+  Reduction::AddPartialResultKernel<bool> add_partial = [lim](Particle const &p,
+                                                              bool &result) {
+    if ((p.pos() - p.pos_at_last_verlet_update()).norm2() > lim) {
+      result = true;
+    }
+  };
+
+  Reduction::ReductionOp<bool> reduce_op = [](bool &acc, bool const &val) {
+    acc |= val;
+  };
+
+  return reduce_over_local_particles(*this, add_partial, reduce_op);
+}
