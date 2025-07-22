@@ -117,19 +117,25 @@ namespace Vector {
 
 namespace Interpolation {
     std::vector< {{dtype}} >
-    get( gpu::GPUField< {{dtype}} > const *vec_field,
-         std::vector< {{dtype}} > const &pos,
-         uint gl );
+    get_rho(
+        gpu::GPUField< {{dtype}} > const *field,
+        std::vector< {{dtype}} > const &pos,
+        {{dtype}} const density,
+        uint gl );
+    std::vector< {{dtype}} >
+    get_vel( gpu::GPUField< {{dtype}} > const *field,
+             std::vector< {{dtype}} > const &pos,
+             uint gl );
     void
-    set( gpu::GPUField< {{dtype}} > const *vec_field,
-         std::vector< {{dtype}} > const &pos,
-         std::vector< {{dtype}} > const &forces,
-         uint gl );
+    add_force( gpu::GPUField< {{dtype}} > const *field,
+               std::vector< {{dtype}} > const &pos,
+               std::vector< {{dtype}} > const &forces,
+               uint gl );
     void
-    set_from_list( gpu::GPUField< {{dtype}} > const *vec_field,
-                   thrust::device_vector< int > const &indices,
-                   thrust::device_vector< {{dtype}} > const &values,
-                   uint gl );
+    set_vel_from_list( gpu::GPUField< {{dtype}} > const *field,
+                       thrust::device_vector< int > const &indices,
+                       thrust::device_vector< {{dtype}} > const &values,
+                       uint gl );
 } // namespace Interpolation
 
 namespace Density {

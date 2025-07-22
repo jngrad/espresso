@@ -1020,6 +1020,15 @@ public:
     return Architecture == lbmpy::Arch::GPU;
   }
 
+  std::function<bool(Utils::Vector3d const &)>
+  make_lattice_position_checker(bool consider_points_in_halo) const override {
+    auto const &lat = *m_lattice;
+    if (consider_points_in_halo) {
+      return [&](Utils::Vector3d const &p) { return lat.pos_in_local_halo(p); };
+    }
+    return [&](Utils::Vector3d const &p) { return lat.pos_in_local_domain(p); };
+  }
+
   void add_forces_at_pos(std::vector<Utils::Vector3d> const &pos,
                          std::vector<Utils::Vector3d> const &forces) override {
     assert(pos.size() == forces.size());
@@ -1058,7 +1067,7 @@ public:
       auto const gl = lattice.get_ghost_layers();
       auto field = block.template uncheckedFastGetData<VectorField>(
           m_force_to_be_applied_id);
-      lbm::accessor::Interpolation::set(field, host_pos, host_force, gl);
+      lbm::accessor::Interpolation::add_force(field, host_pos, host_force, gl);
     }
 #endif
   }
@@ -1072,17 +1081,18 @@ public:
         return;
       }
       interpolate_bspline_at_pos(
-          pos, [&](std::array<int, 3> const node, double weight) {
+          pos, [&, conv = m_zc_to_lb, field_id = m_force_to_be_applied_id](
+                   std::array<int, 3> const node, double weight) {
             auto block = get_block_extended(lattice, node, 0u);
             if (!block)
               block = get_block_extended(lattice, node, 1u);
             if (block) {
               auto cell = to_cell(node);
               blocks.transformGlobalToBlockLocalCell(cell, *block);
-              weight *= m_zc_to_lb;
+              weight *= conv;
               auto const weighted_force = to_vector3<FloatType>(weight * force);
-              auto field = block->template uncheckedFastGetData<VectorField>(
-                  m_force_to_be_applied_id);
+              auto field =
+                  block->template uncheckedFastGetData<VectorField>(field_id);
               lbm::accessor::Vector::add(field, weighted_force, cell);
             }
           });
@@ -1095,7 +1105,8 @@ public:
     assert(lattice.get_ghost_layers() == 1u);
     return [&](Utils::Vector3d const &pos) {
       Utils::Vector3d acc{0., 0., 0.};
-      interpolate_bspline_at_pos(pos, [&](std::array<int, 3> const node,
+      interpolate_bspline_at_pos(pos, [&, field_id = m_velocity_field_id](
+                                          std::array<int, 3> const node,
                                           double weight) {
         // Nodes with zero weight might not be accessible, because they can be
         // outside ghost layers
@@ -1109,11 +1120,38 @@ public:
           } else {
             auto cell = to_cell(node);
             blocks.transformGlobalToBlockLocalCell(cell, *block);
-            auto field = block->template uncheckedFastGetData<VectorField>(
-                m_velocity_field_id);
+            auto field =
+                block->template uncheckedFastGetData<VectorField>(field_id);
             vel = lbm::accessor::Vector::get(field, cell);
           }
           acc += to_vector3d(vel) * weight;
+        }
+      });
+      return acc;
+    };
+  }
+
+  auto make_density_interpolation_kernel() const {
+    auto const &lattice = *m_lattice;
+    auto const &blocks = *lattice.get_blocks();
+    assert(lattice.get_ghost_layers() == 1u);
+    return [&](Utils::Vector3d const &pos) {
+      double acc = 0.;
+      interpolate_bspline_at_pos(pos, [&, density = m_density,
+                                       field_id = m_pdf_field_id](
+                                          std::array<int, 3> const node,
+                                          double weight) {
+        // Nodes with zero weight might not be accessible, because they can be
+        // outside ghost layers
+        if (weight != 0.) {
+          auto block = get_block_extended(lattice, node, 1u);
+          if (!block)
+            throw interpolation_illegal_access("density", pos, node, weight);
+          auto cell = to_cell(node);
+          blocks.transformGlobalToBlockLocalCell(cell, *block);
+          auto field = block->template uncheckedFastGetData<PdfField>(field_id);
+          auto const rho = lbm::accessor::Density::get(field, density, cell);
+          acc += rho * weight;
         }
       });
       return acc;
@@ -1150,9 +1188,11 @@ public:
           block.template uncheckedFastGetData<VectorField>(m_velocity_field_id);
       auto const [d_idx, d_ubb] = m_boundary->get_flattened_map_device();
       if (not d_idx->empty()) {
-        lbm::accessor::Interpolation::set_from_list(field, *d_idx, *d_ubb, gl);
+        lbm::accessor::Interpolation::set_vel_from_list(field, *d_idx, *d_ubb,
+                                                        gl);
       }
-      auto const res = lbm::accessor::Interpolation::get(field, host_pos, gl);
+      auto const res =
+          lbm::accessor::Interpolation::get_vel(field, host_pos, gl);
       for (auto it = res.begin(); it != res.end(); it += 3) {
         vel.emplace_back(Utils::Vector3d{static_cast<double>(*(it + 0)),
                                          static_cast<double>(*(it + 1)),
@@ -1161,6 +1201,48 @@ public:
     }
 #endif
     return vel;
+  }
+
+  std::vector<double>
+  get_densities_at_pos(std::vector<Utils::Vector3d> const &pos) override {
+    if (pos.empty()) {
+      return {};
+    }
+    std::vector<double> rho{};
+    rho.reserve(pos.size());
+    if constexpr (Architecture == lbmpy::Arch::CPU) {
+      auto const kernel = make_density_interpolation_kernel();
+      std::ranges::transform(pos, std::back_inserter(rho), kernel);
+    }
+#if defined(__CUDACC__)
+    if constexpr (Architecture == lbmpy::Arch::GPU) {
+      auto const &lattice = get_lattice();
+      auto const &block = *(lattice.get_blocks()->begin());
+      auto const origin = block.getAABB().min();
+      std::vector<FloatType> host_pos;
+      host_pos.reserve(3ul * pos.size());
+      assert(lattice.get_blocks()->getNumberOfBlocks() == 1u);
+      for (auto const &vec : pos) {
+#pragma unroll
+        for (std::size_t i : {0ul, 1ul, 2ul}) {
+          host_pos.emplace_back(static_cast<FloatType>(vec[i] - origin[i]));
+        }
+      }
+      auto const gl = lattice.get_ghost_layers();
+      auto field =
+          block.template uncheckedFastGetData<PdfField>(m_pdf_field_id);
+      auto res =
+          lbm::accessor::Interpolation::get_rho(field, host_pos, m_density, gl);
+      if constexpr (std::is_same_v<FloatType, double>) {
+        std::swap(rho, res);
+      } else {
+        for (auto const &v : res) {
+          rho.emplace_back(static_cast<double>(v));
+        }
+      }
+    }
+#endif
+    return rho;
   }
 
   std::optional<Utils::Vector3d>
@@ -1184,20 +1266,8 @@ public:
       return std::nullopt;
     if (consider_points_in_halo and !m_lattice->pos_in_local_halo(pos))
       return std::nullopt;
-    double dens = 0.;
-    interpolate_bspline_at_pos(
-        pos, [this, &dens, &pos](std::array<int, 3> const node, double weight) {
-          // Nodes with zero weight might not be accessible, because they can be
-          // outside ghost layers
-          if (weight != 0.) {
-            auto const res = get_node_density(Utils::Vector3i(node), true);
-            if (!res) {
-              throw interpolation_illegal_access("density", pos, node, weight);
-            }
-            dens += *res * weight;
-          }
-        });
-    return {std::move(dens)};
+    auto const kernel = make_density_interpolation_kernel();
+    return {kernel(pos)};
   }
 
   bool add_force_at_pos(Utils::Vector3d const &pos,

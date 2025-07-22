@@ -463,10 +463,11 @@ namespace Interpolation
       }
     }
 
-    __global__ void kernel_get(
-        gpu::FieldAccessor< {{dtype}} > vec,
+    __global__ void kernel_get_rho(
+        gpu::FieldAccessor< {{dtype}} > pdf,
         {{dtype}} const *RESTRICT const pos,
-        {{dtype}} *RESTRICT const vel,
+        {{dtype}} *RESTRICT const rho_out,
+        {{dtype}} const density,
         uint n_pos,
         uint gl)
     {
@@ -474,8 +475,8 @@ namespace Interpolation
       uint pos_index = blockIdx.y * gridDim.x * blockDim.x +
                        blockDim.x * blockIdx.x + threadIdx.x;
 
-      vec.set({0u, 0u, 0u}, {0u, 0u, 0u});
-      if (vec.isValidPosition() and pos_index < n_pos) {
+      pdf.set({0u, 0u, 0u}, {0u, 0u, 0u});
+      if (pdf.isValidPosition() and pos_index < n_pos) {
         auto const array_offset = pos_index * uint({{D}}u);
         int corner[{{D}}];
         {{dtype}} weights[{{D}}][2];
@@ -492,17 +493,58 @@ namespace Interpolation
             for (int k = 0; k < 2; k++) {
               auto const cz = corner[2] + k;
               auto const weight = wxy * weights[2][k];
-              {% for cf in range(D) -%}
-                vel[array_offset + {{cf}}u] += weight * vec.getNeighbor(cx, cy, cz, {{cf}}u);
-              {% endfor %}
+              {% for i in range(Q) -%}
+                  {{dtype}} const f_{{i}} = pdf.getNeighbor(cx, cy, cz, {{i}}u);
+              {% endfor -%}
+              {{density_getters_adjust | indent(12)}}
+              rho_out[pos_index] += weight * rho;
             }
           }
         }
       }
     }
 
-    __global__ void kernel_set(
-        gpu::FieldAccessor< {{dtype}} > vec,
+    __global__ void kernel_get_vel(
+        gpu::FieldAccessor< {{dtype}} > vel,
+        {{dtype}} const *RESTRICT const pos,
+        {{dtype}} *RESTRICT const vel_out,
+        uint n_pos,
+        uint gl)
+    {
+
+      uint pos_index = blockIdx.y * gridDim.x * blockDim.x +
+                       blockDim.x * blockIdx.x + threadIdx.x;
+
+      vel.set({0u, 0u, 0u}, {0u, 0u, 0u});
+      if (vel.isValidPosition() and pos_index < n_pos) {
+        auto const array_offset = pos_index * uint({{D}}u);
+        int corner[{{D}}];
+        {{dtype}} weights[{{D}}][2];
+        calculate_weights(pos + array_offset, corner, &weights[0][0], gl);
+        #pragma unroll
+        for (int i = 0; i < 2; i++) {
+          auto const cx = corner[0] + i;
+          auto const wx = weights[0][i];
+          #pragma unroll
+          for (int j = 0; j < 2; j++) {
+            auto const cy = corner[1] + j;
+            auto const wxy = wx * weights[1][j];
+            #pragma unroll
+            for (int k = 0; k < 2; k++) {
+              auto const cz = corner[2] + k;
+              auto const weight = wxy * weights[2][k];
+              #pragma unroll
+              for (uint cf = 0u; cf < {{D}}u; ++cf) {
+                vel_out[array_offset + cf] += weight * vel.getNeighbor(cx, cy, cz, cf);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    __global__ void kernel_add_force(
+        gpu::FieldAccessor< {{dtype}} > force,
         {{dtype}} const *RESTRICT const pos,
         {{dtype}} const *RESTRICT const forces,
         uint n_pos,
@@ -512,8 +554,8 @@ namespace Interpolation
       uint pos_index = blockIdx.y * gridDim.x * blockDim.x +
                        blockDim.x * blockIdx.x + threadIdx.x;
 
-      vec.set({0u, 0u, 0u}, {0u, 0u, 0u});
-      if (vec.isValidPosition() and pos_index < n_pos) {
+      force.set({0u, 0u, 0u}, {0u, 0u, 0u});
+      if (force.isValidPosition() and pos_index < n_pos) {
         auto const array_offset = pos_index * uint({{D}}u);
         int corner[{{D}}];
         {{dtype}} weights[{{D}}][2];
@@ -530,18 +572,19 @@ namespace Interpolation
             for (int k = 0; k < 2; k++) {
               auto const cz = corner[2] + k;
               auto const weight = wxy * weights[2][k];
-              {% for cf in range(D) -%}
-                atomicAdd(&vec.getNeighbor(cx, cy, cz, {{cf}}u),
-                          weight * forces[array_offset + {{cf}}u]);
-              {% endfor %}
+              #pragma unroll
+              for (uint cf = 0u; cf < {{D}}u; ++cf) {
+                atomicAdd(&force.getNeighbor(cx, cy, cz, cf),
+                          weight * forces[array_offset + cf]);
+              }
             }
           }
         }
       }
     }
 
-    __global__ void kernel_set_from_list(
-        gpu::FieldAccessor< {{dtype}} > vec,
+    __global__ void kernel_set_vel_from_list(
+        gpu::FieldAccessor< {{dtype}} > vel,
         int const *RESTRICT const indices,
         {{dtype}} const *RESTRICT const values,
         uint length)
@@ -550,15 +593,15 @@ namespace Interpolation
       uint index = blockIdx.y * gridDim.x * blockDim.x +
                    blockDim.x * blockIdx.x + threadIdx.x;
 
-      vec.set({0u, 0u, 0u}, {0u, 0u, 0u});
-      if (vec.isValidPosition() and index < length) {
+      vel.set({0u, 0u, 0u}, {0u, 0u, 0u});
+      if (vel.isValidPosition() and index < length) {
         auto const array_index = index * uint({{D}}u);
         auto const cx = indices[array_index + 0u];
         auto const cy = indices[array_index + 1u];
         auto const cz = indices[array_index + 2u];
         #pragma unroll
         for (uint cf = 0u; cf < {{D}}u; ++cf) {
-          vec.getNeighbor(cx, cy, cz, cf) = values[array_index + cf];
+          vel.getNeighbor(cx, cy, cz, cf) = values[array_index + cf];
         }
       }
     }
@@ -576,8 +619,32 @@ namespace Interpolation
     }
 
     std::vector< {{dtype}} >
-    get(
-        gpu::GPUField< {{dtype}} > const *vec_field,
+    get_rho(
+        gpu::GPUField< {{dtype}} > const *field,
+        std::vector< {{dtype}} > const &pos,
+        {{dtype}} const density,
+        uint gl )
+    {
+      thrust::device_vector< {{dtype}} > dev_pos(pos.begin(), pos.end());
+      thrust::device_vector< {{dtype}} > dev_rho(pos.size() / 3ul);
+      auto const dev_pos_ptr = thrust::raw_pointer_cast(dev_pos.data());
+      auto const dev_rho_ptr = thrust::raw_pointer_cast(dev_rho.data());
+
+      auto const threads_per_block = uint(64u);
+      auto const n_pos = static_cast<uint>(pos.size() / {{D}}ul);
+      auto const dim_grid = calculate_dim_grid(n_pos, 4u, threads_per_block);
+      kernel_get_rho<<<dim_grid, threads_per_block, 0u, nullptr>>>(
+          gpu::FieldIndexing< {{dtype}} >::withGhostLayerXYZ(*field, gl).gpuAccess(),
+          dev_pos_ptr, dev_rho_ptr, density, n_pos, gl);
+
+      std::vector< {{dtype}} > out(dev_rho.size());
+      thrust::copy(dev_rho.begin(), dev_rho.end(), out.data());
+      return out;
+    }
+
+    std::vector< {{dtype}} >
+    get_vel(
+        gpu::GPUField< {{dtype}} > const *field,
         std::vector< {{dtype}} > const &pos,
         uint gl )
     {
@@ -589,17 +656,17 @@ namespace Interpolation
       auto const threads_per_block = uint(64u);
       auto const n_pos = static_cast<uint>(pos.size() / {{D}}ul);
       auto const dim_grid = calculate_dim_grid(n_pos, 4u, threads_per_block);
-      kernel_get<<<dim_grid, threads_per_block, 0u, nullptr>>>(
-          gpu::FieldIndexing< {{dtype}} >::withGhostLayerXYZ(*vec_field, gl).gpuAccess(),
+      kernel_get_vel<<<dim_grid, threads_per_block, 0u, nullptr>>>(
+          gpu::FieldIndexing< {{dtype}} >::withGhostLayerXYZ(*field, gl).gpuAccess(),
           dev_pos_ptr, dev_vel_ptr, n_pos, gl);
 
-      std::vector< {{dtype}} > out(pos.size());
+      std::vector< {{dtype}} > out(dev_vel.size());
       thrust::copy(dev_vel.begin(), dev_vel.end(), out.data());
       return out;
     }
 
-    void set(
-        gpu::GPUField< {{dtype}} > const *vec_field,
+    void add_force(
+        gpu::GPUField< {{dtype}} > const *field,
         std::vector< {{dtype}} > const &pos,
         std::vector< {{dtype}} > const &forces,
         uint gl )
@@ -612,13 +679,13 @@ namespace Interpolation
       auto const threads_per_block = uint(64u);
       auto const n_pos = static_cast<uint>(pos.size() / {{D}}ul);
       auto const dim_grid = calculate_dim_grid(n_pos, 4u, threads_per_block);
-      kernel_set<<<dim_grid, threads_per_block, 0u, nullptr>>>(
-          gpu::FieldIndexing< {{dtype}} >::withGhostLayerXYZ(*vec_field, gl).gpuAccess(),
+      kernel_add_force<<<dim_grid, threads_per_block, 0u, nullptr>>>(
+          gpu::FieldIndexing< {{dtype}} >::withGhostLayerXYZ(*field, gl).gpuAccess(),
           dev_pos_ptr, dev_for_ptr, n_pos, gl);
     }
 
-    void set_from_list(
-        gpu::GPUField< {{dtype}} > const *vec_field,
+    void set_vel_from_list(
+        gpu::GPUField< {{dtype}} > const *field,
         thrust::device_vector< int > const &indices,
         thrust::device_vector< {{dtype}} > const &values,
         uint gl)
@@ -629,8 +696,8 @@ namespace Interpolation
       auto const threads_per_block = uint(64u);
       auto const length = static_cast<uint>(indices.size() / 3ul);
       auto const dim_grid = calculate_dim_grid(length, 4u, threads_per_block);
-      kernel_set_from_list<<<dim_grid, threads_per_block, 0u, nullptr>>>(
-          gpu::FieldIndexing< {{dtype}} >::withGhostLayerXYZ(*vec_field, gl).gpuAccess(),
+      kernel_set_vel_from_list<<<dim_grid, threads_per_block, 0u, nullptr>>>(
+          gpu::FieldIndexing< {{dtype}} >::withGhostLayerXYZ(*field, gl).gpuAccess(),
           dev_idx_ptr, dev_val_ptr, length);
     }
 } // namespace Interpolation
