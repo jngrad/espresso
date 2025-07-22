@@ -587,6 +587,28 @@ __global__ void kernel_set(
     }
   }
 }
+
+__global__ void kernel_set_from_list(
+    gpu::FieldAccessor<float> vec,
+    int const *RESTRICT const indices,
+    float const *RESTRICT const values,
+    uint length) {
+
+  uint index = blockIdx.y * gridDim.x * blockDim.x +
+               blockDim.x * blockIdx.x + threadIdx.x;
+
+  vec.set({0u, 0u, 0u}, {0u, 0u, 0u});
+  if (vec.isValidPosition() and index < length) {
+    auto const array_index = index * uint(3u);
+    auto const cx = indices[array_index + 0u];
+    auto const cy = indices[array_index + 1u];
+    auto const cz = indices[array_index + 2u];
+#pragma unroll
+    for (uint cf = 0u; cf < 3u; ++cf) {
+      vec.getNeighbor(cx, cy, cz, cf) = values[array_index + cf];
+    }
+  }
+}
 // LCOV_EXCL_STOP
 
 static dim3 calculate_dim_grid(uint const threads_x,
@@ -638,6 +660,22 @@ void set(
   kernel_set<<<dim_grid, threads_per_block, 0u, nullptr>>>(
       gpu::FieldIndexing<float>::withGhostLayerXYZ(*vec_field, gl).gpuAccess(),
       dev_pos_ptr, dev_for_ptr, n_pos, gl);
+}
+
+void set_from_list(
+    gpu::GPUField<float> const *vec_field,
+    thrust::device_vector<int> const &indices,
+    thrust::device_vector<float> const &values,
+    uint gl) {
+  auto const dev_idx_ptr = thrust::raw_pointer_cast(indices.data());
+  auto const dev_val_ptr = thrust::raw_pointer_cast(values.data());
+
+  auto const threads_per_block = uint(64u);
+  auto const length = static_cast<uint>(indices.size() / 3ul);
+  auto const dim_grid = calculate_dim_grid(length, 4u, threads_per_block);
+  kernel_set_from_list<<<dim_grid, threads_per_block, 0u, nullptr>>>(
+      gpu::FieldIndexing<float>::withGhostLayerXYZ(*vec_field, gl).gpuAccess(),
+      dev_idx_ptr, dev_val_ptr, length);
 }
 } // namespace Interpolation
 

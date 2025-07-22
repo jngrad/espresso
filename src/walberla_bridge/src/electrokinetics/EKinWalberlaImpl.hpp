@@ -84,8 +84,10 @@ protected:
   using FlagField = walberla::FlagField<walberla::uint8_t>;
   using DensityField = GhostLayerField<FloatType, 1>;
 
-  using BoundaryModelDensity = BoundaryHandling<FloatType, Dirichlet>;
-  using BoundaryModelFlux = BoundaryHandling<Vector3<FloatType>, FixedFlux>;
+  using BoundaryModelDensity =
+      BoundaryHandling<FloatType, FloatType, Dirichlet>;
+  using BoundaryModelFlux =
+      BoundaryHandling<FloatType, Vector3<FloatType>, FixedFlux>;
 
   using BlockStorage = LatticeWalberla::Lattice_T;
 
@@ -159,14 +161,18 @@ protected:
 
   void
   reset_density_boundary_handling(std::shared_ptr<BlockStorage> const &blocks) {
+    auto const [lc, uc] = m_lattice->get_local_grid_range(true);
     m_boundary_density = std::make_unique<BoundaryModelDensity>(
-        blocks, m_density_field_id, m_flag_field_density_id);
+        blocks, m_density_field_id, m_flag_field_density_id,
+        CellInterval{to_cell(lc), to_cell(uc)});
   }
 
   void
   reset_flux_boundary_handling(std::shared_ptr<BlockStorage> const &blocks) {
+    auto const [lc, uc] = m_lattice->get_local_grid_range(true);
     m_boundary_flux = std::make_unique<BoundaryModelFlux>(
-        blocks, m_flux_field_id, m_flag_field_flux_id);
+        blocks, m_flux_field_id, m_flag_field_flux_id,
+        CellInterval{to_cell(lc), to_cell(uc)});
   }
 
   using FullCommunicator =

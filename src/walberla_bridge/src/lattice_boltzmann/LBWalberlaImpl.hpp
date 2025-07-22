@@ -100,10 +100,10 @@ protected:
       detail::KernelTrait<FloatType, Architecture>::UpdateVelFromPDF;
   using InitialPDFsSetter =
       detail::KernelTrait<FloatType, Architecture>::InitialPDFsSetter;
+  using DynamicUBB =
+      detail::BoundaryHandlingTrait<FloatType, Architecture>::DynamicUBB;
   using BoundaryModel =
-      BoundaryHandling<Vector3<FloatType>,
-                       typename detail::BoundaryHandlingTrait<
-                           FloatType, Architecture>::DynamicUBB>;
+      BoundaryHandling<FloatType, Vector3<FloatType>, DynamicUBB>;
   using CollisionModel = std::variant<StreamCollisionModelThermalized,
                                       StreamCollisionModelLeesEdwards>;
 
@@ -244,8 +244,10 @@ private:
   }
 
   void reset_boundary_handling(std::shared_ptr<BlockStorage> const &blocks) {
-    m_boundary = std::make_shared<BoundaryModel>(blocks, m_pdf_field_id,
-                                                 m_flag_field_id);
+    auto const [lc, uc] = m_lattice->get_local_grid_range(true);
+    m_boundary =
+        std::make_shared<BoundaryModel>(blocks, m_pdf_field_id, m_flag_field_id,
+                                        CellInterval{to_cell(lc), to_cell(uc)});
   }
 
   FloatType pressure_tensor_correction_factor() const {
@@ -1146,6 +1148,10 @@ public:
       auto const gl = lattice.get_ghost_layers();
       auto field =
           block.template uncheckedFastGetData<VectorField>(m_velocity_field_id);
+      auto const [d_idx, d_ubb] = m_boundary->get_flattened_map_device();
+      if (not d_idx->empty()) {
+        lbm::accessor::Interpolation::set_from_list(field, *d_idx, *d_ubb, gl);
+      }
       auto const res = lbm::accessor::Interpolation::get(field, host_pos, gl);
       for (auto it = res.begin(); it != res.end(); it += 3) {
         vel.emplace_back(Utils::Vector3d{static_cast<double>(*(it + 0)),

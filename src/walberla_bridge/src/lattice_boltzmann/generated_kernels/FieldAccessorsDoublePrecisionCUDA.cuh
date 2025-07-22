@@ -39,6 +39,8 @@
 
 #include <gpu/GPUField.h>
 
+#include <thrust/device_vector.h>
+
 #include <array>
 #include <tuple>
 #include <vector>
@@ -102,6 +104,9 @@ std::vector<double> get(gpu::GPUField<double> const *vec_field,
                         std::vector<double> const &pos, uint gl);
 void set(gpu::GPUField<double> const *vec_field, std::vector<double> const &pos,
          std::vector<double> const &forces, uint gl);
+void set_from_list(gpu::GPUField<double> const *vec_field,
+                   thrust::device_vector<int> const &indices,
+                   thrust::device_vector<double> const &values, uint gl);
 } // namespace Interpolation
 
 namespace Density {
