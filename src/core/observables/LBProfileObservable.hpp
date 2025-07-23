@@ -64,9 +64,12 @@ public:
   std::array<double, 3> sampling_delta;
   std::array<double, 3> sampling_offset;
   bool allow_empty_bins;
+
+protected:
   mutable SanityChecksLB lb_sanity_checks;
   mutable std::vector<Utils::Vector3d> sampling_positions;
 
+public:
   void calculate_sampling_positions(auto const &box_geo, auto const &lb) const {
     assert(Utils::Vector3d(sampling_delta) > Utils::Vector3d::broadcast(0.));
     assert(Utils::Vector3d(sampling_offset) >= Utils::Vector3d::broadcast(0.));
@@ -86,13 +89,13 @@ public:
     for (std::size_t x = 0; x < n_samples_x; ++x) {
       for (std::size_t y = 0; y < n_samples_y; ++y) {
         for (std::size_t z = 0; z < n_samples_z; ++z) {
-          auto const pos =
-              Utils::Vector3d{{lim[0].first + sampling_offset[0] +
-                                   static_cast<double>(x) * sampling_delta[0],
-                               lim[1].first + sampling_offset[1] +
-                                   static_cast<double>(y) * sampling_delta[1],
-                               lim[2].first + sampling_offset[2] +
-                                   static_cast<double>(z) * sampling_delta[2]}};
+          Utils::Vector3d const pos = {
+              {lim[0].first + sampling_offset[0] +
+                   static_cast<double>(x) * sampling_delta[0],
+               lim[1].first + sampling_offset[1] +
+                   static_cast<double>(y) * sampling_delta[1],
+               lim[2].first + sampling_offset[2] +
+                   static_cast<double>(z) * sampling_delta[2]}};
           if (lb_position_checker(pos)) {
             sampling_positions.emplace_back(pos);
           }

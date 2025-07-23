@@ -49,11 +49,14 @@ public:
         sampling_density(sampling_density), lb_sanity_checks() {}
 
   double sampling_density;
+
+protected:
   mutable SanityChecksLB lb_sanity_checks;
   mutable std::vector<Utils::Vector3d> sampling_positions;
   mutable std::vector<Utils::Vector3d> sampling_positions_cyl;
   mutable std::vector<Utils::Vector3d> sampling_positions_cart;
 
+public:
   void calculate_sampling_positions(auto const &box_geo, auto const &lb) const {
     lb_sanity_checks = SanityChecksLB(box_geo, lb);
     sampling_positions.clear();

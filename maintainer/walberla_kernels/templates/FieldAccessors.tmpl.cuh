@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 The ESPResSo project
+ * Copyright (C) 2023-2025 The ESPResSo project
  * Copyright (C) 2020 The waLBerla project
  *
  * This file is part of ESPResSo.
@@ -112,7 +112,11 @@ namespace Vector {
     set( gpu::GPUField< {{dtype}} > * vec_field,
          std::vector< {{dtype}} > const & values,
          CellInterval const & ci );
-
+    void
+    set_from_list( gpu::GPUField< {{dtype}} > const *field,
+                   thrust::device_vector< int > const &indices,
+                   thrust::device_vector< {{dtype}} > const &values,
+                   uint gl );
 } // namespace Vector
 
 namespace Interpolation {
@@ -131,11 +135,6 @@ namespace Interpolation {
                std::vector< {{dtype}} > const &pos,
                std::vector< {{dtype}} > const &forces,
                uint gl );
-    void
-    set_vel_from_list( gpu::GPUField< {{dtype}} > const *field,
-                       thrust::device_vector< int > const &indices,
-                       thrust::device_vector< {{dtype}} > const &values,
-                       uint gl );
 } // namespace Interpolation
 
 namespace Density {

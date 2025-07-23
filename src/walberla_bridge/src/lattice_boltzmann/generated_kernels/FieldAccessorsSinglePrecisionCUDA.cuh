@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 The ESPResSo project
+ * Copyright (C) 2023-2025 The ESPResSo project
  * Copyright (C) 2020 The waLBerla project
  *
  * This file is part of ESPResSo.
@@ -94,7 +94,9 @@ std::vector<float> get(gpu::GPUField<float> const *vec_field,
 /** @brief Set values on a cell interval. */
 void set(gpu::GPUField<float> *vec_field, std::vector<float> const &values,
          CellInterval const &ci);
-
+void set_from_list(gpu::GPUField<float> const *field,
+                   thrust::device_vector<int> const &indices,
+                   thrust::device_vector<float> const &values, uint gl);
 } // namespace Vector
 
 namespace Interpolation {
@@ -105,9 +107,6 @@ std::vector<float> get_vel(gpu::GPUField<float> const *field,
                            std::vector<float> const &pos, uint gl);
 void add_force(gpu::GPUField<float> const *field, std::vector<float> const &pos,
                std::vector<float> const &forces, uint gl);
-void set_vel_from_list(gpu::GPUField<float> const *field,
-                       thrust::device_vector<int> const &indices,
-                       thrust::device_vector<float> const &values, uint gl);
 } // namespace Interpolation
 
 namespace Density {

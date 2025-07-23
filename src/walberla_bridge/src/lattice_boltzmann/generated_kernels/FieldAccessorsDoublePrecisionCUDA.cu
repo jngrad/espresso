@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 The ESPResSo project
+ * Copyright (C) 2023-2025 The ESPResSo project
  * Copyright (C) 2020 The waLBerla project
  *
  * This file is part of ESPResSo.
@@ -95,6 +95,17 @@ struct algo_rescale : thrust::unary_function<double, double> {
   }
 };
 // LCOV_EXCL_STOP
+
+static dim3 calculate_dim_grid(uint const threads_x,
+                               uint const blocks_per_grid_y,
+                               uint const threads_per_block) {
+  assert(threads_x >= 1u);
+  assert(blocks_per_grid_y >= 1u);
+  assert(threads_per_block >= 1u);
+  auto const threads_y = threads_per_block * blocks_per_grid_y;
+  auto const blocks_per_grid_x = (threads_x + threads_y - 1) / threads_y;
+  return make_uint3(blocks_per_grid_x, blocks_per_grid_y, 1);
+}
 
 namespace walberla {
 namespace lbm {
@@ -398,6 +409,28 @@ __global__ void kernel_broadcast_add(
     vec.get(2u) += u_in[2u];
   }
 }
+
+__global__ void kernel_set_from_list(
+    gpu::FieldAccessor<double> vec,
+    int const *RESTRICT const indices,
+    double const *RESTRICT const values,
+    uint length) {
+
+  uint index = blockIdx.y * gridDim.x * blockDim.x +
+               blockDim.x * blockIdx.x + threadIdx.x;
+
+  vec.set({0u, 0u, 0u}, {0u, 0u, 0u});
+  if (vec.isValidPosition() and index < length) {
+    auto const array_index = index * uint(3u);
+    auto const cx = indices[array_index + 0u];
+    auto const cy = indices[array_index + 1u];
+    auto const cz = indices[array_index + 2u];
+#pragma unroll
+    for (uint cf = 0u; cf < 3u; ++cf) {
+      vec.getNeighbor(cx, cy, cz, cf) = values[array_index + cf];
+    }
+  }
+}
 // LCOV_EXCL_STOP
 
 Vector3<double> get(
@@ -489,6 +522,22 @@ void set(
   kernel.addFieldIndexingParam(gpu::FieldIndexing<double>::interval(*vec_field, ci));
   kernel.addParam(const_cast<const double *>(dev_data_ptr));
   kernel();
+}
+
+void set_from_list(
+    gpu::GPUField<double> const *field,
+    thrust::device_vector<int> const &indices,
+    thrust::device_vector<double> const &values,
+    uint gl) {
+  auto const dev_idx_ptr = thrust::raw_pointer_cast(indices.data());
+  auto const dev_val_ptr = thrust::raw_pointer_cast(values.data());
+
+  auto const threads_per_block = uint(64u);
+  auto const length = static_cast<uint>(indices.size() / 3ul);
+  auto const dim_grid = calculate_dim_grid(length, 4u, threads_per_block);
+  kernel_set_from_list<<<dim_grid, threads_per_block, 0u, nullptr>>>(
+      gpu::FieldIndexing<double>::withGhostLayerXYZ(*field, gl).gpuAccess(),
+      dev_idx_ptr, dev_val_ptr, length);
 }
 } // namespace Vector
 
@@ -647,40 +696,7 @@ __global__ void kernel_add_force(
     }
   }
 }
-
-__global__ void kernel_set_vel_from_list(
-    gpu::FieldAccessor<double> vel,
-    int const *RESTRICT const indices,
-    double const *RESTRICT const values,
-    uint length) {
-
-  uint index = blockIdx.y * gridDim.x * blockDim.x +
-               blockDim.x * blockIdx.x + threadIdx.x;
-
-  vel.set({0u, 0u, 0u}, {0u, 0u, 0u});
-  if (vel.isValidPosition() and index < length) {
-    auto const array_index = index * uint(3u);
-    auto const cx = indices[array_index + 0u];
-    auto const cy = indices[array_index + 1u];
-    auto const cz = indices[array_index + 2u];
-#pragma unroll
-    for (uint cf = 0u; cf < 3u; ++cf) {
-      vel.getNeighbor(cx, cy, cz, cf) = values[array_index + cf];
-    }
-  }
-}
 // LCOV_EXCL_STOP
-
-static dim3 calculate_dim_grid(uint const threads_x,
-                               uint const blocks_per_grid_y,
-                               uint const threads_per_block) {
-  assert(threads_x >= 1u);
-  assert(blocks_per_grid_y >= 1u);
-  assert(threads_per_block >= 1u);
-  auto const threads_y = threads_per_block * blocks_per_grid_y;
-  auto const blocks_per_grid_x = (threads_x + threads_y - 1) / threads_y;
-  return make_uint3(blocks_per_grid_x, blocks_per_grid_y, 1);
-}
 
 std::vector<double>
 get_rho(
@@ -743,22 +759,6 @@ void add_force(
   kernel_add_force<<<dim_grid, threads_per_block, 0u, nullptr>>>(
       gpu::FieldIndexing<double>::withGhostLayerXYZ(*field, gl).gpuAccess(),
       dev_pos_ptr, dev_for_ptr, n_pos, gl);
-}
-
-void set_vel_from_list(
-    gpu::GPUField<double> const *field,
-    thrust::device_vector<int> const &indices,
-    thrust::device_vector<double> const &values,
-    uint gl) {
-  auto const dev_idx_ptr = thrust::raw_pointer_cast(indices.data());
-  auto const dev_val_ptr = thrust::raw_pointer_cast(values.data());
-
-  auto const threads_per_block = uint(64u);
-  auto const length = static_cast<uint>(indices.size() / 3ul);
-  auto const dim_grid = calculate_dim_grid(length, 4u, threads_per_block);
-  kernel_set_vel_from_list<<<dim_grid, threads_per_block, 0u, nullptr>>>(
-      gpu::FieldIndexing<double>::withGhostLayerXYZ(*field, gl).gpuAccess(),
-      dev_idx_ptr, dev_val_ptr, length);
 }
 } // namespace Interpolation
 

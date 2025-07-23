@@ -1186,10 +1186,11 @@ public:
       auto const gl = lattice.get_ghost_layers();
       auto field =
           block.template uncheckedFastGetData<VectorField>(m_velocity_field_id);
-      auto const [d_idx, d_ubb] = m_boundary->get_flattened_map_device();
-      if (not d_idx->empty()) {
-        lbm::accessor::Interpolation::set_vel_from_list(field, *d_idx, *d_ubb,
-                                                        gl);
+      // the velocity field has indeterminate values inside boundary regions;
+      // we overwrite them with boundary slip velocities before interpolation
+      auto const [dev_idx, dev_vel] = m_boundary->get_flattened_map_device();
+      if (not dev_idx->empty()) {
+        lbm::accessor::Vector::set_from_list(field, *dev_idx, *dev_vel, gl);
       }
       auto const res =
           lbm::accessor::Interpolation::get_vel(field, host_pos, gl);
