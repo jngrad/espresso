@@ -93,12 +93,12 @@ cdef class PScriptInterface:
         else:
             global _om
             for pname in kwargs:
-                out_params[utils.to_char_pointer(pname)] = python_object_to_variant(
+                out_params[utils.to_bytes(pname)] = python_object_to_variant(
                     kwargs[pname])
             self.set_sip(
                 _om.get().make_shared(
                     policy_,
-                    utils.to_char_pointer(name),
+                    utils.to_bytes(name),
                     out_params))
             utils.handle_errors(f"Exception during instantiation of '{name}'")
 
@@ -158,12 +158,12 @@ cdef class PScriptInterface:
         cdef Variant value
 
         for name in kwargs:
-            parameters[utils.to_char_pointer(name)] = python_object_to_variant(
+            parameters[utils.to_bytes(name)] = python_object_to_variant(
                 kwargs[name])
 
         # the internal buffer of a cython bytestring object can be accessed as
         # a raw char pointer, but then the bytestring object must be kept alive
-        method_name_bytes_counted_reference = utils.to_char_pointer(method)
+        method_name_bytes_counted_reference = utils.to_bytes(method)
         cdef char * method_name_char = method_name_bytes_counted_reference
 
         if with_nogil:
@@ -192,12 +192,12 @@ cdef class PScriptInterface:
 
     def set_params(self, **kwargs):
         for name, value in kwargs.items():
-            self.sip.get().set_parameter(utils.to_char_pointer(name),
+            self.sip.get().set_parameter(utils.to_bytes(name),
                                          python_object_to_variant(value))
             utils.handle_errors(f"while setting parameter '{name}'")
 
     def get_parameter(self, name):
-        cdef Variant value = self.sip.get().get_parameter(utils.to_char_pointer(name))
+        cdef Variant value = self.sip.get().get_parameter(utils.to_bytes(name))
         return variant_to_python_object(value)
 
     def get_params(self):
@@ -255,8 +255,8 @@ cdef Variant python_object_to_variant(value) except *:
             return make_variant[unordered_map[int, Variant]](map_int2var)
         elif all(map(lambda x: isinstance(x, (str, np.str_)), value.keys())):
             for key, value in value.items():
-                map_str2var[utils.to_char_pointer(
-                    str(key))] = python_object_to_variant(value)
+                map_str2var[utils.to_bytes(
+                    key)] = python_object_to_variant(value)
             return make_variant[unordered_map[string, Variant]](map_str2var)
         for k, v in value.items():
             if not isinstance(k, (str, int, np.integer, np.str_)):
@@ -265,8 +265,8 @@ cdef Variant python_object_to_variant(value) except *:
                     f"'dict_item([({type(k).__name__}, {type(v).__name__})])'"
                     f" to 'Variant[std::unordered_map<int, Variant>]' or"
                     f" to 'Variant[std::unordered_map<std::string, Variant>]'")
-    elif type(value) in (str, np.str_):
-        return make_variant[string](utils.to_char_pointer(str(value)))
+    elif isinstance(value, (str, bytes)):
+        return make_variant[string](utils.to_bytes(value))
     elif isinstance(value, array_variant) and np.issubdtype(value.dtype, np.signedinteger):
         view_int = np.ascontiguousarray(value, dtype=np.int32)
         data_int = &view_int[0]
@@ -439,7 +439,7 @@ class ScriptInterfaceHelper(PScriptInterface):
         cdef vector[string] features_vec
         if self._so_features:
             for feature in self._so_features:
-                features_vec.push_back(utils.to_char_pointer(feature))
+                features_vec.push_back(utils.to_bytes(feature))
             check_features(features_vec)
         super().__init__(self._so_name, policy=self._so_creation_policy,
                          **kwargs)

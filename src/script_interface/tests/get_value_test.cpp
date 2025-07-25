@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(default_case) {
   using ScriptInterface::Variant;
 
   {
-    auto const s = std::string{"Abc"};
+    auto const s = std::string{"gemäß"};
     auto const v = Variant(s);
 
     BOOST_CHECK_EQUAL(get_value<std::string>(v), s);

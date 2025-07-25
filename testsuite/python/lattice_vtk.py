@@ -229,6 +229,21 @@ class TestLBVTK(TestVTK):
                 np.testing.assert_allclose(
                     vtk_pressure, lb_pressure, rtol=1e-6, atol=0.)
 
+    @utx.skipIfMissingModules("espressomd.io.vtk")
+    def test_utf8_support(self):
+        """Check UTF-8 support in filepaths and VTK identifiers."""
+        with tempfile.TemporaryDirectory() as tmp_directory:
+            root = pathlib.Path(tmp_directory) / "gemäß"
+            label = "çåš"
+            vtk_obs = list(self.valid_obs)
+            vtk_obj = self.vtk_class(
+                identifier=label, delta_N=0, observables=vtk_obs, base_folder=str(root))
+            self.lbf.add_vtk_writer(vtk=vtk_obj)
+            self.assertEqual(vtk_obj.identifier, label)
+            vtk_obj.write()
+            path = root / label / "simulation_step_0.vtu"
+            self.assertTrue(path.exists(), f"File \"{path}\" not found")
+
 
 class TestEKVTK(TestVTK):
 
