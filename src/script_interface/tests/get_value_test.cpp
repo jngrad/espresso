@@ -25,6 +25,7 @@
 #include "script_interface/get_value.hpp"
 
 #include <cassert>
+#include <filesystem>
 #include <memory>
 #include <regex>
 #include <stdexcept>
@@ -41,6 +42,12 @@ BOOST_AUTO_TEST_CASE(default_case) {
     auto const v = Variant(s);
 
     BOOST_CHECK_EQUAL(get_value<std::string>(v), s);
+  }
+  {
+    auto const p = std::filesystem::path("ab/cd/ef/gemäß.txt");
+    auto const v = Variant(p);
+
+    BOOST_CHECK_EQUAL(get_value<std::filesystem::path>(v), p);
   }
   {
     auto const vec = Utils::Vector<double, 3>{1., 2., 3.};

@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import numpy as np
+import pathlib
 from . import utils
 from .utils cimport Vector3b, Vector3i, Vector2d, Vector3d, Vector4d
+from .utils cimport path
 cimport cpython.object
 
 from libcpp.memory cimport shared_ptr, make_shared
@@ -235,6 +237,7 @@ cdef Variant python_object_to_variant(value) except *:
     cdef int * data_int
     cdef double[::1] view_double
     cdef double * data_double
+    cdef path fs_path
 
     if value is None:
         return Variant()
@@ -267,6 +270,9 @@ cdef Variant python_object_to_variant(value) except *:
                     f" to 'Variant[std::unordered_map<std::string, Variant>]'")
     elif isinstance(value, (str, bytes)):
         return make_variant[string](utils.to_bytes(value))
+    elif isinstance(value, pathlib.Path):
+        fs_path.assign(utils.to_bytes(str(value)))
+        return make_variant[path](fs_path)
     elif isinstance(value, array_variant) and np.issubdtype(value.dtype, np.signedinteger):
         view_int = np.ascontiguousarray(value, dtype=np.int32)
         data_int = &view_int[0]
@@ -335,6 +341,9 @@ cdef variant_to_python_object(const Variant & value):
         return get_value[double](value)
     if is_type[string](value):
         return utils.to_str(get_value[string](value))
+    if is_type[path](value):
+        filepath = utils.to_str(get_value[path](value).generic_string())
+        return pathlib.Path(filepath)
     if is_type[vector[int]](value):
         return get_value[vector[int]](value)
     if is_type[vector[double]](value):
