@@ -27,10 +27,10 @@
 
 #include <utils/Vector.hpp>
 
-#include <boost/filesystem.hpp>
 #include <boost/mpi/communicator.hpp>
 
 #include <cstddef>
+#include <filesystem>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -87,7 +87,7 @@ public:
    * @param charge_unit The unit for charge.
    * @param chunk_size The chunk size for DataSet in hdf5 file
    */
-  File(std::string file_path, std::string script_path,
+  File(std::filesystem::path file_path, std::filesystem::path script_path,
        std::vector<std::string> const &output_fields, std::string mass_unit,
        std::string length_unit, std::string time_unit, std::string force_unit,
        std::string velocity_unit, std::string charge_unit, int chunk_size);
@@ -111,13 +111,13 @@ public:
 
   /**
    * @brief Retrieve the path to the hdf5 file.
-   * @return The path as a string.
+   * @return The path as a file system object.
    */
-  std::string file_path() const;
+  auto const &file_path() const { return m_file_path; }
 
   /**
    * @brief Retrieve the path to the simulation script.
-   * @return The path as a string.
+   * @return The path as a file system object.
    */
   auto const &script_path() const { return m_script_path; }
 
@@ -177,19 +177,17 @@ private:
   /**
    * @brief Initialize the File object.
    */
-  void init_file(std::string const &file_path);
+  void init_file();
 
   /**
    * @brief Creates a new H5MD file.
-   * @param file_path The filename.
    */
-  void create_file(const std::string &file_path);
+  void create_file();
 
   /**
    * @brief Loads an existing H5MD file.
-   * @param file_path The filename.
    */
-  void load_file(const std::string &file_path);
+  void load_file();
 
   /**
    * @brief Create the HDF5 groups according to the H5MD specification.
@@ -217,12 +215,15 @@ private:
    */
   void write_units();
   /**
-   * @brief Create hard links for the time and step entries of time-dependent
-   * datasets.
+   * @brief Create hard links for the simulation time and simulation step
+   * entries of time-dependent datasets.
    */
   void create_hard_links();
 
-  std::string m_script_path;
+  std::filesystem::path m_file_path;
+  std::filesystem::path m_backup_path;
+  std::filesystem::path m_script_path;
+  std::filesystem::path m_absolute_script_path;
   std::string m_mass_unit;
   std::string m_length_unit;
   std::string m_time_unit;
@@ -232,8 +233,6 @@ private:
   int m_chunk_size;
   boost::mpi::communicator m_comm;
   unsigned int m_fields;
-  std::string m_backup_filename;
-  boost::filesystem::path m_absolute_script_path;
   std::unique_ptr<HighFive::File> m_h5md_file;
   std::unique_ptr<std::unordered_map<std::string, HighFive::DataSet>>
       m_datasets;

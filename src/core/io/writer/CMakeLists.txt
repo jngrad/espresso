@@ -26,8 +26,7 @@ if(ESPRESSO_BUILD_WITH_HDF5)
   target_link_libraries(
     espresso_hdf5
     PRIVATE HighFive hdf5 espresso::cpp_flags MPI::MPI_CXX Boost::mpi
-            Boost::filesystem espresso::utils espresso::config
-            espresso::instrumentation)
+            espresso::utils espresso::config espresso::instrumentation)
   target_link_libraries(espresso_core PUBLIC espresso_hdf5)
   install(TARGETS espresso_hdf5
           LIBRARY DESTINATION ${ESPRESSO_INSTALL_PYTHON}/espressomd)

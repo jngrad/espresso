@@ -797,13 +797,13 @@ if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 
-list(APPEND BOOST_COMPONENTS mpi serialization filesystem system)
+list(APPEND ESPRESSO_BOOST_COMPONENTS mpi serialization)
 
 if(ESPRESSO_BUILD_TESTS)
-  list(APPEND BOOST_COMPONENTS unit_test_framework)
+  list(APPEND ESPRESSO_BOOST_COMPONENTS unit_test_framework)
 endif()
 
-find_package(Boost 1.83.0 REQUIRED ${BOOST_COMPONENTS})
+find_package(Boost 1.83.0 REQUIRED ${ESPRESSO_BOOST_COMPONENTS})
 
 # enable boost::variant with more than 20 types
 target_compile_options(

@@ -301,6 +301,16 @@ struct get_value_helper<std::unordered_map<std::string, T>> {
   }
 };
 
+/* std::filesystem::path case */
+template <> struct get_value_helper<std::filesystem::path> {
+  auto operator()(Variant const &v) const {
+    if (auto const *source = boost::get<std::string>(&v)) {
+      return std::filesystem::path(*source);
+    }
+    return boost::get<std::filesystem::path>(v);
+  }
+};
+
 /** Custom error for a conversion that fails when the value is a nullptr. */
 class bad_get_nullptr : public boost::bad_get {};
 

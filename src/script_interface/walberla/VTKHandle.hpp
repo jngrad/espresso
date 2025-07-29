@@ -48,7 +48,7 @@ private:
   int m_delta_N;
   int m_obs_flag;
   std::string m_identifier;
-  std::string m_base_folder;
+  std::filesystem::path m_base_folder;
   std::string m_prefix;
   std::shared_ptr<::VTKHandle> m_vtk_handle;
   std::weak_ptr<Field> m_field;
@@ -56,7 +56,7 @@ private:
   std::vector<Variant> m_pending_arguments;
 
   [[nodiscard]] auto get_vtk_uid() const {
-    return m_base_folder + '/' + m_identifier;
+    return m_base_folder.generic_string() + "/" + m_identifier;
   }
 
   [[nodiscard]] std::shared_ptr<Field> get_field_instance() const {
@@ -129,7 +129,7 @@ private:
   void do_construct(VariantMap const &params) override {
     m_delta_N = get_value<int>(params, "delta_N");
     m_identifier = get_value<std::string>(params, "identifier");
-    m_base_folder = get_value<std::string>(params, "base_folder");
+    m_base_folder = get_value<std::filesystem::path>(params, "base_folder");
     m_prefix = get_value<std::string>(params, "prefix");
     auto const is_enabled = get_value<bool>(params, "enabled");
     auto const execution_count = get_value<int>(params, "execution_count");
@@ -205,12 +205,13 @@ public:
     assert(m_pending_arguments.size() == 2u);
     auto const is_enabled = get_value<bool>(m_pending_arguments[0]);
     auto const execution_count = get_value<int>(m_pending_arguments[1]);
+    auto const base_folder = m_base_folder.generic_string();
     m_units = units;
     m_field = field;
     auto instance = get_field_instance();
     m_vtk_handle =
         instance->create_vtk(m_delta_N, execution_count, m_obs_flag, m_units,
-                             m_identifier, m_base_folder, m_prefix);
+                             m_identifier, base_folder, m_prefix);
     if (m_delta_N and not is_enabled) {
       instance->switch_vtk(get_vtk_uid(), false);
     }
