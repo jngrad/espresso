@@ -129,17 +129,6 @@ void init_forces_and_thermostat(const CellStructure &cell_structure,
   init_forces_ghosts(cell_structure);
 }
 
-void init_forces(const CellStructure &cell_structure) {
-#ifdef CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
-
-  cell_structure.for_each_local_particle(
-      [](Particle &p) { p.force_and_torque() = external_force(p); });
-
-  init_forces_ghosts(cell_structure);
-}
-
 void init_forces_ghosts(const CellStructure &cell_structure) {
   cell_structure.for_each_ghost_particle(
       [](Particle &p) { p.force_and_torque() = {}; });

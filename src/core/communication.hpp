@@ -96,28 +96,6 @@ std::shared_ptr<MpiCallbacks> mpiCallbacksHandle();
 std::shared_ptr<boost::mpi::environment> mpi_init(int argc = 0,
                                                   char **argv = nullptr);
 
-/** @brief Call a local function.
- *  @tparam Args   Local function argument types
- *  @tparam ArgRef Local function argument types
- *  @param fp      Local function
- *  @param args    Local function arguments
- */
-template <class... Args, class... ArgRef>
-void mpi_call(void (*fp)(Args...), ArgRef &&...args) {
-  Communication::mpiCallbacks().call(fp, std::forward<ArgRef>(args)...);
-}
-
-/** @brief Call a local function.
- *  @tparam Args   Local function argument types
- *  @tparam ArgRef Local function argument types
- *  @param fp      Local function
- *  @param args    Local function arguments
- */
-template <class... Args, class... ArgRef>
-void mpi_call_all(void (*fp)(Args...), ArgRef &&...args) {
-  Communication::mpiCallbacks().call_all(fp, std::forward<ArgRef>(args)...);
-}
-
 /** Process requests from head node. Worker nodes main loop. */
 void mpi_loop();
 
