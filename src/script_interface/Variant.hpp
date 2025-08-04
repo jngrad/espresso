@@ -45,23 +45,44 @@ using Vector3b = Utils::Vector<bool, 3>;
 }
 
 namespace ScriptInterface {
+namespace impl {
 
 template <class... Ts> struct recursive_variant;
 
-namespace detail {
-// CRTP helper class; declare base class of @ref recursive_variant here,
-// such that `using BaseClass = detail::recursive_variant_base<Ts...>`
-// can be used in the derived class to avoid writing the entire typelist again
+/**
+ * @brief Helper class to inject STL containers in a recursive variant typelist.
+ * CRTP helper class that defines a base class for @ref recursive_variant,
+ * such that the `using BaseClass = detail::recursive_variant_base<Ts...>`
+ * syntax can be used in the derived class instead of writing the entire
+ * typelist again. These STL containers are used to introduce recursion.
+ */
 template <class... Ts>
 using recursive_variant_add_containers =
     std::variant<Ts..., std::vector<recursive_variant<Ts...>>,
                  std::unordered_map<int, recursive_variant<Ts...>>,
                  std::unordered_map<std::string, recursive_variant<Ts...>>>;
-} // namespace detail
 
+/**
+ * @brief Recursive variant implementation.
+ *
+ * This boilerplate code is required to emulate the following Boost feature:
+ * @code{.cpp}
+ *   using Variant = boost::make_recursive_variant<
+ *     int, double, std::string, std::vector<boost::recursive_variant_>,
+ *     std::unordered_map<std::string, boost::recursive_variant_>>::type;
+ * @endcode
+ * C++ doesn't natively supports the kind of reflections needed to implement
+ * this behavior. Our implementation splits the definition in two classes:
+ * a forward-declared @ref recursive_variant template class whose type
+ * parameters are "basic" types (i.e. non-recursive types), and a helper
+ * class @c recursive_variant_add_containers that injects carefully chosen
+ * STL containers into the type list. Since STL containers store a pointer
+ * to a buffer holding variant instances, the variant size doesn't need to be
+ * known at the time the variant is defined, and the variant is recursive.
+ */
 template <class... Ts>
-struct recursive_variant : detail::recursive_variant_add_containers<Ts...> {
-  using BaseClass = detail::recursive_variant_add_containers<Ts...>;
+struct recursive_variant : recursive_variant_add_containers<Ts...> {
+  using BaseClass = recursive_variant_add_containers<Ts...>;
   using BaseClass::BaseClass;
 
 private:
@@ -74,23 +95,24 @@ private:
   }
 };
 
+} // namespace impl
+
 /**
  * @brief Helper typedef to generate consistent variant types.
  *
  * This is a custom recursive variant type designed specifically for the script
  * interface. It features all basic types required to interface with the core.
- * Recursive types are added by @c detail::recursive_variant_add_containers.
+ * Recursive types are added by @ref impl::recursive_variant_add_containers.
  * The template parameter @c ObjectType is used to ensure instantiations like
  * @ref Variant and @ref PackedVariant hold the same types in the same order.
  *
  * @tparam ObjectType Type of the script interface object handle or reference.
  */
 template <typename ObjectType>
-using make_recursive_variant =
-    recursive_variant<None, bool, int, std::size_t, double, std::string,
-                      std::filesystem::path, ObjectType, Utils::Vector3b,
-                      Utils::Vector3i, Utils::Vector2d, Utils::Vector3d,
-                      Utils::Vector4d, std::vector<int>, std::vector<double>>;
+using make_recursive_variant = impl::recursive_variant<
+    None, bool, int, std::size_t, double, std::string, std::filesystem::path,
+    ObjectType, Utils::Vector3b, Utils::Vector3i, Utils::Vector2d,
+    Utils::Vector3d, Utils::Vector4d, std::vector<int>, std::vector<double>>;
 
 class ObjectHandle;
 using ObjectRef = std::shared_ptr<ObjectHandle>;
