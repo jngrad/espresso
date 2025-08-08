@@ -580,6 +580,11 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
     set(Kokkos_ENABLE_SERIAL ON CACHE BOOL "")
     set(Kokkos_ENABLE_OPENMP ON CACHE BOOL "")
+    set(Kokkos_ENABLE_IMPL_VIEW_LEGACY ON CACHE BOOL "")
+    set(Kokkos_ENABLE_COMPLEX_ALIGN ON CACHE BOOL "")
+    set(Kokkos_ENABLE_AGGRESSIVE_VECTORIZATION ON CACHE BOOL "")
+    set(Kokkos_ENABLE_HWLOC ON CACHE BOOL "")
+    set(Kokkos_ARCH_NATIVE ON CACHE BOOL "")
     FetchContent_MakeAvailable(kokkos)
     set(BUILD_SHARED_LIBS ${ESPRESSO_BUILD_SHARED_LIBS_DEFAULT})
     set(CMAKE_SHARED_LIBRARY_PREFIX "${ESPRESSO_SHARED_LIBRARY_PREFIX}")
@@ -604,7 +609,7 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     FetchContent_Declare(
       cabana
       GIT_REPOSITORY https://github.com/ECP-copa/Cabana.git
-      GIT_TAG        ebfaa51 # 0.7.0 with patches
+      GIT_TAG        e76c1a1 # 0.7.0 with patches
       PATCH_COMMAND  patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cabana.patch
     )
     # cmake-format: on
@@ -628,6 +633,7 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-bool-literals")
     list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-equals-delete")
     list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-equals-default")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-use-nullptr")
     list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-pass-by-value")
     list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-loop-convert")
     list(APPEND SKIP_CLANG_TIDY_CHECKS "-modernize-return-braced-init-list")
@@ -636,6 +642,10 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     list(APPEND SKIP_CLANG_TIDY_CHECKS "-readability-simplify-boolean-expr")
     list(APPEND SKIP_CLANG_TIDY_CHECKS
          "-readability-avoid-const-params-in-decls")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS
+         "-clang-analyzer-optin.performance.Padding")
+    list(APPEND SKIP_CLANG_TIDY_CHECKS
+         "-clang-analyzer-security.insecureAPI.strcpy")
     espresso_override_clang_tidy_checks(
       ESPRESSO_CABANA_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
       "${SKIP_CLANG_TIDY_CHECKS_CXX}")
