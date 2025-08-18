@@ -37,7 +37,7 @@ namespace Reduction {
 /** @brief Kernel that adds the result from a single particle to a reduction */
 template <typename ResultType>
 using AddPartialResultKernel =
-    std::function<void(Particle const &, ResultType &)>;
+    std::function<void(ResultType &, Particle const &)>;
 
 /** @brief Join two partial reduciton results */
 template <typename ResultType>
@@ -111,7 +111,7 @@ ResultType reduce_over_local_particles(
     auto reducer = Reduction::make_kokkos_reducer<ResultType>(
         [&cells, add_partial](std::size_t const c_index, ResultType &res) {
           for (auto const &p : cells[c_index]->particles()) {
-            add_partial(p, res);
+            add_partial(res, p);
           }
         },
         reduce_op);
@@ -123,7 +123,7 @@ ResultType reduce_over_local_particles(
   auto const &particles = cells.front()->particles();
   auto reducer = Reduction::make_kokkos_reducer<ResultType>(
       [&particles, add_partial](std::size_t const p_index, ResultType &res) {
-        add_partial(std::as_const(*(particles.begin() + p_index)), res);
+        add_partial(res, std::as_const(*(particles.begin() + p_index)));
       },
       reduce_op);
   Kokkos::parallel_reduce( // loop over particles
@@ -131,7 +131,7 @@ ResultType reduce_over_local_particles(
   return result;
 #else // SHARED_MEMORY_PARALLELISM
   for (auto const &p : cs.local_particles()) {
-    add_partial(p, result);
+    add_partial(result, p);
   }
   return result;
 #endif

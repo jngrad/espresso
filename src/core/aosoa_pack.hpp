@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <config/config.hpp>
+
 #ifdef SHARED_MEMORY_PARALLELISM
 
 #include "cell_system/CellStructure.hpp"

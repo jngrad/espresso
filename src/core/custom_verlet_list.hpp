@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <config/config.hpp>
+
 #ifdef SHARED_MEMORY_PARALLELISM
 
 #include <Cabana_VerletList.hpp>
@@ -95,14 +97,14 @@ public:
   // Sorting a neighbor
   KOKKOS_INLINE_FUNCTION
   void sortNeighbors() {
-    Kokkos::parallel_for(
-        "custom_verlet_list::sort_neighbors",
-        Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(0, counts.size()),
-        [&](const int i) {
-          const int count = counts(i);
-          auto *ptr = &neighbors(i, 0);
-          std::sort(ptr, ptr + count);
-        });
+    Kokkos::parallel_for("custom_verlet_list::sort_neighbors",
+                         Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(
+                             std::size_t{0}, counts.size()),
+                         [&](std::size_t const i) {
+                           auto const count = counts(i);
+                           auto *ptr = &neighbors(i, 0);
+                           std::sort(ptr, ptr + count);
+                         });
     Kokkos::fence();
   }
 
@@ -135,8 +137,9 @@ public:
     Kokkos::Max<int> max_reduce(max_counts);
     Kokkos::parallel_reduce(
         "custom_verlet_list::reduce_max",
-        Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(0, counts.size()),
-        [&](const int i, int &value) {
+        Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(std::size_t{0},
+                                                           counts.size()),
+        [&](std::size_t const i, int &value) {
           if (counts(i) > value)
             value = counts(i);
         },

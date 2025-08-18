@@ -729,8 +729,9 @@ public:
   auto get_max_id() const { return m_max_id; }
 
   void set_kokkos_handle(std::shared_ptr<Communication::KokkosHandle> handle);
-  void rebuild_local_properties(std::size_t num_threads, double pair_cutoff);
+  void rebuild_local_properties(double pair_cutoff);
   void reset_local_properties();
+  void reset_local_force();
 
   auto &get_local_force() { return *m_local_force; }
 #ifdef ROTATION
@@ -742,6 +743,7 @@ public:
   auto &get_aosoa() { return *m_aosoa; }
   auto const &get_unique_particles() const { return m_unique_particles; }
   auto const &get_verlet_list_cabana() const { return *m_verlet_list_cabana; }
+  void clear_local_properties();
 
   [[nodiscard]] auto is_verlet_list_cabana_rebuild_needed() const {
     return m_rebuild_verlet_list_cabana or (not use_verlet_list);
@@ -749,17 +751,16 @@ public:
 
   /**
    * @brief Reset local properties of the Verlet list.
-   * @param n_threads Number of threads.
    * @param cutoff    Pair interaction cutoff.
    * @return True if a rebuild is needed.
    */
-  [[nodiscard]] auto prepare_verlet_list_cabana(int n_threads, double cutoff) {
+  [[nodiscard]] auto prepare_verlet_list_cabana(double cutoff) {
     auto const rebuild = is_verlet_list_cabana_rebuild_needed();
     if (rebuild) {
       // If we have to rebuild, we need to count the particles
       set_index_map(); // parallelized index_map
       // Create essential variables for MD
-      rebuild_local_properties(n_threads, cutoff);
+      rebuild_local_properties(cutoff);
     } else {
       // If we do not rebuild we can use the saved map
       reset_local_properties();

@@ -25,13 +25,9 @@
  *  Force calculation.
  */
 
-#include "config/config.hpp"
+#include <config/config.hpp>
 
 #include "forces.hpp"
-
-#if defined(ELECTROSTATICS) or defined(DIPOLES) or defined(DPD) or defined(NPT)
-#define LONG_RANGE_KERNELS
-#endif
 
 #include "BoxGeometry.hpp"
 #include "actor/visitors.hpp"
@@ -211,14 +207,12 @@ inline void add_non_bonded_pair_without_p(
  * @brief For interactions which need particle information.
  */
 inline void add_non_bonded_pair_force_with_p(
-    Particle &p1, Particle &p2, ParticleForce &pf,
-#if defined(NPT) and defined(SHARED_MEMORY_PARALLELISM)
-    Utils::Vector3d &virial,
-#endif
-    Utils::Vector3d const &d, double dist, double dist2, double q1q2,
-    IA_parameters const &ia_params, [[maybe_unused]] bool do_nonbonded,
+    Particle &p1, Particle &p2, ParticleForce &pf, Utils::Vector3d const &d,
+    double dist, double dist2, double q1q2, IA_parameters const &ia_params,
+    [[maybe_unused]] bool do_nonbonded_flag,
     Thermostat::Thermostat const &thermostat, BoxGeometry const &box_geo,
     [[maybe_unused]] BondedInteractionsMap const &bonded_ias,
+    [[maybe_unused]] Utils::Vector3d *const virial,
     Coulomb::ShortRangeForceKernel::kernel_type const *coulomb_kernel,
     Dipoles::ShortRangeForceKernel::kernel_type const *dipoles_kernel,
     Coulomb::ShortRangeForceCorrectionsKernel::kernel_type const *elc_kernel,
@@ -230,7 +224,7 @@ inline void add_non_bonded_pair_force_with_p(
 
   if (dist < ia_params.max_cut) {
 #ifdef EXCLUSIONS
-    if (do_nonbonded) {
+    if (do_nonbonded_flag) {
 #endif
 #ifdef THOLE
       pf.f += thole_pair_force(p1, p2, ia_params, d, dist, bonded_ias,
@@ -248,12 +242,10 @@ inline void add_non_bonded_pair_force_with_p(
   /* electrostatic is calculated by energy                             */
   /*********************************************************************/
 #ifdef NPT
-#ifdef SHARED_MEMORY_PARALLELISM
-  virial += hadamard_product(pf.f, d);
-#else
-  npt_add_virial_force_contribution(pf.f, d);
-#endif
-#endif
+  if (virial) {
+    *virial += hadamard_product(pf.f, d);
+  }
+#endif // NPT
 
   /***********************************************/
   /* short-range electrostatics                  */
@@ -262,19 +254,17 @@ inline void add_non_bonded_pair_force_with_p(
 #ifdef ELECTROSTATICS
   // real-space electrostatic charge-charge interaction
   if (q1q2 != 0. and coulomb_kernel != nullptr) {
+#if not defined(SHARED_MEMORY_PARALLELISM)
     pf.f += (*coulomb_kernel)(q1q2, d, dist);
+#endif // not SHARED_MEMORY_PARALLELISM
 #ifdef NPT
-#ifdef SHARED_MEMORY_PARALLELISM
-    virial[0] += (*coulomb_u_kernel)(p1, p2, q1q2, d, dist);
-#else
-    npt_add_virial_diagonalSum_contribution(
-        (*coulomb_u_kernel)(p1, p2, q1q2, d, dist));
-#endif // SHARED_MEMORY_PARALLELISM
+    if (virial) {
+      (*virial)[0] += (*coulomb_u_kernel)(p1, p2, q1q2, d, dist);
+    }
 #endif // NPT
-#ifdef P3M
-    if (elc_kernel)
+    if (elc_kernel) {
       (*elc_kernel)(p1, p2, q1q2);
-#endif // P3M
+    }
   }
 #endif // ELECTROSTATICS
 
@@ -297,10 +287,16 @@ inline void add_non_bonded_pair_force_with_p(
   /***********************************************/
 
 #ifdef DIPOLES
+#if not defined(SHARED_MEMORY_PARALLELISM)
   // real-space magnetic dipole-dipole
   if (dipoles_kernel) {
-    pf += (*dipoles_kernel)(p1, p2, d, dist, dist2);
+    auto const d1d2 = p1.dipm() * p2.dipm();
+    if (d1d2 != 0.) {
+      pf +=
+          (*dipoles_kernel)(d1d2, p1.calc_dip(), p2.calc_dip(), d, dist, dist2);
+    }
   }
+#endif // not SHARED_MEMORY_PARALLELISM
 #endif
 }
 
@@ -316,34 +312,32 @@ inline void add_non_bonded_pair_force_with_p(
  *  @param[in] thermostat      thermostat.
  *  @param[in] box_geo         box geometry.
  *  @param[in] bonded_ias      bonded interaction kernels.
+ *  @param[out] virial         NpT virial.
  *  @param[in] coulomb_kernel  Coulomb force kernel.
  *  @param[in] dipoles_kernel  Dipolar force kernel.
  *  @param[in] elc_kernel      ELC force correction kernel.
  *  @param[in] coulomb_u_kernel Coulomb energy kernel.
  */
-inline auto add_non_bonded_pair_force(
+inline void add_non_bonded_pair_force(
     Particle &p1, Particle &p2, Utils::Vector3d const &d, double dist,
     double dist2, double q1q2, IA_parameters const &ia_params,
     Thermostat::Thermostat const &thermostat, BoxGeometry const &box_geo,
     [[maybe_unused]] BondedInteractionsMap const &bonded_ias,
+    [[maybe_unused]] Utils::Vector3d *const virial,
     Coulomb::ShortRangeForceKernel::kernel_type const *coulomb_kernel,
     Dipoles::ShortRangeForceKernel::kernel_type const *dipoles_kernel,
     Coulomb::ShortRangeForceCorrectionsKernel::kernel_type const *elc_kernel,
     Coulomb::ShortRangeEnergyKernel::kernel_type const *coulomb_u_kernel) {
 
   ParticleForce pf{};
-#if defined(NPT) and defined(SHARED_MEMORY_PARALLELISM)
-  Utils::Vector3d virial{};
-#endif
 
 #ifdef EXCLUSIONS
   auto const do_nonbonded_flag = do_nonbonded(p1, p2);
 #else
-#if defined(LONG_RANGE_KERNELS)
   auto constexpr do_nonbonded_flag = true;
-#endif // LONG_RANGE_KERNELS
 #endif
 
+#ifndef SHARED_MEMORY_PARALLELISM
   if (dist < ia_params.max_cut) {
 #ifdef EXCLUSIONS
     if (do_nonbonded_flag) {
@@ -353,26 +347,18 @@ inline auto add_non_bonded_pair_force(
     }
 #endif
   }
+#endif // not SHARED_MEMORY_PARALLELISM
 
-#if defined(LONG_RANGE_KERNELS)
   add_non_bonded_pair_force_with_p(
-      p1, p2, pf,
-#if defined(NPT) and defined(SHARED_MEMORY_PARALLELISM)
-      virial,
-#endif
-      d, dist, dist2, q1q2, ia_params, do_nonbonded_flag, thermostat, box_geo,
-      bonded_ias, coulomb_kernel, dipoles_kernel, elc_kernel, coulomb_u_kernel);
-#endif
+      p1, p2, pf, d, dist, dist2, q1q2, ia_params, do_nonbonded_flag,
+      thermostat, box_geo, bonded_ias, virial, coulomb_kernel, dipoles_kernel,
+      elc_kernel, coulomb_u_kernel);
 
   /***********************************************/
   /* add total non-bonded forces to particles    */
   /***********************************************/
 
-#if defined(NPT) and defined(SHARED_MEMORY_PARALLELISM)
-  return std::pair{pf, virial};
-#elif defined(SHARED_MEMORY_PARALLELISM)
-  return pf;
-#else
+#ifndef SHARED_MEMORY_PARALLELISM
   p1.force_and_torque() += pf;
   p2.force_and_torque() += calc_opposing_force(pf, d);
 #endif
@@ -424,8 +410,8 @@ inline std::optional<Utils::Vector3d> calc_bond_pair_force(
 }
 
 inline bool add_bonded_two_body_force(
-    Bonded_IA_Parameters const &iaparams, Particle &p1, Particle &p2,
-    BoxGeometry const &box_geo,
+    Bonded_IA_Parameters const &iaparams, BoxGeometry const &box_geo,
+    Particle &p1, Particle &p2, [[maybe_unused]] Utils::Vector3d *const virial,
     Coulomb::ShortRangeForceKernel::kernel_type const *kernel) {
   auto const dx = box_geo.get_mi_vector(p1.pos(), p2.pos());
 
@@ -446,7 +432,9 @@ inline bool add_bonded_two_body_force(
       p2.force() -= result.value();
 
 #ifdef NPT
-      npt_add_virial_force_contribution(result.value(), dx);
+      if (virial) {
+        *virial += hadamard_product(result.value(), dx);
+      }
 #endif
       return false;
     }
@@ -554,6 +542,7 @@ add_bonded_force(Particle &p1, int bond_id, std::span<Particle *> partners,
                  BondedInteractionsMap const &bonded_ia_params,
                  BondBreakage::BondBreakage &bond_breakage,
                  BoxGeometry const &box_geo,
+                 [[maybe_unused]] Utils::Vector3d *const virial,
                  Coulomb::ShortRangeForceKernel::kernel_type const *kernel) {
 
   // Consider for bond breakage
@@ -579,8 +568,8 @@ add_bonded_force(Particle &p1, int bond_id, std::span<Particle *> partners,
   case 0:
     return false;
   case 1:
-    return add_bonded_two_body_force(iaparams, p1, *partners[0], box_geo,
-                                     kernel);
+    return add_bonded_two_body_force(iaparams, box_geo, p1, *partners[0],
+                                     virial, kernel);
   case 2:
     return add_bonded_three_body_force(iaparams, box_geo, p1, *partners[0],
                                        *partners[1]);

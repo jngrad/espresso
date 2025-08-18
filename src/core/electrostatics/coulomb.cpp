@@ -172,7 +172,7 @@ double Solver::cutoff() const {
   if (impl->solver) {
     return std::visit(ShortRangeCutoff(), *impl->solver);
   }
-  return -1.0;
+  return INACTIVE_CUTOFF;
 }
 
 struct EventOnObservableCalc {

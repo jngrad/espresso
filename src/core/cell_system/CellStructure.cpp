@@ -29,8 +29,10 @@
 #include "BoxGeometry.hpp"
 #include "LocalBox.hpp"
 #include "Particle.hpp"
+#include "aosoa_pack.hpp"
 #include "cell_system/CellStructureType.hpp"
 #include "communication.hpp"
+#include "custom_verlet_list.hpp"
 #include "lees_edwards/lees_edwards.hpp"
 #include "particle_enumeration.hpp"
 #include "particle_reduction.hpp"
@@ -42,6 +44,13 @@
 #include <utils/math/sqr.hpp>
 
 #include <boost/mpi/collectives/all_reduce.hpp>
+
+#ifdef SHARED_MEMORY_PARALLELISM
+#include <Cabana_Core.hpp>
+#include <Cabana_NeighborList.hpp>
+#include <Kokkos_Core.hpp>
+#include <omp.h>
+#endif
 
 #include <algorithm>
 #include <cassert>
@@ -57,44 +66,28 @@
 #include <variant>
 #include <vector>
 
-#ifdef SHARED_MEMORY_PARALLELISM
-#include "aosoa_pack.hpp"
-#include "custom_verlet_list.hpp"
-#include <Cabana_Core.hpp>
-#include <Cabana_NeighborList.hpp>
-#include <Kokkos_Core.hpp>
-#endif
-
 CellStructure::~CellStructure() {
 #ifdef SHARED_MEMORY_PARALLELISM
-  if (m_local_force) {
-    m_local_force.reset();
-  }
-#ifdef ROTATION
-  if (m_local_torque) {
-    m_local_torque.reset();
-  }
-#endif
-#ifdef NPT
-  if (m_local_virial) {
-    m_local_virial.reset();
-  }
-#endif
-  if (m_aosoa) {
-    m_aosoa.reset();
-  }
-  if (m_particle_storage) {
-    m_particle_storage.reset();
-  }
-  if (m_verlet_list_cabana) {
-    m_verlet_list_cabana.reset();
-  }
-  // Kokkos handle can be freed after all Cabana containers have been freed
+  clear_local_properties();
+  // Kokkos handle can only be freed after all Cabana containers have been freed
   m_kokkos_handle.reset();
 #endif
 }
 
 #ifdef SHARED_MEMORY_PARALLELISM
+void CellStructure::clear_local_properties() {
+  m_local_force.reset();
+#ifdef ROTATION
+  m_local_torque.reset();
+#endif
+#ifdef NPT
+  m_local_virial.reset();
+#endif
+  m_aosoa.reset();
+  m_particle_storage.reset();
+  m_verlet_list_cabana.reset();
+  m_rebuild_verlet_list_cabana = true;
+}
 
 void CellStructure::set_kokkos_handle(
     std::shared_ptr<Communication::KokkosHandle> handle) {
@@ -123,9 +116,10 @@ static auto estimate_max_counts(int max_prefactor, double pair_cutoff,
   return max_counts;
 }
 
-void CellStructure::rebuild_local_properties(std::size_t const num_threads,
-                                             double const pair_cutoff) {
+void CellStructure::rebuild_local_properties(double const pair_cutoff) {
   assert(m_kokkos_handle);
+  using execution_space = Kokkos::DefaultExecutionSpace;
+  auto const num_threads = execution_space().concurrency();
   auto const num_part = get_unique_particles().size();
   m_local_force =
       std::make_unique<ForceType>("local_force", num_part, num_threads);
@@ -145,13 +139,17 @@ void CellStructure::rebuild_local_properties(std::size_t const num_threads,
   m_verlet_list_cabana = std::make_unique<ListType>(0ul, num_part, max_counts);
 }
 
+void CellStructure::reset_local_force() {
+  Kokkos::deep_copy(get_local_force(), 0.);
+}
+
 void CellStructure::reset_local_properties() {
-  Kokkos::deep_copy(get_local_force(), 0);
+  Kokkos::deep_copy(get_local_force(), 0.);
 #ifdef ROTATION
-  Kokkos::deep_copy(get_local_torque(), 0);
+  Kokkos::deep_copy(get_local_torque(), 0.);
 #endif
 #ifdef NPT
-  Kokkos::deep_copy(get_local_virial(), 0);
+  Kokkos::deep_copy(get_local_virial(), 0.);
 #endif
 }
 
@@ -490,12 +488,12 @@ bool CellStructure::check_resort_required(
     Utils::Vector3d const &additional_offset) const {
   auto const lim = Utils::sqr(m_verlet_skin / 2.) - additional_offset.norm2();
 
-  Reduction::AddPartialResultKernel<bool> add_partial = [lim](Particle const &p,
-                                                              bool &result) {
-    if ((p.pos() - p.pos_at_last_verlet_update()).norm2() > lim) {
-      result = true;
-    }
-  };
+  Reduction::AddPartialResultKernel<bool> add_partial =
+      [lim](bool &result, Particle const &p) {
+        if ((p.pos() - p.pos_at_last_verlet_update()).norm2() > lim) {
+          result = true;
+        }
+      };
 
   Reduction::ReductionOp<bool> reduce_op = [](bool &acc, bool const &val) {
     acc |= val;

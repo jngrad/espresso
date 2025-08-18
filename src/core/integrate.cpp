@@ -551,8 +551,7 @@ int System::System::integrate(int n_steps, int reuse_forces) {
     }
 
 #ifdef NPT
-    if ((propagation.integ_switch != INTEG_METHOD_NPT_ISO_AND) &&
-        (propagation.integ_switch != INTEG_METHOD_NPT_ISO_MTK))
+    if (not has_npt_enabled())
 #endif
     {
       resort_particles_if_needed(*this);
@@ -571,8 +570,7 @@ int System::System::integrate(int n_steps, int reuse_forces) {
 #ifdef VIRTUAL_SITES_RELATIVE
     if (has_vs_rel()) {
 #ifdef NPT
-      if ((propagation.integ_switch == INTEG_METHOD_NPT_ISO_AND) or
-          (propagation.integ_switch == INTEG_METHOD_NPT_ISO_MTK)) {
+      if (has_npt_enabled()) {
         cell_structure->update_ghosts_and_resort_particle(
             Cells::DATA_PART_PROPERTIES);
       }
@@ -708,8 +706,7 @@ int System::System::integrate(int n_steps, int reuse_forces) {
   cell_structure->update_verlet_stats(n_steps, n_verlet_updates);
 
 #ifdef NPT
-  if ((propagation.integ_switch == INTEG_METHOD_NPT_ISO_AND) or
-      (propagation.integ_switch == INTEG_METHOD_NPT_ISO_MTK)) {
+  if (has_npt_enabled()) {
     synchronize_npt_state();
   }
 #endif

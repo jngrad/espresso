@@ -24,6 +24,8 @@
  *  For more information on how to add new interactions, see @ref bondedIA_new.
  */
 
+#include <config/config.hpp>
+
 #include "angle_common.hpp"
 #include "angle_cosine.hpp"
 #include "angle_cossquare.hpp"
@@ -55,11 +57,6 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
-
-/* Special cutoff value for a disabled bond.
- * Bonds that have this cutoff are not visited during bond evaluation.
- */
-static constexpr double BONDED_INACTIVE_CUTOFF = -1.;
 
 /** Interaction type for unused bonded interaction slots */
 struct NoneBond {

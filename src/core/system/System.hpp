@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "config/config.hpp"
+#include <config/config.hpp>
 
 #include "GpuParticleData.hpp"
 #include "ResourceCleanup.hpp"
@@ -131,6 +131,9 @@ public:
 
   /** @brief Rebuild cell lists. Use e.g. after a skin change. */
   void rebuild_cell_structure();
+#ifdef SHARED_MEMORY_PARALLELISM
+  void rebuild_aosoa();
+#endif
 
   /** @brief Calculate the maximal cutoff of all interactions. */
   double maximal_cutoff() const;
@@ -163,10 +166,9 @@ public:
   /** @brief Reinitialize the NpT state. */
   void npt_ensemble_init(bool recalc_forces);
   void npt_add_virial_contribution(double energy);
-  void npt_add_virial_contribution(Utils::Vector3d const &force,
-                                   Utils::Vector3d const &d);
-  void npt_add_virial_contribution(Utils::Vector3d const &virial);
+  bool has_npt_enabled() const;
 #endif // NPT
+  Utils::Vector3d *get_npt_virial() const;
 
   /** @brief Calculate all forces. */
   void calculate_forces();
@@ -352,6 +354,7 @@ protected:
   void update_local_geo();
 #ifdef ELECTROSTATICS
   void update_icc_particles();
+  bool has_icc_enabled() const;
 #endif // ELECTROSTATICS
 
 private:
