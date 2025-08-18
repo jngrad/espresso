@@ -26,7 +26,11 @@
 #include "aosoa_pack.hpp"
 #include "forces_inline.hpp"
 
+#include <utils/Vector.hpp>
+
 #include <Cabana_Core.hpp>
+
+#include <omp.h>
 
 #include <vector>
 
@@ -40,21 +44,18 @@ struct ForcesKernel {
   BondedInteractionsMap const &bonded_ias;
   InteractionsNonBonded const &nonbonded_ias;
   Coulomb::ShortRangeForceKernel::kernel_type const *const coulomb_kernel;
-#if defined(LONG_RANGE_KERNELS)
   Dipoles::ShortRangeForceKernel::kernel_type const *const dipoles_kernel;
   Coulomb::ShortRangeForceCorrectionsKernel::kernel_type const *elc_kernel;
   Coulomb::ShortRangeEnergyKernel::kernel_type const *const coulomb_u_kernel;
   Thermostat::Thermostat const &thermostat;
-#endif
   BoxGeometry const &box_geo;
-#if defined(LONG_RANGE_KERNELS) or defined(EXCLUSIONS)
   std::vector<Particle *> const &unique_particles;
-#endif
   CellStructure::ForceType const &local_force;
 #ifdef ROTATION
   CellStructure::ForceType const &local_torque;
 #endif
 #ifdef NPT
+  Utils::Vector3d *const global_virial;
   CellStructure::VirialType const &local_virial;
 #endif
   CellStructure::AoSoA_pack const &aosoa;
@@ -63,46 +64,36 @@ struct ForcesKernel {
       BondedInteractionsMap const &bonded_ias_,
       InteractionsNonBonded const &nonbonded_ias_,
       Coulomb::ShortRangeForceKernel::kernel_type const *coulomb_kernel_,
-#if defined(LONG_RANGE_KERNELS)
       Dipoles::ShortRangeForceKernel::kernel_type const *dipoles_kernel_,
       Coulomb::ShortRangeForceCorrectionsKernel::kernel_type const *elc_kernel_,
       Coulomb::ShortRangeEnergyKernel::kernel_type const *coulomb_u_kernel_,
-      Thermostat::Thermostat const &thermostat_,
-#endif
-      BoxGeometry const &box_geo_,
-#if defined(LONG_RANGE_KERNELS) or defined(EXCLUSIONS)
+      Thermostat::Thermostat const &thermostat_, BoxGeometry const &box_geo_,
       std::vector<Particle *> const &unique_particles_,
-#endif
       CellStructure::ForceType const &local_force_,
 #ifdef ROTATION
       CellStructure::ForceType const &local_torque_,
 #endif
 #ifdef NPT
+      Utils::Vector3d *const global_virial_,
       CellStructure::VirialType const &local_virial_,
 #endif
       CellStructure::AoSoA_pack const &aosoa_)
       : bonded_ias(bonded_ias_), nonbonded_ias(nonbonded_ias_),
-        coulomb_kernel(coulomb_kernel_),
-#if defined(LONG_RANGE_KERNELS)
-        dipoles_kernel(dipoles_kernel_), elc_kernel(elc_kernel_),
-        coulomb_u_kernel(coulomb_u_kernel_), thermostat(thermostat_),
-#endif
-        box_geo(box_geo_),
-#if defined(LONG_RANGE_KERNELS) or defined(EXCLUSIONS)
-        unique_particles(unique_particles_),
-#endif
-        local_force(local_force_),
+        coulomb_kernel(coulomb_kernel_), dipoles_kernel(dipoles_kernel_),
+        elc_kernel(elc_kernel_), coulomb_u_kernel(coulomb_u_kernel_),
+        thermostat(thermostat_), box_geo(box_geo_),
+        unique_particles(unique_particles_), local_force(local_force_),
 #ifdef ROTATION
         local_torque(local_torque_),
 #endif
 #ifdef NPT
-        local_virial(local_virial_),
+        global_virial(global_virial_), local_virial(local_virial_),
 #endif
         aosoa(aosoa_) {
   }
 
   ESPRESSO_ATTR_ALWAYS_INLINE KOKKOS_INLINE_FUNCTION void
-  operator()(int i, int j) const {
+  operator()(std::size_t i, std::size_t j) const {
 
     auto const thread_id = omp_get_thread_num();
 
@@ -110,25 +101,25 @@ struct ForcesKernel {
         nonbonded_ias.get_ia_param(aosoa.type(i), aosoa.type(j));
 
     ParticleForce pf{};
+
 #ifdef NPT
     Utils::Vector3d virial{};
+    auto *const virial_handle = global_virial ? &virial : nullptr;
+#else
+    Utils::Vector3d *const virial_handle = nullptr;
 #endif
     auto const d = box_geo.get_mi_vector(
         aosoa.position(i, 0), aosoa.position(i, 1), aosoa.position(i, 2),
         aosoa.position(j, 0), aosoa.position(j, 1), aosoa.position(j, 2));
     auto const dist = d.norm();
 
-#if defined(LONG_RANGE_KERNELS) or defined(EXCLUSIONS)
     auto &p1 = *unique_particles.at(i);
     auto &p2 = *unique_particles.at(j);
-#endif
 
 #ifdef EXCLUSIONS
     auto const do_nonbonded_flag = do_nonbonded(p1, p2);
 #else
-#if defined(LONG_RANGE_KERNELS)
     auto constexpr do_nonbonded_flag = true;
-#endif // LONG_RANGE_KERNELS
 #endif
 
     if (dist < ia_params.max_cut) {
@@ -141,21 +132,32 @@ struct ForcesKernel {
 #endif
     }
 
-#if defined(LONG_RANGE_KERNELS)
 #ifdef ELECTROSTATICS
     auto const q1q2 = aosoa.charge(i) * aosoa.charge(j);
 #else
     auto constexpr q1q2 = 0.;
 #endif
-    add_non_bonded_pair_force_with_p(p1, p2, pf,
-#ifdef NPT
-                                     virial,
-#endif // NPT
-                                     d, dist, dist * dist, q1q2, ia_params,
-                                     do_nonbonded_flag, thermostat, box_geo,
-                                     bonded_ias, coulomb_kernel, dipoles_kernel,
-                                     elc_kernel, coulomb_u_kernel);
-#endif // LONG_RANGE_KERNELS
+    add_non_bonded_pair_force_with_p(
+        p1, p2, pf, d, dist, dist * dist, q1q2, ia_params, do_nonbonded_flag,
+        thermostat, box_geo, bonded_ias, virial_handle, coulomb_kernel,
+        dipoles_kernel, elc_kernel, coulomb_u_kernel);
+
+#ifdef ELECTROSTATICS
+    // real-space electrostatic charge-charge interaction
+    if (q1q2 != 0. and coulomb_kernel != nullptr) {
+      pf.f += (*coulomb_kernel)(q1q2, d, dist);
+    }
+#endif // ELECTROSTATICS
+#ifdef DIPOLES
+    // real-space magnetic dipole-dipole interaction
+    if (dipoles_kernel) {
+      auto const d1d2 = p1.dipm() * p2.dipm();
+      if (d1d2 != 0.) {
+        pf += (*dipoles_kernel)(d1d2, p1.calc_dip(), p2.calc_dip(), d, dist,
+                                dist * dist);
+      }
+    }
+#endif // DIPOLES
 
     local_force(i, thread_id, 0) += pf.f[0];
     local_force(i, thread_id, 1) += pf.f[1];
@@ -176,9 +178,11 @@ struct ForcesKernel {
     local_torque(j, thread_id, 2) += opf.torque[2];
 #endif
 #ifdef NPT
-    local_virial(thread_id, 0) += virial[0];
-    local_virial(thread_id, 1) += virial[1];
-    local_virial(thread_id, 2) += virial[2];
+    if (virial_handle) {
+      local_virial(thread_id, 0) += virial[0];
+      local_virial(thread_id, 1) += virial[1];
+      local_virial(thread_id, 2) += virial[2];
+    }
 #endif
   }
 };

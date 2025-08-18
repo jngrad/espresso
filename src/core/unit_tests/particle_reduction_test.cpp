@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE(test_reduce_over_local_particles) {
   auto const *const p = cell_structure.get_local_particle(0);
   assert(p);
 
-  auto const kernel = [](Particle const &p, Utils::Vector3d &res) {
-    res += p.mass() * p.v();
+  auto const kernel = [](Utils::Vector3d &acc, Particle const &p) {
+    acc += p.mass() * p.v();
   };
   auto const ref = p->mass() * p->v();
   auto const res = reduce_over_local_particles<Utils::Vector3d>(

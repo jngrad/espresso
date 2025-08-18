@@ -35,8 +35,10 @@
 #include "communication.hpp"
 #include "electrostatics/icc.hpp"
 #include "errorhandling.hpp"
+#include "nonbonded_interactions/VerletCriterion.hpp"
 #include "npt.hpp"
 #include "particle_node.hpp"
+#include "short_range_cabana.hpp"
 #include "thermostat.hpp"
 #include "virtual_sites/relative.hpp"
 
@@ -343,6 +345,9 @@ void System::on_particle_change() {
 
   /* the particle information is no longer valid */
   invalidate_fetch_cache();
+#ifdef SHARED_MEMORY_PARALLELISM
+  cell_structure->clear_local_properties();
+#endif
 }
 
 void System::on_particle_charge_change() {
@@ -360,7 +365,12 @@ void System::update_dependent_particles() {
 #endif
 
 #ifdef ELECTROSTATICS
-  update_icc_particles();
+  if (has_icc_enabled()) {
+#ifdef SHARED_MEMORY_PARALLELISM
+    rebuild_aosoa();
+#endif
+    update_icc_particles();
+  }
 #endif
 
   // Here we initialize volume conservation
@@ -384,7 +394,30 @@ void System::on_observable_calc() {
 #endif
 
   clear_particle_node();
+#ifdef SHARED_MEMORY_PARALLELISM
+  rebuild_aosoa();
+#endif
 }
+
+#ifdef SHARED_MEMORY_PARALLELISM
+void System::rebuild_aosoa() {
+#ifdef COLLISION_DETECTION
+  auto const collision_detection_cutoff = collision_detection->cutoff();
+#else
+  auto const collision_detection_cutoff = INACTIVE_CUTOFF;
+#endif
+
+  VerletCriterion<> const verlet_criterion{*this,
+                                           cell_structure->get_verlet_skin(),
+                                           get_interaction_range(),
+                                           coulomb.cutoff(),
+                                           dipoles.cutoff(),
+                                           collision_detection_cutoff};
+
+  update_cabana_state(*cell_structure, verlet_criterion,
+                      get_interaction_range());
+}
+#endif // SHARED_MEMORY_PARALLELISM
 
 void System::on_lees_edwards_change() { lb.on_lees_edwards_change(); }
 
@@ -397,12 +430,8 @@ void System::update_local_geo() {
 double System::maximal_cutoff() const {
   auto max_cut = INACTIVE_CUTOFF;
   max_cut = std::max(max_cut, get_min_global_cut());
-#ifdef ELECTROSTATICS
   max_cut = std::max(max_cut, coulomb.cutoff());
-#endif
-#ifdef DIPOLES
   max_cut = std::max(max_cut, dipoles.cutoff());
-#endif
   if (::communicator.size > 1) {
     // If there is just one node, the bonded cutoff can be omitted
     // because bond partners are always on the local node.
@@ -465,6 +494,9 @@ void System::on_integration_start() {
   }
 
   invalidate_fetch_cache();
+#ifdef SHARED_MEMORY_PARALLELISM
+  cell_structure->clear_local_properties();
+#endif
 
 #ifdef ADDITIONAL_CHECKS
   if (!Utils::Mpi::all_compare(::comm_cart, cell_structure->use_verlet_list)) {
@@ -518,6 +550,22 @@ unsigned System::get_global_ghost_flags() const {
 #endif
 
   return data_parts;
+}
+
+#ifdef NPT
+bool System::System::has_npt_enabled() const {
+  return (propagation->integ_switch == INTEG_METHOD_NPT_ISO_AND) or
+         (propagation->integ_switch == INTEG_METHOD_NPT_ISO_MTK);
+}
+#endif
+
+Utils::Vector3d *System::System::get_npt_virial() const {
+#ifdef NPT
+  if (has_npt_enabled()) {
+    return &npt_inst_pressure->p_vir;
+  }
+#endif
+  return nullptr;
 }
 
 } // namespace System

@@ -135,25 +135,8 @@ void System::System::npt_ensemble_init(bool recalc_forces) {
 }
 
 void System::System::npt_add_virial_contribution(double energy) {
-  if ((propagation->integ_switch == INTEG_METHOD_NPT_ISO_AND) or
-      (propagation->integ_switch == INTEG_METHOD_NPT_ISO_MTK)) {
+  if (has_npt_enabled()) {
     npt_inst_pressure->p_vir[0] += energy;
-  }
-}
-
-void System::System::npt_add_virial_contribution(Utils::Vector3d const &force,
-                                                 Utils::Vector3d const &d) {
-  if ((propagation->integ_switch == INTEG_METHOD_NPT_ISO_AND) or
-      (propagation->integ_switch == INTEG_METHOD_NPT_ISO_MTK)) {
-    npt_inst_pressure->p_vir += hadamard_product(force, d);
-  }
-}
-
-void System::System::npt_add_virial_contribution(
-    Utils::Vector3d const &virial) {
-  if ((propagation->integ_switch == INTEG_METHOD_NPT_ISO_AND) or
-      (propagation->integ_switch == INTEG_METHOD_NPT_ISO_MTK)) {
-    npt_inst_pressure->p_vir += virial;
   }
 }
 #endif // NPT
