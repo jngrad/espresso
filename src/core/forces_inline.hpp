@@ -208,8 +208,8 @@ inline void add_non_bonded_pair_without_p(
  */
 inline void add_non_bonded_pair_force_with_p(
     Particle &p1, Particle &p2, ParticleForce &pf, ParticleForce &p1f_asym,
-    ParticleForce &p2f_asym, Utils::Vector3d const &d,
-    double dist, double dist2, double q1q2, IA_parameters const &ia_params,
+    ParticleForce &p2f_asym, Utils::Vector3d const &d, double dist,
+    double dist2, double q1q2, IA_parameters const &ia_params,
     [[maybe_unused]] bool do_nonbonded_flag,
     Thermostat::Thermostat const &thermostat, BoxGeometry const &box_geo,
     [[maybe_unused]] BondedInteractionsMap const &bonded_ias,
@@ -353,9 +353,9 @@ inline void add_non_bonded_pair_force(
 #endif // not SHARED_MEMORY_PARALLELISM
 
   add_non_bonded_pair_force_with_p(
-      p1, p2, pf, p1f_asym, p2f_asym, d, dist, dist2, q1q2, ia_params, do_nonbonded_flag,
-      thermostat, box_geo, bonded_ias, virial, coulomb_kernel, dipoles_kernel,
-      elc_kernel, coulomb_u_kernel);
+      p1, p2, pf, p1f_asym, p2f_asym, d, dist, dist2, q1q2, ia_params,
+      do_nonbonded_flag, thermostat, box_geo, bonded_ias, virial,
+      coulomb_kernel, dipoles_kernel, elc_kernel, coulomb_u_kernel);
 
   /***********************************************/
   /* add total non-bonded forces to particles    */

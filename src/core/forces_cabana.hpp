@@ -140,9 +140,9 @@ struct ForcesKernel {
     auto constexpr q1q2 = 0.;
 #endif
     add_non_bonded_pair_force_with_p(
-        p1, p2, pf, p1f_asym, p2f_asym, d, dist, dist * dist, q1q2, ia_params, do_nonbonded_flag,
-        thermostat, box_geo, bonded_ias, virial_handle, coulomb_kernel,
-        dipoles_kernel, elc_kernel, coulomb_u_kernel);
+        p1, p2, pf, p1f_asym, p2f_asym, d, dist, dist * dist, q1q2, ia_params,
+        do_nonbonded_flag, thermostat, box_geo, bonded_ias, virial_handle,
+        coulomb_kernel, dipoles_kernel, elc_kernel, coulomb_u_kernel);
 
 #ifdef ELECTROSTATICS
     // real-space electrostatic charge-charge interaction

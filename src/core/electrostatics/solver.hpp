@@ -69,7 +69,8 @@ struct Solver {
   using ShortRangeForceKernel =
       std::function<Utils::Vector3d(double, Utils::Vector3d const &, double)>;
   using ShortRangeForceCorrectionsKernel =
-      std::function<void(Utils::Vector3d const &, Utils::Vector3d const &, ParticleForce &, ParticleForce &, double)>;
+      std::function<void(Utils::Vector3d const &, Utils::Vector3d const &,
+                         ParticleForce &, ParticleForce &, double)>;
   using ShortRangePressureKernel = std::function<Utils::Matrix<double, 3, 3>(
       double, Utils::Vector3d const &, double)>;
   using ShortRangeEnergyKernel =
