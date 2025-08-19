@@ -101,6 +101,8 @@ struct ForcesKernel {
         nonbonded_ias.get_ia_param(aosoa.type(i), aosoa.type(j));
 
     ParticleForce pf{};
+    ParticleForce p1f_asym{};
+    ParticleForce p2f_asym{};
 
 #ifdef NPT
     Utils::Vector3d virial{};
@@ -138,9 +140,9 @@ struct ForcesKernel {
     auto constexpr q1q2 = 0.;
 #endif
     add_non_bonded_pair_force_with_p(
-        p1, p2, pf, d, dist, dist * dist, q1q2, ia_params, do_nonbonded_flag,
-        thermostat, box_geo, bonded_ias, virial_handle, coulomb_kernel,
-        dipoles_kernel, elc_kernel, coulomb_u_kernel);
+        p1, p2, pf, p1f_asym, p2f_asym, d, dist, dist * dist, q1q2, ia_params,
+        do_nonbonded_flag, thermostat, box_geo, bonded_ias, virial_handle,
+        coulomb_kernel, dipoles_kernel, elc_kernel, coulomb_u_kernel);
 
 #ifdef ELECTROSTATICS
     // real-space electrostatic charge-charge interaction
@@ -159,6 +161,12 @@ struct ForcesKernel {
     }
 #endif // DIPOLES
 
+    auto opf = calc_opposing_force(pf, d);
+#ifdef ELECTROSTATICS
+    pf += p1f_asym;
+    opf += p2f_asym;
+#endif // ELECTROSTATICS
+
     local_force(i, thread_id, 0) += pf.f[0];
     local_force(i, thread_id, 1) += pf.f[1];
     local_force(i, thread_id, 2) += pf.f[2];
@@ -168,7 +176,6 @@ struct ForcesKernel {
     local_torque(i, thread_id, 2) += pf.torque[2];
 #endif
 
-    auto const opf = calc_opposing_force(pf, d);
     local_force(j, thread_id, 0) += opf.f[0];
     local_force(j, thread_id, 1) += opf.f[1];
     local_force(j, thread_id, 2) += opf.f[2];

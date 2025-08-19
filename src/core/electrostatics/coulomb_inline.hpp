@@ -77,8 +77,11 @@ struct ShortRangeForceCorrectionsKernel {
   result_type
   operator()(std::shared_ptr<ElectrostaticLayerCorrection> const &ptr) const {
     auto const &actor = *ptr;
-    return kernel_type{[&actor](Particle &p1, Particle &p2, double q1q2) {
-      actor.add_pair_force_corrections(p1, p2, q1q2);
+    return kernel_type{[&actor](Utils::Vector3d const &pos1,
+                                Utils::Vector3d const &pos2,
+                                ParticleForce &p1f_asym,
+                                ParticleForce &p2f_asym, double q1q2) {
+      actor.add_pair_force_corrections(pos1, pos2, p1f_asym, p2f_asym, q1q2);
     }};
   }
 #endif // P3M

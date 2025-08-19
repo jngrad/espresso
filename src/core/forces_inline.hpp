@@ -207,8 +207,9 @@ inline void add_non_bonded_pair_without_p(
  * @brief For interactions which need particle information.
  */
 inline void add_non_bonded_pair_force_with_p(
-    Particle &p1, Particle &p2, ParticleForce &pf, Utils::Vector3d const &d,
-    double dist, double dist2, double q1q2, IA_parameters const &ia_params,
+    Particle &p1, Particle &p2, ParticleForce &pf, ParticleForce &p1f_asym,
+    ParticleForce &p2f_asym, Utils::Vector3d const &d, double dist,
+    double dist2, double q1q2, IA_parameters const &ia_params,
     [[maybe_unused]] bool do_nonbonded_flag,
     Thermostat::Thermostat const &thermostat, BoxGeometry const &box_geo,
     [[maybe_unused]] BondedInteractionsMap const &bonded_ias,
@@ -263,7 +264,7 @@ inline void add_non_bonded_pair_force_with_p(
     }
 #endif // NPT
     if (elc_kernel) {
-      (*elc_kernel)(p1, p2, q1q2);
+      (*elc_kernel)(p1.pos(), p2.pos(), p1f_asym, p2f_asym, q1q2);
     }
   }
 #endif // ELECTROSTATICS
@@ -330,6 +331,8 @@ inline void add_non_bonded_pair_force(
     Coulomb::ShortRangeEnergyKernel::kernel_type const *coulomb_u_kernel) {
 
   ParticleForce pf{};
+  ParticleForce p1f_asym{};
+  ParticleForce p2f_asym{};
 
 #ifdef EXCLUSIONS
   auto const do_nonbonded_flag = do_nonbonded(p1, p2);
@@ -350,17 +353,17 @@ inline void add_non_bonded_pair_force(
 #endif // not SHARED_MEMORY_PARALLELISM
 
   add_non_bonded_pair_force_with_p(
-      p1, p2, pf, d, dist, dist2, q1q2, ia_params, do_nonbonded_flag,
-      thermostat, box_geo, bonded_ias, virial, coulomb_kernel, dipoles_kernel,
-      elc_kernel, coulomb_u_kernel);
+      p1, p2, pf, p1f_asym, p2f_asym, d, dist, dist2, q1q2, ia_params,
+      do_nonbonded_flag, thermostat, box_geo, bonded_ias, virial,
+      coulomb_kernel, dipoles_kernel, elc_kernel, coulomb_u_kernel);
 
   /***********************************************/
   /* add total non-bonded forces to particles    */
   /***********************************************/
 
 #ifndef SHARED_MEMORY_PARALLELISM
-  p1.force_and_torque() += pf;
-  p2.force_and_torque() += calc_opposing_force(pf, d);
+  p1.force_and_torque() += pf + p1f_asym;
+  p2.force_and_torque() += calc_opposing_force(pf, d) + p2f_asym;
 #endif
 }
 

@@ -334,23 +334,23 @@ struct ElectrostaticLayerCorrection
   }
 
   /** @brief Add short-range pair force corrections. */
-  void add_pair_force_corrections(Particle &p1, Particle &p2,
-                                  double q1q2) const {
+  void add_pair_force_corrections(Utils::Vector3d const pos1,
+                                  Utils::Vector3d const pos2,
+                                  ParticleForce &p1f_asym,
+                                  ParticleForce &p2f_asym, double q1q2) const {
     if (elc.dielectric_contrast_on) {
       std::visit(
-          [this, &p1, &p2, q1q2](auto &p3m_ptr) {
-            auto const &pos1 = p1.pos();
-            auto const &pos2 = p2.pos();
+          [this, &pos1, &pos2, &p1f_asym, &p2f_asym, q1q2](auto &p3m_ptr) {
             auto const &p3m = *p3m_ptr;
             elc.dielectric_layers_contribution(
                 *m_box_geo, pos1, pos2, q1q2,
                 [&](double q_eff, Utils::Vector3d const &d) {
-                  p1.force() += p3m.pair_force(q_eff, d, d.norm());
+                  p1f_asym.f += p3m.pair_force(q_eff, d, d.norm());
                 });
             elc.dielectric_layers_contribution(
                 *m_box_geo, pos2, pos1, q1q2,
                 [&](double q_eff, Utils::Vector3d const &d) {
-                  p2.force() += p3m.pair_force(q_eff, d, d.norm());
+                  p2f_asym.f += p3m.pair_force(q_eff, d, d.norm());
                 });
           },
           base_solver);
