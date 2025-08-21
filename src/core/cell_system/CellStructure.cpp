@@ -95,7 +95,7 @@ void CellStructure::set_kokkos_handle(
   m_kokkos_handle = std::move(handle);
 }
 
-static auto estimate_max_counts(int max_prefactor, double pair_cutoff,
+static auto estimate_max_counts(double pair_cutoff,
                                 std::size_t number_of_unique_particles) {
   if (std::isinf(pair_cutoff)) {
     return number_of_unique_particles;
@@ -104,8 +104,7 @@ static auto estimate_max_counts(int max_prefactor, double pair_cutoff,
     pair_cutoff = 0.;
   }
   auto const volume = Utils::int_pow<3>(pair_cutoff);
-  auto max_counts = static_cast<std::size_t>(
-      std::ceil(static_cast<double>(max_prefactor) * volume));
+  auto max_counts = static_cast<std::size_t>(std::ceil(8. * volume));
   std::size_t constexpr threshold_num = 16;
   if (max_counts < threshold_num) {
     max_counts = std::min(threshold_num, number_of_unique_particles);
@@ -133,7 +132,7 @@ void CellStructure::rebuild_local_properties(double const pair_cutoff) {
   m_aosoa = std::make_unique<AoSoA_pack>(*m_particle_storage);
 
   auto const &system = get_system();
-  auto max_counts = estimate_max_counts(m_max_prefactor, pair_cutoff, num_part);
+  auto max_counts = estimate_max_counts(pair_cutoff, num_part);
   // TODO: use other types of Verlet list data structures
   if (system.propagation->integ_switch == INTEG_METHOD_STEEPEST_DESCENT) {
     max_counts = num_part;
