@@ -75,6 +75,7 @@
 #include <tuple>
 #include <variant>
 
+ESPRESSO_ATTR_ALWAYS_INLINE
 inline ParticleForce calc_central_radial_force(IA_parameters const &ia_params,
                                                Utils::Vector3d const &d,
                                                double const dist) {
@@ -170,40 +171,6 @@ inline ParticleForce calc_opposing_force(ParticleForce const &pf,
 }
 
 /**
- * For the interaction which need NO particle information
- */
-inline void add_non_bonded_pair_without_p(
-    ParticleForce &pf, Utils::Vector3d const &d, double dist, double q1q2,
-    IA_parameters const &ia_params, [[maybe_unused]] bool do_nonbonded,
-    Coulomb::ShortRangeForceKernel::kernel_type const *coulomb_kernel) {
-
-  /***********************************************/
-  /* non-bonded pair potentials                  */
-  /***********************************************/
-
-  if (dist < ia_params.max_cut) {
-#ifdef EXCLUSIONS
-    if (do_nonbonded) {
-#endif
-      pf += calc_central_radial_force(ia_params, d, dist);
-#ifdef EXCLUSIONS
-    }
-#endif
-  }
-
-  /***********************************************/
-  /* short-range electrostatics                  */
-  /***********************************************/
-
-#ifdef ELECTROSTATICS
-  // real-space electrostatic charge-charge interaction
-  if (q1q2 != 0. and coulomb_kernel != nullptr) {
-    pf.f += (*coulomb_kernel)(q1q2, d, dist);
-  }
-#endif // ELECTROSTATICS
-}
-
-/**
  * @brief For interactions which need particle information.
  */
 inline void add_non_bonded_pair_force_with_p(
@@ -255,12 +222,10 @@ inline void add_non_bonded_pair_force_with_p(
 #ifdef ELECTROSTATICS
   // real-space electrostatic charge-charge interaction
   if (q1q2 != 0. and coulomb_kernel != nullptr) {
-#if not defined(SHARED_MEMORY_PARALLELISM)
     pf.f += (*coulomb_kernel)(q1q2, d, dist);
-#endif // not SHARED_MEMORY_PARALLELISM
 #ifdef NPT
     if (virial) {
-      (*virial)[0] += (*coulomb_u_kernel)(p1, p2, q1q2, d, dist);
+      (*virial)[0] += (*coulomb_u_kernel)(p1.pos(), p2.pos(), q1q2, d, dist);
     }
 #endif // NPT
     if (elc_kernel) {
@@ -288,7 +253,6 @@ inline void add_non_bonded_pair_force_with_p(
   /***********************************************/
 
 #ifdef DIPOLES
-#if not defined(SHARED_MEMORY_PARALLELISM)
   // real-space magnetic dipole-dipole
   if (dipoles_kernel) {
     auto const d1d2 = p1.dipm() * p2.dipm();
@@ -297,7 +261,6 @@ inline void add_non_bonded_pair_force_with_p(
           (*dipoles_kernel)(d1d2, p1.calc_dip(), p2.calc_dip(), d, dist, dist2);
     }
   }
-#endif // not SHARED_MEMORY_PARALLELISM
 #endif
 }
 
@@ -340,7 +303,6 @@ inline void add_non_bonded_pair_force(
   auto constexpr do_nonbonded_flag = true;
 #endif
 
-#ifndef SHARED_MEMORY_PARALLELISM
   if (dist < ia_params.max_cut) {
 #ifdef EXCLUSIONS
     if (do_nonbonded_flag) {
@@ -350,7 +312,6 @@ inline void add_non_bonded_pair_force(
     }
 #endif
   }
-#endif // not SHARED_MEMORY_PARALLELISM
 
   add_non_bonded_pair_force_with_p(
       p1, p2, pf, p1f_asym, p2f_asym, d, dist, dist2, q1q2, ia_params,
@@ -361,10 +322,8 @@ inline void add_non_bonded_pair_force(
   /* add total non-bonded forces to particles    */
   /***********************************************/
 
-#ifndef SHARED_MEMORY_PARALLELISM
   p1.force_and_torque() += pf + p1f_asym;
   p2.force_and_torque() += calc_opposing_force(pf, d) + p2f_asym;
-#endif
 }
 
 /** Compute the bonded interaction force between particle pairs.

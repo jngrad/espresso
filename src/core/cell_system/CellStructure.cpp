@@ -117,20 +117,6 @@ void CellStructure::rebuild_local_properties(double const pair_cutoff) {
   using execution_space = Kokkos::DefaultExecutionSpace;
   auto const num_threads = execution_space().concurrency();
   auto const num_part = get_unique_particles().size();
-  m_local_force =
-      std::make_unique<ForceType>("local_force", num_part, num_threads);
-#ifdef ROTATION
-  m_local_torque =
-      std::make_unique<ForceType>("local_torque", num_part, num_threads);
-#endif
-#ifdef NPT
-  m_local_virial = std::make_unique<VirialType>("local_virial", num_threads);
-#endif
-  m_particle_storage = std::make_unique<AoSoAType>("particles", num_part);
-  m_particle_storage->resize(num_part);
-  // particle properties are defined in aosoa_pack.hpp
-  m_aosoa = std::make_unique<AoSoA_pack>(*m_particle_storage);
-
   auto const &system = get_system();
   auto max_counts = estimate_max_counts(pair_cutoff, num_part);
   // TODO: use other types of Verlet list data structures
@@ -142,7 +128,32 @@ void CellStructure::rebuild_local_properties(double const pair_cutoff) {
     max_counts = num_part * 2ul;
   }
 #endif
-  m_verlet_list_cabana = std::make_unique<ListType>(0ul, num_part, max_counts);
+  if (m_local_force !=
+      nullptr) { // variables for local properties are reallocated.
+    Kokkos::realloc(get_local_force(), num_part, num_threads);
+#ifdef ROTATION
+    Kokkos::realloc(get_local_torque(), num_part, num_threads);
+#endif
+    m_particle_storage->resize(num_part);
+    m_verlet_list_cabana->reallocData(num_part, max_counts);
+  } else { // variables for local properties are generated.
+    m_local_force =
+        std::make_unique<ForceType>("local_force", num_part, num_threads);
+#ifdef ROTATION
+    m_local_torque =
+        std::make_unique<ForceType>("local_torque", num_part, num_threads);
+#endif
+    m_particle_storage = std::make_unique<AoSoAType>("particles", num_part);
+    m_particle_storage->resize(num_part);
+
+    m_verlet_list_cabana =
+        std::make_unique<ListType>(0ul, num_part, max_counts);
+  }
+#ifdef NPT
+  m_local_virial = std::make_unique<VirialType>("local_virial", num_threads);
+#endif
+  // particle properties are defined in aosoa_pack.hpp
+  m_aosoa = std::make_unique<AoSoA_pack>(*m_particle_storage);
 }
 
 void CellStructure::reset_local_force() {

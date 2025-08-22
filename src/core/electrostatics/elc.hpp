@@ -306,14 +306,13 @@ struct ElectrostaticLayerCorrection
 #endif // SHARED_MEMORY_PARALLELISM
 
   /** @brief Calculate short-range pair energy correction. */
-  double pair_energy_correction(Particle const &p1, Particle const &p2,
+  double pair_energy_correction(Utils::Vector3d const &pos1,
+                                Utils::Vector3d const &pos2,
                                 double q1q2) const {
     double energy = 0.;
     if (elc.dielectric_contrast_on) {
       energy = std::visit(
-          [this, &p1, &p2, q1q2](auto &p3m_ptr) {
-            auto const &pos1 = p1.pos();
-            auto const &pos2 = p2.pos();
+          [this, &pos1, &pos2, q1q2](auto &p3m_ptr) {
             auto const &p3m = *p3m_ptr;
             auto energy = 0.;
             elc.dielectric_layers_contribution(
@@ -334,8 +333,8 @@ struct ElectrostaticLayerCorrection
   }
 
   /** @brief Add short-range pair force corrections. */
-  void add_pair_force_corrections(Utils::Vector3d const pos1,
-                                  Utils::Vector3d const pos2,
+  void add_pair_force_corrections(Utils::Vector3d const &pos1,
+                                  Utils::Vector3d const &pos2,
                                   ParticleForce &p1f_asym,
                                   ParticleForce &p2f_asym, double q1q2) const {
     if (elc.dielectric_contrast_on) {
