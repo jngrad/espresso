@@ -887,6 +887,8 @@ class ParticleSlice(ScriptInterfaceHelper):
     _so_checkpointable = False
     _so_creation_policy = "GLOBAL"
     _particle_cache_size = 10000  # size of the particle cache for slices
+    _particle_attributes_trivially_serializable = {
+        x for x in particle_attributes if x not in vars(ParticleHandle)}
 
     def __iter__(self):
         return self._id_gen()
@@ -1334,13 +1336,23 @@ class ParticleList(ScriptInterfaceHelper):
 
 
 def set_slice_one_for_all(p_slice, attribute, value):
+    is_trivially_serializable = attribute in ParticleSlice._particle_attributes_trivially_serializable
     for p_id in p_slice.id_selection:
-        setattr(p_slice._get_particle(p_id), attribute, value)
+        p = p_slice._get_particle(p_id)
+        if is_trivially_serializable:
+            p.set_parameter(attribute, value)
+        else:
+            setattr(p, attribute, value)
 
 
 def set_slice_one_for_each(p_slice, attribute, values):
+    is_trivially_serializable = attribute in ParticleSlice._particle_attributes_trivially_serializable
     for p_id, value in zip(p_slice.id_selection, values):
-        setattr(p_slice._get_particle(p_id), attribute, value)
+        p = p_slice._get_particle(p_id)
+        if is_trivially_serializable:
+            p.set_parameter(attribute, value)
+        else:
+            setattr(p, attribute, value)
 
 
 def _add_particle_slice_properties():
@@ -1441,6 +1453,7 @@ def _add_particle_slice_properties():
 
         # get first slice member to determine its type
         p_id = particle_slice.id_selection[0]
+        is_trivially_serializable = attribute in ParticleSlice._particle_attributes_trivially_serializable
         target = getattr(particle_slice._get_particle(p_id), attribute)
         if isinstance(target, array_locked):  # vectorial quantity
             target_type = target.dtype
@@ -1453,10 +1466,11 @@ def _add_particle_slice_properties():
                 values.append(getattr(part, attribute))
         else:
             values = np.empty((N,) + np.shape(target), dtype=target_type)
-            i = 0
-            for part in particle_slice._id_gen():
-                values[i] = getattr(part, attribute)
-                i += 1
+            for i, part in enumerate(particle_slice._id_gen()):
+                if is_trivially_serializable:
+                    values[i] = part.get_parameter(attribute)
+                else:
+                    values[i] = getattr(part, attribute)
 
         return values
 
