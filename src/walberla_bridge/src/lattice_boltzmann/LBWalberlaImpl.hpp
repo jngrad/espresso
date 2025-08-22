@@ -1727,6 +1727,14 @@ public:
     return out;
   }
 
+  // Global boundary force
+  [[nodiscard]] Utils::Vector3d get_boundary_force() const override {
+    Vector3<FloatType> force(FloatType{0});
+    for (auto &block : *get_lattice().get_blocks()) {
+      force += m_boundary->get_force(&block);
+    }
+    return to_vector3d(force);
+  }
   // Global pressure tensor
   [[nodiscard]] Utils::VectorXd<9> get_pressure_tensor() const override {
     Matrix3<FloatType> tensor(FloatType{0});

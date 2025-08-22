@@ -297,7 +297,7 @@ def generate_packinfo_kernels(ctx, data_type, fields):
 def generate_boundary_kernels(ctx, method, data_type):
     precision_prefix = pystencils_espresso.precision_prefix[ctx.double_accuracy]
     ubb_dynamic = lbmpy.boundaries.UBB(
-        lambda *args: None, dim=3, data_type=data_type)
+        lambda *args: None, dim=3, data_type=data_type, calculate_force_on_boundary=True)
     ubb_data_handler = lbmpy_espresso.BounceBackSlipVelocityUBB(
         method.stencil, ubb_dynamic)
 

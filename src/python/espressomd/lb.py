@@ -100,6 +100,10 @@ class HydrodynamicInteraction(ScriptInterfaceHelper):
             raise ValueError(f"Slip velocity exceeds Mach {mach_number:.2f}")
 
     @property
+    def boundary_force(self):
+        return self.call_method("get_boundary_force")
+
+    @property
     def pressure_tensor(self):
         tensor = self.call_method("get_pressure_tensor")
         return utils.array_locked(tensor)

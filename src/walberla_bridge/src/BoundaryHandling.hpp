@@ -231,6 +231,10 @@ public:
   }
 #endif
 
+  Vector3<FloatType> get_force(IBlock *block) const {
+    return m_boundary->getForce(block);
+  }
+
 private:
   std::shared_ptr<StructuredBlockForest> m_blocks;
   BlockDataID m_flag_field_id;

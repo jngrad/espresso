@@ -17,9 +17,9 @@
 //! \\author pystencils
 //======================================================================================================================
 
-// kernel generated with pystencils v1.3.7, lbmpy v1.3.7+4.gc7d65a7, sympy
-// v1.12.1, lbmpy_walberla/pystencils_walberla from waLBerla commit
-// 0aab9c0af2335b1f6fec75deae06e514ccb233ab
+// kernel generated with pystencils v1.3.7+13.gdfd203a, lbmpy
+// v1.3.7+4.gc7d65a7.dirty, sympy v1.10, lbmpy_walberla/pystencils_walberla from
+// waLBerla commit c69cb11d6a95d32b2280544d3d9abde1fe5fdbb5
 
 #pragma once
 #include "core/DataTypes.h"
@@ -89,6 +89,49 @@ public:
     std::vector<CpuIndexVector> cpuVectors_{NUM_TYPES};
   };
 
+  struct ForceStruct {
+    double F_0;
+    double F_1;
+    double F_2;
+    ForceStruct()
+        : F_0(double_c(0.0)), F_1(double_c(0.0)), F_2(double_c(0.0)) {}
+    bool operator==(const ForceStruct &o) const {
+      return floatIsEqual(F_0, o.F_0) && floatIsEqual(F_1, o.F_1) &&
+             floatIsEqual(F_2, o.F_2);
+    }
+  };
+
+  class ForceVector {
+  public:
+    ForceVector() = default;
+    bool operator==(ForceVector const &other) const {
+      return other.cpuVector_ == cpuVector_;
+    }
+
+    std::vector<ForceStruct> &forceVector() { return cpuVector_; }
+    ForceStruct *pointerCpu() { return cpuVector_.data(); }
+    bool empty() { return cpuVector_.empty(); }
+
+    Vector3<double> getForce() {
+      syncCPU();
+      Vector3<double> result(double_c(0.0));
+      for (std::vector<ForceStruct>::iterator it = cpuVector_.begin();
+           it != cpuVector_.end(); ++it) {
+        result[0] += it->F_0;
+        result[1] += it->F_1;
+        result[2] += it->F_2;
+      }
+      return result;
+    }
+
+    void syncGPU() {}
+
+    void syncCPU() {}
+
+  private:
+    std::vector<ForceStruct> cpuVector_;
+  };
+
   DynamicUBBDoublePrecision(
       const shared_ptr<StructuredBlockForest> &blocks, BlockDataID pdfsID_,
       std::function<Vector3<float64>(
@@ -101,6 +144,11 @@ public:
     };
     indexVectorID = blocks->addStructuredBlockData<IndexVectors>(
         createIdxVector, "IndexField_DynamicUBBDoublePrecision");
+    auto createForceVector = [](IBlock *const, StructuredBlockStorage *const) {
+      return new ForceVector();
+    };
+    forceVectorID = blocks->addStructuredBlockData<ForceVector>(
+        createForceVector, "forceVector_DynamicUBBDoublePrecision");
   }
 
   void run(IBlock *block);
@@ -111,11 +159,11 @@ public:
 
   void outer(IBlock *block);
 
-  Vector3<double> getForce(IBlock * /*block*/) {
-
-    WALBERLA_ABORT(
-        "Boundary condition was not generated including force calculation.")
-    return Vector3<double>(double_c(0.0));
+  Vector3<double> getForce(IBlock *block) {
+    auto *forceVector = block->getData<ForceVector>(forceVectorID);
+    if (forceVector->empty())
+      return Vector3<double>(double_c(0.0));
+    return forceVector->getForce();
   }
 
   std::function<void(IBlock *)> getSweep() {
@@ -147,6 +195,7 @@ public:
     auto &indexVectorAll = indexVectors->indexVector(IndexVectors::ALL);
     auto &indexVectorInner = indexVectors->indexVector(IndexVectors::INNER);
     auto &indexVectorOuter = indexVectors->indexVector(IndexVectors::OUTER);
+    auto *forceVector = block->getData<ForceVector>(forceVectorID);
 
     auto *flagField = block->getData<FlagField_T>(flagFieldID);
 
@@ -564,13 +613,15 @@ public:
     }
 
     indexVectors->syncGPU();
+    forceVector->forceVector().resize(indexVectorAll.size());
+    forceVector->syncGPU();
   }
 
 private:
   void run_impl(IBlock *block, IndexVectors::Type type);
 
   BlockDataID indexVectorID;
-
+  BlockDataID forceVectorID;
   std::function<Vector3<float64>(
       const Cell &, const shared_ptr<StructuredBlockForest> &, IBlock &)>
       elementInitialiser;
