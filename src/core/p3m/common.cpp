@@ -63,9 +63,9 @@ void P3MLocalMesh::calc_local_ca_mesh(P3MParameters const &params,
 
   /* correct roundoff errors at boundary */
   for (i = 0; i < 3; i++) {
-    if (inner_ur_grid_pos[i] - in_ur[i] < ROUND_ERROR_PREC)
+    if (inner_ur_grid_pos[i] - in_ur[i] < round_error_prec)
       in_ur[i]--;
-    if (inner_ld_grid_pos[i] - in_ld[i] + 1. < ROUND_ERROR_PREC)
+    if (inner_ld_grid_pos[i] - in_ld[i] + 1. < round_error_prec)
       in_ld[i]--;
   }
   /* inner grid dimensions */

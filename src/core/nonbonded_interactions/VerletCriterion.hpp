@@ -50,8 +50,8 @@ template <typename CutoffGetter = GetNonbondedCutoff> class VerletCriterion {
   const double m_eff_dipolar_cut2 = 0.;
   const double m_collision_cut2 = 0.;
   double eff_cutoff_sqr(double x) const {
-    if (x == INACTIVE_CUTOFF)
-      return INACTIVE_CUTOFF;
+    if (x == inactive_cutoff)
+      return inactive_cutoff;
     return Utils::sqr(x + m_skin);
   }
   CutoffGetter get_nonbonded_cutoff;
@@ -93,7 +93,7 @@ public:
 
     // Within short-range distance (including dpd and the like)
     auto const ia_cut = get_nonbonded_cutoff(p1.type(), p2.type());
-    return (ia_cut != INACTIVE_CUTOFF) &&
+    return (ia_cut != inactive_cutoff) &&
            (dist2 <= Utils::sqr(ia_cut + m_skin));
   }
 };

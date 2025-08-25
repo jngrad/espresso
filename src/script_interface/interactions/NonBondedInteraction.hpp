@@ -75,7 +75,7 @@ protected:
   /** @brief Which parameter indicates whether the potential is inactive. */
   virtual std::string inactive_parameter() const { return "cutoff"; }
   /** @brief Which magic value indicates the potential is inactive. */
-  virtual double inactive_cutoff() const { return INACTIVE_CUTOFF; }
+  virtual double get_inactive_cutoff() const { return inactive_cutoff; }
 
   template <typename T>
   auto make_autoparameter(T CoreInteraction::*ptr, char const *name) {
@@ -129,7 +129,7 @@ public:
       m_handle = std::make_shared<CoreInteraction>();
     } else {
       if (std::abs(get_value<double>(params, inactive_parameter()) -
-                   inactive_cutoff()) < 1e-9) {
+                   get_inactive_cutoff()) < 1e-9) {
         m_handle = std::make_shared<CoreInteraction>();
       } else {
         context()->parallel_try_catch([this, &params]() {
@@ -166,7 +166,7 @@ public:
 
 private:
   std::string inactive_parameter() const override { return "sigma"; }
-  double inactive_cutoff() const override { return 0.; }
+  double get_inactive_cutoff() const override { return 0.; }
 
   void make_new_instance(VariantMap const &params) override {
     m_handle = make_shared_from_args<CoreInteraction, double, double>(
@@ -328,7 +328,7 @@ public:
 
 private:
   std::string inactive_parameter() const override { return "sigma"; }
-  double inactive_cutoff() const override { return 0.; }
+  double get_inactive_cutoff() const override { return 0.; }
 
   void make_new_instance(VariantMap const &params) override {
     m_handle =
@@ -672,7 +672,7 @@ public:
 
 private:
   std::string inactive_parameter() const override { return "scaling_coeff"; }
-  double inactive_cutoff() const override { return 0.; }
+  double get_inactive_cutoff() const override { return 0.; }
 
   void make_new_instance(VariantMap const &params) override {
     m_handle = make_shared_from_args<CoreInteraction, double, double>(

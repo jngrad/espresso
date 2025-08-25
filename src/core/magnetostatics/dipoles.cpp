@@ -95,7 +95,7 @@ double Solver::cutoff() const {
     }
   }
 #endif
-  return INACTIVE_CUTOFF;
+  return inactive_cutoff;
 }
 
 void Solver::on_observable_calc() {

@@ -96,7 +96,7 @@ System::System(Private) {
   time_step = -1.;
   sim_time = 0.;
   force_cap = 0.;
-  min_global_cut = INACTIVE_CUTOFF;
+  min_global_cut = inactive_cutoff;
 }
 
 void System::initialize() {
@@ -404,7 +404,7 @@ void System::rebuild_aosoa() {
 #ifdef COLLISION_DETECTION
   auto const collision_detection_cutoff = collision_detection->cutoff();
 #else
-  auto const collision_detection_cutoff = INACTIVE_CUTOFF;
+  auto const collision_detection_cutoff = inactive_cutoff;
 #endif
 
   VerletCriterion<> const verlet_criterion{*this,
@@ -428,7 +428,7 @@ void System::update_local_geo() {
 }
 
 double System::maximal_cutoff() const {
-  auto max_cut = INACTIVE_CUTOFF;
+  auto max_cut = inactive_cutoff;
   max_cut = std::max(max_cut, get_min_global_cut());
   max_cut = std::max(max_cut, coulomb.cutoff());
   max_cut = std::max(max_cut, dipoles.cutoff());
@@ -464,7 +464,7 @@ double System::get_interaction_range() const {
   auto const max_cut = maximal_cutoff();
   auto const verlet_skin = cell_structure->get_verlet_skin();
   /* Consider skin only if there are actually interactions */
-  return (max_cut > 0.) ? max_cut + verlet_skin : INACTIVE_CUTOFF;
+  return (max_cut > 0.) ? max_cut + verlet_skin : inactive_cutoff;
 }
 
 void System::set_box_l(Utils::Vector3d const &box_l) {

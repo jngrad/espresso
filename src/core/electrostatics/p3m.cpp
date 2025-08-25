@@ -282,7 +282,7 @@ static double p3m_k_space_error(double pref, Utils::Vector3i const &mesh,
           auto const d = alias1 - Utils::sqr(alias2 / cs) / n2;
           /* at high precision, d can become negative due to extinction;
              also, don't take values that have no significant digits left*/
-          if (d > 0. and std::fabs(d / alias1) > ROUND_ERROR_PREC) {
+          if (d > 0. and std::fabs(d / alias1) > round_error_prec) {
             he_q += d;
           }
         }
@@ -298,7 +298,7 @@ static double p3m_k_space_error(double pref, Utils::Vector3i const &mesh,
 template <typename FloatType, Arch Architecture>
 void CoulombP3MImpl<FloatType, Architecture>::init_cpu_kernels() {
   assert(p3m.params.mesh >= Utils::Vector3i::broadcast(1));
-  assert(p3m.params.cao >= 1 and p3m.params.cao <= 7);
+  assert(p3m.params.cao >= p3m_min_cao and p3m.params.cao <= p3m_max_cao);
   assert(p3m.params.alpha > 0.);
 
   auto const &system = get_system();
@@ -413,13 +413,13 @@ void CoulombP3MImpl<FloatType, Architecture>::charge_assign(
   prepare_fft_mesh(true);
 
 #ifdef SHARED_MEMORY_PARALLELISM
-  Utils::integral_parameter<int, AssignCharge, 1, 7>(
+  Utils::integral_parameter<int, AssignCharge, p3m_min_cao, p3m_max_cao>(
       p3m.params.cao, p3m, *get_system().cell_structure);
 #else  // SHARED_MEMORY_PARALLELISM
   auto p_q_range = ParticlePropertyRange::charge_range(particles);
   auto p_pos_range = ParticlePropertyRange::pos_range(particles);
 
-  Utils::integral_parameter<int, AssignCharge, 1, 7>(
+  Utils::integral_parameter<int, AssignCharge, p3m_min_cao, p3m_max_cao>(
       p3m.params.cao, p3m, boost::combine(p_q_range, p_pos_range));
 #endif // SHARED_MEMORY_PARALLELISM
 }
@@ -428,10 +428,10 @@ template <typename FloatType, Arch Architecture>
 void CoulombP3MImpl<FloatType, Architecture>::assign_charge(
     double q, Utils::Vector3d const &real_pos, bool skip_cache) {
   if (skip_cache) {
-    Utils::integral_parameter<int, AssignCharge, 1, 7>(p3m.params.cao, p3m, q,
-                                                       real_pos);
+    Utils::integral_parameter<int, AssignCharge, p3m_min_cao, p3m_max_cao>(
+        p3m.params.cao, p3m, q, real_pos);
   } else {
-    Utils::integral_parameter<int, AssignCharge, 1, 7>(
+    Utils::integral_parameter<int, AssignCharge, p3m_min_cao, p3m_max_cao>(
         p3m.params.cao, p3m, q, real_pos, p3m.inter_weights);
   }
 }
@@ -726,7 +726,7 @@ double CoulombP3MImpl<FloatType, Architecture>::long_range_kernel(
 #else
     auto const particle_data = boost::combine(p_q_range, p_force_range);
 #endif
-    Utils::integral_parameter<int, AssignForces, 1, 7>(
+    Utils::integral_parameter<int, AssignForces, p3m_min_cao, p3m_max_cao>(
         p3m.params.cao, p3m, force_prefac, particle_data);
 
     // add dipole forces

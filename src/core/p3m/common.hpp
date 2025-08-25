@@ -136,7 +136,7 @@ struct P3MParameters {
     if (not(mesh_off >= Utils::Vector3d::broadcast(0.) and
             mesh_off <= Utils::Vector3d::broadcast(1.))) {
       if (mesh_off == Utils::Vector3d::broadcast(-1.)) {
-        this->mesh_off = Utils::Vector3d::broadcast(P3M_MESHOFF);
+        this->mesh_off = Utils::Vector3d::broadcast(0.5);
       } else {
         throw std::domain_error("Parameter 'mesh_off' must be >= 0 and <= 1");
       }

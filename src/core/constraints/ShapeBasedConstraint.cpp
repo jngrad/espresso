@@ -44,7 +44,7 @@
 namespace Constraints {
 /** Check if a non-bonded interaction is defined */
 static bool is_active(IA_parameters const &data) {
-  return data.max_cut != INACTIVE_CUTOFF;
+  return data.max_cut != inactive_cutoff;
 }
 
 void ShapeBasedConstraint::set_type(int type) {

@@ -189,7 +189,7 @@ System::System() : m_instance{}, m_leaves{std::make_unique<Leaves>()} {
        [this](Variant const &v) {
          context()->parallel_try_catch([&]() {
            auto const new_value = get_value<double>(v);
-           if (new_value < 0. and new_value != INACTIVE_CUTOFF) {
+           if (new_value < 0. and new_value != inactive_cutoff) {
              throw std::domain_error("Attribute 'min_global_cut' must be >= 0");
            }
            m_instance->set_min_global_cut(new_value);

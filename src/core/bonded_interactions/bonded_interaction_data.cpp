@@ -34,7 +34,7 @@
 
 double BondedInteractionsMap::maximal_cutoff() const {
   auto const max_cut_bonded = std::accumulate(
-      begin(), end(), BONDED_INACTIVE_CUTOFF, [](auto max_cut, auto const &kv) {
+      begin(), end(), bonded_inactive_cutoff, [](auto max_cut, auto const &kv) {
         auto constexpr visitor = [](auto const &bond) { return bond.cutoff(); };
         return std::max(max_cut, std::visit(visitor, *kv.second));
       });

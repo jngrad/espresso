@@ -64,7 +64,7 @@ struct Solver {
   Solver();
 #else  // DIPOLES
   Solver() = default;
-  constexpr double cutoff() const { return INACTIVE_CUTOFF; }
+  constexpr double cutoff() const { return inactive_cutoff; }
 #endif // DIPOLES
 
   using ShortRangeForceKernel = std::function<ParticleForce(

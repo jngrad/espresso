@@ -25,6 +25,7 @@
 
 #include "p3m/TuningAlgorithm.hpp"
 #include "p3m/common.hpp"
+#include "p3m/math.hpp"
 
 #include "tuning.hpp"
 
@@ -75,11 +76,11 @@ void TuningAlgorithm::determine_r_cut_limits() {
 }
 
 void TuningAlgorithm::determine_cao_limits(int initial_cao) {
-  assert(initial_cao >= 1 and initial_cao <= 7);
+  assert(initial_cao >= p3m_min_cao and initial_cao <= p3m_max_cao);
   auto const cao = get_params().cao;
   if (cao == -1) {
-    cao_min = 1;
-    cao_max = 7;
+    cao_min = p3m_min_cao;
+    cao_max = p3m_max_cao;
     cao_best = initial_cao;
   } else {
     cao_min = cao_max = cao_best = cao;

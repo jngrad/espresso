@@ -25,9 +25,9 @@
  * The corresponding header file is @ref p3m_gpu_cuda.cuh.
  */
 
-#include "config/config.hpp"
+#include <config/config.hpp>
 
-#ifdef ELECTROSTATICS
+#ifdef P3M
 
 #define P3M_GPU_FLOAT
 // #define P3M_GPU_REAL_DOUBLE
@@ -721,4 +721,4 @@ void p3m_gpu_add_farfield_force(P3MGpuParams &data, GpuParticleData &gpu,
                 pref);
 }
 
-#endif // ELECTROSTATICS
+#endif // P3M

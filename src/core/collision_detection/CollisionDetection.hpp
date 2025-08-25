@@ -56,7 +56,7 @@ public:
 
   auto cutoff() const {
     if (m_protocol == nullptr) {
-      return INACTIVE_CUTOFF;
+      return inactive_cutoff;
     }
     return std::visit([](auto const &protocol) { return protocol.cutoff(); },
                       *m_protocol);

@@ -37,7 +37,7 @@ class Off {
 public:
   Off() = default;
 
-  auto cutoff() const { return INACTIVE_CUTOFF; }
+  auto cutoff() const { return inactive_cutoff; }
 
   void initialize(System::System &) {}
 

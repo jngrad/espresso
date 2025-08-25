@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(VerletCriterion_test) {
   auto const &system = System::get_system();
   VerletCriterion<GetMaxCutoff> criterion(system, skin, max_cut);
   VerletCriterion<GetMaxCutoff> criterion_inactive(system, skin,
-                                                   INACTIVE_CUTOFF);
+                                                   inactive_cutoff);
   VerletCriterion<GetZeroCutoff> criterion_long_range(
       system, skin, max_cut, coulomb_cut, dipolar_cut, collision_cut);
 

@@ -34,7 +34,7 @@
 #include <vector>
 
 static double recalc_maximal_cutoff(IA_parameters const &data) {
-  auto max_cut_current = INACTIVE_CUTOFF;
+  auto max_cut_current = inactive_cutoff;
 
 #ifdef LENNARD_JONES
   max_cut_current = std::max(max_cut_current, data.lj.max_cutoff());
@@ -117,7 +117,7 @@ void InteractionsNonBonded::recalc_maximal_cutoffs() {
 }
 
 double InteractionsNonBonded::maximal_cutoff() const {
-  auto max_cut_nonbonded = INACTIVE_CUTOFF;
+  auto max_cut_nonbonded = inactive_cutoff;
   for (auto &data : m_nonbonded_ia_params) {
     max_cut_nonbonded = std::max(max_cut_nonbonded, data->max_cut);
   }

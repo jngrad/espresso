@@ -172,7 +172,7 @@ void System::System::calculate_forces() {
   collision_detection->clear_queue();
   auto const collision_detection_cutoff = collision_detection->cutoff();
 #else
-  auto const collision_detection_cutoff = INACTIVE_CUTOFF;
+  auto const collision_detection_cutoff = inactive_cutoff;
 #endif
   bond_breakage->clear_queue();
   auto particles = cell_structure->local_particles();

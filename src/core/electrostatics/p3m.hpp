@@ -42,6 +42,7 @@
 
 #include "p3m/common.hpp"
 #include "p3m/data_struct.hpp"
+#include "p3m/math.hpp"
 
 #include "ParticleRange.hpp"
 
