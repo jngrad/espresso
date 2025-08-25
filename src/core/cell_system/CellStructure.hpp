@@ -56,12 +56,12 @@
 #include <utility>
 #include <vector>
 
-#ifdef CALIPER
+#ifdef ESPRESSO_CALIPER
 #include <caliper/cali.h>
 #endif
 
 // forward declarations
-#ifdef SHARED_MEMORY_PARALLELISM
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
 namespace Kokkos {
 template <class DataType, class... Properties> class View;
 class HostSpace;
@@ -81,7 +81,7 @@ struct KokkosHandle;
 } // namespace Communication
 template <class MemorySpace, class ListAlgorithm, class Layout, class BuildTag>
 class CustomVerletList;
-#endif // SHARED_MEMORY_PARALLELISM
+#endif // ESPRESSO_SHARED_MEMORY_PARALLELISM
 
 template <typename Callable>
 concept ParticleCallback = requires(Callable c, Particle &p) {
@@ -106,7 +106,7 @@ enum DataPart : unsigned {
   DATA_PART_POSITION = 2u,   /**< Particle::r */
   DATA_PART_MOMENTUM = 8u,   /**< Particle::m */
   DATA_PART_FORCE = 16u,     /**< Particle::f */
-#ifdef BOND_CONSTRAINT
+#ifdef ESPRESSO_BOND_CONSTRAINT
   DATA_PART_RATTLE = 32u, /**< Particle::rattle */
 #endif
   DATA_PART_BONDS = 64u /**< Particle::bonds */
@@ -169,7 +169,7 @@ struct EuclidianDistance {
  *  be stored in separate structures.
  */
 class CellStructure : public System::Leaf<CellStructure> {
-#ifdef SHARED_MEMORY_PARALLELISM
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
 public:
   static constexpr auto vector_length = 1;
   struct AoSoA_pack;
@@ -183,7 +183,7 @@ public:
   using ListType =
       CustomVerletList<Kokkos::HostSpace, ListAlgorithm, Cabana::VerletLayout2D,
                        Cabana::TeamVectorOpTag>;
-#endif // SHARED_MEMORY_PARALLELISM
+#endif // ESPRESSO_SHARED_MEMORY_PARALLELISM
 
 private:
   /** The local id-to-particle index */
@@ -203,14 +203,14 @@ private:
   /** @brief Verlet list skin. */
   double m_verlet_skin = 0.;
   double m_verlet_reuse = 0.;
-#ifdef SHARED_MEMORY_PARALLELISM
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
   int m_cached_max_local_particle_id = 0;
   int m_max_id = 0;
   std::unique_ptr<ForceType> m_local_force;
-#ifdef ROTATION
+#ifdef ESPRESSO_ROTATION
   std::unique_ptr<ForceType> m_local_torque;
 #endif
-#ifdef NPT
+#ifdef ESPRESSO_NPT
   std::unique_ptr<VirialType> m_local_virial;
 #endif
   std::unique_ptr<ListType> m_verlet_list_cabana;
@@ -220,7 +220,7 @@ private:
   /** The local id-to-index for aosoa data */
   std::vector<Particle *> m_unique_particles;
   std::shared_ptr<Communication::KokkosHandle> m_kokkos_handle;
-#endif // SHARED_MEMORY_PARALLELISM
+#endif // ESPRESSO_SHARED_MEMORY_PARALLELISM
 
 public:
   CellStructure(BoxGeometry const &box);
@@ -358,7 +358,7 @@ public:
 
   /** @brief whether to use parallel version of @ref for_each_local_particle */
   bool use_parallel_for_each_local_particle() const {
-#ifdef SHARED_MEMORY_PARALLELISM
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
     return true;
 #else
     return false;
@@ -370,7 +370,7 @@ public:
    * The kernel is assumed to be thread-safe.
    */
   void for_each_local_particle(ParticleUnaryOp &&f) const {
-#ifdef SHARED_MEMORY_PARALLELISM
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
     if (use_parallel_for_each_local_particle()) {
       parallel_for_each_particle_impl(decomposition().local_cells(), f);
       return;
@@ -405,7 +405,7 @@ private:
     return decomposition().particle_to_cell(p);
   }
 
-#ifdef SHARED_MEMORY_PARALLELISM
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
   void parallel_for_each_particle_impl(std::span<Cell *const> cells,
                                        ParticleUnaryOp &f) const;
 #endif
@@ -458,7 +458,7 @@ public:
    * this node, or -1 if there are no particles on this node.
    */
   int get_max_local_particle_id() const;
-#ifdef SHARED_MEMORY_PARALLELISM
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
   int get_cached_max_local_particle_id() const {
     return m_cached_max_local_particle_id;
   }
@@ -554,7 +554,7 @@ public:
    */
   void ghosts_reduce_forces();
 
-#ifdef BOND_CONSTRAINT
+#ifdef ESPRESSO_BOND_CONSTRAINT
   /**
    * @brief Add rattle corrections from ghost particles to real particles.
    */
@@ -722,7 +722,7 @@ private:
     }
   }
 
-#ifdef SHARED_MEMORY_PARALLELISM
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
 public:
   auto get_max_id() const { return m_max_id; }
 
@@ -732,10 +732,10 @@ public:
   void reset_local_force();
 
   auto &get_local_force() { return *m_local_force; }
-#ifdef ROTATION
+#ifdef ESPRESSO_ROTATION
   auto &get_local_torque() { return *m_local_torque; }
 #endif
-#ifdef NPT
+#ifdef ESPRESSO_NPT
   auto &get_local_virial() { return *m_local_virial; }
 #endif
   auto &get_aosoa() { return *m_aosoa; }

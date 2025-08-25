@@ -21,7 +21,7 @@
 
 #include <config/config.hpp>
 
-#ifdef SHARED_MEMORY_PARALLELISM
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
 
 #include "cell_system/CellStructure.hpp"
 
@@ -54,7 +54,7 @@ ESPRESSO_ATTR_ALWAYS_INLINE inline void
 commit_particle(Particle const &p, auto const index,
                 CellStructure::AoSoA_pack &aosoa) {
   aosoa.id(index) = p.id();
-#ifdef ELECTROSTATICS
+#ifdef ESPRESSO_ELECTROSTATICS
   aosoa.charge(index) = p.q();
 #endif
   aosoa.type(index) = p.type();
@@ -172,7 +172,7 @@ update_cabana_state(CellStructure &cell_structure, auto const &verlet_criterion,
   }
 }
 
-#ifdef ELECTROSTATICS
+#ifdef ESPRESSO_ELECTROSTATICS
 ESPRESSO_ATTR_ALWAYS_INLINE inline void
 update_aosoa_charges(CellStructure &cell_structure) {
   using execution_space = Kokkos::DefaultExecutionSpace;
@@ -211,4 +211,4 @@ void cabana_short_range(auto const &bond_kernel, auto const &forces_kernel,
   }
 }
 
-#endif // SHARED_MEMORY_PARALLELISM
+#endif // ESPRESSO_SHARED_MEMORY_PARALLELISM

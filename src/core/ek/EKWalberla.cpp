@@ -19,7 +19,7 @@
 
 #include "config/config.hpp"
 
-#ifdef WALBERLA
+#ifdef ESPRESSO_WALBERLA
 
 #include "BoxGeometry.hpp"
 #include "LocalBox.hpp"
@@ -139,4 +139,4 @@ void EKWalberla::sanity_checks(System::System const &system) const {
 
 } // namespace EK
 
-#endif // WALBERLA
+#endif // ESPRESSO_WALBERLA
