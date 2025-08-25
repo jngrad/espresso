@@ -36,7 +36,7 @@
 
 #include "config/config.hpp"
 
-#ifdef P3M
+#ifdef ESPRESSO_P3M
 
 #include "electrostatics/actor.hpp"
 
@@ -201,4 +201,4 @@ protected:
   virtual void scaleby_box_l() = 0;
 };
 
-#endif // P3M
+#endif // ESPRESSO_P3M

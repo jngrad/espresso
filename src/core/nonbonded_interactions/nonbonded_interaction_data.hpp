@@ -87,7 +87,7 @@ struct LJGen_Parameters {
   LJGen_Parameters() = default;
   LJGen_Parameters(double epsilon, double sigma, double cutoff, double shift,
                    double offset,
-#ifdef LJGEN_SOFTCORE
+#ifdef ESPRESSO_LJGEN_SOFTCORE
                    double lam, double delta,
 #endif
                    double e1, double e2, double b1, double b2);
@@ -280,71 +280,71 @@ struct IA_parameters {
    */
   double max_cut = inactive_cutoff;
 
-#ifdef LENNARD_JONES
+#ifdef ESPRESSO_LENNARD_JONES
   LJ_Parameters lj;
 #endif
 
-#ifdef WCA
+#ifdef ESPRESSO_WCA
   WCA_Parameters wca;
 #endif
 
-#ifdef LENNARD_JONES_GENERIC
+#ifdef ESPRESSO_LENNARD_JONES_GENERIC
   LJGen_Parameters ljgen;
 #endif
 
-#ifdef SMOOTH_STEP
+#ifdef ESPRESSO_SMOOTH_STEP
   SmoothStep_Parameters smooth_step;
 #endif
 
-#ifdef HERTZIAN
+#ifdef ESPRESSO_HERTZIAN
   Hertzian_Parameters hertzian;
 #endif
 
-#ifdef GAUSSIAN
+#ifdef ESPRESSO_GAUSSIAN
   Gaussian_Parameters gaussian;
 #endif
 
-#ifdef BMHTF_NACL
+#ifdef ESPRESSO_BMHTF_NACL
   BMHTF_Parameters bmhtf;
 #endif
 
-#ifdef MORSE
+#ifdef ESPRESSO_MORSE
   Morse_Parameters morse;
 #endif
 
-#ifdef BUCKINGHAM
+#ifdef ESPRESSO_BUCKINGHAM
   Buckingham_Parameters buckingham;
 #endif
 
-#ifdef SOFT_SPHERE
+#ifdef ESPRESSO_SOFT_SPHERE
   SoftSphere_Parameters soft_sphere;
 #endif
 
-#ifdef HAT
+#ifdef ESPRESSO_HAT
   Hat_Parameters hat;
 #endif
 
-#ifdef LJCOS
+#ifdef ESPRESSO_LJCOS
   LJcos_Parameters ljcos;
 #endif
 
-#ifdef LJCOS2
+#ifdef ESPRESSO_LJCOS2
   LJcos2_Parameters ljcos2;
 #endif
 
-#ifdef GAY_BERNE
+#ifdef ESPRESSO_GAY_BERNE
   GayBerne_Parameters gay_berne;
 #endif
 
-#ifdef TABULATED
+#ifdef ESPRESSO_TABULATED
   TabulatedPotential tab;
 #endif
 
-#ifdef DPD
+#ifdef ESPRESSO_DPD
   DPD_Parameters dpd;
 #endif
 
-#ifdef THOLE
+#ifdef ESPRESSO_THOLE
   Thole_Parameters thole;
 #endif
 };

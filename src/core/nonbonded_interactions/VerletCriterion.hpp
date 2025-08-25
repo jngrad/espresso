@@ -73,19 +73,19 @@ public:
     if (dist2 > m_eff_max_cut2)
       return false;
 
-#ifdef ELECTROSTATICS
+#ifdef ESPRESSO_ELECTROSTATICS
     // Within real space cutoff of electrostatics and both are charged
     if (dist2 <= m_eff_coulomb_cut2 and p1.q() != 0. and p2.q() != 0.)
       return true;
 #endif
 
-#ifdef DIPOLES
+#ifdef ESPRESSO_DIPOLES
     // Within dipolar cutoff and both carry magnetic moments
     if (dist2 <= m_eff_dipolar_cut2 and p1.dipm() != 0. and p2.dipm() != 0.)
       return true;
 #endif
 
-#ifdef COLLISION_DETECTION
+#ifdef ESPRESSO_COLLISION_DETECTION
     // Collision detection
     if (dist2 <= m_collision_cut2)
       return true;

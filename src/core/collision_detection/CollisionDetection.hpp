@@ -21,7 +21,7 @@
 
 #include <config/config.hpp>
 
-#ifdef COLLISION_DETECTION
+#ifdef ESPRESSO_COLLISION_DETECTION
 
 #include "ActiveProtocol.hpp"
 #include "CollisionPair.hpp"
@@ -90,4 +90,4 @@ public:
 
 } // namespace CollisionDetection
 
-#endif // COLLISION_DETECTION
+#endif // ESPRESSO_COLLISION_DETECTION

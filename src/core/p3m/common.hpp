@@ -45,7 +45,7 @@
 /** This value indicates metallic boundary conditions. */
 auto constexpr P3M_EPSILON_METALLIC = 0.0;
 
-#if defined(P3M) or defined(DP3M)
+#if defined(ESPRESSO_P3M) or defined(ESPRESSO_DP3M)
 
 #include "LocalBox.hpp"
 
@@ -244,7 +244,7 @@ template <typename FloatType> struct P3MFFTMesh {
   int ks_pnum = 0;
 };
 
-#endif // defined(P3M) or defined(DP3M)
+#endif // defined(ESPRESSO_P3M) or defined(ESPRESSO_DP3M)
 
 /** @brief Calculate indices that shift @ref P3MParameters::mesh by `mesh/2`.
  *  For each mesh size @f$ n @f$ in @c mesh_size, create a sequence of integer

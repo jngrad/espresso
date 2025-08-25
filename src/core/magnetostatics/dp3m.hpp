@@ -33,7 +33,7 @@
 
 #include "config/config.hpp"
 
-#ifdef DP3M
+#ifdef ESPRESSO_DP3M
 
 #include "magnetostatics/actor.hpp"
 
@@ -178,7 +178,7 @@ public:
 
     // Calculate real-space torques
     auto const torque = prefactor * (-mixmj * B_r + mixr * (mjr * C_r));
-#ifdef NPT
+#ifdef ESPRESSO_NPT
 #if USE_ERFC_APPROXIMATION
     auto const fac = prefactor * d1d2 * exp_adist2;
 #else
@@ -186,7 +186,7 @@ public:
 #endif
     auto const energy = fac * (mimj * B_r - mir * mjr * C_r);
     npt_add_virial_contribution(energy);
-#endif // NPT
+#endif // ESPRESSO_NPT
     return ParticleForce{force, torque};
   }
 
@@ -254,10 +254,10 @@ protected:
 
   virtual void scaleby_box_l() = 0;
 
-#ifdef NPT
+#ifdef ESPRESSO_NPT
   /** Update the NpT virial */
   virtual void npt_add_virial_contribution(double energy) const = 0;
 #endif
 };
 
-#endif // DP3M
+#endif // ESPRESSO_DP3M

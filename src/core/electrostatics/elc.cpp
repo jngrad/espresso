@@ -21,7 +21,7 @@
 
 #include "config/config.hpp"
 
-#ifdef P3M
+#ifdef ESPRESSO_P3M
 
 #include "electrostatics/elc.hpp"
 
@@ -40,7 +40,7 @@
 #include <utils/Vector.hpp>
 #include <utils/math/sqr.hpp>
 
-#ifdef SHARED_MEMORY_PARALLELISM
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
 #include <Kokkos_Core.hpp>
 #endif
 
@@ -1121,7 +1121,7 @@ void charge_assign(elc_data const &elc, CoulombP3M &solver,
   solver.prepare_fft_mesh(protocol == ChargeProtocol::BOTH or
                           protocol == ChargeProtocol::IMAGE);
 
-#ifdef SHARED_MEMORY_PARALLELISM
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
   // multi-threading -> cache sizes must be equal to the number of particles
   auto const include_neutral_particles = Kokkos::num_threads() > 1;
 #else

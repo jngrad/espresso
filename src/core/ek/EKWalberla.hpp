@@ -21,7 +21,7 @@
 
 #include "config/config.hpp"
 
-#ifdef WALBERLA
+#ifdef ESPRESSO_WALBERLA
 
 #include <utils/Vector.hpp>
 
@@ -75,4 +75,4 @@ struct EKWalberla {
 
 } // namespace EK
 
-#endif // WALBERLA
+#endif // ESPRESSO_WALBERLA

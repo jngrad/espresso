@@ -21,7 +21,7 @@
 
 #include "rattle.hpp"
 
-#ifdef BOND_CONSTRAINT
+#ifdef ESPRESSO_BOND_CONSTRAINT
 
 #include "BoxGeometry.hpp"
 #include "Particle.hpp"

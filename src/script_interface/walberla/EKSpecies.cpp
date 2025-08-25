@@ -18,7 +18,7 @@
  */
 #include "config/config.hpp"
 
-#ifdef WALBERLA
+#ifdef ESPRESSO_WALBERLA
 
 #include "EKSpecies.hpp"
 #include "EKWalberlaNodeState.hpp"
@@ -305,4 +305,4 @@ void EKSpecies::save_checkpoint(std::filesystem::path const &path, int mode) {
 
 } // namespace ScriptInterface::walberla
 
-#endif // WALBERLA
+#endif // ESPRESSO_WALBERLA

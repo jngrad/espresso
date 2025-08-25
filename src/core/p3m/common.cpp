@@ -21,7 +21,7 @@
 
 #include "config/config.hpp"
 
-#if defined(P3M) or defined(DP3M)
+#if defined(ESPRESSO_P3M) or defined(ESPRESSO_DP3M)
 
 #include "common.hpp"
 
@@ -111,4 +111,4 @@ void P3MLocalMesh::calc_local_ca_mesh(P3MParameters const &params,
   dim_no_halo = ur_no_halo - ld_no_halo;
 }
 
-#endif // defined(P3M) or defined(DP3M)
+#endif // defined(ESPRESSO_P3M) or defined(ESPRESSO_DP3M)

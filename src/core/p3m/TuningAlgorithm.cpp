@@ -21,7 +21,7 @@
 
 #include "config/config.hpp"
 
-#if defined(P3M) || defined(DP3M)
+#if defined(ESPRESSO_P3M) || defined(ESPRESSO_DP3M)
 
 #include "p3m/TuningAlgorithm.hpp"
 #include "p3m/common.hpp"
@@ -338,4 +338,4 @@ double TuningAlgorithm::get_m_time(Utils::Vector3i const &mesh, int &tuned_cao,
   return best_time;
 }
 
-#endif // P3M or DP3M
+#endif // ESPRESSO_P3M or ESPRESSO_DP3M
