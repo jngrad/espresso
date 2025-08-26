@@ -74,7 +74,7 @@ BOOST_DATA_TEST_CASE(dimensions, bdata::make(all_eks()), ek_generator) {
 }
 
 BOOST_AUTO_TEST_CASE(stencil_size) {
-  auto constexpr stencil_size = std::size_t{9u};
+  auto constexpr stencil_size = std::size_t{13u};
   auto ek = std::make_shared<walberla::EKinWalberlaImpl<stencil_size, float>>(
       params.lattice, params.diffusion, 0., params.valency, params.ext_efield,
       params.density, params.advection, params.friction_coupling, false, 0u);
