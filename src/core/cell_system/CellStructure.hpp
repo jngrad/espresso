@@ -774,34 +774,6 @@ public:
   }
 
   void set_index_map();
-  inline void set_index_map(ParticleRange const &particles,
-                            ParticleRange const &ghost_particles) {
-    m_unique_particles.clear();
-    m_max_id = 0;
-    std::unordered_set<int> registered_index{};
-    for (auto &p : particles) {
-      if (p.id() > m_max_id)
-        m_max_id = p.id();
-      m_unique_particles.emplace_back(&p);
-    }
-
-    for (auto &p : ghost_particles) {
-      if (not get_local_particle(p.id())) {
-        continue;
-      }
-      if (not get_local_particle(p.id())->is_ghost()) {
-        continue;
-      }
-      if (registered_index.contains(p.id())) {
-        continue;
-      }
-      if (p.id() > m_max_id)
-        m_max_id = p.id();
-      registered_index.insert(p.id());
-      m_unique_particles.emplace_back(&p);
-    }
-    registered_index.clear();
-  }
 #endif
 
 private:
