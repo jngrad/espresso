@@ -146,12 +146,10 @@ update_cabana_state(CellStructure &cell_structure, auto const &verlet_criterion,
   // ===================================================
   // Fill particle storage
   // ===================================================
-  Kokkos::View<int *> id_to_index(
-      Kokkos::ViewAllocateWithoutInitializing("id_to_index"), max_id + 1);
-  Kokkos::deep_copy(id_to_index, -1);
-
+  Kokkos::realloc(aosoa.id_to_index, max_id + 1);
+  auto &id_to_index = aosoa.id_to_index;
   kokkos_parallel_range_for<policy_type>(
-      "AoSoA write", std::size_t{0}, n_part,
+      "Views write", std::size_t{0}, n_part,
       [&unique_particles, &aosoa, &id_to_index](int const index) {
         auto const &p = *unique_particles.at(index);
         commit_particle(p, index, aosoa);
@@ -182,7 +180,7 @@ update_aosoa_charges(CellStructure &cell_structure) {
   auto &aosoa = cell_structure.get_aosoa();
 
   kokkos_parallel_range_for<policy_type>(
-      "AoSoA update charges", std::size_t{0}, n_part,
+      "Views update charges", std::size_t{0}, n_part,
       [&unique_particles, &aosoa](std::size_t const index) {
         aosoa.charge(index) = unique_particles.at(index)->q();
       });

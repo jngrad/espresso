@@ -175,10 +175,7 @@ public:
   struct AoSoA_pack;
   using ForceType = Kokkos::View<double **[3], Kokkos::LayoutRight>;
   using VirialType = Kokkos::View<double *[3], Kokkos::LayoutRight>;
-  using data_types = Cabana::MemberTypes<double[3], double, int, int>;
   using memory_space = Kokkos::HostSpace;
-  using AoSoAType = Cabana::AoSoA<data_types, memory_space, vector_length,
-                                  Kokkos::MemoryTraits<0>>;
   using ListAlgorithm = Cabana::HalfNeighborTag;
   using ListType =
       CustomVerletList<Kokkos::HostSpace, ListAlgorithm, Cabana::VerletLayout2D,
@@ -214,8 +211,7 @@ private:
   std::unique_ptr<VirialType> m_local_virial;
 #endif
   std::unique_ptr<ListType> m_verlet_list_cabana;
-  std::unique_ptr<AoSoAType> m_particle_storage;
-  /** particle properties for Cabana */
+  /** particle properties using individual Kokkos Views */
   std::unique_ptr<AoSoA_pack> m_aosoa;
   /** The local id-to-index for aosoa data */
   std::vector<Particle *> m_unique_particles;
