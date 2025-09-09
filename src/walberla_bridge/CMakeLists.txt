@@ -149,8 +149,7 @@ if(WALBERLA_BUILD_WITH_CUDA)
   target_link_libraries(
     espresso_walberla_cuda PUBLIC espresso::utils
     PRIVATE CUDA::cuda_driver CUDA::cudart espresso::walberla_codegen_cuda)
-  target_link_libraries(espresso_walberla_codegen_cuda PRIVATE CUDA::cuda_driver
-                                                               CUDA::cudart)
+  target_link_libraries(espresso_walberla_codegen_cuda PRIVATE CUDA::cudart)
 endif()
 
 add_subdirectory(src)

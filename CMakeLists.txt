@@ -260,6 +260,8 @@ if(ESPRESSO_BUILD_WITH_CUDA)
       # 2. sm_75: RTX-2000 series (Turing)
       # 3. sm_86: RTX-3000 series (Ampere)
       # 4. sm_89: RTX-4000 series (Ada)
+      # 5. sm_90: H100 series (Hopper)
+      # 6. sm_120: RTX-5000 series (Blackwell)
       set(ESPRESSO_CUDA_ARCHITECTURES "75;86;89")
     else()
       set(ESPRESSO_CUDA_ARCHITECTURES "$ENV{CUDAARCHS}")
@@ -268,6 +270,19 @@ if(ESPRESSO_BUILD_WITH_CUDA)
         CACHE INTERNAL "")
   endif()
   set(CMAKE_CUDA_ARCHITECTURES "${ESPRESSO_CMAKE_CUDA_ARCHITECTURES}")
+  cmake_path(GET CUDA_cuda_driver_LIBRARY PARENT_PATH ESPRESSO_LIBCUDA_RPATH)
+  cmake_path(GET CUDA_cudart_LIBRARY PARENT_PATH ESPRESSO_LIBCUDART_RPATH)
+  macro(espresso_add_cuda_rpaths)
+    set(TARGET_NAME ${ARGV0})
+    set_property(
+      TARGET ${TARGET_NAME} APPEND
+      PROPERTY BUILD_RPATH "${ESPRESSO_LIBCUDA_RPATH}"
+               "${ESPRESSO_LIBCUDART_RPATH}")
+    set_property(
+      TARGET ${TARGET_NAME} APPEND
+      PROPERTY INSTALL_RPATH "${ESPRESSO_LIBCUDA_RPATH}"
+               "${ESPRESSO_LIBCUDART_RPATH}")
+  endmacro()
   if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
     find_package(CUDACompilerNVCC ${ESPRESSO_MINIMAL_CUDA_VERSION} REQUIRED)
   elseif(CMAKE_CUDA_COMPILER_ID STREQUAL "Clang")

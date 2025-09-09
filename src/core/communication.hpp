@@ -67,6 +67,7 @@ extern std::shared_ptr<KokkosHandle> kokkos_handle;
 class CommunicationEnvironment {
   std::shared_ptr<boost::mpi::environment> m_mpi_env;
   std::shared_ptr<Communication::MpiCallbacks> m_callbacks;
+  bool m_is_mpi_gpu_aware;
 
 public:
   CommunicationEnvironment();
@@ -77,6 +78,7 @@ public:
   auto &mpiCallbacks() const { return *m_callbacks; }
   auto mpiCallbacksHandle() { return m_callbacks; }
   auto get_mpi_env() const { return m_mpi_env; }
+  auto is_mpi_gpu_aware() const { return m_is_mpi_gpu_aware; }
 };
 
 struct Communicator {

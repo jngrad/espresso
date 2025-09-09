@@ -44,9 +44,12 @@ function(espresso_unit_test_executable)
   endif()
   target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src/core)
   if(${TEST_SRC} MATCHES ".*\.cu$")
-    target_link_libraries(${TEST_NAME} PRIVATE espresso::config CUDA::cuda_driver CUDA::cudart)
+    target_link_libraries(${TEST_NAME} PRIVATE espresso::config CUDA::cudart)
   else()
     target_link_libraries(${TEST_NAME} PRIVATE espresso::config espresso::cpp_flags espresso::tests::cpp_flags)
+  endif()
+  if(ESPRESSO_BUILD_WITH_CUDA)
+    espresso_add_cuda_rpaths(${TEST_NAME}) # for GPU-aware MPI vendors
   endif()
 endfunction()
 

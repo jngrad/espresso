@@ -45,6 +45,9 @@
 #include <boost/mpi/environment.hpp>
 
 #include <mpi.h>
+#if defined(OPEN_MPI)
+#include <mpi-ext.h>
+#endif
 
 #include <cassert>
 #include <cstdlib>
@@ -97,6 +100,27 @@ CommunicationEnvironment::CommunicationEnvironment(
     omp_set_num_threads(1);
   }
 #endif
+
+  m_is_mpi_gpu_aware = false;
+
+#if defined(OPEN_MPI)
+#if defined(OMPI_HAVE_MPI_EXT_ROCM) && OMPI_HAVE_MPI_EXT_ROCM
+  m_is_mpi_gpu_aware |= static_cast<bool>(MPIX_Query_rocm_support());
+#endif
+#if defined(OMPI_HAVE_MPI_EXT_CUDA) && OMPI_HAVE_MPI_EXT_CUDA
+  m_is_mpi_gpu_aware |= static_cast<bool>(MPIX_Query_cuda_support());
+#endif
+#endif // defined(OPEN_MPI)
+
+#if defined(MPICH)
+  auto const mpich_gpu_env = get_env_variable("MPIR_CVAR_ENABLE_GPU");
+  m_is_mpi_gpu_aware |= (mpich_gpu_env and *mpich_gpu_env == "1");
+#endif // defined(MPICH)
+
+#if defined(_CRAYC)
+  auto const cray_mpich_gpu_env = get_env_variable("MPICH_GPU_SUPPORT_ENABLED");
+  m_is_mpi_gpu_aware |= (cray_mpich_gpu_env and *cray_mpich_gpu_env == "1");
+#endif // defined(_CRAYC)
 
   communicator.full_initialization();
 
