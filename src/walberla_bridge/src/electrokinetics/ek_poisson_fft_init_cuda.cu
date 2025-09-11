@@ -28,11 +28,11 @@
 #endif
 #endif
 
-#include "FFT_CUDA.cuh"
+#include "PoissonSolverFFT.hpp"
 
+#include <walberla_bridge/Architecture.hpp>
 #include <walberla_bridge/LatticeWalberla.hpp>
-#include <walberla_bridge/electrokinetics/PoissonSolver/PoissonSolverCuFFT.hpp>
-#include <walberla_bridge/electrokinetics/ek_poisson_fft_gpu_init.hpp>
+#include <walberla_bridge/electrokinetics/ek_walberla_init.hpp>
 
 #include <memory>
 
@@ -42,11 +42,12 @@ std::shared_ptr<walberla::PoissonSolver>
 new_ek_poisson_fft_cuda(std::shared_ptr<LatticeWalberla> const &lattice,
                         double permittivity, bool single_precision) {
   if (single_precision) {
-    return std::make_shared<walberla::PoissonSolverCuFFT<float>>(lattice,
-                                                                 permittivity);
+    return std::make_shared<
+        walberla::PoissonSolverFFT<float, lbmpy::Arch::GPU>>(lattice,
+                                                             permittivity);
   }
-  return std::make_shared<walberla::PoissonSolverCuFFT<double>>(lattice,
-                                                                permittivity);
+  return std::make_shared<walberla::PoissonSolverFFT<double, lbmpy::Arch::GPU>>(
+      lattice, permittivity);
 }
 
 } // namespace walberla

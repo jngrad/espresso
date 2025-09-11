@@ -21,16 +21,16 @@
 
 #include <config/config.hpp>
 
-#ifdef ESPRESSO_WALBERLA
-#include "EKPoissonSolver.hpp"
 #ifdef ESPRESSO_WALBERLA_FFT
+
+#include "EKPoissonSolver.hpp"
 
 #include "LatticeWalberla.hpp"
 
 #include "core/MpiCallbacks.hpp"
 #include "core/communication.hpp"
 
-#include <walberla_bridge/electrokinetics/ek_poisson_fft_init.hpp>
+#include <walberla_bridge/electrokinetics/ek_walberla_init.hpp>
 #include <walberla_bridge/utils/ResourceManager.hpp>
 
 #include <script_interface/ScriptInterface.hpp>
@@ -59,6 +59,7 @@ public:
 
     m_instance = ::walberla::new_ek_poisson_fft(
         m_lattice->lattice(), permittivity, m_single_precision);
+    m_instance->setup_fft(false);
   }
 
   void do_construct(VariantMap const &args) override {
@@ -108,4 +109,3 @@ public:
 } // namespace ScriptInterface::walberla
 
 #endif // ESPRESSO_WALBERLA_FFT
-#endif // ESPRESSO_WALBERLA

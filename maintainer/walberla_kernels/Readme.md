@@ -23,8 +23,6 @@ python3 -m pip install \
 deactivate
 ```
 
-You will need to manually patch lbmpy with [pycodegen/lbmpy!186](https://i10git.cs.fau.de/pycodegen/lbmpy/-/merge_requests/186).
-
 The kernels can be regenerated with this shell script:
 
 ```sh

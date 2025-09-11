@@ -68,14 +68,18 @@ public:
   get_slice_potential(Utils::Vector3i const &lower_corner,
                       Utils::Vector3i const &upper_corner) const = 0;
 
-  void register_vtk_field_writers(walberla::vtk::VTKOutput &vtk_obj,
-                                  LatticeModel::units_map const &units,
-                                  int flag_observables) override {}
+  void register_vtk_field_writers(walberla::vtk::VTKOutput &,
+                                  LatticeModel::units_map const &,
+                                  int) override {}
+
+  virtual void setup_fft(bool use_gpu_aware) = 0;
+
+  [[nodiscard]] virtual bool is_gpu() const noexcept = 0;
+  [[nodiscard]] virtual bool is_double_precision() const noexcept = 0;
 
 protected:
   void integrate_vtk_writers() override {}
-
-  void register_vtk_field_filters(walberla::vtk::VTKOutput &vtk_obj) override {}
+  void register_vtk_field_filters(walberla::vtk::VTKOutput &) override {}
 };
 
 } // namespace walberla

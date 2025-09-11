@@ -19,9 +19,8 @@
 
 #pragma once
 
-#include "PoissonSolver.hpp"
-
 #include <walberla_bridge/LatticeWalberla.hpp>
+#include <walberla_bridge/electrokinetics/PoissonSolver.hpp>
 
 #include <field/AddToStorage.h>
 #include <field/GhostLayerField.h>
@@ -56,7 +55,7 @@ public:
 
   std::optional<double>
   get_node_potential(Utils::Vector3i const &,
-                     bool consider_ghosts = false) override {
+                     [[maybe_unused]] bool consider_ghosts = false) override {
     throw std::runtime_error("PoissonSolverNone has no potential field");
   }
 
@@ -67,6 +66,12 @@ public:
   }
 
   void solve() override {}
+  void setup_fft(bool) override {}
+
+  [[nodiscard]] bool is_gpu() const noexcept override { return false; }
+  [[nodiscard]] bool is_double_precision() const noexcept override {
+    return std::is_same_v<FloatType, double>;
+  }
 };
 
 } // namespace walberla
