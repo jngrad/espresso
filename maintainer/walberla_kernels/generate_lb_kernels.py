@@ -318,6 +318,16 @@ def generate_boundary_kernels(ctx, method, data_type):
             assert pop in content
         return content
 
+    def patch_boundary_force_accessor(content):
+        # content = content.replace("& forceVector()", "forceVector() const")
+        content = content.replace("BlockDataID forceVectorID;", "")
+        content = content.replace(
+            "BlockDataID pdfsID;", "BlockDataID pdfsID;\nBlockDataID forceVectorID;\n")
+        content = content.replace("BlockDataID indexVectorID;", "")
+        content = content.replace(
+            "BlockDataID pdfsID;", "BlockDataID pdfsID;\nBlockDataID indexVectorID;")
+        return content
+
     for _, target_suffix in paramlist(parameters, ("CPU", "GPU")):
         class_name = f"DynamicUBB{precision_prefix}{target_suffix}"
         lbmpy_walberla.generate_boundary(
@@ -330,6 +340,8 @@ def generate_boundary_kernels(ctx, method, data_type):
                        patch_boundary_kernel, target_suffix)
         ctx.patch_file(class_name, get_ext_source(target_suffix),
                        patch_openmp_kernels)
+        ctx.patch_file(class_name, get_ext_header(target_suffix),
+                       patch_boundary_force_accessor)
 
 
 with code_generation_context.CodeGeneration() as ctx:

@@ -235,6 +235,10 @@ public:
     return m_boundary->getForce(block);
   }
 
+  BlockDataID get_force_vector_id() const { return m_boundary->forceVectorID; }
+
+  BlockDataID get_index_vector_id() const { return m_boundary->indexVectorID; }
+
 private:
   std::shared_ptr<StructuredBlockForest> m_blocks;
   BlockDataID m_flag_field_id;

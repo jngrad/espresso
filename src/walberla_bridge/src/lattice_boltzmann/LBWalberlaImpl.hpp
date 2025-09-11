@@ -1727,6 +1727,56 @@ public:
     return out;
   }
 
+  [[nodiscard]] Utils::Vector3i flat_index_to_node(int index) const {
+    Utils::Vector3i node({0, 0, 0});
+    auto const grid_size = get_lattice().get_grid_dimensions();
+    node[2] = index % grid_size[2];
+    int tmp = index / grid_size[2];
+    node[1] = tmp % grid_size[1];
+    node[0] = tmp / grid_size[1];
+    return node;
+  }
+
+  [[nodiscard]] Utils::Vector3d get_boundary_force_from_shape(
+      std::vector<int> const &raster_flat) const override {
+    const int32_t neighbour_offset_x[] = {0, 0, 0, -1, 1, 0, 0, -1, 1, -1,
+                                          1, 0, 0, -1, 1, 0, 0, -1, 1};
+    const int32_t neighbour_offset_y[] = {0,  1, -1, 0, 0, 0, 0,  1, 1, -1,
+                                          -1, 1, -1, 0, 0, 1, -1, 0, 0};
+    const int32_t neighbour_offset_z[] = {0, 0, 0, 0, 0, 1,  -1, 0,  0, 0,
+                                          0, 1, 1, 1, 1, -1, -1, -1, -1};
+    Vector3<FloatType> force(FloatType{0});
+    for (auto const &block : *get_lattice().get_blocks()) {
+      auto force_id = m_boundary->get_force_vector_id();
+      auto force_field =
+          const_cast<typename DynamicUBB::ForceVector *>(
+              block.template getData<typename DynamicUBB::ForceVector>(
+                  force_id))
+              ->forceVector();
+      auto index_id = m_boundary->get_index_vector_id();
+      auto index_field =
+          const_cast<typename DynamicUBB::IndexVectors *>(
+              block.template getData<typename DynamicUBB::IndexVectors>(
+                  index_id))
+              ->indexVector(DynamicUBB::IndexVectors::ALL);
+      for (int i = 0; i < raster_flat.size(); i++) {
+        if (raster_flat[i] != 0) {
+          auto node = flat_index_to_node(i);
+          for (int j = 0; j < index_field.size(); j++) {
+            int dir = index_field[j].dir;
+            if (index_field[j].x == node[0] - neighbour_offset_x[dir] &&
+                index_field[j].y == node[1] - neighbour_offset_y[dir] &&
+                index_field[j].z == node[2] - neighbour_offset_z[dir]) {
+              force[0] += force_field[j].F_0;
+              force[1] += force_field[j].F_1;
+              force[2] += force_field[j].F_2;
+            }
+          }
+        }
+      }
+    }
+    return to_vector3d(force);
+  }
   // Global boundary force
   [[nodiscard]] Utils::Vector3d get_boundary_force() const override {
     Vector3<FloatType> force(FloatType{0});

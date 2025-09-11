@@ -620,14 +620,14 @@ public:
 private:
   void run_impl(IBlock *block, IndexVectors::Type type);
 
-  BlockDataID indexVectorID;
-  BlockDataID forceVectorID;
   std::function<Vector3<float64>(
       const Cell &, const shared_ptr<StructuredBlockForest> &, IBlock &)>
       elementInitialiser;
 
 public:
   BlockDataID pdfsID;
+  BlockDataID indexVectorID;
+  BlockDataID forceVectorID;
 };
 
 } // namespace lbm
