@@ -31,9 +31,9 @@
 
 #include "tests_common_ek.hpp"
 
+#include "../src/electrokinetics/PoissonSolverNone.hpp"
 #include <walberla_bridge/VTKHandle.hpp>
 #include <walberla_bridge/electrokinetics/EKinWalberlaBase.hpp>
-#include <walberla_bridge/electrokinetics/PoissonSolver/PoissonSolverNone.hpp>
 #include <walberla_bridge/electrokinetics/ek_walberla_init.hpp>
 
 #include <utils/Vector.hpp>

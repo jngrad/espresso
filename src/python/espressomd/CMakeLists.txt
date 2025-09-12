@@ -113,3 +113,7 @@ foreach(cython_file ${cython_SRC})
   install(TARGETS "${target}"
           LIBRARY DESTINATION "${ESPRESSO_INSTALL_PYTHON}/espressomd")
 endforeach()
+
+if(ESPRESSO_BUILD_WITH_CUDA)
+  espresso_add_cuda_rpaths(espressomd__init) # for GPU-aware MPI vendors
+endif()

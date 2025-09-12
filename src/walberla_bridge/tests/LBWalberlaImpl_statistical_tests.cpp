@@ -111,7 +111,7 @@ BOOST_DATA_TEST_CASE(velocity_fluctuation, bdata::make(thermalized_lbs()),
   BOOST_CHECK_SMALL(std::abs(sum_v[1] / steps), tol_v * 100.);
   BOOST_CHECK_SMALL(std::abs(sum_v[2] / steps), tol_v * 100.);
 
-  const double tol_kT = 5; // this is in percent ...
+  auto const tol_kT = 5.; // this is in percent ...
   BOOST_CHECK_CLOSE(sum_v_square[0] / steps, params.kT, tol_kT);
   BOOST_CHECK_CLOSE(sum_v_square[1] / steps, params.kT, tol_kT);
   BOOST_CHECK_CLOSE(sum_v_square[2] / steps, params.kT, tol_kT);

@@ -94,7 +94,6 @@ option(ESPRESSO_BUILD_WITH_WALBERLA
        "Build with waLBerla lattice-Boltzmann support" OFF)
 option(ESPRESSO_BUILD_WITH_WALBERLA_AVX
        "Build waLBerla lattice-Boltzmann with AVX vectorization" OFF)
-option(ESPRESSO_BUILD_WITH_WALBERLA_FFT "Build waLBerla with FFT support" OFF)
 option(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM
        "Build with shared memory parallelism support" OFF)
 option(ESPRESSO_BUILD_BENCHMARKS "Enable benchmarks" OFF)
@@ -133,10 +132,6 @@ option(ESPRESSO_INSIDE_DOCKER "Set this to ON when running inside Docker." OFF)
 mark_as_advanced(ESPRESSO_INSIDE_DOCKER)
 set(ESPRESSO_TEST_TIMEOUT "300"
     CACHE STRING "Timeout in seconds for each testsuite test")
-
-if(ESPRESSO_BUILD_WITH_WALBERLA_FFT)
-  set(ESPRESSO_BUILD_WITH_FFTW ON CACHE BOOL "")
-endif()
 
 if(ESPRESSO_BUILD_WITH_CCACHE)
   find_program(CCACHE_PROGRAM ccache REQUIRED)
@@ -260,6 +255,8 @@ if(ESPRESSO_BUILD_WITH_CUDA)
       # 2. sm_75: RTX-2000 series (Turing)
       # 3. sm_86: RTX-3000 series (Ampere)
       # 4. sm_89: RTX-4000 series (Ada)
+      # 5. sm_90: H100 series (Hopper)
+      # 6. sm_120: RTX-5000 series (Blackwell)
       set(ESPRESSO_CUDA_ARCHITECTURES "75;86;89")
     else()
       set(ESPRESSO_CUDA_ARCHITECTURES "$ENV{CUDAARCHS}")
@@ -268,6 +265,19 @@ if(ESPRESSO_BUILD_WITH_CUDA)
         CACHE INTERNAL "")
   endif()
   set(CMAKE_CUDA_ARCHITECTURES "${ESPRESSO_CMAKE_CUDA_ARCHITECTURES}")
+  cmake_path(GET CUDA_cuda_driver_LIBRARY PARENT_PATH ESPRESSO_LIBCUDA_RPATH)
+  cmake_path(GET CUDA_cudart_LIBRARY PARENT_PATH ESPRESSO_LIBCUDART_RPATH)
+  macro(espresso_add_cuda_rpaths)
+    set(TARGET_NAME ${ARGV0})
+    set_property(
+      TARGET ${TARGET_NAME} APPEND
+      PROPERTY BUILD_RPATH "${ESPRESSO_LIBCUDA_RPATH}"
+               "${ESPRESSO_LIBCUDART_RPATH}")
+    set_property(
+      TARGET ${TARGET_NAME} APPEND
+      PROPERTY INSTALL_RPATH "${ESPRESSO_LIBCUDA_RPATH}"
+               "${ESPRESSO_LIBCUDART_RPATH}")
+  endmacro()
   if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
     find_package(CUDACompilerNVCC ${ESPRESSO_MINIMAL_CUDA_VERSION} REQUIRED)
   elseif(CMAKE_CUDA_COMPILER_ID STREQUAL "Clang")
@@ -507,9 +517,6 @@ if(ESPRESSO_BUILD_WITH_FFTW)
   if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     list(APPEND FFTW3_COMPONENTS omp)
   endif()
-  if(ESPRESSO_BUILD_WITH_WALBERLA_FFT)
-    list(APPEND FFTW3_COMPONENTS mpi)
-  endif()
   find_package(fftw3 REQUIRED COMPONENTS ${FFTW3_COMPONENTS})
 
   if(NOT EXISTS ${FETCHCONTENT_BASE_DIR}/heffte-src)
@@ -540,8 +547,8 @@ if(ESPRESSO_BUILD_WITH_FFTW)
     target_link_libraries(Heffte::Heffte INTERFACE Heffte)
     install(TARGETS Heffte LIBRARY DESTINATION "${ESPRESSO_INSTALL_LIBDIR}")
     if(ESPRESSO_BUILD_WITH_CLANG_TIDY)
-      set(ESPRESSO_P3M_CXX_CLANG_TIDY "${ESPRESSO_CXX_CLANG_TIDY}")
-      set(ESPRESSO_P3M_CUDA_CLANG_TIDY "${ESPRESSO_CUDA_CLANG_TIDY}")
+      set(ESPRESSO_HEFFTE_CXX_CLANG_TIDY "${ESPRESSO_CXX_CLANG_TIDY}")
+      set(ESPRESSO_HEFFTE_CUDA_CLANG_TIDY "${ESPRESSO_CUDA_CLANG_TIDY}")
       unset(SKIP_CLANG_TIDY_CHECKS)
       unset(SKIP_CLANG_TIDY_CHECKS_CXX)
       unset(SKIP_CLANG_TIDY_CHECKS_CUDA)
@@ -556,11 +563,13 @@ if(ESPRESSO_BUILD_WITH_FFTW)
       list(APPEND SKIP_CLANG_TIDY_CHECKS
            "-readability-avoid-const-params-in-decls")
       espresso_override_clang_tidy_checks(
-        ESPRESSO_P3M_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
+        ESPRESSO_HEFFTE_CXX_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
         "${SKIP_CLANG_TIDY_CHECKS_CXX}")
       espresso_override_clang_tidy_checks(
-        ESPRESSO_P3M_CUDA_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
+        ESPRESSO_HEFFTE_CUDA_CLANG_TIDY "${SKIP_CLANG_TIDY_CHECKS}"
         "${SKIP_CLANG_TIDY_CHECKS_CUDA}")
+      set(ESPRESSO_P3M_CXX_CLANG_TIDY "${ESPRESSO_HEFFTE_CXX_CLANG_TIDY}")
+      set(ESPRESSO_P3M_CUDA_CLANG_TIDY "${ESPRESSO_HEFFTE_CUDA_CLANG_TIDY}")
     endif()
   endif()
 endif()
@@ -895,12 +904,7 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
       endif()
     endif()
   endif()
-  if(ESPRESSO_BUILD_WITH_WALBERLA_FFT)
-    set(ESPRESSO_USE_WALBERLA_FFT 1)
-    set(WALBERLA_BUILD_WITH_FFTW on CACHE BOOL "")
-  else()
-    set(WALBERLA_BUILD_WITH_FFTW off CACHE BOOL "")
-  endif()
+  set(WALBERLA_BUILD_WITH_FFTW off CACHE BOOL "")
   if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     set(WALBERLA_BUILD_WITH_OPENMP on CACHE BOOL "")
   endif()
