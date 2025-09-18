@@ -146,11 +146,10 @@ public:
     Vector3<double> getForce() {
       syncCPU();
       Vector3<double> result(double_c(0.0));
-      for (std::vector<ForceStruct>::iterator it = cpuVector_.begin();
-           it != cpuVector_.end(); ++it) {
-        result[0] += it->F_0;
-        result[1] += it->F_1;
-        result[2] += it->F_2;
+      for (auto &it : cpuVector_) {
+        result[0] += it.F_0;
+        result[1] += it.F_1;
+        result[2] += it.F_2;
       }
       return result;
     }

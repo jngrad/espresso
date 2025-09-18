@@ -319,13 +319,18 @@ def generate_boundary_kernels(ctx, method, data_type):
         return content
 
     def patch_boundary_force_accessor(content):
-        # content = content.replace("& forceVector()", "forceVector() const")
+        # make ids accessable from outside
         content = content.replace("BlockDataID forceVectorID;", "")
         content = content.replace(
             "BlockDataID pdfsID;", "BlockDataID pdfsID;\nBlockDataID forceVectorID;\n")
         content = content.replace("BlockDataID indexVectorID;", "")
         content = content.replace(
             "BlockDataID pdfsID;", "BlockDataID pdfsID;\nBlockDataID indexVectorID;")
+        # use range-based for loop
+        content = content.replace(
+            "for(std::vector<ForceStruct>::iterator it = cpuVector_.begin(); it != cpuVector_.end(); ++it)",
+            "for(auto & it : cpuVector_)")
+        content = content.replace("] += it->F_", "] += it.F_")
         return content
 
     for _, target_suffix in paramlist(parameters, ("CPU", "GPU")):
