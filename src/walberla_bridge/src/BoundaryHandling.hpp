@@ -151,7 +151,8 @@ private:
     auto const flag_field =
         block->template uncheckedFastGetData<FlagField>(m_flag_field_id);
     auto const boundary_flag = flag_field->getFlag(Boundary_flag);
-    return std::make_tuple(flag_field, boundary_flag);
+    auto const domain_flag = flag_field->getFlag(Domain_flag);
+    return std::make_tuple(flag_field, boundary_flag, domain_flag);
   }
 
 public:
@@ -188,9 +189,11 @@ public:
 
   void set_node_value_at_boundary(signed_integral_vector auto const &node,
                                   ValueType const &v, BlockAndCell const &bc) {
-    auto [flag_field, boundary_flag] = get_flag_field_and_flag(bc.block);
+    auto [flag_field, boundary_flag, domain_flag] =
+        get_flag_field_and_flag(bc.block);
     m_callback.set_node_boundary_value(to_cell(node), v);
     flag_field->addFlag(bc.cell, boundary_flag);
+    flag_field->removeFlag(bc.cell, domain_flag);
     m_pending_changes = true;
   }
 
@@ -201,9 +204,11 @@ public:
 
   void remove_node_from_boundary(signed_integral_vector auto const &node,
                                  BlockAndCell const &bc) {
-    auto [flag_field, boundary_flag] = get_flag_field_and_flag(bc.block);
+    auto [flag_field, boundary_flag, domain_flag] =
+        get_flag_field_and_flag(bc.block);
     m_callback.unset_node_boundary_value(to_cell(node));
     flag_field->removeFlag(bc.cell, boundary_flag);
+    flag_field->addFlag(bc.cell, domain_flag);
     m_pending_changes = true;
   }
 
