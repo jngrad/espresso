@@ -1759,7 +1759,7 @@ public:
 
   [[nodiscard]] Utils::Vector3d get_boundary_force_from_shape(
       std::vector<int> const &raster_flat) const override {
-    Vector3<FloatType> force(FloatType{0});
+    Utils::Vector3d force({0});
     for (auto const &block : *get_lattice().get_blocks()) {
       auto const offset = get_lattice().get_block_corner(block, true);
       auto force_id = m_boundary->get_force_vector_id();
@@ -1790,7 +1790,7 @@ public:
         }
       }
     }
-    return zero_centered_to_md(to_vector3d(force));
+    return zero_centered_to_md(force);
   }
   // Global boundary force
   [[nodiscard]] Utils::Vector3d get_boundary_force() const override {
