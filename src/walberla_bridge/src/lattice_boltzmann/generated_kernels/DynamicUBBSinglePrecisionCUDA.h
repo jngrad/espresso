@@ -675,6 +675,28 @@ private:
       elementInitialiser;
 
 public:
+  static constexpr std::vector<std::vector<int>> getNeighborOffset() {
+    std::vector<std::vector<int>> neighborOffset;
+    neighborOffset.push_back(
+        {0, 0, 0, -1, 1, 0, 0, -1, 1, -1, 1, 0, 0, -1, 1, 0, 0, -1, 1});
+    neighborOffset.push_back(
+        {0, 1, -1, 0, 0, 0, 0, 1, 1, -1, -1, 1, -1, 0, 0, 1, -1, 0, 0});
+    neighborOffset.push_back(
+        {0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 1, 1, 1, 1, -1, -1, -1, -1});
+    return neighborOffset;
+  }
+  std::vector<ForceStruct> &getForceVector(const IBlock *block) {
+    auto *forceVector =
+        const_cast<ForceVector *>(block->getData<ForceVector>(forceVectorID));
+    return forceVector->forceVector();
+  }
+  std::vector<IndexInfo> &getIndexVector(const IBlock *block) {
+    auto *indexVectors =
+        const_cast<IndexVectors *>(block->getData<IndexVectors>(indexVectorID));
+    return indexVectors->indexVector(IndexVectors::ALL);
+  }
+
+public:
   BlockDataID pdfsID;
   BlockDataID indexVectorID;
   BlockDataID forceVectorID;

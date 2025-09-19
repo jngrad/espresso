@@ -1742,14 +1742,8 @@ public:
                                                   int dir) const {
     Utils::Vector3i neighbor({0, 0, 0});
     auto const grid_size = get_lattice().get_grid_dimensions();
-    std::vector<std::vector<int>> neighbor_offset;
-    // offsets taken from generated boundary kernel
-    neighbor_offset.push_back(
-        {0, 0, 0, -1, 1, 0, 0, -1, 1, -1, 1, 0, 0, -1, 1, 0, 0, -1, 1});
-    neighbor_offset.push_back(
-        {0, 1, -1, 0, 0, 0, 0, 1, 1, -1, -1, 1, -1, 0, 0, 1, -1, 0, 0});
-    neighbor_offset.push_back(
-        {0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 1, 1, 1, 1, -1, -1, -1, -1});
+    std::vector<std::vector<int>> neighbor_offset =
+        m_boundary->get_neighbor_offset();
     for (int i = 0; i < neighbor.size(); i++) {
       neighbor[i] =
           (node[i] - neighbor_offset[i][dir] + grid_size[i]) % grid_size[i];
@@ -1759,21 +1753,11 @@ public:
 
   [[nodiscard]] Utils::Vector3d get_boundary_force_from_shape(
       std::vector<int> const &raster_flat) const override {
-    Utils::Vector3d force({0});
+    Utils::Vector3d force({0, 0, 0});
     for (auto const &block : *get_lattice().get_blocks()) {
       auto const offset = get_lattice().get_block_corner(block, true);
-      auto force_id = m_boundary->get_force_vector_id();
-      auto force_field =
-          const_cast<typename DynamicUBB::ForceVector *>(
-              block.template getData<typename DynamicUBB::ForceVector>(
-                  force_id))
-              ->forceVector();
-      auto index_id = m_boundary->get_index_vector_id();
-      auto index_field =
-          const_cast<typename DynamicUBB::IndexVectors *>(
-              block.template getData<typename DynamicUBB::IndexVectors>(
-                  index_id))
-              ->indexVector(DynamicUBB::IndexVectors::ALL);
+      auto force_field = m_boundary->get_force_vector(&block);
+      auto index_field = m_boundary->get_index_vector(&block);
       for (int i = 0; i < raster_flat.size(); i++) {
         if (raster_flat[i] != 0) {
           auto node = flat_index_to_node(i, offset);
