@@ -17,7 +17,7 @@
 //! \\author pystencils
 //======================================================================================================================
 
-// kernel generated with pystencils v1.3.7+13.gdfd203a, lbmpy v1.3.7+4.gc7d65a7.dirty, sympy v1.10, lbmpy_walberla/pystencils_walberla from waLBerla commit c69cb11d6a95d32b2280544d3d9abde1fe5fdbb5
+// kernel generated with pystencils v1.3.7+13.gdfd203a, lbmpy v1.3.7+5.gd7100a3, sympy v1.10, lbmpy_walberla/pystencils_walberla from waLBerla commit c69cb11d6a95d32b2280544d3d9abde1fe5fdbb5
 
 #include "DynamicUBBSinglePrecision.h"
 #include "core/DataTypes.h"

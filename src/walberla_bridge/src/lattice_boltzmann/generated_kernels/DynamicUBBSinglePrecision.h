@@ -17,9 +17,9 @@
 //! \\author pystencils
 //======================================================================================================================
 
-// kernel generated with pystencils v1.3.7+13.gdfd203a, lbmpy
-// v1.3.7+4.gc7d65a7.dirty, sympy v1.10, lbmpy_walberla/pystencils_walberla from
-// waLBerla commit c69cb11d6a95d32b2280544d3d9abde1fe5fdbb5
+// kernel generated with pystencils v1.3.7+13.gdfd203a, lbmpy v1.3.7+5.gd7100a3,
+// sympy v1.10, lbmpy_walberla/pystencils_walberla from waLBerla commit
+// c69cb11d6a95d32b2280544d3d9abde1fe5fdbb5
 
 #pragma once
 #include "core/DataTypes.h"
@@ -236,7 +236,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(0, 1, 0, 0), boundaryFlag)) {
@@ -257,7 +257,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(0, -1, 0, 0), boundaryFlag)) {
@@ -278,7 +278,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(-1, 0, 0, 0), boundaryFlag)) {
@@ -299,7 +299,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(1, 0, 0, 0), boundaryFlag)) {
@@ -320,7 +320,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(0, 0, 1, 0), boundaryFlag)) {
@@ -341,7 +341,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(0, 0, -1, 0), boundaryFlag)) {
@@ -362,7 +362,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(-1, 1, 0, 0), boundaryFlag)) {
@@ -383,7 +383,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(1, 1, 0, 0), boundaryFlag)) {
@@ -404,7 +404,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(-1, -1, 0, 0), boundaryFlag)) {
@@ -425,7 +425,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(1, -1, 0, 0), boundaryFlag)) {
@@ -446,7 +446,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(0, 1, 1, 0), boundaryFlag)) {
@@ -467,7 +467,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(0, -1, 1, 0), boundaryFlag)) {
@@ -488,7 +488,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(-1, 0, 1, 0), boundaryFlag)) {
@@ -509,7 +509,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(1, 0, 1, 0), boundaryFlag)) {
@@ -530,7 +530,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(0, 1, -1, 0), boundaryFlag)) {
@@ -551,7 +551,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(0, -1, -1, 0), boundaryFlag)) {
@@ -572,7 +572,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(-1, 0, -1, 0), boundaryFlag)) {
@@ -593,7 +593,7 @@ public:
     for (auto it = flagField->beginWithGhostLayerXYZ(
              cell_idx_c(flagField->nrOfGhostLayers() - 1));
          it != flagField->end(); ++it) {
-      if (!isFlagSet(it, domainFlag))
+      if (!isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag))
         continue;
 
       if (isFlagSet(it.neighbor(1, 0, -1, 0), boundaryFlag)) {
@@ -619,6 +619,8 @@ public:
 private:
   void run_impl(IBlock *block, IndexVectors::Type type);
 
+  BlockDataID indexVectorID;
+  BlockDataID forceVectorID;
   std::function<Vector3<float32>(
       const Cell &, const shared_ptr<StructuredBlockForest> &, IBlock &)>
       elementInitialiser;
@@ -647,8 +649,6 @@ public:
 
 public:
   BlockDataID pdfsID;
-  BlockDataID indexVectorID;
-  BlockDataID forceVectorID;
 };
 
 } // namespace lbm

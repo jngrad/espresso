@@ -319,13 +319,11 @@ def generate_boundary_kernels(ctx, method, data_type):
         return content
 
     def patch_boundary_force_accessor(content):
-        # make ids accessable from outside
-        content = content.replace("BlockDataID forceVectorID;", "")
+        # remove boundary boundary interaction flags
+        content = content.replace("! isFlagSet(it, domainFlag)",
+                                  "! isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag)")
         content = content.replace(
-            "BlockDataID pdfsID;", "BlockDataID pdfsID;\nBlockDataID forceVectorID;\n")
-        content = content.replace("BlockDataID indexVectorID;", "")
-        content = content.replace(
-            "BlockDataID pdfsID;", "BlockDataID pdfsID;\nBlockDataID indexVectorID;")
+            "! isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag)", "! isFlagSet(it, domainFlag)", 1)
         # use range-based for loop
         content = content.replace(
             "for(std::vector<ForceStruct>::iterator it = cpuVector_.begin(); it != cpuVector_.end(); ++it)",
