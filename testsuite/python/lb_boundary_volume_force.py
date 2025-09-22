@@ -29,6 +29,7 @@ EXT_FORCE = np.array([-.01, 0.02, 0.03])
 VISC = 3.5
 DENS = 1.5
 TIME_STEP = 0.05
+BOUNDARY_VELOCITY = np.array([.0, 0.4, 0.5])
 LB_PARAMS = {'agrid': AGRID,
              'density': DENS,
              'kinematic_viscosity': VISC,
@@ -64,15 +65,15 @@ class LBBoundaryForceCommon:
         wall_shape2 = espressomd.shapes.Wall(
             normal=[-1, 0, 0], dist=-(self.system.box_l[0] - AGRID))
 
-        self.lbf.add_boundary_from_shape(wall_shape1)
-        self.lbf.add_boundary_from_shape(wall_shape2)
+        self.lbf.add_boundary_from_shape(wall_shape1, BOUNDARY_VELOCITY)
+        self.lbf.add_boundary_from_shape(wall_shape2, BOUNDARY_VELOCITY)
         fluid_nodes = np.sum(np.logical_not(
             self.lbf[:, :, :].is_boundary).astype(int))
 
         self.system.integrator.run(20)
         diff = float("inf")
         old_val = float("inf")
-        while diff > 0.002:
+        while diff > 0.00002:
             self.system.integrator.run(10)
             new_val = self.lbf.get_boundary_force_from_shape(wall_shape1)[0]
             diff = abs(new_val - old_val)
