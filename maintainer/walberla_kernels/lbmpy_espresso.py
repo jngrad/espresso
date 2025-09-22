@@ -19,7 +19,6 @@
 
 
 import lbmpy_walberla.additional_data_handler
-import lbmpy
 import numpy as np
 
 

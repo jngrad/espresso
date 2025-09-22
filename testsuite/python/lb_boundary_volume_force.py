@@ -79,12 +79,26 @@ class LBBoundaryForceCommon:
             old_val = new_val
 
         expected_force = np.copy(fluid_nodes * AGRID**3 * EXT_FORCE)
-        measured_force = np.array(self.lbf.get_boundary_force_from_shape(wall_shape1)) + \
-            np.array(self.lbf.get_boundary_force_from_shape(wall_shape2))
+
+        measured_force_all = np.array(self.lbf.boundary_force)
+        measured_force_1 = np.array(
+            self.lbf.get_boundary_force_from_shape(wall_shape1))
+        measured_force_2 = np.array(
+            self.lbf.get_boundary_force_from_shape(wall_shape2))
 
         np.testing.assert_allclose(
-            measured_force,
+            measured_force_all,
             expected_force,
+            rtol=2E-2)
+
+        np.testing.assert_allclose(
+            measured_force_1,
+            expected_force / 2,
+            rtol=2E-2)
+
+        np.testing.assert_allclose(
+            measured_force_2,
+            expected_force / 2,
             rtol=2E-2)
 
 

@@ -1727,15 +1727,14 @@ public:
     return out;
   }
 
-  [[nodiscard]] Utils::Vector3i
-  flat_index_to_node(int index, Utils::Vector3i offset) const {
+  [[nodiscard]] Utils::Vector3i flat_index_to_node(int index) const {
     Utils::Vector3i node({0, 0, 0});
     auto const grid_size = get_lattice().get_grid_dimensions();
     node[2] = index % grid_size[2];
     int tmp = index / grid_size[2];
     node[1] = tmp % grid_size[1];
     node[0] = tmp / grid_size[1];
-    return (node + offset + grid_size) % grid_size;
+    return node;
   }
 
   [[nodiscard]] Utils::Vector3i get_neighbor_node(Utils::Vector3i node,
@@ -1754,21 +1753,26 @@ public:
   [[nodiscard]] Utils::Vector3d get_boundary_force_from_shape(
       std::vector<int> const &raster_flat) const override {
     Utils::Vector3d force({0, 0, 0});
+    auto const grid_size = get_lattice().get_grid_dimensions();
     for (auto const &block : *get_lattice().get_blocks()) {
       auto const offset = get_lattice().get_block_corner(block, true);
       auto force_field = m_boundary->get_force_vector(&block);
       auto index_field = m_boundary->get_index_vector(&block);
       for (int i = 0; i < raster_flat.size(); i++) {
         if (raster_flat[i] != 0) {
-          auto node = flat_index_to_node(i, offset);
-          for (int j = 0; j < index_field.size(); j++) {
-            auto neighbor_node = get_neighbor_node(node, index_field[j].dir);
-            if (index_field[j].x == neighbor_node[0] &&
-                index_field[j].y == neighbor_node[1] &&
-                index_field[j].z == neighbor_node[2]) {
-              force[0] += force_field[j].F_0;
-              force[1] += force_field[j].F_1;
-              force[2] += force_field[j].F_2;
+          auto node = flat_index_to_node(i);
+          if (get_lattice().node_in_local_domain(node)) {
+            // shift node to local frame
+            node = (node - offset + grid_size) % grid_size;
+            for (int j = 0; j < index_field.size(); j++) {
+              auto neighbor_node = get_neighbor_node(node, index_field[j].dir);
+              if (index_field[j].x == neighbor_node[0] &&
+                  index_field[j].y == neighbor_node[1] &&
+                  index_field[j].z == neighbor_node[2]) {
+                force[0] += force_field[j].F_0;
+                force[1] += force_field[j].F_1;
+                force[2] += force_field[j].F_2;
+              }
             }
           }
         }
