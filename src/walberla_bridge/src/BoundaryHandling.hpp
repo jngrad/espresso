@@ -235,15 +235,12 @@ public:
     return m_boundary->getForce(block);
   }
 
-  constexpr std::vector<std::vector<int>> get_neighbor_offset() {
-    return m_boundary->getNeighborOffset();
-  }
   BlockDataID get_force_vector_id() const { return m_boundary->forceVectorID; }
-  auto &get_force_vector(const IBlock *block) {
+  BlockDataID get_index_vector_id() const { return m_boundary->indexVectorID; }
+  auto const &get_force_vector(const IBlock *block) {
     return m_boundary->getForceVector(block);
   }
-  BlockDataID get_index_vector_id() const { return m_boundary->indexVectorID; }
-  auto &get_index_vector(const IBlock *block) {
+  auto const &get_index_vector(const IBlock *block) {
     return m_boundary->getIndexVector(block);
   }
 

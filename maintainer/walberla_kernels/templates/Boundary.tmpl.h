@@ -41,6 +41,7 @@
 #include <field/FlagField.h>
 #include <core/debug/Debug.h>
 
+#include <array>
 #include <cassert>
 #include <functional>
 #include <memory>
@@ -109,7 +110,8 @@ public:
         }
         {% endif -%}
 
-        CpuIndexVector & indexVector(Type t) { return cpuVectors_[t]; }
+        auto &indexVector(Type t) { return cpuVectors_[t]; }
+        auto const &indexVector(Type t) const { return cpuVectors_[t]; }
         {{StructName}} * pointerCpu(Type t)  { return cpuVectors_[t].empty() ? nullptr : cpuVectors_[t].data(); }
 
         {% if target == 'gpu' -%}
@@ -181,9 +183,10 @@ public:
        ~ForceVector() {if(!gpuVector_.empty()){WALBERLA_GPU_CHECK(gpuFree( gpuVector_[0] ))}}
        {% endif -%}
 
-       std::vector<ForceStruct> & forceVector() { return cpuVector_; }
+       auto &forceVector() { return cpuVector_; }
+       auto const &forceVector() const { return cpuVector_; }
        ForceStruct * pointerCpu()  { return cpuVector_.empty() ? nullptr : cpuVector_.data(); }
-       bool empty() {return cpuVector_.empty();}
+       bool empty() const { return cpuVector_.empty(); }
 
        {% if target == 'gpu' -%}
        ForceStruct * pointerGpu()  { return gpuVector_[0]; }
@@ -477,6 +480,26 @@ private:
     BlockDataID forceVectorID;
     {%- endif %}
     {{additional_data_handler.additional_member_variable|indent(4)}}
+
+{% if calculate_force -%}
+public:
+    static constexpr std::array<std::array<int, {{additional_data_handler.Q}}u>, {{dim}}u> neighborOffset = { {
+        {% for i in range(dim) -%}
+            { {{additional_data_handler.neighbor_directions[i][1:-1]}} },
+        {%- endfor %}
+    } };
+
+    auto const & getForceVector(IBlock const *block) const {
+        auto const * forceVector = block->getData<ForceVector>(forceVectorID);
+        return forceVector->forceVector();
+    }
+
+    auto const & getIndexVector(IBlock const *block) const {
+        auto const * indexVectors = block->getData<IndexVectors>(indexVectorID);
+        return indexVectors->indexVector(IndexVectors::ALL);
+    }
+{%- endif %}
+
 public:
     {{kernel|generate_members(('indexVector', 'indexVectorSize', 'forceVector', 'forceVectorSize'))|indent(4)}}
 };

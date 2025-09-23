@@ -32,7 +32,10 @@
 #include "field/FlagField.h"
 #include "field/GhostLayerField.h"
 
-#include <set>
+#include <array>
+#include <cassert>
+#include <functional>
+#include <memory>
 #include <vector>
 
 #ifdef __GNUC__
@@ -80,7 +83,8 @@ public:
       return other.cpuVectors_ == cpuVectors_;
     }
 
-    CpuIndexVector &indexVector(Type t) { return cpuVectors_[t]; }
+    auto &indexVector(Type t) { return cpuVectors_[t]; }
+    auto const &indexVector(Type t) const { return cpuVectors_[t]; }
     IndexInfo *pointerCpu(Type t) {
       return cpuVectors_[t].empty() ? nullptr : cpuVectors_[t].data();
     }
@@ -110,17 +114,20 @@ public:
       return other.cpuVector_ == cpuVector_;
     }
 
-    std::vector<ForceStruct> &forceVector() { return cpuVector_; }
-    ForceStruct *pointerCpu() { return cpuVector_.data(); }
-    bool empty() { return cpuVector_.empty(); }
+    auto &forceVector() { return cpuVector_; }
+    auto const &forceVector() const { return cpuVector_; }
+    ForceStruct *pointerCpu() {
+      return cpuVector_.empty() ? nullptr : cpuVector_.data();
+    }
+    bool empty() const { return cpuVector_.empty(); }
 
     Vector3<double> getForce() {
       syncCPU();
       Vector3<double> result(double_c(0.0));
-      for (auto &it : cpuVector_) {
-        result[0] += it.F_0;
-        result[1] += it.F_1;
-        result[2] += it.F_2;
+      for (auto const &force : cpuVector_) {
+        result[0] += force.F_0;
+        result[1] += force.F_1;
+        result[2] += force.F_2;
       }
       return result;
     }
@@ -134,7 +141,7 @@ public:
   };
 
   DynamicUBBDoublePrecision(
-      const shared_ptr<StructuredBlockForest> &blocks, BlockDataID pdfsID_,
+      const std::shared_ptr<StructuredBlockForest> &blocks, BlockDataID pdfsID_,
       std::function<Vector3<double>(
           const Cell &, const shared_ptr<StructuredBlockForest> &, IBlock &)>
           &velocityCallbackDynamicUBBDoublePrecision)
@@ -180,7 +187,7 @@ public:
   }
 
   template <typename FlagField_T>
-  void fillFromFlagField(const shared_ptr<StructuredBlockForest> &blocks,
+  void fillFromFlagField(const std::shared_ptr<StructuredBlockForest> &blocks,
                          ConstBlockDataID flagFieldID, FlagUID boundaryFlagUID,
                          FlagUID domainFlagUID) {
     for (auto blockIt = blocks->begin(); blockIt != blocks->end(); ++blockIt)
@@ -200,7 +207,7 @@ public:
 
     auto *flagField = block->getData<FlagField_T>(flagFieldID);
 
-    if (!(flagField->flagExists(boundaryFlagUID) &&
+    if (!(flagField->flagExists(boundaryFlagUID) and
           flagField->flagExists(domainFlagUID)))
       return;
 
@@ -623,30 +630,24 @@ private:
 
   BlockDataID indexVectorID;
   BlockDataID forceVectorID;
-
   std::function<Vector3<double>(
       const Cell &, const shared_ptr<StructuredBlockForest> &, IBlock &)>
       elementInitialiser;
 
 public:
-  static constexpr std::vector<std::vector<int>> getNeighborOffset() {
-    std::vector<std::vector<int>> neighborOffset;
-    neighborOffset.push_back(
-        {0, 0, 0, -1, 1, 0, 0, -1, 1, -1, 1, 0, 0, -1, 1, 0, 0, -1, 1});
-    neighborOffset.push_back(
-        {0, 1, -1, 0, 0, 0, 0, 1, 1, -1, -1, 1, -1, 0, 0, 1, -1, 0, 0});
-    neighborOffset.push_back(
-        {0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 1, 1, 1, 1, -1, -1, -1, -1});
-    return neighborOffset;
-  }
-  std::vector<ForceStruct> &getForceVector(const IBlock *block) {
-    auto *forceVector =
-        const_cast<ForceVector *>(block->getData<ForceVector>(forceVectorID));
+  static constexpr std::array<std::array<int, 19u>, 3u> neighborOffset = {{
+      {0, 0, 0, -1, 1, 0, 0, -1, 1, -1, 1, 0, 0, -1, 1, 0, 0, -1, 1},
+      {0, 1, -1, 0, 0, 0, 0, 1, 1, -1, -1, 1, -1, 0, 0, 1, -1, 0, 0},
+      {0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 1, 1, 1, 1, -1, -1, -1, -1},
+  }};
+
+  auto const &getForceVector(IBlock const *block) const {
+    auto const *forceVector = block->getData<ForceVector>(forceVectorID);
     return forceVector->forceVector();
   }
-  std::vector<IndexInfo> &getIndexVector(const IBlock *block) {
-    auto *indexVectors =
-        const_cast<IndexVectors *>(block->getData<IndexVectors>(indexVectorID));
+
+  auto const &getIndexVector(IBlock const *block) const {
+    auto const *indexVectors = block->getData<IndexVectors>(indexVectorID);
     return indexVectors->indexVector(IndexVectors::ALL);
   }
 

@@ -30,8 +30,10 @@ class BounceBackSlipVelocityUBB(
 
     def __init__(self, stencil, boundary_object):
         super().__init__(stencil, boundary_object)
-        self.neighbor_directions = np.array(
-            stencil.stencil_entries).transpose()
+        self.Q = stencil.Q
+        self.neighbor_directions = [
+            np.array2string(x, separator=",") for x in np.array(
+            stencil.stencil_entries).transpose()]
 
     def data_initialisation(self, direction):
         '''
@@ -54,33 +56,4 @@ class BounceBackSlipVelocityUBB(
             "element.vel_1 = InitialisationAdditionalData[1];",
             "element.vel_2 = InitialisationAdditionalData[2];",
         ]
-        return "\n".join(code)
-
-    @property
-    def additional_member_variable(self):
-        '''
-        Adds getter for the force and index fields
-        '''
-        code = super().additional_member_variable
-        code = [code,
-                "public:",
-                "static constexpr std::vector<std::vector<int>> getNeighborOffset() {",
-                "std::vector<std::vector<int>> neighborOffset;",
-                f"neighborOffset.push_back({{{', '.join(
-                    map(str, self.neighbor_directions[0]))}}});",
-                f"neighborOffset.push_back({{{', '.join(
-                    map(str, self.neighbor_directions[1]))}}});",
-                f"neighborOffset.push_back({{{', '.join(
-                    map(str, self.neighbor_directions[2]))}}});",
-                "return neighborOffset;",
-                "}",
-                "std::vector<ForceStruct> & getForceVector(const IBlock *block) {",
-                "auto * forceVector = const_cast<ForceVector *>(block->getData<ForceVector>(forceVectorID));",
-                "return forceVector->forceVector();",
-                "}",
-                "std::vector<IndexInfo> & getIndexVector(const IBlock *block) {",
-                "auto * indexVectors = const_cast<IndexVectors *>(block->getData<IndexVectors>(indexVectorID));",
-                "return indexVectors->indexVector(IndexVectors::ALL);",
-                "}",
-                ]
         return "\n".join(code)

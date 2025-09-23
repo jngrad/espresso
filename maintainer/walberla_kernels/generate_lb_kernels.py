@@ -326,11 +326,6 @@ def generate_boundary_kernels(ctx, method, data_type):
                                   "! isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag)")
         content = content.replace(
             "! isFlagSet(it, domainFlag) || isFlagSet(it, boundaryFlag)", "! isFlagSet(it, domainFlag)", 1)
-        # use range-based for loop
-        content = content.replace(
-            "for(std::vector<ForceStruct>::iterator it = cpuVector_.begin(); it != cpuVector_.end(); ++it)",
-            "for(auto & it : cpuVector_)")
-        content = content.replace("] += it->F_", "] += it.F_")
         return content
 
     for _, target_suffix in paramlist(parameters, ("CPU", "GPU")):
