@@ -17,9 +17,9 @@
 //! \\author pystencils
 //======================================================================================================================
 
-// kernel generated with pystencils v1.3.7+13.gdfd203a, lbmpy v1.3.7+5.gd7100a3,
-// sympy v1.10, lbmpy_walberla/pystencils_walberla from waLBerla commit
-// c69cb11d6a95d32b2280544d3d9abde1fe5fdbb5
+// kernel generated with pystencils v1.3.7+13.gdfd203a, lbmpy
+// v1.3.7+10.gd3f6236, sympy v1.12.1, lbmpy_walberla/pystencils_walberla from
+// waLBerla commit c69cb11d6a95d32b2280544d3d9abde1fe5fdbb5
 
 #pragma once
 #include "core/DataTypes.h"
@@ -83,11 +83,16 @@ public:
     }
 
     ~IndexVectors() {
-      for (auto &gpuVec : gpuVectors_)
-        WALBERLA_GPU_CHECK(gpuFree(gpuVec));
+      for (auto &gpuVec : gpuVectors_) {
+        if (gpuVec) {
+          WALBERLA_GPU_CHECK(gpuFree(gpuVec));
+        }
+      }
     }
     CpuIndexVector &indexVector(Type t) { return cpuVectors_[t]; }
-    IndexInfo *pointerCpu(Type t) { return cpuVectors_[t].data(); }
+    IndexInfo *pointerCpu(Type t) {
+      return cpuVectors_[t].empty() ? nullptr : cpuVectors_[t].data();
+    }
 
     IndexInfo *pointerGpu(Type t) { return gpuVectors_[t]; }
     void syncGPU() {
@@ -99,9 +104,12 @@ public:
       for (size_t i = 0; i < cpuVectors_.size(); ++i) {
         auto &gpuVec = gpuVectors_[i];
         auto &cpuVec = cpuVectors_[i];
+        if (cpuVec.empty()) {
+          continue;
+        }
         WALBERLA_GPU_CHECK(
             gpuMalloc(&gpuVec, sizeof(IndexInfo) * cpuVec.size()));
-        WALBERLA_GPU_CHECK(gpuMemcpy(gpuVec, &cpuVec[0],
+        WALBERLA_GPU_CHECK(gpuMemcpy(gpuVec, cpuVec.data(),
                                      sizeof(IndexInfo) * cpuVec.size(),
                                      gpuMemcpyHostToDevice));
       }
@@ -181,7 +189,7 @@ public:
 
   DynamicUBBSinglePrecisionCUDA(
       const shared_ptr<StructuredBlockForest> &blocks, BlockDataID pdfsID_,
-      std::function<Vector3<float32>(
+      std::function<Vector3<float>(
           const Cell &, const shared_ptr<StructuredBlockForest> &, IBlock &)>
           &velocityCallbackDynamicUBBSinglePrecisionCUDA)
       : elementInitialiser(velocityCallbackDynamicUBBSinglePrecisionCUDA),
@@ -208,10 +216,10 @@ public:
 
   void outer(IBlock *block, gpuStream_t stream = nullptr);
 
-  Vector3<double> getForce(IBlock *block) {
+  Vector3<float> getForce(IBlock *block) {
     auto *forceVector = block->getData<ForceVector>(forceVectorID);
     if (forceVector->empty())
-      return Vector3<double>(double_c(0.0));
+      return Vector3<float>(double_c(0.0));
     return forceVector->getForce();
   }
 
@@ -275,11 +283,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -296,11 +304,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -317,11 +325,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -338,11 +346,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -359,11 +367,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -380,11 +388,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -401,11 +409,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -422,11 +430,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -443,11 +451,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -464,11 +472,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -485,11 +493,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -506,11 +514,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -527,11 +535,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -548,11 +556,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -569,11 +577,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -590,11 +598,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -611,11 +619,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -632,11 +640,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -653,11 +661,11 @@ public:
         element.vel_0 = InitialisationAdditionalData[0];
         element.vel_1 = InitialisationAdditionalData[1];
         element.vel_2 = InitialisationAdditionalData[2];
-        indexVectorAll.push_back(element);
+        indexVectorAll.emplace_back(element);
         if (inner.contains(it.x(), it.y(), it.z()))
-          indexVectorInner.push_back(element);
+          indexVectorInner.emplace_back(element);
         else
-          indexVectorOuter.push_back(element);
+          indexVectorOuter.emplace_back(element);
       }
     }
 
@@ -672,7 +680,8 @@ private:
 
   BlockDataID indexVectorID;
   BlockDataID forceVectorID;
-  std::function<Vector3<float32>(
+
+  std::function<Vector3<float>(
       const Cell &, const shared_ptr<StructuredBlockForest> &, IBlock &)>
       elementInitialiser;
 
