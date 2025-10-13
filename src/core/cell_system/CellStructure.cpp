@@ -116,9 +116,9 @@ void CellStructure::rebuild_local_properties(double const pair_cutoff) {
   using execution_space = Kokkos::DefaultExecutionSpace;
   auto const num_threads = execution_space().concurrency();
   auto const num_part = get_unique_particles().size();
-  auto const &system = get_system();
   auto max_counts = estimate_max_counts(pair_cutoff, num_part);
 #ifdef ESPRESSO_COLLISION_DETECTION
+  auto const &system = get_system();
   if (system.has_collision_detection_enabled()) {
     // TODO: use other types of Verlet list data structures
     max_counts = num_part * 2ul;
