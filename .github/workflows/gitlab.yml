@@ -34,6 +34,8 @@ jobs:
           git push -f https://github:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de/jgrad/espresso.git ${{ github.ref_name }}
       - name: "update commit status"
         shell: sh
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh api \
               -X POST \
