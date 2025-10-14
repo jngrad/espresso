@@ -37,17 +37,34 @@ status_pending:
   stage: prepare
   script: sh maintainer/gh_post_status.sh pending
 
+maxset:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'gcc-14'
+     CXX: 'g++-14'
+     GCOV: 'gcov-14'
+     with_cuda: 'false'
+     myconfig: 'maxset'
+     with_coverage: 'false'
+     with_scafacos: 'false'
+     with_walberla: 'false'
+     with_stokesian_dynamics: 'false'
+     with_caliper: 'false'
+     check_skip_long: 'true'
+     make_check_python: 'false'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+  tags:
+    - espresso
+    - no-cuda
+    - numa
+    - avx2
+
 status_success:
   <<: *notification_job_definition
   stage: result
-  script:
-    - GIT_COMMIT=$(git rev-parse HEAD)
-    - URL="https://gitlab.icp.uni-stuttgart.de/jgrad/espresso/-/pipelines/${CI_PIPELINE_ID}"
-    - curl "https://api.github.com/repos/jgrad/espresso/statuses/${GIT_COMMIT}" \
-       -H "Authorization: token ${GITHUB_TOKEN}" \
-       -H "Content-Type: application/json" \
-       -X POST \
-       -d "{\"state\": \"success\", \"context\": \"ICP GitLab CI\", \"target_url\": \"${URL}\"}"
+  script: sh maintainer/gh_post_status.sh success
   when: on_success
 
 status_failure:
