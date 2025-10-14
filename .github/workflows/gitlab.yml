@@ -21,7 +21,7 @@ jobs:
         run: |
           git push -f https://github:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de/jgrad/espresso.git HEAD:PR-${{ github.event.number }}
       - name: "process push event (fetch changes)"
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push-other' }}
         uses: actions/checkout@main
         with:
           fetch-depth: 100

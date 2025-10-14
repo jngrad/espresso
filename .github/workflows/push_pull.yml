@@ -14,6 +14,15 @@ jobs:
     if: ${{ github.repository == 'jngrad/espresso' }}
     uses: ./.github/workflows/gitlab.yml
 
+  trigger_pipeline:
+    runs-on: ubuntu-24.04
+    environment: mirror
+    steps:
+      - name: "check"
+        run: |
+          export token=${{ secrets.GITLAB_WRITE_API }}
+          echo "length: ${#token} last char: ${token: -1}"
+
   macOS:
     runs-on: macos-15
     if: ${{ github.repository == 'espressomd/espresso' }}
