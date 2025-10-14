@@ -16,21 +16,15 @@ jobs:
         uses: actions/checkout@main
       - name: "process pull request event (push changes)"
         if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/checkout@main
-        with:
-          token: ${{ secrets.GITLAB_CI_API }}
         run: |
-          git push -f git@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git HEAD:PR-${{ github.event.number }}
+          git push -f https://github:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git HEAD:PR-${{ github.event.number }}
       - name: "process push event (fetch changes)"
         if: ${{ github.event_name == 'push' }}
         uses: actions/checkout@main
       - name: "process push event (push changes)"
         if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@main
-        with:
-          token: ${{ secrets.GITLAB_CI_API }}
         run: |
-          git push -f ${{ github.ref_name }} git@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git
+          git push -f https://github:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git ${{ github.ref_name }}
       - name: "update commit status"
         shell: sh
         run: |

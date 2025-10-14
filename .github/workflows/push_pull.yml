@@ -9,9 +9,6 @@ on:
 permissions:
   contents: read # to fetch code (actions/checkout)
 
-on:
-  workflow_call:
-
 jobs:
   GitLab-CI:
     runs-on: ubuntu-24.04
