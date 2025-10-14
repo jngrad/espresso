@@ -15,7 +15,7 @@ on:
 jobs:
   GitLab-CI:
     runs-on: ubuntu-24.04
-    if: ${{ github.repository == 'espressomd/espresso' }}
+    if: ${{ github.repository == 'jngrad/espresso' }}
     environment: continuous_integration
     steps:
       - name: Trigger GitLab-CI

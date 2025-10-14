@@ -9,7 +9,6 @@ permissions:
 jobs:
   trigger_pipeline:
     runs-on: ubuntu-24.04
-    if: ${{ github.repository == 'espressomd/espresso' }}
     environment: continuous_integration
     steps:
       - name: "process pull request event"
@@ -21,21 +20,21 @@ jobs:
           mkdir espresso
           cd espresso
           git init
-          git fetch https://github.com/espressomd/espresso pull/${{ github.event.number }}/head:pr
+          git fetch https://github.com/jgrad/espresso pull/${{ github.event.number }}/head:pr
           git checkout pr
-          git push -f git@gitlab.icp.uni-stuttgart.de:espressomd/espresso.git pr:PR-${{ github.event.number }}
+          git push -f git@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git pr:PR-${{ github.event.number }}
       - name: "process push event"
         if: ${{ github.event_name == 'push' }}
         shell: sh
         env:
           GITLAB_CI_API: ${{ secrets.GITLAB_CI_API }}
         run: |
-          git clone --mirror https://github.com/espressomd/espresso
+          git clone --mirror https://github.com/jgrad/espresso
           cd espresso.git
-          git push -f --all git@gitlab.icp.uni-stuttgart.de:espressomd/espresso.git
-          git push -f --tags git@gitlab.icp.uni-stuttgart.de:espressomd/espresso.git
+          git push -f --all git@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git
+          git push -f --tags git@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git
       - name: "update commit status"
         shell: sh
         run: |
           curl -s "${{ github.api_url }}/repos/${{ github.repository }}/statuses/${{ github.sha }}?access_token=${{ github.token }}" -H "Content-Type: application/json" -X POST \
-               -d "{\"state\": \"pending\", \"context\": \"ICP GitLab CI\", \"target_url\": \"https://gitlab.icp.uni-stuttgart.de/${{ github.repository }}/commit/${{ github.sha }}/pipelines\"}"
+               -d "{\"state\": \"pending\", \"context\": \"ICP GitLab CI\", \"target_url\": \"https://gitlab.icp.uni-stuttgart.de/jgrad/espresso/commit/${{ github.sha }}/pipelines\"}"
