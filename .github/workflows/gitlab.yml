@@ -36,4 +36,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          sh maintainer/CI/build_cmake.sh pending
+          sh maintainer/gh_post_status.sh pending
