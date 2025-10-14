@@ -17,6 +17,7 @@ jobs:
       contents: read
       statuses: write
     secrets:
+      # https://github.com/orgs/community/discussions/25238#discussioncomment-3247035
       GITLAB_WRITE_API: ${{ secrets.GITLAB_WRITE_API }}
 
   trigger_pipeline:

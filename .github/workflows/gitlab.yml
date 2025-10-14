@@ -44,5 +44,5 @@ jobs:
               /repos/${{ github.repository }}/statuses/${{ github.sha }} \
               -f 'state=pending' \
               -f 'target_url=https://gitlab.icp.uni-stuttgart.de/jgrad/espresso/commit/${{ github.sha }}/pipelines' \
-              -f 'description=The build started!' \
+              -f 'description=The CI pipeline has started' \
               -f 'context=ICP GitLab CI'

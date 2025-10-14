@@ -23,10 +23,14 @@ set -x
 [ "${#}" -eq 1 ] || exit 1
 
 GIT_COMMIT=$(git rev-parse HEAD)
-URL="https://gitlab.icp.uni-stuttgart.de/jgrad/espresso/-/pipelines/${CI_PIPELINE_ID}"
+TARGET_URL="https://gitlab.icp.uni-stuttgart.de/jgrad/espresso/-/pipelines/${CI_PIPELINE_ID}"
 STATUS="${1}"
-curl "https://api.github.com/repos/jgrad/espresso/statuses/${GIT_COMMIT}" \
+if [ "${STATUS}" = "pending" ]; then DESCRIPTION="The CI pipeline has started"; fi
+if [ "${STATUS}" = "failure" ]; then DESCRIPTION="Failing"; fi
+if [ "${STATUS}" = "success" ]; then DESCRIPTION="Successful"; fi
+curl -L "https://api.github.com/repos/jngrad/espresso/statuses/${GIT_COMMIT}" \
      -H "Authorization: token ${GITHUB_TOKEN}" \
-     -H "Content-Type: application/json" \
+     -H "Accept: application/vnd.github+json" \
+     -H "X-GitHub-Api-Version: 2022-11-28" \
      -X POST \
-     -d "{\"state\": \"${STATUS}\", \"context\": \"ICP GitLab CI\", \"target_url\": \"${URL}\"}"
+     -d '{"state":"'${STATUS}'", "context":"ICP GitLab CI", "description":"'${description}'", "target_url":"'${URL}'"}'
