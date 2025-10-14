@@ -11,28 +11,26 @@ jobs:
     runs-on: ubuntu-24.04
     environment: continuous_integration
     steps:
-      - name: "process pull request event"
+      - name: "process pull request event (fetch changes)"
         if: ${{ github.event_name == 'pull_request' }}
-        shell: sh
-        env:
-          GITLAB_CI_API: ${{ secrets.GITLAB_CI_API }}
+        uses: actions/checkout@main
+      - name: "process pull request event (push changes)"
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/checkout@main
+        with:
+          token: ${{ secrets.GITLAB_CI_API }}
         run: |
-          mkdir espresso
-          cd espresso
-          git init
-          git fetch https://github.com/jgrad/espresso pull/${{ github.event.number }}/head:pr
-          git checkout pr
-          git push -f git@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git pr:PR-${{ github.event.number }}
-      - name: "process push event"
+          git push -f git@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git HEAD:PR-${{ github.event.number }}
+      - name: "process push event (fetch changes)"
         if: ${{ github.event_name == 'push' }}
-        shell: sh
-        env:
-          GITLAB_CI_API: ${{ secrets.GITLAB_CI_API }}
+        uses: actions/checkout@main
+      - name: "process push event (push changes)"
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/checkout@main
+        with:
+          token: ${{ secrets.GITLAB_CI_API }}
         run: |
-          git clone --mirror https://github.com/jgrad/espresso
-          cd espresso.git
-          git push -f --all git@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git
-          git push -f --tags git@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git
+          git push -f ${{ github.ref_name }} git@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git
       - name: "update commit status"
         shell: sh
         run: |
