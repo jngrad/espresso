@@ -13,6 +13,8 @@ jobs:
   GitLab-CI:
     if: ${{ github.repository == 'jngrad/espresso' }}
     uses: ./.github/workflows/gitlab.yml
+    secrets:
+      GITLAB_WRITE_API: ${{ secrets.GITLAB_WRITE_API }}
 
   trigger_pipeline:
     runs-on: ubuntu-24.04

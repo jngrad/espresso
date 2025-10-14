@@ -2,6 +2,9 @@ name: GitLab-CI
 
 on:
   workflow_call:
+    secrets:
+      GITLAB_WRITE_API:
+        required: true
 
 permissions:
   contents: read # to fetch code (actions/checkout)
