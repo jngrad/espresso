@@ -10,7 +10,7 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
-  GitLab-CI:
+  GitLab CI:
     if: ${{ github.repository == 'jngrad/espresso' }}
     uses: ./.github/workflows/gitlab.yml
     permissions:

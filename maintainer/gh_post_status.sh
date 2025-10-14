@@ -18,8 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-set -x
-
 [ "${#}" -eq 1 ] || exit 1
 
 GIT_COMMIT=$(git rev-parse HEAD)
@@ -33,4 +31,4 @@ curl -L "https://api.github.com/repos/jngrad/espresso/statuses/${GIT_COMMIT}" \
      -H "Accept: application/vnd.github+json" \
      -H "X-GitHub-Api-Version: 2022-11-28" \
      -X POST \
-     -d "{\"state\": \"${STATUS}\", \"context\": \"ICP GitLab CI\", \"description\": \"${DESCRIPTION}\", \"target_url\": \"${TARGET_URL}\"}"
+     -d "{\"state\": \"${STATUS}\", \"context\": \"GitLab CI\", \"description\": \"${DESCRIPTION}\", \"target_url\": \"${TARGET_URL}\"}"

@@ -1,4 +1,4 @@
-name: GitLab-CI
+name: GitLab CI
 
 on:
   workflow_call:
@@ -7,7 +7,7 @@ on:
         required: true
 
 jobs:
-  trigger_pipeline:
+  synchronize:
     runs-on: ubuntu-24.04
     environment: mirror
     permissions:
@@ -18,31 +18,22 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/checkout@main
         with:
-          fetch-depth: 100
+          fetch-depth: 500
       - name: "process pull request event (push changes)"
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          git push -f https://github:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de/jgrad/espresso.git HEAD:PR-${{ github.event.number }}
+          git push -f https://token:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de/jgrad/espresso.git HEAD:PR-${{ github.event.number }}
       - name: "process push event (fetch changes)"
         if: ${{ github.event_name == 'push' }}
         uses: actions/checkout@main
         with:
-          fetch-depth: 100
+          fetch-depth: 500
       - name: "process push event (push changes)"
         if: ${{ github.event_name == 'push' }}
         run: |
-          git push -f https://github:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de/jgrad/espresso.git ${{ github.ref_name }}
+          git push -f https://token:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de/jgrad/espresso.git ${{ github.ref_name }}
       - name: "update commit status"
-        shell: sh
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          gh api \
-              -X POST \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              /repos/${{ github.repository }}/statuses/${{ github.sha }} \
-              -f 'state=pending' \
-              -f 'target_url=https://gitlab.icp.uni-stuttgart.de/jgrad/espresso/commit/${{ github.sha }}/pipelines' \
-              -f 'description=The CI pipeline has started' \
-              -f 'context=ICP GitLab CI'
+          sh maintainer/CI/build_cmake.sh pending
