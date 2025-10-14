@@ -11,19 +11,8 @@ permissions:
 
 jobs:
   GitLab-CI:
-    runs-on: ubuntu-24.04
     if: ${{ github.repository == 'jngrad/espresso' }}
-    environment: continuous_integration
-    steps:
-      - name: Checkout
-        uses: actions/checkout@main
-        with:
-          sparse-checkout: .github
-          ref: refs/heads/python
-      - name: Trigger GitLab-CI
-        uses: ./.github/actions/gitlab
-        with:
-          commit_sha: ${{ github.sha }}
+    uses: ./.github/workflows/gitlab.yml
 
   macOS:
     runs-on: macos-15
