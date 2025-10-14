@@ -15,7 +15,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/checkout@main
         with:
-          fetch-depth: 1000
+          fetch-depth: 100
       - name: "process pull request event (push changes)"
         if: ${{ github.event_name == 'pull_request' }}
         run: |
@@ -24,10 +24,12 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         uses: actions/checkout@main
         with:
-          fetch-depth: 1000
+          fetch-depth: 100
       - name: "process push event (push changes)"
         if: ${{ github.event_name == 'push' }}
         run: |
+          export token=${{ secrets.GITLAB_WRITE_API }}
+          echo "length: ${#token} last char: ${token: -1}"
           git push -f https://github:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de/jgrad/espresso.git ${{ github.ref_name }}
       - name: "update commit status"
         shell: sh
