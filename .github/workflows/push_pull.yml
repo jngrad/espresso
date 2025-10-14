@@ -8,7 +8,7 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
-  macos:
+  macOS:
     runs-on: macos-15
     if: ${{ github.repository == 'espressomd/espresso' }}
     steps:
@@ -54,7 +54,7 @@ jobs:
           with_walberla_avx: 'false'
           with_shared_memory_parallelism: 'false'
 
-  debian:
+  Debian:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/espressomd/docker/debian:3388b293a5e8a9b613b1bfa4220e54dfb4bff245-base-layer
@@ -95,7 +95,7 @@ jobs:
           OMPI_ALLOW_RUN_AS_ROOT: 1
           OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
 
-  ubuntu:
+  Ubuntu:
     runs-on: ubuntu-latest
     if: ${{ github.repository == 'espressomd/espresso' }}
     container:
@@ -137,7 +137,7 @@ jobs:
           OMPI_ALLOW_RUN_AS_ROOT: 1
           OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
 
-  fedora:
+  Fedora:
     runs-on: ubuntu-latest
     if: ${{ github.repository == 'espressomd/espresso' }}
     container:
