@@ -10,16 +10,6 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
-  GitLab CI:
-    if: ${{ github.repository == 'jngrad/espresso' }}
-    uses: ./.github/workflows/gitlab.yml
-    permissions:
-      contents: read
-      statuses: write
-    secrets:
-      # https://github.com/orgs/community/discussions/25238#discussioncomment-3247035
-      GITLAB_WRITE_API: ${{ secrets.GITLAB_WRITE_API }}
-
   trigger_pipeline:
     runs-on: ubuntu-24.04
     environment: mirror
