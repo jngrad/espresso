@@ -9,7 +9,7 @@ permissions:
 jobs:
   trigger_pipeline:
     runs-on: ubuntu-24.04
-    environment: continuous_integration
+    environment: mirror
     steps:
       - name: "process pull request event (fetch changes)"
         if: ${{ github.event_name == 'pull_request' }}
