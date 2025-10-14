@@ -2,12 +2,27 @@ name: run tests
 
 on:
   push:
+  create:
   pull_request:
+    types: [opened, synchronize]
 
 permissions:
   contents: read # to fetch code (actions/checkout)
 
+on:
+  workflow_call:
+
 jobs:
+  GitLab-CI:
+    runs-on: ubuntu-24.04
+    if: ${{ github.repository == 'espressomd/espresso' }}
+    environment: continuous_integration
+    steps:
+      - name: Trigger GitLab-CI
+        uses: ./.github/actions/gitlab
+        with:
+          commit_sha: ${{ github.sha }}
+
   macOS:
     runs-on: macos-15
     if: ${{ github.repository == 'espressomd/espresso' }}
