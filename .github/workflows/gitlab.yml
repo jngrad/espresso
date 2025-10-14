@@ -19,7 +19,7 @@ jobs:
       - name: "process pull request event (push changes)"
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          git push -f https://github:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git HEAD:PR-${{ github.event.number }}
+          git push -f https://github:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de/jgrad/espresso.git HEAD:PR-${{ github.event.number }}
       - name: "process push event (fetch changes)"
         if: ${{ github.event_name == 'push' }}
         uses: actions/checkout@main
@@ -28,7 +28,7 @@ jobs:
       - name: "process push event (push changes)"
         if: ${{ github.event_name == 'push' }}
         run: |
-          git push -f https://github:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de:jgrad/espresso.git ${{ github.ref_name }}
+          git push -f https://github:${{ secrets.GITLAB_WRITE_API }}@gitlab.icp.uni-stuttgart.de/jgrad/espresso.git ${{ github.ref_name }}
       - name: "update commit status"
         shell: sh
         run: |
