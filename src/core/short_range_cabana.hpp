@@ -110,8 +110,7 @@ link_cell_kokkos(std::span<Cell *const> cells, BoxGeometry const &box_geo,
   auto inter_kernel = [&cells, &distance_function, &verlet_criterion,
                        &id_to_index, &inter_operator, max_id](const int i) {
     auto &local_particles = cells[i]->particles();
-    for (auto it = local_particles.begin(); it != local_particles.end(); ++it) {
-      auto const &p1 = *it;
+    for (auto const &p1 : local_particles) {
       if (p1.id() <= max_id) {
         auto const ii = id_to_index(p1.id());
         if (ii >= 0) {
