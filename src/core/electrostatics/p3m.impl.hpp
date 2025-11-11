@@ -88,7 +88,6 @@ private:
   int tune_timings;
   std::pair<std::optional<int>, std::optional<int>> tune_limits;
   bool tune_verbose;
-  bool check_complex_residuals;
   bool m_is_tuned;
 
   constexpr const Utils::Vector3i get_memory_layout() const {
@@ -103,12 +102,10 @@ private:
 public:
   CoulombP3MImpl(std::unique_ptr<CoulombP3MState<FloatType>> &&p3m_state,
                  double prefactor, int tune_timings, bool tune_verbose,
-                 decltype(tune_limits) tune_limits,
-                 bool check_complex_residuals)
+                 decltype(tune_limits) tune_limits)
       : CoulombP3M(p3m_state->params), p3m{*p3m_state},
         p3m_state_ptr{std::move(p3m_state)}, tune_timings{tune_timings},
-        tune_limits{std::move(tune_limits)}, tune_verbose{tune_verbose},
-        check_complex_residuals{check_complex_residuals} {
+        tune_limits{std::move(tune_limits)}, tune_verbose{tune_verbose} {
 
     if (tune_timings <= 0) {
       throw std::domain_error("Parameter 'timings' must be > 0");

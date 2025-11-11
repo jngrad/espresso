@@ -44,7 +44,6 @@ class CoulombP3M : public Actor<CoulombP3M<Architecture>, ::CoulombP3M> {
   int m_tune_timings;
   bool m_tune;
   bool m_tune_verbose;
-  bool m_check_complex_residuals;
   bool m_single_precision;
   std::pair<std::optional<int>, std::optional<int>> m_tune_limits;
 
@@ -99,8 +98,6 @@ public:
            return retval;
          }},
         {"tune", AutoParameter::read_only, [this]() { return m_tune; }},
-        {"check_complex_residuals", AutoParameter::read_only,
-         [this]() { return m_check_complex_residuals; }},
     });
   }
 
@@ -142,8 +139,6 @@ public:
         }
       });
     }
-    m_check_complex_residuals =
-        get_value<bool>(params, "check_complex_residuals");
     auto const single_precision = get_value<bool>(params, "single_precision");
     context()->parallel_try_catch([&]() {
       if (Architecture == Arch::GPU and not single_precision) {
@@ -160,7 +155,7 @@ public:
                                get_value<double>(params, "accuracy")};
       make_handle(single_precision, std::move(p3m),
                   get_value<double>(params, "prefactor"), m_tune_timings,
-                  m_tune_verbose, m_tune_limits, m_check_complex_residuals);
+                  m_tune_verbose, m_tune_limits);
     });
     set_charge_neutrality_tolerance(params);
   }
