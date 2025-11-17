@@ -481,10 +481,6 @@ General features
 
    .. seealso:: :ref:`Electrostatics`
 
--  ``MMM1D_MACHINE_PREC``: This enables high-precision Bessel functions
-   for MMM1D on CPU. Comes with a 60% slow-down penalty. The low-precision
-   functions are enabled by default and are precise enough for most applications.
-
 -  ``DIPOLES`` This activates the dipole-moment property of particles and switches
    on various magnetostatics algorithms
 
@@ -658,7 +654,8 @@ using a CMake flag (see :ref:`Options and Variables`).
   :ref:`ScaFaCoS electrostatics`, :ref:`ScaFaCoS magnetostatics`).
 
 - ``GSL``: enables features relying on the GNU Scientific Library, e.g.
-  :meth:`espressomd.cluster_analysis.Cluster.fractal_dimension`.
+  :meth:`espressomd.cluster_analysis.Cluster.fractal_dimension` and
+  :class:`espressomd.electrostatics.MMM1D`.
 
 - ``STOKESIAN_DYNAMICS``: enable the Stokesian Dynamics propagator
   (see :ref:`Stokesian Dynamics`). Requires BLAS and LAPACK.
