@@ -1,4 +1,6 @@
 {
   "image": "ghcr.io/espressomd/docker/fedora:3388b293a5e8a9b613b1bfa4220e54dfb4bff245",
+  "postCreateCommand": ". /etc/profile.d/modules.sh && module load mpi",
+  "postCreateCommand": "bash && echo -e \"build ESPResSo with:\nmkdir build; cd build; cmake .. -D ESPRESO_BUILD_WITH_FFTW=ON -D ESPRESO_BUILD_WITH_WALBERLA=ON\nmake -j$(nproc)\nmake -j$(nproc) tutorials\n\nrealpath src/python > $(python -c 'import sysconfig;print(sysconfig.get_path(\\\"platlib\\\"))')/espresso.pth\"",
   "features": {}
 }
