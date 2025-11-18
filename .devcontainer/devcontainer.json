@@ -17,8 +17,8 @@
     },
     "codespaces": {
       "openFiles": [
-        ".devcontainer/Readme.md",
-        "doc/tutorials/Readme.md"
+        ".devcontainer",
+        "doc/tutorials"
       ]
     }
   },
