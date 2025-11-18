@@ -1,0 +1,4 @@
+{
+  "image": "ghcr.io/espressomd/docker/fedora:3388b293a5e8a9b613b1bfa4220e54dfb4bff245-base-layer",
+  "features": {}
+}
