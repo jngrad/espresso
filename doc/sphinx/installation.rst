@@ -28,10 +28,9 @@ This means, however, that learning how to compile is a necessary evil.
 The build system of |es| uses CMake to compile
 software easily on a wide range of platforms.
 
-Users who only need a "default" installation of |es| and have an account
-on the `Gitpod <https://gitpod.io>`__ platform can build the software
-automatically in the cloud and skip this chapter. For more details on
-running |es| in Gitpod, go to section :ref:`Running in the cloud`.
+Users who only need a "default" installation of |es| and have a GitHub account
+can build the software automatically in the cloud and directly go to section
+:ref:`Using Codespaces`.
 
 Quickstart
 ----------
