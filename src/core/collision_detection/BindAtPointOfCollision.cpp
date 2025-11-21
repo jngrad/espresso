@@ -94,7 +94,7 @@ void BindAtPointOfCollision::handle_collisions(
   // non-ghost particle
   auto global_collision_queue = gather_collision_queue(local_collision_queue);
 
-  // Synchornize max_seen_part
+  // Synchronize max_seen_part
   auto const global_max_seen_particle = boost::mpi::all_reduce(
       ::comm_cart, cell_structure.get_max_local_particle_id(),
       boost::mpi::maximum<int>());
