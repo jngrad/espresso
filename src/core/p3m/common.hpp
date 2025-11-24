@@ -37,6 +37,7 @@
 #include <config/config.hpp>
 
 #include <utils/Vector.hpp>
+#include <utils/index.hpp>
 
 #include <algorithm>
 #include <array>
@@ -277,3 +278,13 @@ std::array<std::vector<int>, 3> inline calc_p3m_mesh_shift(
 
   return ret;
 }
+
+template <Utils::MemoryOrder RSpaceOrder = Utils::MemoryOrder::ROW_MAJOR,
+          Utils::MemoryOrder KSpaceOrder = Utils::MemoryOrder::ROW_MAJOR>
+struct P3MFFTConfig {
+  /** @brief Data layout of the input real-space 3D matrix. */
+  static auto constexpr r_space_order = RSpaceOrder;
+  /** @brief Data layout of the output k-space 3D matrix. */
+  static auto constexpr k_space_order = KSpaceOrder;
+  static auto constexpr r2c_dir = 0u;
+};
