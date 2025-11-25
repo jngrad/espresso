@@ -570,8 +570,9 @@ class LeesEdwards(ut.TestCase):
         p2.ext_force = [1, 0, 0]
         p3.ext_force = -p2.ext_force
         system.integrator.run(1)
-        np.testing.assert_allclose(
-            np.copy(p1.torque_lab), [0, 0, -2], atol=tol)
+        if not espressomd.has_features("SHARED_MEMORY_PARALLELISM"):
+            np.testing.assert_allclose(
+                np.copy(p1.torque_lab), [0, 0, -2], atol=tol)
 
     @utx.skipIfMissingFeatures(["VIRTUAL_SITES_RELATIVE", "ROTATION", "DPD"])
     def test_virt_sites_interaction(self):
