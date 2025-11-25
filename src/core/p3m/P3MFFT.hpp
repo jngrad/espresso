@@ -38,7 +38,9 @@
 template <typename FloatType, class FFTConfig> class P3MFFT {
 private:
   using backend_tag = heffte::backend::default_backend<heffte::tag::cpu>::type;
-  using FFT3D = heffte::fft3d<backend_tag>;
+  using FFT3D =
+      std::conditional_t<FFTConfig::use_r2c, heffte::fft3d_r2c<backend_tag>,
+                         heffte::fft3d<backend_tag>>;
   using Box = heffte::box3d<>;
 
   /* input box */
@@ -74,7 +76,10 @@ public:
             : col_major_order;
     auto const n_procs = Utils::product(node_grid);
     auto const high = to_array(global_mesh - Utils::Vector3i::broadcast(1));
-    auto const global_out_box = Box({0, 0, 0}, high, out_box_order);
+    auto const global_out_box_full = Box({0, 0, 0}, high, out_box_order);
+    auto const global_out_box =
+        FFTConfig::use_r2c ? global_out_box_full.r2c(FFTConfig::r2c_dir)
+                           : global_out_box_full;
     auto best_grid = node_grid;
     for (auto i : {0u, 1u, 2u}) {
       if (global_mesh[i] % (2 * n_procs) == 0) {
@@ -111,7 +116,12 @@ public:
     // pencil decomposition is better but for smaller problems, the slabs may
     // perform better (depending on hardware and backend)
     options.use_pencils = true;
-    fft3d = std::make_unique<FFT3D>(*in_box, *out_box, comm, options);
+    if constexpr (FFTConfig::use_r2c) {
+      fft3d = std::make_unique<FFT3D>(*in_box, *out_box, FFTConfig::r2c_dir,
+                                      comm, options);
+    } else {
+      fft3d = std::make_unique<FFT3D>(*in_box, *out_box, comm, options);
+    }
     m_workspace.resize(fft3d->size_workspace());
   }
 

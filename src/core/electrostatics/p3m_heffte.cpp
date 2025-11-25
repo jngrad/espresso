@@ -33,7 +33,7 @@ std::shared_ptr<CoulombP3M>
 new_coulomb_p3m_impl(P3MParameters &&p3m, TuningParameters const &tuning_params,
                      double prefactor) {
   using DefaultFFTConfig = P3MFFTConfig<Utils::MemoryOrder::ROW_MAJOR,
-                                        Utils::MemoryOrder::ROW_MAJOR>;
+                                        Utils::MemoryOrder::ROW_MAJOR, true, 2>;
   auto state_ptr =
       std::make_unique<CoulombP3MState<FloatType, DefaultFFTConfig>>(
           std::move(p3m));

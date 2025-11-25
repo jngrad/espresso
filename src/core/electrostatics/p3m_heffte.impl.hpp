@@ -167,6 +167,11 @@ void CoulombP3MHeffte<FloatType, Architecture,
                                         FFTConfig::k_space_order>(
       p3m.params, p3m.fft->ks_local_ld_index(), p3m.fft->ks_local_ur_index(),
       get_system().box_geo->length_inv());
+  if constexpr (FFTConfig::use_r2c) {
+    influence_function_r2c<FFTConfig::r2c_dir>(p3m.g_force, p3m.params.mesh,
+                                               p3m.fft->ks_local_size(),
+                                               p3m.fft->ks_local_ld_index());
+  }
 }
 
 /** Calculate the influence function optimized for the energy and the
@@ -179,6 +184,11 @@ void CoulombP3MHeffte<FloatType, Architecture,
                                          FFTConfig::k_space_order>(
       p3m.params, p3m.fft->ks_local_ld_index(), p3m.fft->ks_local_ur_index(),
       get_system().box_geo->length_inv());
+  if constexpr (FFTConfig::use_r2c) {
+    influence_function_r2c<FFTConfig::r2c_dir>(p3m.g_energy, p3m.params.mesh,
+                                               p3m.fft->ks_local_size(),
+                                               p3m.fft->ks_local_ld_index());
+  }
 }
 
 /** Aliasing sum used by @ref p3m_k_space_error. */
@@ -897,6 +907,11 @@ public:
                                   std::max(lhs[2u], rhs[2u])}};
         },
         0);
+    if constexpr (FFTConfig::use_r2c) {
+      // adjust for reduced dimension
+      mesh_size_k_space[FFTConfig::r2c_dir] -= 1;
+      mesh_size_k_space[FFTConfig::r2c_dir] *= 2;
+    }
     // check consistency with box size in real-space
     if (::this_node == 0) {
       auto const &node_grid = ::communicator.node_grid;

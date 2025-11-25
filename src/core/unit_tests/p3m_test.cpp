@@ -112,6 +112,18 @@ template <auto... Pack> void test_all_p3m_fft_configs() {
     test_all_p3m_fft_configs<Pack..., Utils::MemoryOrder::COLUMN_MAJOR>();
   }
   if constexpr (nest_level == 2) {
+    test_all_p3m_fft_configs<Pack..., true>();
+    test_all_p3m_fft_configs<Pack..., false>();
+  }
+  if constexpr (nest_level == 3) {
+    // in the complex-to-complex backend, short dimension is irrelevant,
+    // assuming the flat index is properly incremented in the energy and
+    // pressure kernels (i.e. outside the short dimension conditional!!)
+    test_all_p3m_fft_configs<Pack..., 0>();
+    test_all_p3m_fft_configs<Pack..., 1>();
+    test_all_p3m_fft_configs<Pack..., 2>();
+  }
+  if constexpr (nest_level == 4) {
     using FFTConfig = P3MFFTConfig<Pack...>;
     auto constexpr Hardware = Arch::CPU;
     auto const comm = boost::mpi::communicator();
