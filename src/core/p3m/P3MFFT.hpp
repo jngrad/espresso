@@ -134,6 +134,10 @@ public:
   Utils::Vector3i ks_local_size() const {
     return ks_local_ur_index() - ks_local_ld_index();
   }
+  Utils::Vector3i rs_local_size() const {
+    return Utils::Vector3i(in_box->high) + Utils::Vector3i::broadcast(1) -
+           Utils::Vector3i(in_box->low);
+  }
   void forward(auto &&in, auto &&out) {
     fft3d->forward(in, out, m_workspace.data());
   }

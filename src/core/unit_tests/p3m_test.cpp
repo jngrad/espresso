@@ -27,6 +27,10 @@
 #include "actor/registration.hpp"
 #include "electrostatics/p3m.hpp"
 #include "electrostatics/p3m_heffte.impl.hpp"
+#include "magnetostatics/dp3m.hpp"
+#include "magnetostatics/dp3m_heffte.impl.hpp"
+#include "p3m/FFTBackendLegacy.hpp"
+#include "p3m/FFTBuffersLegacy.hpp"
 #include "p3m/common.hpp"
 
 #include "EspressoCoreGlobalConfig.hpp"
@@ -157,6 +161,63 @@ template <auto... Pack> void test_all_p3m_fft_configs() {
 }
 #endif // ESPRESSO_P3M
 
+#ifdef ESPRESSO_DP3M
+template <auto... Pack> void test_all_dp3m_fft_configs() {
+  auto constexpr nest_level = sizeof...(Pack);
+  if constexpr (nest_level == 0) {
+    test_all_dp3m_fft_configs<Pack..., Utils::MemoryOrder::ROW_MAJOR>();
+  }
+  if constexpr (nest_level == 1) {
+    test_all_dp3m_fft_configs<Pack..., Utils::MemoryOrder::ROW_MAJOR>();
+  }
+  if constexpr (nest_level == 2) {
+    test_all_dp3m_fft_configs<Pack..., true>();
+    test_all_dp3m_fft_configs<Pack..., false>();
+  }
+  if constexpr (nest_level == 3) {
+    // in the complex-to-complex backend, short dimension is irrelevant,
+    // assuming the flat index is properly incremented in the energy
+    // kernel (i.e. outside the short dimension conditional!!)
+    test_all_dp3m_fft_configs<Pack..., 0>();
+    test_all_dp3m_fft_configs<Pack..., 1>();
+    test_all_dp3m_fft_configs<Pack..., 2>();
+  }
+  if constexpr (nest_level == 4) {
+    using FFTConfig = P3MFFTConfig<Pack...>;
+    auto constexpr Hardware = Arch::CPU;
+    auto const comm = boost::mpi::communicator();
+    auto const rank = comm.rank();
+    auto &system = *espresso::system;
+    // set up P3M
+    auto const prefactor = 2.;
+    auto tuning = TuningParameters{1, {std::nullopt, std::nullopt}, false};
+    auto solver =
+        std::make_shared<DipolarP3MHeffte<double, Hardware, FFTConfig>>(
+            std::make_unique<DipolarP3MState<double, FFTConfig>>(
+                P3MParameters{false, 0.0, 3.5, Utils::Vector3i::broadcast(12),
+                              Utils::Vector3d::broadcast(0.5), 5, 0.615, 1e-3}),
+            tuning, prefactor);
+    solver->dp3m.template make_mesh_instance<FFTBuffersLegacy<double>>();
+    solver->dp3m.template make_fft_instance<FFTBackendLegacy<double>>();
+    add_actor(comm, espresso::system, system.dipoles.impl->solver, solver,
+              [&system]() { system.on_dipoles_change(); });
+    auto const obs_energy = system.calculate_energy();
+    system.integrate(0, INTEG_REUSE_FORCES_NEVER);
+    if (rank == 0) {
+      BOOST_TEST_CONTEXT(Utils::demangle<FFTConfig>()) {
+        auto constexpr energy_ref = -0.0052257342364;
+        auto const energy_k_space = obs_energy->dipolar[1];
+        BOOST_CHECK_CLOSE(energy_k_space, energy_ref, 1e-6);
+      }
+    }
+    // deactivate actor
+    solver->detach_system(espresso::system);
+    system.dipoles.impl->solver = std::nullopt;
+    system.on_dipoles_change();
+  }
+}
+#endif // ESPRESSO_DP3M
+
 BOOST_FIXTURE_TEST_CASE(p3m_solvers, ParticleFactory) {
   auto const box_l = 12.;
   auto const time_step = 0.001;
@@ -180,6 +241,12 @@ BOOST_FIXTURE_TEST_CASE(p3m_solvers, ParticleFactory) {
   set_particle_property(pid2, &Particle::q, -0.5);
   test_all_p3m_fft_configs<>();
 #endif // ESPRESSO_P3M
+
+#ifdef ESPRESSO_DP3M
+  set_particle_property(pid1, &Particle::dipm, +0.5);
+  set_particle_property(pid2, &Particle::dipm, -0.5);
+  test_all_dp3m_fft_configs<>();
+#endif // ESPRESSO_DP3M
 }
 
 BOOST_AUTO_TEST_SUITE_END()
