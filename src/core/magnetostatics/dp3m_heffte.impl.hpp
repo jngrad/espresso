@@ -1174,7 +1174,7 @@ void DipolarP3MHeffte<FloatType, Architecture, FFTConfig>::tune() {
   }
   if (not is_tuned()) {
     count_magnetic_particles();
-    if (dp3m.sum_dip_part == 0.) {
+    if (dp3m.sum_dip_part == 0) {
       throw std::runtime_error(
           "DipolarP3M: no dipolar particles in the system");
     }

@@ -35,8 +35,9 @@ template <typename FloatType, Arch Architecture>
 std::shared_ptr<DipolarP3M>
 new_dipolar_p3m_impl(P3MParameters &&p3m, TuningParameters const &tuning_params,
                      double prefactor) {
-  using DefaultFFTConfig = P3MFFTConfig<Utils::MemoryOrder::ROW_MAJOR,
-                                        Utils::MemoryOrder::ROW_MAJOR, true, 2>;
+  using DefaultFFTConfig =
+      P3MFFTConfig<Utils::MemoryOrder::ROW_MAJOR, Utils::MemoryOrder::ROW_MAJOR,
+                   false, 2>;
   auto obj = std::make_shared<
       DipolarP3MHeffte<FloatType, Architecture, DefaultFFTConfig>>(
       std::make_unique<DipolarP3MState<FloatType, DefaultFFTConfig>>(
