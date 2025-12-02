@@ -168,23 +168,26 @@ void vs_relative_back_transfer_forces_and_torques(
   init_forces_ghosts(cell_structure);
 
   // Iterate over all the particles in the local cells
-  cell_structure.for_each_local_particle([&](Particle &p) {
-    if (!is_vs(p))
-      return;
+  cell_structure.for_each_local_particle(
+      [&](Particle &p) {
+        if (!is_vs(p))
+          return;
 
-    auto *p_ref_ptr = get_reference_particle(cell_structure, p);
-    assert(p_ref_ptr != nullptr);
+        auto *p_ref_ptr = get_reference_particle(cell_structure, p);
+        assert(p_ref_ptr != nullptr);
 
-    auto &p_ref = *p_ref_ptr;
-    if (is_vs_relative_trans(p)) {
-      p_ref.force() += p.force();
-      p_ref.torque() += vector_product(connection_vector(p_ref, p), p.force());
-    }
+        auto &p_ref = *p_ref_ptr;
+        if (is_vs_relative_trans(p)) {
+          p_ref.force() += p.force();
+          p_ref.torque() +=
+              vector_product(connection_vector(p_ref, p), p.force());
+        }
 
-    if (is_vs_rot(p)) {
-      p_ref.torque() += p.torque();
-    }
-  });
+        if (is_vs_rot(p)) {
+          p_ref.torque() += p.torque();
+        }
+      },
+      /* parallel */ false);
 }
 
 // Rigid body contribution to scalar pressure and pressure tensor
