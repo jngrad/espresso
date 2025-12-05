@@ -40,6 +40,7 @@
 #include "particle_node.hpp"
 #include "short_range_cabana.hpp"
 #include "thermostat.hpp"
+#include "virtual_sites/com.hpp"
 #include "virtual_sites/relative.hpp"
 
 #include <utils/Vector.hpp>
@@ -360,6 +361,9 @@ void System::update_dependent_particles() {
 #ifdef ESPRESSO_VIRTUAL_SITES
 #ifdef ESPRESSO_VIRTUAL_SITES_RELATIVE
   vs_relative_update_particles(*cell_structure, *box_geo);
+#endif
+#ifdef ESPRESSO_VIRTUAL_SITES_CENTER_OF_MASS
+  vs_com_update_particles(*cell_structure, *box_geo);
 #endif
   cell_structure->update_ghosts_and_resort_particle(get_global_ghost_flags());
 #endif
