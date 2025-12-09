@@ -252,7 +252,7 @@ void System::System::calculate_forces() {
   ForcesKernel first_neighbor_kernel(
       *bonded_ias, *nonbonded_ias, get_ptr(coulomb_kernel),
       get_ptr(dipoles_kernel), get_ptr(elc_kernel), get_ptr(coulomb_u_kernel),
-      *thermostat, *box_geo, unique_particles, local_force,
+      coulomb, *thermostat, *box_geo, unique_particles, local_force,
 #ifdef ESPRESSO_ROTATION
       local_torque,
 #endif

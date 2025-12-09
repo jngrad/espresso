@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "config/config.hpp"
+#include <config/config.hpp>
 
 #include "electrostatics/coulomb.hpp"
 #include "electrostatics/solver.hpp"
@@ -27,7 +27,6 @@
 #include "Particle.hpp"
 
 #include <utils/Vector.hpp>
-#include <utils/demangle.hpp>
 #include <utils/math/tensor_product.hpp>
 #include <utils/matrix.hpp>
 
@@ -39,12 +38,13 @@
 
 namespace Coulomb {
 
+#ifdef ESPRESSO_ELECTROSTATICS
+
 struct ShortRangeForceKernel {
 
   using kernel_type = Solver::ShortRangeForceKernel;
   using result_type = std::optional<kernel_type>;
 
-#ifdef ESPRESSO_ELECTROSTATICS
   template <typename T>
   result_type operator()(std::shared_ptr<T> const &ptr) const {
     auto const &actor = *ptr;
@@ -53,14 +53,6 @@ struct ShortRangeForceKernel {
           return actor.pair_force(q1q2, d, dist);
         }};
   }
-
-#ifdef ESPRESSO_P3M
-  auto
-  operator()(std::shared_ptr<ElectrostaticLayerCorrection> const &ptr) const {
-    return std::visit(*this, ptr->base_solver);
-  }
-#endif // ESPRESSO_P3M
-#endif // ESPRESSO_ELECTROSTATICS
 };
 
 struct ShortRangeForceCorrectionsKernel {
@@ -92,7 +84,6 @@ struct ShortRangePressureKernel {
   using kernel_type = Solver::ShortRangePressureKernel;
   using result_type = std::optional<kernel_type>;
 
-#ifdef ESPRESSO_ELECTROSTATICS
   template <typename T>
   result_type operator()(std::shared_ptr<T> const &ptr) const {
     if constexpr (traits::has_pressure<T>::value) {
@@ -101,9 +92,8 @@ struct ShortRangePressureKernel {
             return Utils::tensor_product(actor.pair_force(q1q2, d, dist), d);
           }};
     }
-    return {};
+    return std::nullopt;
   }
-#endif // ESPRESSO_ELECTROSTATICS
 };
 
 struct ShortRangeEnergyKernel {
@@ -111,7 +101,6 @@ struct ShortRangeEnergyKernel {
   using kernel_type = Solver::ShortRangeEnergyKernel;
   using result_type = std::optional<kernel_type>;
 
-#ifdef ESPRESSO_ELECTROSTATICS
   template <typename T>
   result_type operator()(std::shared_ptr<T> const &ptr) const {
     auto const &actor = *ptr;
@@ -145,8 +134,9 @@ struct ShortRangeEnergyKernel {
                  double dist) { return actor->pair_energy(q1q2, d, dist); }};
   }
 #endif // ESPRESSO_GSL
-#endif // ESPRESSO_ELECTROSTATICS
 };
+
+#endif // ESPRESSO_ELECTROSTATICS
 
 inline std::optional<Solver::ShortRangeForceKernel>
 Solver::pair_force_kernel() const {
