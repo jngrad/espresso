@@ -36,7 +36,6 @@
 #include "integrators/velocity_verlet_npt.hpp"
 
 #include "BoxGeometry.hpp"
-#include "ParticleRange.hpp"
 #include "PropagationMode.hpp"
 #include "accumulators/AutoUpdateAccumulators.hpp"
 #include "bond_breakage/bond_breakage.hpp"
@@ -46,11 +45,9 @@
 #include "collision_detection/CollisionDetection.hpp"
 #include "communication.hpp"
 #include "errorhandling.hpp"
-#include "forces.hpp"
 #include "lb/particle_coupling.hpp"
 #include "lb/utils.hpp"
 #include "lees_edwards/lees_edwards.hpp"
-#include "magnetostatics/stoner_wohlfarth_thermal.hpp"
 #include "nonbonded_interactions/nonbonded_interaction_data.hpp"
 #include "npt.hpp"
 #include "rattle.hpp"
@@ -662,7 +659,7 @@ int System::System::integrate(int n_steps, int reuse_forces) {
     cell_structure->update_ghosts_and_resort_particle(get_global_ghost_flags());
 
 #ifdef ESPRESSO_THERMAL_STONER_WOHLFARTH
-    run_magnetodynamics(*cell_structure, *thermostat);
+    integrate_magnetodynamics();
 #endif
 
     calculate_forces();

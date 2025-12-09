@@ -151,7 +151,7 @@ class Test(ut.TestCase):
         self.assertIsNone(actor.charge_neutrality_tolerance)
 
     @utx.skipIfMissingFeatures(["ELECTROSTATICS", "GSL"])
-    def test_mmm1d_cpu_tuning_exceptions(self):
+    def test_mmm1d_cpu_tuning(self):
         self.system.periodicity = [False, False, True]
         self.system.cell_system.set_n_square()
         actor = espressomd.electrostatics.MMM1D(
@@ -160,6 +160,13 @@ class Test(ut.TestCase):
             self.system.electrostatics.solver = actor
         self.assertIsNone(self.system.electrostatics.solver)
         self.assertFalse(actor.is_tuned)
+        # override far_switch_radius when larger than box size in z-direction
+        h_z = self.system.box_l[2]
+        actor = espressomd.electrostatics.MMM1D(
+            prefactor=1., maxPWerror=1e-3, far_switch_radius=2. * h_z)
+        self.system.electrostatics.solver = actor
+        self.assertTrue(actor.is_tuned)
+        self.assertAlmostEqual(actor.far_switch_radius**2, 0.8 * h_z**2)
 
     @utx.skipIfMissingFeatures(["P3M"])
     def test_elc_p3m_exceptions(self):

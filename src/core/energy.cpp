@@ -19,8 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config/config.hpp>
+
 #include "BoxGeometry.hpp"
 #include "Observable_stat.hpp"
+#include "Particle.hpp"
 #include "cell_system/CellStructure.hpp"
 #include "constraints/Constraints.hpp"
 #include "energy_inline.hpp"
@@ -31,8 +34,11 @@
 #include "electrostatics/coulomb.hpp"
 #include "magnetostatics/dipoles.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <optional>
 #include <span>
+#include <vector>
 
 namespace System {
 
@@ -89,12 +95,12 @@ std::shared_ptr<Observable_stat> System::calculate_energy() {
 
 #ifdef ESPRESSO_ELECTROSTATICS
   /* calculate k-space part of electrostatic interaction. */
-  obs_energy.coulomb[1] = coulomb.calc_energy_long_range(local_parts);
+  obs_energy.coulomb[1] = coulomb.calc_energy_long_range();
 #endif
 
 #ifdef ESPRESSO_DIPOLES
   /* calculate k-space part of magnetostatic interaction. */
-  obs_energy.dipolar[1] = dipoles.calc_energy_long_range(local_parts);
+  obs_energy.dipolar[1] = dipoles.calc_energy_long_range();
 #endif
 
   constraints->add_energy(local_parts, get_sim_time(), obs_energy);

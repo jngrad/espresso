@@ -24,11 +24,10 @@
  *  See @cite banchio03a and @cite brady88a for the thermalization method.
  */
 
-#include "config/config.hpp"
+#include <config/config.hpp>
 
 #ifdef ESPRESSO_STOKESIAN_DYNAMICS
 
-#include "ParticleRange.hpp"
 #include "PropagationMode.hpp"
 #include "PropagationPredicate.hpp"
 #include "thermostat.hpp"

@@ -360,6 +360,9 @@ protected:
   void update_icc_particles();
   bool has_icc_enabled() const;
 #endif // ESPRESSO_ELECTROSTATICS
+#ifdef ESPRESSO_THERMAL_STONER_WOHLFARTH
+  void integrate_magnetodynamics();
+#endif
 
 private:
   /**

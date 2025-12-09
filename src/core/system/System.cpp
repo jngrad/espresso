@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config/config.hpp"
+#include <config/config.hpp>
 
 #include "System.hpp"
 #include "System.impl.hpp"
@@ -104,7 +104,6 @@ void System::initialize() {
   auto handle = shared_from_this();
   cell_structure->bind_system(handle);
   lees_edwards->bind_system(handle);
-  immersed_boundaries->bind_system(handle);
   bonded_ias->bind_system(handle);
   thermostat->bind_system(handle);
   nonbonded_ias->bind_system(handle);

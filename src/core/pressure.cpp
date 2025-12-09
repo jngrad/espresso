@@ -19,12 +19,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config/config.hpp"
+#include <config/config.hpp>
 
 #include "BoxGeometry.hpp"
 #include "Observable_stat.hpp"
 #include "Particle.hpp"
-#include "ParticleRange.hpp"
 #include "bonded_interactions/bonded_interaction_data.hpp"
 #include "dpd.hpp"
 #include "electrostatics/coulomb.hpp"
@@ -101,7 +100,7 @@ std::shared_ptr<Observable_stat> System::calculate_pressure() {
 
 #ifdef ESPRESSO_ELECTROSTATICS
   /* calculate k-space part of electrostatic interaction. */
-  auto const coulomb_pressure = coulomb.calc_pressure_long_range(local_parts);
+  auto const coulomb_pressure = coulomb.calc_pressure_long_range();
   std::ranges::copy(coulomb_pressure, obs_pressure.coulomb.begin() + 9u);
 #endif
 #ifdef ESPRESSO_DIPOLES
