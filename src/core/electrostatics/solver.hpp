@@ -82,8 +82,4 @@ struct Solver {
   pair_force_elc_kernel() const;
 };
 
-#ifdef ESPRESSO_ELECTROSTATICS
-Solver const &get_coulomb();
-#endif
-
 } // namespace Coulomb

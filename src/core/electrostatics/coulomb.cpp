@@ -61,8 +61,6 @@ Solver::Solver() {
   reinit_on_observable_calc = false;
 }
 
-Solver const &get_coulomb() { return System::get_system().coulomb; }
-
 void Solver::sanity_checks() const {
   if (impl->solver) {
     std::visit([](auto const &ptr) { ptr->sanity_checks(); }, *impl->solver);

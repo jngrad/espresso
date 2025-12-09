@@ -74,8 +74,4 @@ struct Solver {
   inline std::optional<ShortRangeEnergyKernel> pair_energy_kernel() const;
 };
 
-#ifdef ESPRESSO_DIPOLES
-Solver const &get_dipoles();
-#endif
-
 } // namespace Dipoles

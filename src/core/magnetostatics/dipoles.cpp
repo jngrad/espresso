@@ -29,7 +29,6 @@
 #include "communication.hpp"
 #include "errorhandling.hpp"
 #include "magnetostatics/solver.hpp"
-#include "system/System.hpp"
 
 #include <utils/demangle.hpp>
 
@@ -43,8 +42,6 @@ Solver::Solver() {
   impl = std::make_unique<Implementation>();
   reinit_on_observable_calc = false;
 }
-
-Solver const &get_dipoles() { return System::get_system().dipoles; }
 
 void Solver::sanity_checks() const {
   if (impl->solver) {

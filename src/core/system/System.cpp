@@ -35,10 +35,12 @@
 #include "communication.hpp"
 #include "electrostatics/icc.hpp"
 #include "errorhandling.hpp"
+#include "integrators/steepest_descent.hpp"
 #include "nonbonded_interactions/VerletCriterion.hpp"
 #include "npt.hpp"
 #include "particle_node.hpp"
 #include "short_range_cabana.hpp"
+#include "stokesian_dynamics/sd_interface.hpp"
 #include "thermostat.hpp"
 #include "virtual_sites/com.hpp"
 #include "virtual_sites/relative.hpp"
@@ -89,6 +91,10 @@ System::System(Private) {
   auto_update_accumulators =
       std::make_shared<Accumulators::AutoUpdateAccumulators>();
   constraints = std::make_shared<Constraints::Constraints>();
+  steepest_descent = std::make_shared<SteepestDescent>();
+#ifdef ESPRESSO_STOKESIAN_DYNAMICS
+  stokesian_dynamics = std::make_shared<StokesianDynamics>();
+#endif
 #ifdef ESPRESSO_NPT
   nptiso = std::make_shared<NptIsoParameters>();
   npt_inst_pressure = std::make_shared<InstantaneousPressure>();

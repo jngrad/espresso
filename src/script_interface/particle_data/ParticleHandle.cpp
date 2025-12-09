@@ -68,18 +68,18 @@ namespace ScriptInterface {
 namespace Particles {
 
 #ifdef ESPRESSO_ROTATION
-static auto const contradicting_arguments_quat = std::vector<
-    std::array<std::string, 3>>{{
-    {{"dip", "dipm",
-      "Setting 'dip' is sufficient as it defines the scalar dipole moment."}},
-    {{"quat", "director",
-      "Setting 'quat' is sufficient as it defines the director."}},
-    {{"dip", "quat",
-      "Setting 'dip' would overwrite 'quat'. Set 'quat' and 'dipm' instead."}},
-    {{"dip", "director",
-      "Setting 'dip' would overwrite 'director'. Set 'director' and "
-      "'dipm' instead."}},
-}};
+static auto constexpr contradicting_arguments_quat = std::to_array<
+    std::array<std::string_view, 3>>({
+    {"dip", "dipm",
+     "Setting 'dip' is sufficient as it defines the scalar dipole moment."},
+    {"quat", "director",
+     "Setting 'quat' is sufficient as it defines the director."},
+    {"dip", "quat",
+     "Setting 'dip' would overwrite 'quat'. Set 'quat' and 'dipm' instead."},
+    {"dip", "director",
+     "Setting 'dip' would overwrite 'director'. Set 'director' and "
+     "'dipm' instead."},
+});
 
 static void sanity_checks_rotation(VariantMap const &params) {
   // if we are not constructing a particle from a checkpoint file,
@@ -88,7 +88,8 @@ static void sanity_checks_rotation(VariantMap const &params) {
     auto formatter =
         boost::format("Contradicting particle attributes: '%s' and '%s'. %s");
     for (auto const &[prop1, prop2, reason] : contradicting_arguments_quat) {
-      if (params.contains(prop1) and params.contains(prop2)) {
+      if (params.contains(std::string{prop1}) and
+          params.contains(std::string{prop2})) {
         auto const err_msg = boost::str(formatter % prop1 % prop2 % reason);
         throw std::invalid_argument(err_msg);
       }

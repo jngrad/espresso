@@ -87,9 +87,9 @@ std::shared_ptr<Observable_stat> System::calculate_energy() {
        &obs_energy](Particle const &p1, Particle const &p2, Distance const &d) {
         auto const &ia_params =
             nonbonded_ias->get_ia_param(p1.type(), p2.type());
-        add_non_bonded_pair_energy(p1, p2, d.vec21, sqrt(d.dist2), d.dist2,
-                                   ia_params, *bonded_ias, coulomb_kernel_ptr,
-                                   dipoles_kernel_ptr, obs_energy);
+        add_non_bonded_pair_energy(
+            p1, p2, d.vec21, sqrt(d.dist2), d.dist2, ia_params, *bonded_ias,
+            coulomb, coulomb_kernel_ptr, dipoles_kernel_ptr, obs_energy);
       },
       *cell_structure, maximal_cutoff(), bonded_ias->maximal_cutoff());
 
@@ -136,8 +136,9 @@ double System::particle_short_range_energy_contribution(int pid) {
 #endif
       auto const &ia_params = nonbonded_ias->get_ia_param(p.type(), p1.type());
       // Add energy for current particle pair to result
-      ret += calc_non_bonded_pair_energy(p, p1, ia_params, vec, vec.norm(),
-                                         *bonded_ias, coulomb_kernel_ptr);
+      ret +=
+          calc_non_bonded_pair_energy(p, p1, ia_params, vec, vec.norm(),
+                                      *bonded_ias, coulomb, coulomb_kernel_ptr);
     };
     cell_structure->run_on_particle_short_range_neighbors(*p, kernel);
   }

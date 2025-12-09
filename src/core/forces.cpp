@@ -225,10 +225,10 @@ void System::System::calculate_forces() {
   CALI_MARK_BEGIN("calc_long_range_forces");
 #endif
 #ifdef ESPRESSO_ELECTROSTATICS
-  Coulomb::get_coulomb().calc_long_range_force();
+  coulomb.calc_long_range_force();
 #endif
 #ifdef ESPRESSO_DIPOLES
-  Dipoles::get_dipoles().calc_long_range_force();
+  dipoles.calc_long_range_force();
 #endif
 #ifdef ESPRESSO_CALIPER
   CALI_MARK_END("calc_long_range_forces");
