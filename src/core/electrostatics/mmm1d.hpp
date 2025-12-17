@@ -46,6 +46,7 @@
 #include <utils/Vector.hpp>
 
 #include <array>
+#include <vector>
 
 /** @brief Parameters for the MMM1D electrostatic interaction */
 struct CoulombMMM1D : public Coulomb::Actor<CoulombMMM1D> {

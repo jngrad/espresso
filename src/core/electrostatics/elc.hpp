@@ -353,8 +353,10 @@ struct ElectrostaticLayerCorrection
     }
   }
 
-  double long_range_energy(ParticleRange const &particles) const;
-  void add_long_range_forces(ParticleRange const &particles) const;
+  /** @brief Calculate long-range electrostatic energy with corrections. */
+  double long_range_energy() const;
+  /** @brief Accumulate long-range electrostatic forces with corrections. */
+  void add_long_range_forces() const;
 
 private:
   /** Check if a charged particle is in the gap region. */
@@ -362,10 +364,10 @@ private:
   double tune_far_cut() const;
   void adapt_solver();
   /** pairwise contributions from the lowest and top layers to the energy */
-  double dipole_energy(ParticleRange const &particles) const;
-  void add_dipole_force(ParticleRange const &particles) const;
-  double z_energy(ParticleRange const &particles) const;
-  void add_z_force(ParticleRange const &particles) const;
+  double dipole_energy() const;
+  void add_dipole_force() const;
+  double z_energy() const;
+  void add_z_force() const;
 
   void recalc_box_h();
   void recalc_far_cut() {
@@ -381,9 +383,9 @@ private:
   void sanity_checks_dielectric_contrasts() const;
 
   /// the force calculation
-  void add_force(ParticleRange const &particles) const;
+  void add_force() const;
   /// the energy calculation
-  double calc_energy(ParticleRange const &particles) const;
+  double calc_energy() const;
 
   void visit_base_solver(auto &&visitor) const {
     std::visit(visitor, base_solver);

@@ -44,7 +44,6 @@
 #include "cell_system/CellStructure.hpp"
 #include "cells.hpp"
 #include "communication.hpp"
-#include "forces.hpp"
 
 #include <utils/Vector.hpp>
 #include <utils/mpi/gather_buffer.hpp>
@@ -186,21 +185,17 @@ void vs_com_update_particles(CellStructure &cell_structure,
     if (not virtual_site_id_for_mol_id.contains(mol_id)) {
       continue;
     }
-    auto com = com_info.weighted_position / com_info.total_mass;
     auto const vs_id = virtual_site_id_for_mol_id[mol_id];
-    auto const vs_ptr = cell_structure.get_local_particle(vs_id);
-    if (vs_ptr == nullptr) {
-      continue;
+    if (auto const vs_ptr = cell_structure.get_local_particle(vs_id)) {
+      auto folded_pos = com_info.weighted_position / com_info.total_mass;
+      auto image_box = Utils::Vector3i{};
+
+      box_geo.fold_position(folded_pos, image_box);
+
+      vs_ptr->image_box() = image_box;
+      vs_ptr->mass() = com_info.total_mass;
+      vs_ptr->pos() = folded_pos;
     }
-
-    auto folded_pos = com;
-    auto image_box = Utils::Vector3i{};
-
-    box_geo.fold_position(folded_pos, image_box);
-
-    vs_ptr->image_box() = image_box;
-    vs_ptr->mass() = com_info.total_mass;
-    vs_ptr->pos() = folded_pos;
   }
 }
 
@@ -210,7 +205,7 @@ void vs_com_back_transfer_forces_and_torques(CellStructure &cell_structure) {
 
   auto constexpr parallel_execution_policy = false;
   cell_structure.ghosts_reduce_forces();
-  init_forces_ghosts(cell_structure);
+  cell_structure.ghosts_reset_forces();
 
   // Store forces for virtual site com particles
   // (vs_com_id: force)

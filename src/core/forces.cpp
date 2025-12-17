@@ -18,17 +18,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** \file
- *  Force calculation.
- *
- *  The corresponding header file is forces.hpp.
- */
 
 #include <config/config.hpp>
 
 #include "BoxGeometry.hpp"
 #include "Particle.hpp"
-#include "ParticleRange.hpp"
 #include "PropagationMode.hpp"
 #include "bond_breakage/bond_breakage.hpp"
 #include "cell_system/CellStructure.hpp"
@@ -95,7 +89,7 @@ static ParticleForce external_force(Particle const &p) {
 }
 
 /** Combined force initialization and Langevin noise application */
-void init_forces_and_thermostat(System::System const &system) {
+static void init_forces_and_thermostat(System::System const &system) {
 #ifdef ESPRESSO_CALIPER
   CALI_CXX_MARK_FUNCTION;
 #endif
@@ -134,12 +128,7 @@ void init_forces_and_thermostat(System::System const &system) {
 #endif
 
   // Initialize ghost forces (unchanged)
-  init_forces_ghosts(cell_structure);
-}
-
-void init_forces_ghosts(const CellStructure &cell_structure) {
-  cell_structure.for_each_ghost_particle(
-      [](Particle &p) { p.force_and_torque() = {}; });
+  cell_structure.ghosts_reset_forces();
 }
 
 static void force_capping(CellStructure &cell_structure, double force_cap) {
@@ -232,7 +221,18 @@ void System::System::calculate_forces() {
   }
 #endif // ESPRESSO_ELECTROSTATICS
   init_forces_and_thermostat(*this);
-  calc_long_range_forces(particles);
+#ifdef ESPRESSO_CALIPER
+  CALI_MARK_BEGIN("calc_long_range_forces");
+#endif
+#ifdef ESPRESSO_ELECTROSTATICS
+  coulomb.calc_long_range_force();
+#endif
+#ifdef ESPRESSO_DIPOLES
+  dipoles.calc_long_range_force();
+#endif
+#ifdef ESPRESSO_CALIPER
+  CALI_MARK_END("calc_long_range_forces");
+#endif
 
 #ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
 #ifdef ESPRESSO_CALIPER
@@ -418,20 +418,4 @@ void System::System::calculate_forces() {
 
   // mark that forces are now up-to-date
   propagation->recalc_forces = false;
-}
-
-void calc_long_range_forces(const ParticleRange &particles) {
-#ifdef ESPRESSO_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
-
-#ifdef ESPRESSO_ELECTROSTATICS
-  /* calculate k-space part of electrostatic interaction. */
-  Coulomb::get_coulomb().calc_long_range_force(particles);
-#endif // ESPRESSO_ELECTROSTATICS
-
-#ifdef ESPRESSO_DIPOLES
-  /* calculate k-space part of the magnetostatic interaction. */
-  Dipoles::get_dipoles().calc_long_range_force(particles);
-#endif // ESPRESSO_DIPOLES
 }

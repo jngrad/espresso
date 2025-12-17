@@ -36,7 +36,6 @@
 #include "integrators/velocity_verlet_npt.hpp"
 
 #include "BoxGeometry.hpp"
-#include "ParticleRange.hpp"
 #include "PropagationMode.hpp"
 #include "accumulators/AutoUpdateAccumulators.hpp"
 #include "bond_breakage/bond_breakage.hpp"
@@ -46,17 +45,17 @@
 #include "collision_detection/CollisionDetection.hpp"
 #include "communication.hpp"
 #include "errorhandling.hpp"
-#include "forces.hpp"
 #include "lb/particle_coupling.hpp"
 #include "lb/utils.hpp"
 #include "lees_edwards/lees_edwards.hpp"
-#include "magnetostatics/stoner_wohlfarth_thermal.hpp"
 #include "nonbonded_interactions/nonbonded_interaction_data.hpp"
 #include "npt.hpp"
 #include "rattle.hpp"
 #include "rotation.hpp"
 #include "signalhandling.hpp"
+#include "stokesian_dynamics/sd_interface.hpp"
 #include "system/System.hpp"
+#include "system/System.impl.hpp"
 #include "thermostat.hpp"
 #include "thermostats/langevin_inline.hpp"
 #include "virtual_sites/com.hpp"
@@ -347,7 +346,7 @@ static bool integrator_step_1(CellStructure &cell_structure,
 #endif
   // steepest decent
   if (propagation.integ_switch == INTEG_METHOD_STEEPEST_DESCENT)
-    return steepest_descent_step(cell_structure.local_particles());
+    return system.steepest_descent->propagate(cell_structure);
 
   auto const &thermostat = *system.thermostat;
   auto const kT = thermostat.kT;
@@ -419,7 +418,8 @@ static bool integrator_step_1(CellStructure &cell_structure,
       (propagation.default_propagation & PropagationMode::TRANS_STOKESIAN)) {
     auto pred = PropagationPredicateStokesian(propagation.default_propagation);
     stokesian_dynamics_step_1(cell_structure.local_particles().filter(pred),
-                              *thermostat.stokesian, time_step, kT);
+                              *system.stokesian_dynamics, *thermostat.stokesian,
+                              time_step, kT);
   }
 #endif // ESPRESSO_STOKESIAN_DYNAMICS
 
@@ -662,7 +662,7 @@ int System::System::integrate(int n_steps, int reuse_forces) {
     cell_structure->update_ghosts_and_resort_particle(get_global_ghost_flags());
 
 #ifdef ESPRESSO_THERMAL_STONER_WOHLFARTH
-    run_magnetodynamics(*cell_structure, *thermostat);
+    integrate_magnetodynamics();
 #endif
 
     calculate_forces();
