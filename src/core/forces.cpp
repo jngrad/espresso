@@ -173,6 +173,7 @@ static ForcesKernel create_cabana_neighbor_kernel(
                              get_ptr(dipoles_kernel),
                              get_ptr(elc_kernel),
                              get_ptr(coulomb_u_kernel),
+                             system.coulomb,
                              *system.thermostat,
                              *system.box_geo,
                              unique_particles,
