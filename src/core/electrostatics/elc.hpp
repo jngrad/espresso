@@ -273,6 +273,13 @@ struct ElectrostaticLayerCorrection
     return {};
   }
 
+  Utils::Vector3d pair_force(double q1q2, Utils::Vector3d const &d,
+                             double dist) const {
+    return std::visit(
+        [&](auto &solver) { return solver->pair_force(q1q2, d, dist); },
+        base_solver);
+  }
+
 #ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
   /** @brief Calculate short-range pair energy correction. */
   double pair_energy_correction(std::size_t p1, std::size_t p2, auto &aosoa,
