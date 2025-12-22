@@ -544,7 +544,7 @@ class ScriptInterfaceHelper(PScriptInterface):
         self.define_bound_methods()
 
     def __reduce__(self):
-        assert self._so_checkpointable
+        assert self._so_checkpointable, f"Class '{self.__class__.__name__}' doesn't support checkpointing"  # nopep8
         return (_unpickle_so_class, (self._so_name, self._serialize()))
 
     def __dir__(self):
