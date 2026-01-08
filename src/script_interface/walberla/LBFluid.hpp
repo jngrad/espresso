@@ -28,6 +28,8 @@
 #include "VTKHandle.hpp"
 
 #include "core/lb/LBWalberla.hpp"
+#include "core/lb/Solver.hpp"
+#include "core/system/System.hpp"
 
 #include <script_interface/ScriptInterface.hpp>
 

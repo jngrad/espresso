@@ -558,6 +558,33 @@ class EKTest:
         with self.assertRaisesRegex(ValueError, "Parameter 'seed' is required for thermalized EKSpecies"):
             self.ek_species_class(**make_kwargs(thermalized=True))
 
+        # when ekcontainer is None, no solver can be attached
+        self.system.ekcontainer = None
+        self.system.ekcontainer.solver = None
+        with self.assertRaisesRegex(RuntimeError, "Parameter 'solver' is read-only"):
+            self.system.ekcontainer.solver = espressomd.electrokinetics.EKNone(
+                lattice=self.lattice)
+        self.assertIsNone(self.system.ekcontainer.solver)
+
+    def test_rollback(self):
+        """check rollback to a valid state when setter fails"""
+        node_grid = np.copy(self.system.cell_system.node_grid)
+        world_size = np.prod(node_grid)
+        if world_size <= 4:
+            wrong_box_l = [1., 1., 7.] if world_size == 1 else 2. * node_grid
+            lattice1 = espressomd.electrokinetics.LatticeWalberla(
+                n_ghost_layers=2, agrid=1., box_l=self.system.box_l)
+            lattice2 = espressomd.electrokinetics.LatticeWalberla(
+                n_ghost_layers=2, agrid=1., box_l=wrong_box_l)
+            solver_valid = espressomd.electrokinetics.EKNone(lattice=lattice1)
+            solver_wrong = espressomd.electrokinetics.EKNone(lattice=lattice2)
+            self.system.ekcontainer = espressomd.electrokinetics.EKContainer(
+                tau=self.system.time_step, solver=solver_valid)
+            with self.assertRaisesRegex(RuntimeError, "waLBerla and ESPResSo disagree about domain decomposition"):
+                self.system.ekcontainer = espressomd.electrokinetics.EKContainer(
+                    tau=self.system.time_step, solver=solver_wrong)
+            self.assertEqual(self.system.ekcontainer.solver, solver_valid)
+
     def test_bool_operations_on_node(self):
         ekspecies = self.make_default_ek_species()
         # test __eq()__ where a node is equal to itself and not equal to any

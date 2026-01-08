@@ -314,6 +314,12 @@ protected:
   FlagUID const Boundary_flag{"boundary"};
   bool m_has_boundaries{false};
 
+  // lattice
+  std::shared_ptr<LatticeWalberla> m_lattice;
+
+  // boundaries
+  std::shared_ptr<BoundaryModel> m_boundary;
+
   /**
    * @brief Full communicator.
    * We use the D3Q27 directions to update cells along the diagonals during
@@ -345,10 +351,16 @@ protected:
   std::shared_ptr<PDFStreamingCommunicator> m_pdf_streaming_communicator;
   std::bitset<GhostComm::SIZE> m_pending_ghost_comm;
 
-  // ResetForce sweep + external force handling
+  // collision sweep
+  std::shared_ptr<CollisionModel> m_collision_model;
+
+  // force reset sweep + external force handling
   std::shared_ptr<ResetForce<PdfField, VectorField>> m_reset_force;
 
-  // Lees Edwards boundary interpolation
+  // velocity update sweep
+  std::shared_ptr<UpdateVelFromPDF> m_update_velocities_from_pdf;
+
+  // Lees-Edwards boundary interpolation
   std::shared_ptr<LeesEdwardsPack> m_lees_edwards_callbacks;
   std::shared_ptr<InterpolateAndShiftAtBoundary<_PdfField, FloatType>>
       m_lees_edwards_pdf_interpol_sweep;
@@ -356,18 +368,6 @@ protected:
       m_lees_edwards_vel_interpol_sweep;
   std::shared_ptr<InterpolateAndShiftAtBoundary<_VectorField, FloatType>>
       m_lees_edwards_last_applied_force_interpol_sweep;
-
-  // Collision sweep
-  std::shared_ptr<CollisionModel> m_collision_model;
-
-  // Velocity update sweep
-  std::shared_ptr<UpdateVelFromPDF> m_update_velocities_from_pdf;
-
-  // boundaries
-  std::shared_ptr<BoundaryModel> m_boundary;
-
-  // lattice
-  std::shared_ptr<LatticeWalberla> m_lattice;
 
 #if defined(__CUDACC__)
   std::shared_ptr<gpu::HostFieldAllocator<FloatType>> m_host_field_allocator;
@@ -407,13 +407,13 @@ protected:
       auto field_id = gpu::addGPUFieldToStorage<GPUField>(
           blocks, tag, Field::F_SIZE, field::fzyx, n_ghost_layers);
       if constexpr (std::is_same_v<Field, _VectorField>) {
-        for (auto block = blocks->begin(); block != blocks->end(); ++block) {
-          auto field = block->template getData<GPUField>(field_id);
+        for (auto &block : *blocks) {
+          auto field = block.template getData<GPUField>(field_id);
           lbm::accessor::Vector::initialize(field, Vector3<FloatType>{0});
         }
       } else if constexpr (std::is_same_v<Field, _PdfField>) {
-        for (auto block = blocks->begin(); block != blocks->end(); ++block) {
-          auto field = block->template getData<GPUField>(field_id);
+        for (auto &block : *blocks) {
+          auto field = block.template getData<GPUField>(field_id);
           lbm::accessor::Population::initialize(
               field, std::array<FloatType, Stencil::Size>{});
         }
@@ -571,8 +571,8 @@ private:
 
   void integrate_update_velocities_from_pdf(
       std::shared_ptr<BlockStorage> const &blocks) {
-    for (auto b = blocks->begin(); b != blocks->end(); ++b)
-      (*m_update_velocities_from_pdf)(&*b);
+    for (auto &block : *blocks)
+      (*m_update_velocities_from_pdf)(&block);
   }
 
   void integrate_pull_scheme() {

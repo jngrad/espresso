@@ -589,7 +589,7 @@ private:
 
   void kernel_migration() {}
 
-  void updated_boundary_fields() {
+  void update_boundary_fields() {
     m_boundary_flux->boundary_update();
     m_boundary_density->boundary_update();
   }
@@ -609,7 +609,7 @@ public:
   void integrate(std::size_t potential_id, std::size_t velocity_id,
                  std::size_t force_id, double lb_density) override {
 
-    updated_boundary_fields();
+    update_boundary_fields();
 
     if (get_diffusion() == 0.)
       return;
