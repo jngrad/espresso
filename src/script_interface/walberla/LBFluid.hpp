@@ -35,6 +35,7 @@
 
 #include <walberla_bridge/LatticeModel.hpp>
 #include <walberla_bridge/lattice_boltzmann/LBWalberlaBase.hpp>
+#include <walberla_bridge/utils/ResourceManager.hpp>
 
 #include <utils/Vector.hpp>
 #include <utils/math/int_pow.hpp>
@@ -42,6 +43,7 @@
 #include <cstddef>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -57,10 +59,19 @@ class LBVTKHandle : public VTKHandleBase<::LBWalberlaBase> {
   }
 };
 
+inline void
+lb_throw_if_expired(std::optional<ResourceObserver> const &mpi_obs) {
+  if (not(mpi_obs and mpi_obs->is_valid())) {
+    throw std::runtime_error(
+        "the MPI Cartesian communicator of this LB object has expired");
+  }
+}
+
 class LBFluid : public LatticeModel<::LBWalberlaBase, LBVTKHandle> {
 protected:
   using Base = LatticeModel<::LBWalberlaBase, LBVTKHandle>;
   std::shared_ptr<::LB::LBWalberlaParams> m_lb_params;
+  std::optional<ResourceObserver> m_mpi_cart_comm_observer;
   bool m_is_active;
   double m_conv_dist;
   double m_conv_visc;
@@ -131,6 +142,9 @@ public:
 
   [[nodiscard]] auto get_lb_fluid() const { return m_instance; }
   [[nodiscard]] auto get_lb_params() const { return m_lb_params; }
+  [[nodiscard]] auto get_mpi_cart_comm_observer() const {
+    return m_mpi_cart_comm_observer;
+  }
 
   ::LatticeModel::units_map
   get_lattice_to_md_units_conversion() const override {

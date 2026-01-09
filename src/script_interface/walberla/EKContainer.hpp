@@ -106,6 +106,7 @@ class EKContainer : public ObjectList<EKSpecies, EK::Container> {
         throw std::runtime_error(
             "Cannot mix single and double precision kernels");
       }
+      ek_throw_if_expired(obj_ptr->get_mpi_cart_comm_observer());
       m_ek_container->add(obj_ptr->get_ekinstance());
     });
   }

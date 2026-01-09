@@ -35,6 +35,8 @@
 #include <walberla_bridge/LatticeWalberla.hpp>
 #include <walberla_bridge/lattice_boltzmann/LeesEdwardsPack.hpp>
 #include <walberla_bridge/lattice_boltzmann/lb_walberla_init.hpp>
+#include <walberla_bridge/utils/ResourceManager.hpp>
+#include <walberla_bridge/walberla_init.hpp>
 
 #include <utils/Vector.hpp>
 #include <utils/matrix.hpp>
@@ -69,6 +71,8 @@ Variant LBFluid::do_call_method(std::string const &name,
                                 VariantMap const &params) {
   if (name == "activate") {
     auto &system = get_system();
+    context()->parallel_try_catch(
+        [&]() { lb_throw_if_expired(m_mpi_cart_comm_observer); });
     system.lb.set<::LB::LBWalberla>(m_instance, m_lb_params);
     system.lb.update_collision_model();
     m_is_active = true;
@@ -78,6 +82,10 @@ Variant LBFluid::do_call_method(std::string const &name,
     get_system().lb.reset();
     m_is_active = false;
     return {};
+  }
+  if (not name.starts_with("get_")) {
+    context()->parallel_try_catch(
+        [&]() { lb_throw_if_expired(m_mpi_cart_comm_observer); });
   }
   if (name == "add_force_at_pos") {
     auto const &box_geo = *get_system().box_geo;
@@ -201,6 +209,7 @@ void LBFluid::do_construct(VariantMap const &params) {
       throw std::domain_error("Parameter 'kinematic_viscosity' must be >= 0");
     }
     make_instance(params);
+    m_mpi_cart_comm_observer = ::walberla::get_mpi_cart_comm_observer();
     m_instance->set_collision_model(lb_kT, seed);
     m_instance->set_external_force(lb_ext_f);
     m_instance->ghost_communication();
