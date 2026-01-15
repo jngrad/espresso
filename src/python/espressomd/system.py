@@ -242,7 +242,7 @@ class System(ScriptInterfaceHelper):
         """
         Lattice-Boltzmann method.
 
-        Type: :class:`espressomd.lb.LBFluidWalberla`
+        Type: :class:`espressomd.lb.LBFluid`
         """
         return self.lbcontainer.solver
 

@@ -156,8 +156,10 @@ class CheckpointTest(ut.TestCase):
 
         self.assertTrue(lbf.is_active)
         if "LB.CPU" in modes:
+            self.assertFalse(lbf.gpu)
             self.assertFalse(lbf.single_precision)
         elif "LB.GPU" in modes:
+            self.assertTrue(lbf.gpu)
             self.assertTrue(lbf.single_precision)
 
         # check boundary objects
@@ -919,14 +921,13 @@ class CheckpointTest(ut.TestCase):
     @ut.skipIf(not has_p3m_mode, "Skipping test due to missing combination.")
     def test_p3m(self):
         actor = system.electrostatics.solver
-        self.assertIsInstance(actor, espressomd.electrostatics._P3MBase)
-        single_precision = isinstance(actor, espressomd.electrostatics.P3MGPU)
+        self.assertIsInstance(actor, espressomd.electrostatics.P3M)
         state = actor.get_params()
         reference = {'prefactor': 1.0, 'accuracy': 0.1, 'mesh': 3 * [10],
                      'cao': 1, 'alpha': 1.0, 'r_cut': 1.0, 'tune': False,
                      'timings': 15, 'check_neutrality': True,
-                     'tune_limits': [8, 12],
-                     'single_precision': single_precision,
+                     'tune_limits': [8, 12], 'gpu': 'P3M.GPU' in modes,
+                     'single_precision': 'P3M.GPU' in modes,
                      'charge_neutrality_tolerance': 1e-12}
         for key in reference:
             self.assertIn(key, state)

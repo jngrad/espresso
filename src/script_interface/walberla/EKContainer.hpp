@@ -24,7 +24,6 @@
 #ifdef ESPRESSO_WALBERLA
 
 #include "EKFFT.hpp"
-#include "EKFFT_GPU.hpp"
 #include "EKNone.hpp"
 #include "EKReactions.hpp"
 #include "EKSpecies.hpp"
@@ -56,9 +55,6 @@ class EKContainer : public ObjectList<EKSpecies, EK::Container> {
   std::variant<
 #ifdef ESPRESSO_WALBERLA_FFT
       std::shared_ptr<EKFFT>,
-#ifdef ESPRESSO_CUDA
-      std::shared_ptr<EKFFTGPU>,
-#endif
 #endif
       std::shared_ptr<EKNone>>
       m_poisson_solver;
@@ -140,11 +136,6 @@ class EKContainer : public ObjectList<EKSpecies, EK::Container> {
       solver = std::move(ptr);
     }
 #ifdef ESPRESSO_WALBERLA_FFT
-#ifdef ESPRESSO_CUDA
-    else if (auto ptr = std::dynamic_pointer_cast<EKFFTGPU>(so_ptr)) {
-      solver = std::move(ptr);
-    }
-#endif // ESPRESSO_CUDA
     else if (auto ptr = std::dynamic_pointer_cast<EKFFT>(so_ptr)) {
       solver = std::move(ptr);
     }

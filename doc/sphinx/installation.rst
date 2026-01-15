@@ -480,8 +480,8 @@ To activate ``FEATURE``, add the following line to the header file:
 
 Some features cannot be manually enabled; they are instead automatically
 enabled when a specific list of dependent features are enabled. For example,
-``DIPOLAR_DIRECT_SUM`` is automatically enabled when ``DIPOLES``, ``ROTATION``
-and ``CUDA`` are enabled. Please note that ``CUDA`` is an external feature
+``MMM1D`` is automatically enabled when ``ELECTROSTATICS``
+and ``GSL`` are enabled. Please note that ``GSL`` is an external feature
 and can only be enabled via a CMake option (see :ref:`External features`).
 
 
@@ -500,8 +500,6 @@ General features
    .. seealso:: :ref:`Magnetostatics`
 
 -  ``SCAFACOS_DIPOLES`` This activates magnetostatics methods of ScaFaCoS.
-
--  ``DIPOLAR_DIRECT_SUM`` This activates the GPU implementation of the dipolar direct sum.
 
 -  ``DIPOLE_FIELD_TRACKING`` enable dipolar direct sum algorithms
    to calculate the total dipole field at particle positions.

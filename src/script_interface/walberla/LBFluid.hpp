@@ -88,6 +88,8 @@ public:
         {"lattice", AutoParameter::read_only, [this]() { return m_lattice; }},
         {"single_precision", AutoParameter::read_only,
          [this]() { return not m_instance->is_double_precision(); }},
+        {"gpu", AutoParameter::read_only,
+         [this]() { return m_instance->is_gpu(); }},
         {"is_active", AutoParameter::read_only,
          [this]() { return m_is_active; }},
         {"agrid", AutoParameter::read_only,
@@ -155,6 +157,9 @@ public:
     };
   }
 
+protected:
+  void make_instance(VariantMap const &params) override;
+
 private:
   void load_checkpoint(std::filesystem::path const &path, int mode);
   void save_checkpoint(std::filesystem::path const &path, int mode);
@@ -163,18 +168,6 @@ private:
   Variant get_boundary_force() const;
   Variant get_interpolated_velocity(Utils::Vector3d const &pos) const;
 };
-
-class LBFluidCPU : public LBFluid {
-protected:
-  void make_instance(VariantMap const &params) override;
-};
-
-#ifdef ESPRESSO_CUDA
-class LBFluidGPU : public LBFluid {
-protected:
-  void make_instance(VariantMap const &params) override;
-};
-#endif // ESPRESSO_CUDA
 
 } // namespace ScriptInterface::walberla
 

@@ -271,9 +271,9 @@ class LBTest:
         world_size = np.prod(node_grid)
         if world_size <= 4:
             wrong_box_l = [1., 1., 7.] if world_size == 1 else 2. * node_grid
-            lattice1 = espressomd.lb.LatticeWalberla(
+            lattice1 = espressomd.lb.Lattice(
                 n_ghost_layers=1, agrid=1., box_l=self.system.box_l)
-            lattice2 = espressomd.lb.LatticeWalberla(
+            lattice2 = espressomd.lb.Lattice(
                 n_ghost_layers=1, agrid=1., box_l=wrong_box_l)
             kwargs = self.params.copy()
             del kwargs["agrid"]
@@ -882,11 +882,11 @@ class LBTest:
         np.testing.assert_allclose(f1, f2, rtol=1e-2)
 
     def test_block_grid_exceptions(self):
-        if self.lb_class is espressomd.lb.LBFluidWalberla:
+        if self.lb_params["gpu"] is False:
             with self.assertRaisesRegex(RuntimeError, "Lattice grid dimensions and block grid are not compatible"):
                 self.lb_class(
                     **self.params, single_precision=self.lb_params["single_precision"], blocks_per_mpi_rank=[11, 1, 1])
-        if self.lb_class is espressomd.lb.LBFluidWalberlaGPU:
+        if self.lb_params["gpu"] is True:
             with self.assertRaisesRegex(RuntimeError, "Using more than one block per MPI rank is not supported for GPU LB"):
                 self.lb_class(
                     **self.params,
@@ -912,16 +912,16 @@ class LBTest:
 
 @utx.skipIfMissingFeatures("WALBERLA")
 class LBTestWalberlaDoublePrecisionCPU(LBTest, ut.TestCase):
-    lb_class = espressomd.lb.LBFluidWalberla
-    lb_params = {"single_precision": False}
+    lb_class = espressomd.lb.LBFluid
+    lb_params = {"single_precision": False, "gpu": False}
     atol = 1e-10
     rtol = 1e-7
 
 
 @utx.skipIfMissingFeatures("WALBERLA")
 class LBTestWalberlaSinglePrecisionCPU(LBTest, ut.TestCase):
-    lb_class = espressomd.lb.LBFluidWalberla
-    lb_params = {"single_precision": True}
+    lb_class = espressomd.lb.LBFluid
+    lb_params = {"single_precision": True, "gpu": False}
     atol = 5e-6
     rtol = 2e-4
 
@@ -929,8 +929,8 @@ class LBTestWalberlaSinglePrecisionCPU(LBTest, ut.TestCase):
 @utx.skipIfMissingGPU()
 @utx.skipIfMissingFeatures(["WALBERLA", "CUDA"])
 class LBTestWalberlaDoublePrecisionGPU(LBTest, ut.TestCase):
-    lb_class = espressomd.lb.LBFluidWalberlaGPU
-    lb_params = {"single_precision": False}
+    lb_class = espressomd.lb.LBFluid
+    lb_params = {"single_precision": False, "gpu": True}
     atol = 1e-10
     rtol = 1e-7
 
@@ -938,17 +938,17 @@ class LBTestWalberlaDoublePrecisionGPU(LBTest, ut.TestCase):
 @utx.skipIfMissingGPU()
 @utx.skipIfMissingFeatures(["WALBERLA", "CUDA"])
 class LBTestWalberlaSinglePrecisionGPU(LBTest, ut.TestCase):
-    lb_class = espressomd.lb.LBFluidWalberlaGPU
-    lb_params = {"single_precision": True}
+    lb_class = espressomd.lb.LBFluid
+    lb_params = {"single_precision": True, "gpu": True}
     atol = 5e-6
     rtol = 2e-4
 
 
 @utx.skipIfMissingFeatures("WALBERLA")
 class LBTestWalberlaDoublePrecisionBlocksCPU(LBTest, ut.TestCase):
-    lb_class = espressomd.lb.LBFluidWalberla
+    lb_class = espressomd.lb.LBFluid
     blocks_per_mpi_rank = [2, 2, 2]
-    lb_params = {"single_precision": False,
+    lb_params = {"single_precision": False, "gpu": False,
                  "blocks_per_mpi_rank": blocks_per_mpi_rank}
     atol = 1e-10
     rtol = 1e-7
@@ -956,9 +956,9 @@ class LBTestWalberlaDoublePrecisionBlocksCPU(LBTest, ut.TestCase):
 
 @utx.skipIfMissingFeatures("WALBERLA")
 class LBTestWalberlaSinglePrecisionBlocksCPU(LBTest, ut.TestCase):
-    lb_class = espressomd.lb.LBFluidWalberla
+    lb_class = espressomd.lb.LBFluid
     blocks_per_mpi_rank = [2, 2, 2]
-    lb_params = {"single_precision": True,
+    lb_params = {"single_precision": True, "gpu": False,
                  "blocks_per_mpi_rank": blocks_per_mpi_rank}
     atol = 5e-6
     rtol = 2e-4

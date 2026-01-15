@@ -33,22 +33,22 @@ class Test(ut.TestCase):
     """
 
     def test_interface(self):
-        LatticeWalberla = espressomd.lb.LatticeWalberla
+        Lattice = espressomd.lb.Lattice
         box_l = np.array([12., 4., 4.])
 
         # check getters
         for n_ghost_layers in range(10):
-            obj = LatticeWalberla(
+            obj = Lattice(
                 agrid=1., n_ghost_layers=n_ghost_layers, box_l=box_l)
             self.assertEqual(obj.n_ghost_layers, n_ghost_layers)
         for agrid in (0.5, 1., 2.):
-            obj = LatticeWalberla(agrid=agrid, n_ghost_layers=1, box_l=box_l)
+            obj = Lattice(agrid=agrid, n_ghost_layers=1, box_l=box_l)
             self.assertEqual(obj.agrid, agrid)
             target_shape = np.asarray(box_l, dtype=int) / obj.agrid
             np.testing.assert_array_equal(obj.shape, target_shape)
 
         # check exception mechanism
-        obj = LatticeWalberla(agrid=1., n_ghost_layers=1, box_l=box_l)
+        obj = Lattice(agrid=1., n_ghost_layers=1, box_l=box_l)
         with self.assertRaisesRegex(RuntimeError, "Parameter 'agrid' is read-only"):
             obj.agrid = 2.
         with self.assertRaisesRegex(RuntimeError, "Parameter 'box_l' is read-only"):
@@ -56,16 +56,16 @@ class Test(ut.TestCase):
         with self.assertRaisesRegex(RuntimeError, "Parameter 'n_ghost_layers' is read-only"):
             obj.n_ghost_layers = 2
         with self.assertRaisesRegex(ValueError, "Parameter 'n_ghost_layers' must be >= 0"):
-            LatticeWalberla(agrid=1., n_ghost_layers=-1, box_l=box_l)
+            Lattice(agrid=1., n_ghost_layers=-1, box_l=box_l)
         with self.assertRaisesRegex(ValueError, "Parameter 'agrid' must be > 0"):
-            LatticeWalberla(agrid=0., n_ghost_layers=1, box_l=box_l)
+            Lattice(agrid=0., n_ghost_layers=1, box_l=box_l)
         with self.assertRaisesRegex(ValueError, "Parameter 'agrid' must be > 0"):
-            LatticeWalberla(agrid=-1., n_ghost_layers=1, box_l=box_l)
+            Lattice(agrid=-1., n_ghost_layers=1, box_l=box_l)
         with self.assertRaisesRegex(ValueError, "Parameter 'blocks_per_mpi_rank' must be >= 1"):
-            LatticeWalberla(
+            Lattice(
                 agrid=1., blocks_per_mpi_rank=[1, 0, 1], box_l=box_l)
         with self.assertRaisesRegex(ValueError, "Parameter 'shape' must be derived from espressomd.shapes.Shape"):
-            obj = LatticeWalberla(agrid=1., n_ghost_layers=1, box_l=box_l)
+            obj = Lattice(agrid=1., n_ghost_layers=1, box_l=box_l)
             next(obj.get_node_indices_inside_shape(10))
 
 

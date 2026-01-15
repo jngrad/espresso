@@ -379,8 +379,8 @@ In the following example, a particle is advected by a fluid flowing along the x-
     system = espressomd.System(box_l=[8., 8., 8.])
     system.time_step = 0.01
     system.cell_system.skin = 0.
-    lbf = espressomd.lb.LBFluidWalberla(agrid=1., tau=0.01, density=1.,
-                                        kinematic_viscosity=1.)
+    lbf = espressomd.lb.LBFluid(agrid=1., tau=0.01, density=1.,
+                                kinematic_viscosity=1.)
     system.lb = lbf
     system.thermostat.set_lb(LB_fluid=lbf, seed=123, gamma=1.5)
     lbf[:, :, :].velocity = [0.1, 0., 0.]
