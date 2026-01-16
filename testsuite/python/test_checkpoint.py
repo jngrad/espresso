@@ -804,8 +804,7 @@ class CheckpointTest(ut.TestCase):
         prop_flag = Propagation.TRANS_VS_CENTER_OF_MASS
         self.assertEqual(p_real.propagation, Propagation.SYSTEM_DEFAULT)
         self.assertEqual(p_virt.propagation, prop_flag)
-        self.assertEqual(p_real.vs_com[0], -1)
-        self.assertEqual(p_virt.vs_com[0], p_real.mol_id)
+        self.assertEqual(p_virt.mol_id, p_real.mol_id)
 
     @utx.skipIfMissingFeatures(['THERMAL_STONER_WOHLFARTH', 'EXTERNAL_FORCES'])
     @ut.skipIf('THERM.LANGEVIN' not in modes, 'missing a suitable thermostat')
