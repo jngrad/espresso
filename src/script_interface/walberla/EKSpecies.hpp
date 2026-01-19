@@ -77,6 +77,10 @@ public:
   EKSpecies() {
     add_parameters(
         {{"lattice", AutoParameter::read_only, [this]() { return m_lattice; }},
+         {"single_precision", AutoParameter::read_only,
+          [this]() { return not m_instance->is_double_precision(); }},
+         {"gpu", AutoParameter::read_only,
+          [this]() { return m_instance->is_gpu(); }},
          {"diffusion",
           [this](Variant const &v) {
             m_instance->set_diffusion(get_value<double>(v) * m_conv_diffusion);
@@ -116,8 +120,6 @@ public:
             m_instance->set_friction_coupling(get_value<bool>(v));
           },
           [this]() { return m_instance->get_friction_coupling(); }},
-         {"single_precision", AutoParameter::read_only,
-          [this]() { return not m_instance->is_double_precision(); }},
          {"tau", AutoParameter::read_only, [this]() { return m_tau; }},
          {"density", AutoParameter::read_only,
           [this]() { return m_density / m_conv_density; }},
@@ -171,22 +173,13 @@ public:
     };
   }
 
+protected:
+  void make_instance(VariantMap const &params) override;
+
 private:
   void load_checkpoint(std::filesystem::path const &path, int mode);
   void save_checkpoint(std::filesystem::path const &path, int mode);
 };
-
-class EKSpeciesCPU : public EKSpecies {
-protected:
-  void make_instance(VariantMap const &params) override;
-};
-
-#ifdef ESPRESSO_CUDA
-class EKSpeciesGPU : public EKSpecies {
-protected:
-  void make_instance(VariantMap const &params) override;
-};
-#endif // ESPRESSO_CUDA
 
 } // namespace ScriptInterface::walberla
 

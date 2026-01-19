@@ -26,7 +26,7 @@ from espressomd.script_interface import ScriptInterfaceHelper, script_interface_
 
 
 @script_interface_register
-class LatticeWalberla(ScriptInterfaceHelper):
+class Lattice(ScriptInterfaceHelper):
     """
     Interface to a waLBerla lattice.
 
@@ -45,7 +45,7 @@ class LatticeWalberla(ScriptInterfaceHelper):
         Meant to improve cache locality. Experimental.
 
     """
-    _so_name = "walberla::LatticeWalberla"
+    _so_name = "walberla::Lattice"
     _so_creation_policy = "GLOBAL"
     _so_features = ("WALBERLA",)
 

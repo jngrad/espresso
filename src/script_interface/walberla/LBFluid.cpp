@@ -30,6 +30,7 @@
 #include "core/lees_edwards/protocols.hpp"
 #include "core/system/System.hpp"
 
+#include <script_interface/code_info/CodeInfo.hpp>
 #include <script_interface/communication.hpp>
 
 #include <walberla_bridge/LatticeWalberla.hpp>
@@ -139,33 +140,31 @@ Variant LBFluid::do_call_method(std::string const &name,
   return Base::do_call_method(name, params);
 }
 
-void LBFluidCPU::make_instance(VariantMap const &params) {
+void LBFluid::make_instance(VariantMap const &params) {
   auto const visc = get_value<double>(params, "kinematic_viscosity");
   auto const dens = get_value<double>(params, "density");
-  auto const precision = get_value<bool>(params, "single_precision");
+  auto const gpu = get_value_or(params, "gpu", false);
+  auto const precision = get_value_or(params, "single_precision", gpu);
   auto const lb_lattice = m_lattice->lattice();
   auto const lb_visc = m_conv_visc * visc;
   auto const lb_dens = m_conv_dens * dens;
-  m_instance = new_lb_walberla_cpu(lb_lattice, lb_visc, lb_dens, precision);
-}
-
+  auto *make_new_instance = &new_lb_walberla_cpu;
+  if (gpu) {
+    std::vector<std::string> required_features;
+    required_features.emplace_back("CUDA");
+    CodeInfo::check_features(required_features);
 #ifdef ESPRESSO_CUDA
-void LBFluidGPU::make_instance(VariantMap const &params) {
-  auto const visc = get_value<double>(params, "kinematic_viscosity");
-  auto const dens = get_value<double>(params, "density");
-  auto const precision = get_value<bool>(params, "single_precision");
-  auto const blocks_per_mpi_rank = get_value<Utils::Vector3i>(
-      m_lattice->get_parameter("blocks_per_mpi_rank"));
-  if (blocks_per_mpi_rank != Utils::Vector3i{{1, 1, 1}}) {
-    throw std::runtime_error(
-        "Using more than one block per MPI rank is not supported for GPU LB");
+    auto const blocks_per_mpi_rank = get_value<Utils::Vector3i>(
+        m_lattice->get_parameter("blocks_per_mpi_rank"));
+    if (blocks_per_mpi_rank != Utils::Vector3i{{1, 1, 1}}) {
+      throw std::runtime_error(
+          "Using more than one block per MPI rank is not supported for GPU LB");
+    }
+    make_new_instance = &new_lb_walberla_gpu;
+#endif
   }
-  auto const lb_lattice = m_lattice->lattice();
-  auto const lb_visc = m_conv_visc * visc;
-  auto const lb_dens = m_conv_dens * dens;
-  m_instance = new_lb_walberla_gpu(lb_lattice, lb_visc, lb_dens, precision);
+  m_instance = make_new_instance(lb_lattice, lb_visc, lb_dens, precision);
 }
-#endif // ESPRESSO_CUDA
 
 void LBFluid::do_construct(VariantMap const &params) {
   m_lattice = get_value<std::shared_ptr<LatticeWalberla>>(params, "lattice");

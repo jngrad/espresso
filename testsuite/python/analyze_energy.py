@@ -200,17 +200,18 @@ class AnalyzeEnergy(ut.TestCase):
         p0_energy_new = self.system.analysis.particle_non_bonded_energy(p0)
         self.assertAlmostEqual(p0_energy_new, p0_energy_old, delta=1e-7)
 
-    def check_electrostatics(self, p3m_class):
+    def check_electrostatics(self, gpu):
         p0, p1 = self.system.part.all()
         p0.pos = [1, 2, 2]
         p1.pos = [3, 2, 2]
         p0.q = 1
         p1.q = -1
-        p3m = p3m_class(
+        p3m = espressomd.electrostatics.P3M(
             prefactor=1.0,
             accuracy=1e-7,
             mesh=[22, 22, 22],
             cao=7,
+            gpu=gpu,
             r_cut=8.90625,
             alpha=0.38761105,
             tune=False)
@@ -228,12 +229,12 @@ class AnalyzeEnergy(ut.TestCase):
 
     @utx.skipIfMissingFeatures(["P3M"])
     def test_electrostatics_cpu(self):
-        self.check_electrostatics(espressomd.electrostatics.P3M)
+        self.check_electrostatics(False)
 
     @utx.skipIfMissingGPU()
     @utx.skipIfMissingFeatures(["P3M"])
     def test_electrostatics_gpu(self):
-        self.check_electrostatics(espressomd.electrostatics.P3MGPU)
+        self.check_electrostatics(True)
 
     @utx.skipIfMissingFeatures(["ELECTROSTATICS"])
     def test_particle_energy(self):
