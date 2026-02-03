@@ -58,6 +58,7 @@ jobs:
 
   debian:
     runs-on: ubuntu-latest
+    if: ${{ github.repository == 'espressomd/espresso' }}
     container:
       image: ghcr.io/espressomd/docker/debian:3388b293a5e8a9b613b1bfa4220e54dfb4bff245-base-layer
       credentials:
