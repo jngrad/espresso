@@ -7,6 +7,12 @@ jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/espressomd/docker/ubuntu-wo-dependencies:3388b293a5e8a9b613b1bfa4220e54dfb4bff245-base-layer
+      credentials:
+         username: ${{ github.actor }}
+         password: ${{ secrets.github_token }}
+      options: --cpus 4
     permissions:
       # required for all workflows
       security-events: write
@@ -50,14 +56,26 @@ jobs:
 
     - name: Run manual build steps
       if: matrix.build-mode == 'manual'
-      shell: bash
-      run: |
-        mkdir build
-        cd build
-        cp ../maintainer/configs/maxset.hpp myconfig.hpp
-        cmake -G Ninja ..
-        ninja -j 4 espresso_packaging_dependencies
-        ninja -j 4 check_unit_tests
+      uses: ./.github/actions/build_and_check
+      env:
+        build_procs: 4
+        check_procs: 4
+        CC: 'gcc-13'
+        CXX: 'g++-13'
+        myconfig: 'maxset'
+        with_ccache: 'true'
+        with_cuda: 'false'
+        with_hdf5: 'false'
+        with_fftw: 'false'
+        with_gsl: 'false'
+        with_scafacos: 'false'
+        with_stokesian_dynamics: 'false'
+        with_shared_memory_parallelism: 'false'
+        make_check_unit_tests: 'false'
+        make_check_python: 'false'
+        OMPI_ALLOW_RUN_AS_ROOT: 1
+        OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
       with:
