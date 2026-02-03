@@ -1,0 +1,63 @@
+name: "CodeQL Advanced"
+
+on:
+  push:
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      # required for all workflows
+      security-events: write
+      # required to fetch internal or private CodeQL packs
+      packages: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - language: actions
+          build-mode: none
+        - language: c-cpp
+          build-mode: manual
+        - language: python
+          build-mode: none
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v4
+      with:
+        languages: ${{ matrix.language }}
+        build-mode: ${{ matrix.build-mode }}
+    - name: Install build dependencies
+      if: matrix.build-mode == 'manual'
+      run: sudo apt install --no-install-recommends -y build-essential cmake cython3 gcc-13 g++-13 libstdc++-13-dev libboost-dev libboost-mpi-dev libboost-serialization-dev libboost-test-dev libopenmpi-dev ninja-build openmpi-bin python3 python3-dev python3-numpy python3-packaging python3-scipy python3-setuptools
+    - name: Run manual build steps
+      if: matrix.build-mode == 'manual'
+      uses: ./.github/actions/build_and_check
+      env:
+        build_procs: 4
+        check_procs: 4
+        CC: 'gcc-13'
+        CXX: 'g++-13'
+        myconfig: 'maxset'
+        with_ccache: 'false'
+        with_cuda: 'false'
+        with_hdf5: 'false'
+        with_fftw: 'false'
+        with_gsl: 'false'
+        with_walberla: 'false'
+        with_scafacos: 'false'
+        with_stokesian_dynamics: 'false'
+        with_shared_memory_parallelism: 'false'
+        make_check_unit_tests: 'true'
+        make_check_python: 'false'
+        OMPI_ALLOW_RUN_AS_ROOT: 1
+        OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v4
+      with:
+        category: "/language:${{matrix.language}}"
