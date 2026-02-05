@@ -216,6 +216,7 @@ class Visualizer():
                  colors: dict = None,
                  radii: dict = None,
                  bonds: bool = False,
+                 forces: bool = False,
                  jupyter: bool = True,
                  vector_field: typing.Union[VectorField, LBField] = None,
                  ):
@@ -226,6 +227,7 @@ class Visualizer():
             "colors": colors,
             "radii": radii,
             "bonds": bonds,
+            "forces": forces,
             "vector_field": vector_field,
         }
 
@@ -300,8 +302,10 @@ class Visualizer():
         all_types = particles.type
         self.system.visualizer_params = self.params
         ase_interf = ase.ASEInterface(
-            self.system, None, self.system.part.all(),
-            use_folded_positions=self.params["folded"])
+            system=self.system,
+            particle_slice=self.system.part.all(),
+            use_folded_positions=self.params["folded"],
+            export_forces=self.params["forces"])
         data = ase_interf.atoms
         if self.params["colors"] is not None:
             data.arrays["colors"] = [self.params["colors"].get(
@@ -330,17 +334,35 @@ class Visualizer():
             if self.params["folded"]:
                 # add ghost particles and bonds for PBC crossing bonds
                 bonds = self._handle_pbc_bonds(bonds=bonds, ase_data=data)
-            # data.info["connectivity"] = bonds  # from zndraw version 0.5.12
-            data.connectivity = bonds
+            data.info["connectivity"] = bonds
 
         if self.frame_count == 0:
             x, y, z = self.system.box_l / 2
             z_dist = max([1.5 * y, 1.5 * x, 1.5 * z])
 
-            self.zndraw.camera = {
-                'position': [x, y, z_dist],
-                'target': [x, y, z]
-            }
+            self.zndraw.geometries["camera"] = zndraw.geometries.Camera(
+                position=(x, y, z_dist),
+                target=(x, y, z),
+            )
+
+            # activate the camera
+            for key in self.zndraw.sessions.keys():
+                self.zndraw.api.set_active_camera(key, "camera")
+
+            if self.params["forces"]:
+                self.zndraw.geometries["force_arrows"] = zndraw.geometries.Arrow(
+                    position="arrays.positions",
+                    direction="arrays.forces",
+                    color=["gray"] if self.params["colors"] else "arrays.colors",
+                    radius=4 *
+                    max(self.params["radii"].values()
+                        ) if self.params["radii"] else 1.0,
+                    opacity=0.8,
+                    hovering=zndraw.geometries.InteractionSettings(
+                        enabled=False),
+                    selecting=zndraw.geometries.InteractionSettings(
+                        enabled=False),
+                )
 
         if self.params["vector_field"] is not None:
             field_data = self.params["vector_field"]()
@@ -523,6 +545,8 @@ class Visualizer():
         ase_data.arrays['radii'] = np.hstack(
             [ase_data.arrays['radii'], [1e-6 * min_radii] * len(ghost_positions)])
         ase_data.arrays['numbers'] = np.hstack([numbers, ghost_numbers])
+        ase_data.arrays['forces'] = np.vstack(
+            [ase_data.arrays['forces'], np.zeros((len(ghost_positions), 3))])
 
         bonds.extend(bonds_to_add)
         return bonds
