@@ -36,22 +36,22 @@ authors:
     family-names: Kobayashi
     affiliation: Institute for Computational Physics, University of Stuttgart, Stuttgart, Germany
     orcid: "https://orcid.org/0000-0002-4024-1752"
+  - given-names: Ingo
+    family-names: Tischler
+    affiliation: Institute for Computational Physics, University of Stuttgart, Stuttgart, Germany
+    orcid: "https://orcid.org/0000-0001-8986-7679"
   - given-names: Pablo M.
     family-names: Blanco
-    affiliation: Department of Physics, Norwegian University of Science and Technology, Trondheim, Norway
+    affiliation: Department of Chemistry, Physics, Environmental and Soil Sciences, University of Lleida – AGROTECNIO-CERCA Center, Lleida, Spain
     orcid: "https://orcid.org/0000-0002-7603-8617"
   - given-names: Deniz
     family-names: Mostarac
-    affiliation: Department of Physics, University of Rome La Sapienza, Rome, Italy
+    affiliation: School of Chemistry, University of Edinburgh, Edinburgh, United Kingdom
     orcid: "https://orcid.org/0000-0003-4084-6046"
   - given-names: Sebastian
     family-names: Bindgen
     affiliation: Soft Matter, Rheology and Technology, Department of Chemical Engineering, KU Leuven, Leuven, Belgium
     orcid: "https://orcid.org/0000-0002-5861-0990"
-  - given-names: Ingo
-    family-names: Tischler
-    affiliation: Institute for Computational Physics, University of Stuttgart, Stuttgart, Germany
-    orcid: "https://orcid.org/0000-0001-8986-7679"
   - given-names: David
     family-names: Beyer
     affiliation: Institute for Computational Physics, University of Stuttgart, Stuttgart, Germany
@@ -77,14 +77,14 @@ authors:
     family-names: Gandhi
     affiliation: Institute for Computational Physics, University of Stuttgart, Stuttgart, Germany
     orcid: "https://orcid.org/0000-0002-9220-761X"
-  - given-names: Samuel
-    family-names: Tovey
-    affiliation: Institute for Computational Physics, University of Stuttgart, Stuttgart, Germany
-    orcid: "https://orcid.org/0000-0001-9537-8361"
   - given-names: Mariano E.
     family-names: Brito
     affiliation: Institute for Computational Physics, University of Stuttgart, Stuttgart, Germany
     orcid: "https://orcid.org/0000-0001-5548-7889"
+  - given-names: Samuel
+    family-names: Tovey
+    affiliation: Institute for Computational Physics, University of Stuttgart, Stuttgart, Germany
+    orcid: "https://orcid.org/0000-0001-9537-8361"
   - given-names: Rudolf
     family-names: Weeber
     affiliation: Institute for Computational Physics, University of Stuttgart, Stuttgart, Germany
