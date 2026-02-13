@@ -51,6 +51,7 @@
 #include <boost/mpi/collectives/all_reduce.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <functional>
 #include <memory>

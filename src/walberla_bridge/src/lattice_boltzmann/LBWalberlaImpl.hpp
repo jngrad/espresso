@@ -587,7 +587,7 @@ private:
     // LB stream collide
     integrate_stream_collide(blocks);
     // Mark pending ghost layer updates
-    // As pdf and laf are communicated direcly afterwards they are not set.
+    // As pdf and laf are communicated directly afterwards, they are not set
     m_pending_ghost_comm.set(GhostComm::VEL);
     m_pending_ghost_comm.set(GhostComm::LAF);
     m_pdf_streaming_communicator->communicate();

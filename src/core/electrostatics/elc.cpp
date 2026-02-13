@@ -37,7 +37,6 @@
 #include "errorhandling.hpp"
 #include "system/System.hpp"
 
-#include <utils/Vector.hpp>
 #include <utils/math/sqr.hpp>
 
 #ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
@@ -53,6 +52,8 @@
 #include <cstddef>
 #include <functional>
 #include <numbers>
+#include <stdexcept>
+#include <utility>
 #include <variant>
 #include <vector>
 

@@ -83,7 +83,7 @@ static void handle_negative_volume(auto &nptiso, auto const &box_geo,
 }
 
 /**
- * @brief propagete positions and the volume and add thermal fluctuation.
+ * @brief propagate positions and the volume and add thermal fluctuation.
  * A and V are the position and volume propagators for half-time step.
  * O is the propagator corresponding to Ornstein-Uhlenbeck process
  * representing the stochastic thermostat.

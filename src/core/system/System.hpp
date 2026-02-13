@@ -35,6 +35,8 @@
 #include <utils/Vector.hpp>
 
 #include <memory>
+#include <optional>
+#include <vector>
 
 class BoxGeometry;
 class LocalBox;
@@ -216,7 +218,7 @@ public:
    *  @param reuse_forces  Decide when to re-calculate forces
    *
    *  @details This function calls two hooks for propagation kernels such as
-   *  velocity verlet, velocity verlet + npt box changes, and steepest_descent.
+   *  velocity Verlet, velocity Verlet + NpT, or steepest descent.
    *  One hook is called before and one after the force calculation.
    *  It is up to the propagation kernels to increment the simulation time.
    *

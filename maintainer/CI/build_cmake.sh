@@ -386,7 +386,6 @@ if [ "${with_coverage}" = true ] || [ "${with_coverage_python}" = true ]; then
         echo "Running lcov and gcov..."
         codecov_opts="${codecov_opts} --gcov"
         "${srcdir}/maintainer/CI/run_lcov.sh" coverage.info
-        rm coverage.info
     fi
     if [ "${with_coverage_python}" = true ]; then
         echo "Running python3-coverage..."

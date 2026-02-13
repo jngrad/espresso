@@ -62,6 +62,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstddef>
 #include <memory>
 #include <span>
 #include <variant>

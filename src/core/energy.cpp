@@ -34,6 +34,7 @@
 #include "electrostatics/coulomb.hpp"
 #include "magnetostatics/dipoles.hpp"
 
+#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <optional>
