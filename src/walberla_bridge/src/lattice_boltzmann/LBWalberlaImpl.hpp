@@ -873,7 +873,9 @@ public:
   get_slice_velocity(Utils::Vector3i const &lower_corner,
                      Utils::Vector3i const &upper_corner) const override {
     std::vector<double> out;
-    uint_t values_size = 0;
+#ifndef NDEBUG
+    uint_t values_size = 0u;
+#endif
     auto const &lattice = get_lattice();
     if (auto const ci = get_interval(lattice, lower_corner, upper_corner)) {
       out = std::vector<double>(3u * ci->numCells());
@@ -885,7 +887,9 @@ public:
               block.template getData<VectorField>(m_velocity_field_id);
           auto values = lbm::accessor::Vector::get(field, *bci);
           assert(values.size() == 3u * bci->numCells());
+#ifndef NDEBUG
           values_size += 3u * bci->numCells();
+#endif
 
           auto kernel = [&values, &out, this](unsigned const block_index,
                                               unsigned const local_index,

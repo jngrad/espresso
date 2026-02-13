@@ -1130,7 +1130,7 @@ void charge_assign(elc_data const &elc, CoulombP3M &solver,
 
 #ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
   // multi-threading -> cache sizes must be equal to the number of particles
-  auto const include_neutral_particles = Kokkos::num_threads() > 1;
+  auto constexpr include_neutral_particles = true;
 #else
   auto constexpr include_neutral_particles = false;
 #endif

@@ -103,11 +103,16 @@ GlobalContext::make_shared(std::string const &name,
           /* Custom deleter, we keep the corresponding global context,
            * as well as the original deleter for the object. */
           [global_context = this, deleter = sp.get_deleter()](ObjectHandle *o) {
-            /* Tell the other nodes before invoking the destructor, this is
-             * required
-             * to have synchronous destructors, which is needed by some client
-             * code. */
-            global_context->cb_delete_handle(ObjectId(o));
+            /* Notify worker nodes before invoking the deleter. This is
+             * required by synchronous deleters used by some client code.
+             * Since a deleter cannot throw, exceptions thrown by Boost and
+             * MpiCallbacks must be silenced (such code paths arise when
+             * undefined behavior is invoked).
+             */
+            try {
+              global_context->cb_delete_handle(ObjectId(o));
+            } catch (...) { // NOLINT(bugprone-empty-catch)
+            }
 
             /* Locally destroy the object. */
             deleter(o);

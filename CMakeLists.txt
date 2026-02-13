@@ -142,6 +142,10 @@ option(ESPRESSO_INSIDE_DOCKER "Set this to ON when running inside Docker." OFF)
 mark_as_advanced(ESPRESSO_INSIDE_DOCKER)
 set(ESPRESSO_TEST_TIMEOUT "300"
     CACHE STRING "Timeout in seconds for each testsuite test")
+if(ESPRESSO_BUILD_WITH_PYTHON)
+  set(ESPRESSO_MODULE_INSTALL_PATH ""
+      CACHE PATH "Install ESPResSo Python module in a custom location")
+endif()
 
 if(ESPRESSO_BUILD_WITH_CCACHE)
   find_program(CCACHE_PROGRAM ccache REQUIRED)
@@ -316,7 +320,7 @@ endif()
 # Python interpreter and Cython interface library
 if(ESPRESSO_BUILD_WITH_PYTHON)
   find_package(Python 3.11 REQUIRED COMPONENTS Interpreter Development NumPy)
-  find_package(Cython 3.0.4...<3.2.0 REQUIRED)
+  find_package(Cython 3.0.4...<4.0.0 REQUIRED)
   if(CYTHON_VERSION VERSION_LESS 3.0.8)
     message(WARNING "We strongly recommend using Cython 3.0.8 or later")
   endif()
@@ -358,7 +362,7 @@ set(ESPRESSO_INSTALL_LIBDIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 
 set(ESPRESSO_OLD_CMAKE_INSTALL_LIBDIR "${CMAKE_INSTALL_LIBDIR}")
 
-# python site-packages, can be overriden with CMake options
+# python site-packages, can be overridden with CMake options
 if(ESPRESSO_BUILD_WITH_PYTHON)
   if(NOT ESPRESSO_INSTALL_PYTHON)
     if(CMAKE_INSTALL_PREFIX STREQUAL "/")
@@ -369,7 +373,10 @@ if(ESPRESSO_BUILD_WITH_PYTHON)
       )
     endif()
   endif()
-  # override: package C++, CUDA and Cython shared objects together
+  if(NOT ESPRESSO_MODULE_INSTALL_PATH STREQUAL "")
+    set(ESPRESSO_INSTALL_PYTHON "${ESPRESSO_MODULE_INSTALL_PATH}")
+  endif()
+  # install shared objects in the Python folder
   set(ESPRESSO_INSTALL_LIBDIR "${ESPRESSO_INSTALL_PYTHON}/espressomd")
   add_custom_target(espresso_packaging_dependencies)
 endif()
@@ -633,14 +640,14 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
   find_package(OpenMP REQUIRED COMPONENTS CXX)
 
   if(NOT EXISTS ${FETCHCONTENT_BASE_DIR}/kokkos-src)
-    find_package(Kokkos 4.3 QUIET)
+    find_package(Kokkos 4.6 QUIET)
   endif()
   if(NOT DEFINED Kokkos_FOUND OR NOT ${Kokkos_FOUND})
     # cmake-format: off
     FetchContent_Declare(
       kokkos
       GIT_REPOSITORY https://github.com/kokkos/kokkos.git
-      GIT_TAG        18b830e # version 4.6.1 with patches
+      GIT_TAG        5.0.2
       OVERRIDE_FIND_PACKAGE
     )
     # cmake-format: on
@@ -652,6 +659,7 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     set(Kokkos_ENABLE_COMPLEX_ALIGN ON CACHE BOOL "")
     set(Kokkos_ENABLE_AGGRESSIVE_VECTORIZATION ON CACHE BOOL "")
     set(Kokkos_ENABLE_HWLOC ON CACHE BOOL "")
+    set(Kokkos_ENABLE_DEPRECATED_CODE_5 OFF CACHE BOOL "")
     set(Kokkos_ARCH_NATIVE ON CACHE BOOL "")
     FetchContent_MakeAvailable(kokkos)
     set(BUILD_SHARED_LIBS ${ESPRESSO_BUILD_SHARED_LIBS_DEFAULT})
@@ -711,7 +719,7 @@ if(ESPRESSO_BUILD_WITH_HDF5)
   FetchContent_Declare(
     HighFive
     GIT_REPOSITORY https://github.com/highfive-devs/highfive.git
-    GIT_TAG        v3.2.0
+    GIT_TAG        v3.3.0
   )
   # cmake-format: on
   FetchContent_MakeAvailable(HighFive)
@@ -893,6 +901,8 @@ if(ESPRESSO_BUILD_TESTS)
             "Extra arguments to give to ctest calls (separated by semicolons)")
   set(ESPRESSO_TEST_NP "4" CACHE STRING
                                  "Maximal number of MPI ranks to use per test")
+  set(ESPRESSO_TEST_NT "4"
+      CACHE STRING "Maximal number of OpenMP threads to use per test")
   add_library(espresso_tests_compiler_flags INTERFACE)
   add_library(espresso::tests::compiler_flags ALIAS
               espresso_tests_compiler_flags)
@@ -923,13 +933,14 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   FetchContent_Declare(
     walberla
     GIT_REPOSITORY https://i10git.cs.fau.de/walberla/walberla.git
-    GIT_TAG        17fc54c8 # v7.2 with patches
+    GIT_TAG        3247aa73 # v7.2 with patches
   )
   # cmake-format: on
   string(REGEX REPLACE "([/\\]walberla)-src$" "\\1-build" walberla_BINARY_DIR
                        "${walberla_SOURCE_DIR}")
   set(WALBERLA_BUILD_TESTS off CACHE BOOL "")
   set(WALBERLA_BUILD_TOOLS off CACHE BOOL "")
+  set(WALBERLA_BUILD_LEGACY_LBM off CACHE BOOL "")
   set(WALBERLA_BUILD_BENCHMARKS off CACHE BOOL "")
   set(WALBERLA_BUILD_TUTORIALS off CACHE BOOL "")
   set(WALBERLA_BUILD_SHOWCASES off CACHE BOOL "")
@@ -972,6 +983,13 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
     endfunction()
     espresso_enable_avx2_support(espresso_avx_flags_callback)
   endif()
+  add_library(espresso_walberla_sqlite_compiler_flags INTERFACE)
+  target_compile_options(
+    espresso_walberla_sqlite_compiler_flags
+    INTERFACE $<$<COMPILE_LANG_AND_ID:C,GNU>:-Wno-discarded-qualifiers>
+              -Wno-misleading-indentation -Wno-unused-but-set-variable)
+  target_link_libraries(walberla_sqlite
+                        PRIVATE espresso_walberla_sqlite_compiler_flags)
 endif()
 
 if(ESPRESSO_BUILD_WITH_CALIPER)
@@ -979,7 +997,7 @@ if(ESPRESSO_BUILD_WITH_CALIPER)
   FetchContent_Declare(
     caliper
     GIT_REPOSITORY https://github.com/LLNL/Caliper.git
-    GIT_TAG        v2.13.0
+    GIT_TAG        v2.14.0
   )
   # cmake-format: on
   set(CALIPER_OPTION_PREFIX on CACHE BOOL "")
@@ -995,10 +1013,14 @@ if(ESPRESSO_BUILD_WITH_CALIPER)
   set(BUILD_SHARED_LIBS ${ESPRESSO_BUILD_SHARED_LIBS_DEFAULT})
   set(CMAKE_INSTALL_LIBDIR "${ESPRESSO_OLD_CMAKE_INSTALL_LIBDIR}")
   set(CMAKE_SHARED_LIBRARY_PREFIX "${ESPRESSO_SHARED_LIBRARY_PREFIX}")
+  add_library(espresso_caliper_compiler_flags INTERFACE)
   target_compile_options(
-    caliper-common
-    PRIVATE $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-free-nonheap-object
-            -Wno-deprecated-enum-enum-conversion -Wno-volatile>)
+    espresso_caliper_compiler_flags
+    INTERFACE $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-free-nonheap-object
+              -Wno-deprecated-enum-enum-conversion -Wno-volatile
+              -Wno-maybe-uninitialized>)
+  target_link_libraries(caliper-common PRIVATE espresso_caliper_compiler_flags)
+  target_link_libraries(caliper-runtime PRIVATE espresso_caliper_compiler_flags)
 endif()
 
 #
@@ -1027,6 +1049,17 @@ function(espresso_set_common_target_properties)
                               PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
       elseif(CMAKE_CUDA_COMPILER_ID STREQUAL "Clang")
         set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE "CXX")
+      endif()
+      # handle builds with different GCC versions for C++ and CUDA
+      # (https://github.com/espressomd/espresso/issues/5256)
+      if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND CMAKE_CXX_COMPILER_ID
+                                                      STREQUAL "GNU"
+         AND NOT "$ENV{CUDAHOSTCXX}" STREQUAL "$ENV{CXX}"
+         AND "$ENV{CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES_EXCLUDE}" MATCHES
+             "^/usr/lib/gcc/[^/]+/1[4-9]\$")
+        target_link_directories(
+          ${TARGET_NAME} BEFORE PUBLIC
+          "$ENV{CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES_EXCLUDE}")
       endif()
     endif()
   endif()
