@@ -220,6 +220,7 @@ minimally required CUDA version.
 
 On Ubuntu 24.04, the default GCC compiler may be too recent for nvcc 12.0.
 You can either use GCC 12 or alternatively install Clang 19 as a replacement for nvcc and GCC.
+If the NVIDIA HPC SDK is installed, the NVHPC toolchain can be used with GCC 12.
 
 .. tabs::
 
@@ -256,6 +257,27 @@ You can either use GCC 12 or alternatively install Clang 19 as a replacement for
             clang-19 clang-tidy-19 clang-format-19 llvm-19 libc++-19-dev \
             libclang-rt-19-dev libomp-19-dev gcc-12 g++-12 libstdc++-12-dev
 
+   .. group-tab:: NVHPC on Ubuntu 24.04
+
+      .. code-block:: bash
+
+         CC=nvc CXX=nvc++ CUDACXX=nvcc cmake .. \
+            -D ESPRESSO_BUILD_WITH_CUDA=ON \
+            -D CMAKE_CXX_FLAGS="--gcc-toolchain=gcc-12"
+
+      with compiler dependencies:
+
+      .. code-block:: bash
+
+         sudo apt install gcc-12 g++-12 libstdc++-12-dev
+
+      To print which toolchains and libraries are loaded by NVHPC, run:
+
+      .. code-block:: bash
+
+          echo 'int main() {}' > mwe.cpp
+          nvc++ -v -std=c++20 mwe.cpp
+
 Please note that all CMake options and compiler flags that involve
 ``/usr/local/cuda-*`` need to be adapted to your CUDA environment.
 But they are only necessary on systems with multiple CUDA releases installed,
@@ -270,6 +292,7 @@ the NVIDIA driver without GCC 13 due to a dependency resolution issue
 
 On Ubuntu 26.04, only GCC <= 13 can be used with nvcc 12.4.
 Alternatively, the Clang toolchain can be used.
+If the NVIDIA HPC SDK is installed, the NVHPC toolchain can be used with GCC 13.
 
 .. tabs::
 
@@ -307,6 +330,27 @@ Alternatively, the Clang toolchain can be used.
          sudo apt install \
             clang-20 clang-tidy-20 clang-format-20 llvm-20 libc++-20-dev \
             libclang-rt-20-dev libomp-20-dev gcc-15 g++-15 libstdc++-15-dev
+
+   .. group-tab:: NVHPC on Ubuntu 26.04
+
+      .. code-block:: bash
+
+         CC=nvc CXX=nvc++ CUDACXX=nvcc cmake .. \
+            -D ESPRESSO_BUILD_WITH_CUDA=ON \
+            -D CMAKE_CXX_FLAGS="--gcc-toolchain=gcc-13"
+
+      with compiler dependencies:
+
+      .. code-block:: bash
+
+         sudo apt install gcc-13 g++-13 libstdc++-13-dev
+
+      To print which toolchains and libraries are loaded by NVHPC, run:
+
+      .. code-block:: bash
+
+          echo 'int main() {}' > mwe.cpp
+          nvc++ -v -std=c++20 mwe.cpp
 
 .. _Setting up a Jupyter environment:
 

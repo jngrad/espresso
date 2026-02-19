@@ -113,7 +113,8 @@ public:
       template <class C> struct get_class_from_method;
       template <class C, class Ret, class... Args>
       struct get_class_from_method<Ret (C::*)(Args...)> {
-#if defined(__NVCC__)
+#if defined(__NVCC__) or defined(__NVCOMPILER) or                              \
+    defined(__GNUC__) and __GNUC__ < 13
         using type = C;
 #else
         static_assert(false,

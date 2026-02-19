@@ -241,6 +241,7 @@ espresso_minimal_compiler_version("Clang" 18.1.0)
 espresso_minimal_compiler_version("AppleClang" 17.0.0)
 espresso_minimal_compiler_version("CrayClang" 17.0.0)
 espresso_minimal_compiler_version("IntelLLVM" 2023.1)
+espresso_minimal_compiler_version("NVHPC" 25.5)
 
 set(ESPRESSO_UNSUPPORTED_COMPILERS "Intel;MSVC")
 foreach(LANG C CXX)
@@ -391,14 +392,14 @@ target_compile_options(
   INTERFACE
     $<$<COMPILE_LANGUAGE:CXX,CUDA>:-Wall>
     $<$<COMPILE_LANGUAGE:CXX,CUDA>:-Wextra>
-    $<$<COMPILE_LANGUAGE:CXX>:-pedantic>
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang>:-pedantic>
     # add extra warnings
-    $<$<COMPILE_LANGUAGE:CXX>:-Wfloat-conversion>
-    $<$<COMPILE_LANGUAGE:CXX>:-Wdelete-non-virtual-dtor>
-    $<$<COMPILE_LANGUAGE:CXX>:-Wnon-virtual-dtor>
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang,IntelLLVM>:-Wfloat-conversion>
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang,IntelLLVM>:-Wdelete-non-virtual-dtor>
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang,IntelLLVM>:-Wnon-virtual-dtor>
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang,IntelLLVM>:-Wunused-macros>
     $<$<COMPILE_LANGUAGE:CXX>:-Wcast-qual>
     $<$<COMPILE_LANGUAGE:CXX>:-Wcast-align>
-    $<$<COMPILE_LANGUAGE:CXX>:-Wunused-macros>
     $<$<COMPILE_LANGUAGE:CXX>:-Wpointer-arith>
     $<$<COMPILE_LANGUAGE:CXX>:-Winit-self>
     $<$<COMPILE_LANG_AND_ID:CXX,Clang>:-Wextern-initializer>
@@ -426,14 +427,16 @@ target_compile_options(
     # disable warnings from -Wall and -Wextra, as well as warnings triggered by third-party libraries
     $<$<COMPILE_LANGUAGE:CXX,CUDA>:-Wno-sign-compare>
     $<$<COMPILE_LANGUAGE:CXX,CUDA>:-Wno-unused-parameter>
-    $<$<COMPILE_LANGUAGE:CXX,CUDA>:-Wno-array-bounds>
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang,IntelLLVM>:-Wno-array-bounds>
+    $<$<COMPILE_LANG_AND_ID:CUDA,Clang>:-Wno-array-bounds>
+    $<$<AND:$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>,$<CXX_COMPILER_ID:GNU,Clang,CrayClang,AppleClang,IntelLLVM>>:-Xcompiler=-Wno-array-bounds>
     $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-restrict>
     $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-cast-function-type>
     $<$<COMPILE_LANG_AND_ID:CXX,IntelLLVM>:-diag-disable=592>
     $<$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang,IntelLLVM>:-Wno-global-constructors>
     $<$<AND:$<COMPILE_LANG_AND_ID:CXX,GNU>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},arm>>:-Wno-psabi>
-    $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>,$<COMPILE_LANGUAGE:CXX>>:-Wno-format-nonliteral>
-    $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>,$<COMPILE_LANGUAGE:CXX>>:-Wno-float-conversion>
+    $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang,IntelLLVM>>:-Wno-format-nonliteral>
+    $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang,IntelLLVM>>:-Wno-float-conversion>
     $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>,$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang,IntelLLVM>>:-Wno-implicit-int-float-conversion>
     $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>,$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang,IntelLLVM>>:-Wno-implicit-float-conversion>
     $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>,$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang,IntelLLVM>>:-Wno-tautological-constant-compare>
@@ -442,7 +445,11 @@ target_compile_options(
     $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_FFTW}>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>>:-Wno-extra-semi>
     $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_HDF5}>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>>:-Wno-extra-semi>
     $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_HDF5}>,$<COMPILE_LANGUAGE:CXX>>:-Wno-cast-qual>
-    $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_HDF5}>,$<COMPILE_LANGUAGE:CXX>>:-Wno-old-style-cast>
+    $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_HDF5}>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang,IntelLLVM>>:-Wno-old-style-cast>
+    $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_HDF5}>,$<COMPILE_LANG_AND_ID:CXX,NVHPC>>:--diag_suppress=storage_class_not_first>
+    $<$<AND:$<VERSION_LESS:${ESPRESSO_MINIMAL_CXX_STANDARD},23>,$<COMPILE_LANG_AND_ID:CXX,NVHPC>>:--diag_suppress=bad_pp_directive_keyword>
+    $<$<COMPILE_LANG_AND_ID:CXX,NVHPC>:--diag_suppress=code_is_unreachable>
+    $<$<COMPILE_LANG_AND_ID:CXX,NVHPC>:--diag_suppress=loop_not_reachable>
     # warnings are errors
     $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<COMPILE_LANGUAGE:CXX>>:-Werror>
     $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>>:--Werror=all-warnings>
@@ -507,7 +514,9 @@ endif()
 # allow infinities
 target_compile_options(
   espresso_compiler_flags
-  INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-fno-finite-math-only>)
+  INTERFACE
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang,IntelLLVM>:-fno-finite-math-only>
+)
 
 #
 # Sanitizers
@@ -906,8 +915,9 @@ if(ESPRESSO_BUILD_TESTS)
   add_library(espresso_tests_compiler_flags INTERFACE)
   add_library(espresso::tests::compiler_flags ALIAS
               espresso_tests_compiler_flags)
-  target_compile_options(espresso_tests_compiler_flags
-                         INTERFACE -Wno-unused-macros)
+  target_compile_options(
+    espresso_tests_compiler_flags
+    INTERFACE $<$<NOT:$<CXX_COMPILER_ID:NVHPC>>:-Wno-unused-macros>)
   if(ESPRESSO_BUILD_WITH_COVERAGE)
     target_compile_options(
       espresso_tests_compiler_flags
@@ -986,8 +996,11 @@ if(ESPRESSO_BUILD_WITH_WALBERLA)
   add_library(espresso_walberla_sqlite_compiler_flags INTERFACE)
   target_compile_options(
     espresso_walberla_sqlite_compiler_flags
-    INTERFACE $<$<COMPILE_LANG_AND_ID:C,GNU>:-Wno-discarded-qualifiers>
-              -Wno-misleading-indentation -Wno-unused-but-set-variable)
+    INTERFACE
+      $<$<COMPILE_LANG_AND_ID:C,GNU>:-Wno-discarded-qualifiers>
+      $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang,IntelLLVM>:-Wno-misleading-indentation>
+      $<$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>:-Wno-misleading-indentation>
+      -Wno-unused-but-set-variable)
   target_link_libraries(walberla_sqlite
                         PRIVATE espresso_walberla_sqlite_compiler_flags)
 endif()

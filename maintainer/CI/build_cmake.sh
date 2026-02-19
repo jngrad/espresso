@@ -254,6 +254,7 @@ if [ -f "/etc/os-release" ]; then
                                 --install "${HOME}/.local/bin/gcov" "gcov" "${custom_gcov}" 10
         fi
         export OMPI_MCA_mpi_abort_print_stack=enabled
+        export OMPI_MCA_hwloc_base_binding_policy=none
     fi
 fi
 
