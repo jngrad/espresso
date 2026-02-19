@@ -21,7 +21,6 @@
 
 #include <config/config.hpp>
 
-#include "GpuParticleData.hpp"
 #include "ResourceCleanup.hpp"
 
 #include "electrostatics/solver.hpp"
@@ -71,6 +70,9 @@ struct SteepestDescent;
 struct StokesianDynamics;
 struct NptIsoParameters;
 struct InstantaneousPressure;
+#ifdef ESPRESSO_CUDA
+class GpuParticleData;
+#endif
 
 namespace System {
 
@@ -91,7 +93,7 @@ public:
   static std::shared_ptr<System> create();
 
 #ifdef ESPRESSO_CUDA
-  GpuParticleData gpu;
+  std::shared_ptr<GpuParticleData> gpu;
 #endif
   ResourceCleanup cleanup_queue;
 

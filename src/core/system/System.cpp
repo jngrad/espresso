@@ -23,6 +23,7 @@
 #include "System.impl.hpp"
 
 #include "BoxGeometry.hpp"
+#include "GpuParticleData.hpp"
 #include "LocalBox.hpp"
 #include "PropagationMode.hpp"
 #include "accumulators/AutoUpdateAccumulators.hpp"
@@ -75,6 +76,9 @@ System::System(Private) {
 #ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
   cell_structure->set_kokkos_handle(::kokkos_handle);
 #endif
+#ifdef ESPRESSO_CUDA
+  gpu = std::make_shared<GpuParticleData>();
+#endif
   propagation = std::make_shared<Propagation>();
   bonded_ias = std::make_shared<BondedInteractionsMap>();
   thermostat = std::make_shared<Thermostat::Thermostat>();
@@ -122,8 +126,8 @@ void System::initialize() {
   auto_update_accumulators->bind_system(handle);
   constraints->bind_system(handle);
 #ifdef ESPRESSO_CUDA
-  gpu.bind_system(handle);
-  gpu.initialize();
+  gpu->bind_system(handle);
+  gpu->initialize();
 #endif
   lb.bind_system(handle);
   ek.bind_system(handle);
