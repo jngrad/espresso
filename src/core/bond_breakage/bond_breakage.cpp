@@ -31,8 +31,10 @@
 #include <boost/mpi.hpp>
 #include <boost/serialization/access.hpp>
 
+#include <algorithm>
 #include <cassert>
 #include <memory>
+#include <span>
 #include <unordered_set>
 #include <utility>
 #include <variant>
