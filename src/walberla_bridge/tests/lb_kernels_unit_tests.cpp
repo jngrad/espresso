@@ -33,8 +33,8 @@
 
 BOOST_AUTO_TEST_CASE(dynamic_ubb) {
   using namespace walberla::detail;
-  using Dynamic_UBB_f = BoundaryHandlingTrait<float>::DynamicUBB;
-  using Dynamic_UBB_d = BoundaryHandlingTrait<double>::DynamicUBB;
+  using Dynamic_UBB_f = KernelTrait<float>::DynamicUBB;
+  using Dynamic_UBB_d = KernelTrait<double>::DynamicUBB;
 
   // check IndexInfo
   auto vel1_f = Dynamic_UBB_f::IndexInfo(1, 2, 3, 0);

@@ -44,9 +44,7 @@
 namespace walberla {
 namespace detail {
 
-using lbmpy::Arch;
-
-template <> struct KernelTrait<double, Arch::GPU> {
+template <> struct KernelTrait<double, lbmpy::Arch::GPU> {
   using StreamCollisionModelThermalized =
       pystencils::StreamCollideSweepThermalizedDoublePrecisionCUDA;
   using StreamCollisionModelLeesEdwards =
@@ -55,9 +53,10 @@ template <> struct KernelTrait<double, Arch::GPU> {
   using UpdateVelFromPDF = pystencils::UpdateVelFromPDFDoublePrecisionCUDA;
   using PackInfoPdf = pystencils::PackInfoPdfDoublePrecisionCUDA;
   using PackInfoVec = pystencils::PackInfoVecDoublePrecisionCUDA;
+  using DynamicUBB = lbm::DynamicUBBDoublePrecisionCUDA;
 };
 
-template <> struct KernelTrait<float, Arch::GPU> {
+template <> struct KernelTrait<float, lbmpy::Arch::GPU> {
   using StreamCollisionModelThermalized =
       pystencils::StreamCollideSweepThermalizedSinglePrecisionCUDA;
   using StreamCollisionModelLeesEdwards =
@@ -66,13 +65,6 @@ template <> struct KernelTrait<float, Arch::GPU> {
   using UpdateVelFromPDF = pystencils::UpdateVelFromPDFSinglePrecisionCUDA;
   using PackInfoPdf = pystencils::PackInfoPdfSinglePrecisionCUDA;
   using PackInfoVec = pystencils::PackInfoVecSinglePrecisionCUDA;
-};
-
-template <> struct BoundaryHandlingTrait<double, Arch::GPU> {
-  using DynamicUBB = lbm::DynamicUBBDoublePrecisionCUDA;
-};
-
-template <> struct BoundaryHandlingTrait<float, Arch::GPU> {
   using DynamicUBB = lbm::DynamicUBBSinglePrecisionCUDA;
 };
 
