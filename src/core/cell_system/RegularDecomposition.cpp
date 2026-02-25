@@ -459,6 +459,11 @@ void RegularDecomposition::init_cell_interactions() {
       throw std::runtime_error(
           "The MPI nodegrid must be 1 in the fully connected direction.");
     }
+    if (not m_box.periodic(fc_normal)) {
+      throw std::runtime_error(
+          "The fully connected boundary requires periodicity in the "
+          "boundary normal direction.");
+    }
   }
 
   /* We only consider local cells (e.g. not halo cells), which
@@ -485,7 +490,7 @@ void RegularDecomposition::init_cell_interactions() {
           // Fully connected is only needed at the box surface
           if (at_boundary(fc_boundary, {m, n, o})) {
             lower_index[fc_direction] = -1;
-            upper_index[fc_direction] = global_size[fc_boundary];
+            upper_index[fc_direction] = global_size[fc_direction];
           }
         }
 
