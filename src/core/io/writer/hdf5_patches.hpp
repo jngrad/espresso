@@ -29,6 +29,8 @@
 #endif
 #endif // not defined(_H5public_H)
 
+#if not defined(H5_USE_BOOST)
 #define H5_USE_BOOST
+#endif
 
 #include <H5public.h>

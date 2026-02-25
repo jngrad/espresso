@@ -80,7 +80,7 @@ template <typename FloatType, lbmpy::Arch Architecture>
 void LBWalberlaImpl<FloatType, Architecture>::set_collision_model(
     std::unique_ptr<LeesEdwardsPack> &&lees_edwards_pack) {
   assert(m_kT == 0.);
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
   if constexpr (Architecture == lbmpy::Arch::GPU) {
     throw std::runtime_error("Lees-Edwards LB doesn't support GPU yet");
   }

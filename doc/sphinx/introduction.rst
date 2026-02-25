@@ -612,6 +612,16 @@ version number; even though package repositories outside of the Python ecosystem
 sometimes customize version numbers with extra metadata to label development commits,
 such as in ``1.1.5-dev`` or ``1.1.5.git8b603b12``, |es| doesn't offer a mechanism for it.
 
+No guarantees are made regarding the bitwise reproducibility of simulation trajectories.
+Although thermostats are based on fully deterministic random number generators,
+many parts of the simulation engine leverage dynamic task scheduling and unsorted
+containers to improve performance, making the order of operations non-deterministic.
+This can introduce very small round-off errors in floating-point operations,
+leading eventually to diverging trajectories. This issue isn't specific to |es|
+and can be found in other molecular dynamics engines :cite:`craven25a`.
+In addition, some tuning algorithms propagate the system during the benchmark loops,
+which can cause significant deviations in the trajectories in a couple of time steps.
+
 .. _How to cite ESPResSo:
 
 How to cite |es|

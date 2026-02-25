@@ -21,6 +21,6 @@ add_subdirectory(generated_kernels)
 
 target_sources(espresso_walberla PRIVATE lb_walberla_init.cpp)
 
-if(ESPRESSO_BUILD_WITH_CUDA AND WALBERLA_BUILD_WITH_CUDA)
+if(ESPRESSO_BUILD_WITH_CUDA)
   target_sources(espresso_walberla PRIVATE lb_walberla_init.cu)
 endif()

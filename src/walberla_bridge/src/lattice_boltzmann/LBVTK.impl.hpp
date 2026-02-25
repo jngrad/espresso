@@ -126,7 +126,7 @@ template <typename FloatType, lbmpy::Arch Architecture>
 void LBWalberlaImpl<FloatType, Architecture>::register_vtk_field_writers(
     walberla::vtk::VTKOutput &vtk_obj, LatticeModel::units_map const &units,
     int flag_observables) {
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
   auto const allocate_cpu_field_if_empty =
       [&]<typename Field>(auto const &blocks, std::string name,
                           std::optional<BlockDataID> &cpu_field) {
@@ -140,7 +140,7 @@ void LBWalberlaImpl<FloatType, Architecture>::register_vtk_field_writers(
   if (flag_observables & static_cast<int>(OutputVTK::density)) {
     auto const unit_conversion =
         FloatType_c(zero_centered_to_md(units.at("density")));
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
     if constexpr (Architecture == lbmpy::Arch::GPU) {
       auto const &blocks = m_lattice->get_blocks();
       allocate_cpu_field_if_empty.template operator()<PdfFieldCpu>(
@@ -155,7 +155,7 @@ void LBWalberlaImpl<FloatType, Architecture>::register_vtk_field_writers(
   }
   if (flag_observables & static_cast<int>(OutputVTK::velocity_vector)) {
     auto const unit_conversion = FloatType_c(units.at("velocity"));
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
     if constexpr (Architecture == lbmpy::Arch::GPU) {
       auto const &blocks = m_lattice->get_blocks();
       allocate_cpu_field_if_empty.template operator()<VectorFieldCpu>(
@@ -172,7 +172,7 @@ void LBWalberlaImpl<FloatType, Architecture>::register_vtk_field_writers(
   if (flag_observables & static_cast<int>(OutputVTK::pressure_tensor)) {
     auto const unit_conversion =
         FloatType_c(zero_centered_to_md(units.at("pressure")));
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
     if constexpr (Architecture == lbmpy::Arch::GPU) {
       auto const &blocks = m_lattice->get_blocks();
       allocate_cpu_field_if_empty.template operator()<PdfFieldCpu>(

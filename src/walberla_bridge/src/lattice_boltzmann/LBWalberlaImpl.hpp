@@ -35,7 +35,8 @@
 #include <field/vtk/VTKWriter.h>
 #include <stencil/D3Q19.h>
 #include <stencil/D3Q27.h>
-#if defined(__CUDACC__)
+#include <waLBerlaDefinitions.h>
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
 #include <gpu/AddGPUFieldToStorage.h>
 #include <gpu/HostFieldAllocator.h>
 #endif
@@ -48,7 +49,7 @@
 #include "ResetForce.hpp"
 #include "lb_fields.hpp"
 #include "lb_kernels.hpp"
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
 #include "lb_fields.cuh"
 #include "lb_kernels.cuh"
 #endif
@@ -83,6 +84,10 @@ namespace walberla {
 /** @brief Class that runs and controls the LB on waLBerla. */
 template <typename FloatType, lbmpy::Arch Architecture>
 class LBWalberlaImpl : public LBWalberlaBase {
+#if not defined(WALBERLA_BUILD_WITH_CUDA)
+  static_assert(Architecture != lbmpy::Arch::GPU,
+                "waLBerla was compiled without CUDA support");
+#endif
 protected:
   // ---- Types & Constants ----
 
@@ -110,7 +115,7 @@ public:
   using PdfField = FieldTrait<FloatType, Stencil, Architecture>::PdfField;
   using VectorField = FieldTrait<FloatType, Stencil, Architecture>::VectorField;
   using FlagField = BoundaryModel::FlagField;
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
   using GPUField = gpu::GPUField<FloatType>;
   using PdfFieldCpu =
       FieldTrait<FloatType, Stencil, lbmpy::Arch::CPU>::PdfField;
@@ -178,7 +183,7 @@ protected:
   BlockDataID m_velocity_field_id;
   BlockDataID m_vel_tmp_field_id;
 
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
   std::optional<BlockDataID> m_pdf_cpu_field_id;
   std::optional<BlockDataID> m_vel_cpu_field_id;
 #endif
@@ -219,7 +224,7 @@ protected:
   std::shared_ptr<InterpolateAndShiftAtBoundary<_VectorField, FloatType>>
       m_lees_edwards_last_applied_force_interpol_sweep;
 
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
   std::shared_ptr<gpu::HostFieldAllocator<FloatType>> m_host_field_allocator;
 #endif
 
@@ -260,7 +265,7 @@ public:
     m_force_to_be_applied_id = add_to_storage<_VectorField>("force next");
     m_velocity_field_id = add_to_storage<_VectorField>("velocity");
     m_vel_tmp_field_id = add_to_storage<_VectorField>("velocity_tmp");
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
     m_host_field_allocator =
         std::make_shared<gpu::HostFieldAllocator<FloatType>>();
 #endif
@@ -882,7 +887,7 @@ protected:
                                         n_ghost_layers);
 #endif // ESPRESSO_BUILD_WITH_AVX_KERNELS
     }
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
     else {
       auto field_id = gpu::addGPUFieldToStorage<GPUField>(
           blocks, tag, Field::F_SIZE, field::fzyx, n_ghost_layers);

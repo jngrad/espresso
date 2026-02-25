@@ -244,8 +244,9 @@ static std::vector<Particle> mpi_get_particles(std::span<const int> ids) {
   }
 
   static std::vector<int> node_sizes(comm_cart.size());
-  std::ranges::transform(std::as_const(node_ids), node_sizes.begin(),
-                         std::size<std::vector<int>>);
+  // cannot use range-based transform with GCC 13 + ASAN
+  std::transform(node_ids.begin(), node_ids.end(), node_sizes.begin(),
+                 std::size<std::vector<int>>);
 
   Utils::Mpi::gatherv(comm_cart, parts.data(), static_cast<int>(parts.size()),
                       parts.data(), node_sizes.data(), 0);
