@@ -632,6 +632,7 @@ Please cite both :cite:t:`weeber24a` and :cite:t:`weik19a`
 for |es| 4.0 and later, or both :cite:t:`arnold13a` and :cite:t:`limbach06a`
 (BibTeX keys ``arnold13a`` and ``limbach06a`` in :file:`doc/bibliography.bib`)
 for |es| 2.0 to 3.3.
+Starting with ESPResSo 5.0, please also cite the exact release published on Zenodo.
 
 To find the version number, use the following command:
 
@@ -647,7 +648,7 @@ publications, using the BibTeX entries indicated in this user guide.
 
 A complete citation would look like this:
 
-    Simulations were carried out with ESPResSo 4.2.2[23,24] using the ICC\*
+    Simulations were carried out with ESPResSo 5.0.0[23,24] using the ICC\*
     algorithm[25].
 
     | ____________
