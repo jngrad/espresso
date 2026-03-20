@@ -501,7 +501,7 @@ class FixedForceCalculator(Calculator):
         return self.forces_array.copy()
 
 
-@utx.skipIfMissingFeatures("EXTERNAL_FORCES")
+@utx.skipIfMissingFeatures(["EXTERNAL_FORCES", "MASS"])
 @utx.skipIfMissingModules("ase.calculators")
 class ASEIntegrationTest(ut.TestCase):
     """Test suite for ASE interface integration functionality."""

@@ -50,16 +50,15 @@
 
 static Thermostat::GammaType lb_handle_particle_anisotropy(Particle const &p,
                                                            double lb_gamma) {
-#ifdef ESPRESSO_THERMOSTAT_PER_PARTICLE
-  auto const &partcl_gamma = p.gamma();
 #ifdef ESPRESSO_PARTICLE_ANISOTROPY
   auto const default_gamma = Thermostat::GammaType::broadcast(lb_gamma);
 #else
   auto const default_gamma = lb_gamma;
 #endif // ESPRESSO_PARTICLE_ANISOTROPY
-  return Thermostat::handle_particle_gamma(partcl_gamma, default_gamma);
+#ifdef ESPRESSO_THERMOSTAT_PER_PARTICLE
+  return Thermostat::handle_particle_gamma(p.gamma(), default_gamma);
 #else
-  return lb_gamma;
+  return default_gamma;
 #endif // ESPRESSO_THERMOSTAT_PER_PARTICLE
 }
 

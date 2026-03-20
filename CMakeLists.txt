@@ -438,7 +438,6 @@ target_compile_options(
     $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-cast-function-type>
     $<$<COMPILE_LANG_AND_ID:CXX,IntelLLVM>:-diag-disable=592>
     $<$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang,IntelLLVM>:-Wno-global-constructors>
-    $<$<AND:$<COMPILE_LANG_AND_ID:CXX,GNU>,$<STREQUAL:${CMAKE_SYSTEM_PROCESSOR},arm>>:-Wno-psabi>
     $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang,IntelLLVM>>:-Wno-format-nonliteral>
     $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,CrayClang,AppleClang,IntelLLVM>>:-Wno-float-conversion>
     $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM}>,$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang,IntelLLVM>>:-Wno-implicit-int-float-conversion>
@@ -454,6 +453,8 @@ target_compile_options(
     $<$<AND:$<VERSION_LESS:${ESPRESSO_MINIMAL_CXX_STANDARD},23>,$<COMPILE_LANG_AND_ID:CXX,NVHPC>>:--diag_suppress=bad_pp_directive_keyword>
     $<$<COMPILE_LANG_AND_ID:CXX,NVHPC>:--diag_suppress=code_is_unreachable>
     $<$<COMPILE_LANG_AND_ID:CXX,NVHPC>:--diag_suppress=loop_not_reachable>
+    # disable GCC's C++17 processor-specific ABI warning (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94383)
+    $<$<AND:$<COMPILE_LANG_AND_ID:CXX,GNU>,$<IN_LIST:${CMAKE_SYSTEM_PROCESSOR},arm;arm64;aarch64;aarch64_be;powerpc64le>>:-Wno-psabi>
     # warnings are errors
     $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<COMPILE_LANGUAGE:CXX>>:-Werror>
     $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>>:--Werror=all-warnings>
@@ -1028,8 +1029,8 @@ if(ESPRESSO_BUILD_WITH_CALIPER)
   # cmake-format: on
   set(CALIPER_OPTION_PREFIX on CACHE BOOL "")
   set(CALIPER_WITH_MPI on CACHE BOOL "")
-  set(CALIPER_WITH_NVTX off CACHE BOOL "")
-  set(CALIPER_WITH_CUPTI off CACHE BOOL "")
+  set(CALIPER_WITH_NVTX ${ESPRESSO_BUILD_WITH_CUDA} CACHE BOOL "")
+  set(CALIPER_WITH_CUPTI ${ESPRESSO_BUILD_WITH_CUDA} CACHE BOOL "")
   set(CALIPER_INSTALL_CONFIG off CACHE BOOL "")
   set(CALIPER_INSTALL_HEADERS off CACHE BOOL "")
   set(BUILD_SHARED_LIBS ON)
