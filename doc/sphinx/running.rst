@@ -953,6 +953,16 @@ For a more fine-grained report on GPU kernels:
 
     $ CALI_CONFIG=cuda-activity-report ./pypresso ../samples/p3m.py --gpu
 
+For more details on profiling methods and report types,
+see the following chapters of the Caliper user guide:
+
+* `GPU profiling <https://software.llnl.gov/Caliper/GPUProfiling.html>`__,
+  `CUDA services <https://software.llnl.gov/Caliper/services.html#cupti>`__
+* `MPI profiling <https://software.llnl.gov/Caliper/MPIProfiling.html>`__,
+  `MPI services <https://software.llnl.gov/Caliper/services.html#mpi>`__
+* `OpenMP profiling <https://software.llnl.gov/Caliper/OpenMP.html>`__,
+  `OpenMP services <https://software.llnl.gov/Caliper/services.html#ompt>`__
+
 To introduce custom markers at the C++ level, add ``CALI`` macros inside
 performance-critical functions to register them:
 
