@@ -787,8 +787,8 @@ class CheckpointTest(ut.TestCase):
         self.assertEqual(dh.core_id_from_drude_id, {9: 1})
         self.assertEqual(dh.drude_id_list, [9])
 
-    @utx.skipIfMissingFeatures(['VIRTUAL_SITES', 'VIRTUAL_SITES_RELATIVE'])
-    def test_virtual_sites(self):
+    @utx.skipIfMissingFeatures(['VIRTUAL_SITES_RELATIVE'])
+    def test_virtual_sites_rel(self):
         Propagation = espressomd.propagation.Propagation
         p_real = system.part.by_id(0)
         p_virt = system.part.by_id(1)
@@ -805,7 +805,7 @@ class CheckpointTest(ut.TestCase):
             np.copy(p_real.vs_relative[2]), [1., 0., 0., 0.], atol=1e-10)
 
     @utx.skipIfMissingFeatures(['VIRTUAL_SITES_CENTER_OF_MASS'])
-    def test_virtual_sites(self):
+    def test_virtual_sites_com(self):
         Propagation = espressomd.propagation.Propagation
         p_real = system.part.by_id(0)
         p_virt = system.part.by_id(8)
