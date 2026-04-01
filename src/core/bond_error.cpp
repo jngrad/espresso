@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include "bond_error.hpp"
 
 #include "error_handling/RuntimeErrorStream.hpp"
@@ -31,5 +32,20 @@ void bond_broken_error(int id, std::span<const int> partner_ids) {
   error_msg << "bond broken between particles " << id;
   for (auto partner_id : partner_ids) {
     error_msg << ", " << partner_id;
+  }
+}
+
+void bond_resolution_error(std::span<const int> partner_ids) {
+  auto error_msg = runtimeErrorMsg();
+
+  error_msg << "bond partner not found on local node, could only find: ";
+  bool first = true;
+  for (auto partner_id : partner_ids) {
+    if (partner_id == -1)
+      continue;
+    if (!first)
+      error_msg << ", ";
+    error_msg << partner_id;
+    first = false;
   }
 }

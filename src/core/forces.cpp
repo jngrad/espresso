@@ -154,6 +154,25 @@ static void reinit_dip_fld(CellStructure const &cell_structure) {
 #endif
 
 #ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
+static BondsKernelData
+create_kokkos_bonds_kernel_data(System::System const &system) {
+
+  auto &local_force = system.cell_structure->get_local_force();
+#ifdef ESPRESSO_NPT
+  auto &local_virial = system.cell_structure->get_local_virial();
+#endif
+  auto const &aosoa = system.cell_structure->get_aosoa();
+  return /* BondsKernelData */ {*system.bonded_ias,
+                                *system.bond_breakage,
+                                *system.box_geo,
+                                local_force,
+#ifdef ESPRESSO_NPT
+                                local_virial,
+#endif
+                                aosoa,
+                                !system.bond_breakage->breakage_specs.empty()};
+}
+
 static ForcesKernel create_cabana_neighbor_kernel(
     System::System const &system, Utils::Vector3d *virial,
     auto const &elc_kernel, auto const &coulomb_kernel,
@@ -288,23 +307,12 @@ void System::System::calculate_forces() {
   auto const coulomb_u_kernel = coulomb.pair_energy_kernel();
   auto *const virial = get_npt_virial();
 
-  // interaction kernel is defined
-  auto bond_kernel = [coulomb_kernel_ptr = get_ptr(coulomb_kernel),
-                      &bonded_ias = *bonded_ias,
-                      &bond_breakage = *bond_breakage, virial,
-                      &box_geo = *box_geo](Particle &p1, int bond_id,
-                                           std::span<Particle *> partners) {
-    return add_bonded_force(p1, bond_id, partners, bonded_ias, bond_breakage,
-                            box_geo, virial, coulomb_kernel_ptr);
-  };
-
   VerletCriterion<> const verlet_criterion{*this,
                                            cell_structure->get_verlet_skin(),
                                            get_interaction_range(),
                                            coulomb.cutoff(),
                                            dipoles.cutoff(),
                                            collision_detection_cutoff};
-
 #ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
   update_cabana_state(*cell_structure, verlet_criterion,
                       get_interaction_range(), propagation->integ_switch);
@@ -332,14 +340,24 @@ void System::System::calculate_forces() {
 #ifdef ESPRESSO_CALIPER
   CALI_MARK_BEGIN("cabana_short_range");
 #endif
+  auto &bs = cell_structure->bond_state();
+  auto bonds_kernel_data = create_kokkos_bonds_kernel_data(*this);
+  auto pair_bonds_kernel = PairBondsKernel{
+      bonds_kernel_data, bs.pair_list, bs.pair_ids, get_ptr(coulomb_kernel)};
+  auto angle_bonds_kernel =
+      AngleBondsKernel{bonds_kernel_data, bs.angle_list, bs.angle_ids};
+  auto dihedral_bonds_kernel =
+      DihedralBondsKernel{bonds_kernel_data, bs.dihedral_list, bs.dihedral_ids};
 
   auto first_neighbor_kernel =
       create_cabana_neighbor_kernel(*this, virial, elc_kernel, coulomb_kernel,
                                     dipoles_kernel, coulomb_u_kernel);
 
-  cabana_short_range(bond_kernel, first_neighbor_kernel, *cell_structure,
-                     get_interaction_range(), bonded_ias->maximal_cutoff(),
-                     verlet_criterion, propagation->integ_switch);
+  cabana_short_range(pair_bonds_kernel, angle_bonds_kernel,
+                     dihedral_bonds_kernel, first_neighbor_kernel,
+                     *cell_structure, get_interaction_range(),
+                     bonded_ias->maximal_cutoff(), verlet_criterion,
+                     propagation->integ_switch);
 
   // Force and Torque reduction
   reduce_cabana_forces_and_torques(*this, virial);
@@ -353,7 +371,7 @@ void System::System::calculate_forces() {
   if (not collision_detection->is_off()) {
     cell_structure->non_bonded_loop(collision_kernel, verlet_criterion);
   }
-#endif
+#endif // ESPRESSO_COLLISION_DETECTION
 
 #ifdef ESPRESSO_CALIPER
   CALI_MARK_END("cabana_short_range");
@@ -364,6 +382,14 @@ void System::System::calculate_forces() {
 #ifdef ESPRESSO_CALIPER
   CALI_MARK_BEGIN("serial_short_range");
 #endif
+  auto bond_kernel = [coulomb_kernel_ptr = get_ptr(coulomb_kernel),
+                      &bonded_ias = *bonded_ias,
+                      &bond_breakage = *bond_breakage, virial,
+                      &box_geo = *box_geo](Particle &p1, int bond_id,
+                                           std::span<Particle *> partners) {
+    return add_bonded_force(p1, bond_id, partners, bonded_ias, bond_breakage,
+                            box_geo, virial, coulomb_kernel_ptr);
+  };
 
   auto pair_kernel = [coulomb_kernel_ptr = get_ptr(coulomb_kernel),
                       dipoles_kernel_ptr = get_ptr(dipoles_kernel),

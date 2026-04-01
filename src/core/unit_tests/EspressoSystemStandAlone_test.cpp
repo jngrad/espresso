@@ -31,6 +31,7 @@ namespace utf = boost::unit_test;
 #include "PropagationMode.hpp"
 #include "accumulators/TimeSeries.hpp"
 #include "actor/registration.hpp"
+#include "bond_error.hpp"
 #include "bonded_interactions/bonded_interaction_data.hpp"
 #include "bonded_interactions/fene.hpp"
 #include "bonded_interactions/harmonic.hpp"
@@ -42,6 +43,7 @@ namespace utf = boost::unit_test;
 #include "electrostatics/coulomb.hpp"
 #include "electrostatics/p3m.hpp"
 #include "energy_inline.hpp"
+#include "errorhandling.hpp"
 #include "forces_inline.hpp"
 #include "galilei/Galilei.hpp"
 #include "integrate.hpp"
@@ -90,6 +92,7 @@ static std::shared_ptr<System::System> system;
 
 struct GlobalConfig : public EspressoCoreGlobalConfig {
   GlobalConfig() {
+    ErrorHandling::init_error_handling(comm_cart);
     espresso::system = System::System::create();
     espresso::system->set_cell_structure_topology(CellStructureType::REGULAR);
     ::System::set_system(espresso::system);
@@ -97,6 +100,7 @@ struct GlobalConfig : public EspressoCoreGlobalConfig {
   ~GlobalConfig() {
     espresso::system.reset();
     ::System::reset_system();
+    ErrorHandling::deinit_error_handling();
   }
 };
 
@@ -129,9 +133,11 @@ BOOST_FIXTURE_TEST_CASE(espresso_system_stand_alone, ParticleFactory) {
   auto const pid1 = 9;
   auto const pid2 = 2;
   auto const pid3 = 5;
+  auto const pid4 = 4;
   auto const type_a = 1;
-  auto const type_b = 2;
-  auto const max_type = std::max(type_a, type_b);
+  auto const type_b = 3;
+  auto const type_c = 2;
+  auto const max_type = std::max({type_a, type_b, type_c});
   system.nonbonded_ias->make_particle_type_exist(max_type);
 
   // we need at least 2 MPI ranks to test the communication logic, therefore
@@ -139,10 +145,12 @@ BOOST_FIXTURE_TEST_CASE(espresso_system_stand_alone, ParticleFactory) {
   auto const start_positions = std::unordered_map<int, Utils::Vector3d>{
       {pid1, {box_center - 0.1, box_center - 0.1, 1.0}},
       {pid2, {box_center + 0.1, box_center - 0.1, 1.0}},
-      {pid3, {box_center + 0.1, box_center + 0.1, 1.0}}};
+      {pid3, {box_center + 0.1, box_center + 0.1, 1.0}},
+      {pid4, {box_center - 0.1, box_center + 0.1, 1.1}}};
   create_particle(start_positions.at(pid1), pid1, type_a);
   create_particle(start_positions.at(pid2), pid2, type_b);
   create_particle(start_positions.at(pid3), pid3, type_b);
+  create_particle(start_positions.at(pid4), pid4, type_c);
   if (n_nodes % 2 == 0) {
     BOOST_REQUIRE_EQUAL(get_particle_node_parallel(pid1), rank ? -1 : 0);
     BOOST_REQUIRE_GE(get_particle_node_parallel(pid2), rank ? -1 : 1);
@@ -153,15 +161,15 @@ BOOST_FIXTURE_TEST_CASE(espresso_system_stand_alone, ParticleFactory) {
   set_particle_property(pid3, &Particle::mol_id, type_b);
 
   auto const reset_particle_positions = [&start_positions]() {
-    for (auto const &kv : start_positions) {
-      set_particle_pos(kv.first, kv.second);
+    for (auto const &[pid, pos] : start_positions) {
+      set_particle_pos(pid, pos);
     }
   };
 
   // check observables
   {
-    auto const pid4 = 10;
-    auto const pids = std::vector<int>{pid2, pid3, pid1, pid4};
+    auto const pid5 = 10;
+    auto const pids = std::vector<int>{pid2, pid3, pid1, pid5};
     Observables::ParticleReferenceRange particle_range{};
     for (int pid : pids) {
       if (auto const p = system.cell_structure->get_local_particle(pid)) {
@@ -169,7 +177,7 @@ BOOST_FIXTURE_TEST_CASE(espresso_system_stand_alone, ParticleFactory) {
       }
     }
     Particle p{};
-    p.id() = pid4;
+    p.id() = pid5;
     p.pos() = {1., 1., 1.};
     p.image_box() = {1, -1, 0};
     if (rank == 0) {
@@ -182,7 +190,7 @@ BOOST_FIXTURE_TEST_CASE(espresso_system_stand_alone, ParticleFactory) {
         BOOST_CHECK_EQUAL(vec.size(), 4ul);
         for (std::size_t i = 0ul; i < pids.size(); ++i) {
           Utils::Vector3d dist{};
-          if (pids[i] == pid4) {
+          if (pids[i] == pid5) {
             dist = p.pos() - vec[i];
             if (not use_folded_positions) {
               dist += p.image_box() * box_l;
@@ -541,6 +549,44 @@ BOOST_FIXTURE_TEST_CASE(espresso_system_stand_alone, ParticleFactory) {
     cs.check_particle_index();
   }
 
+  // check bond counting
+  {
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
+    auto &cs = *system.cell_structure;
+    auto init_n_pairs = 0;
+    auto init_n_angles = 0;
+    auto init_n_dihes = 0;
+    for (auto const &p : cs.local_particles()) {
+      if (p.id() == pid2) {
+        init_n_pairs = 2;
+      }
+    }
+    BOOST_CHECK_EQUAL(cs.get_local_pair_bond_numbers(), init_n_pairs);
+    BOOST_CHECK_EQUAL(cs.get_local_angle_bond_numbers(), init_n_angles);
+    BOOST_CHECK_EQUAL(cs.get_local_dihedral_bond_numbers(), init_n_dihes);
+#ifdef ESPRESSO_COLLISION_DETECTION
+    cs.add_new_bond(2, {pid1, pid2});
+    BOOST_CHECK_EQUAL(cs.get_local_pair_bond_numbers(), init_n_pairs + 1);
+    BOOST_CHECK_EQUAL(cs.get_local_angle_bond_numbers(), init_n_angles);
+    BOOST_CHECK_EQUAL(cs.get_local_dihedral_bond_numbers(), init_n_dihes);
+    cs.add_new_bond(3, {pid1, pid2, pid3});
+    BOOST_CHECK_EQUAL(cs.get_local_pair_bond_numbers(), init_n_pairs + 1);
+    BOOST_CHECK_EQUAL(cs.get_local_angle_bond_numbers(), init_n_angles + 1);
+    BOOST_CHECK_EQUAL(cs.get_local_dihedral_bond_numbers(), init_n_dihes);
+    cs.add_new_bond(4, {pid1, pid2, pid3, pid4});
+    BOOST_CHECK_EQUAL(cs.get_local_pair_bond_numbers(), init_n_pairs + 1);
+    BOOST_CHECK_EQUAL(cs.get_local_angle_bond_numbers(), init_n_angles + 1);
+    BOOST_CHECK_EQUAL(cs.get_local_dihedral_bond_numbers(), init_n_dihes + 1);
+    cs.clear_new_bonds();
+    cs.set_local_bond_numbers(init_n_pairs, init_n_angles, init_n_dihes);
+    cs.rebuild_bond_list();
+    BOOST_CHECK_EQUAL(cs.get_local_pair_bond_numbers(), init_n_pairs);
+    BOOST_CHECK_EQUAL(cs.get_local_angle_bond_numbers(), init_n_angles);
+    BOOST_CHECK_EQUAL(cs.get_local_dihedral_bond_numbers(), init_n_dihes);
+#endif // ESPRESSO_COLLISION_DETECTION
+#endif // ESPRESSO_SHARED_MEMORY_PARALLELISM
+  }
+
   // check exceptions from sanity checks
   {
     auto const &cs = *system.cell_structure;
@@ -585,6 +631,41 @@ BOOST_FIXTURE_TEST_CASE(espresso_system_stand_alone, ParticleFactory) {
     BOOST_CHECK_THROW(CollisionDetection::get_part(*system.cell_structure, 777),
                       std::runtime_error);
 #endif
+    {
+      auto const is_head_node = comm.rank() == 0;
+      std::array<int, 3> partner_ids{{3, 2, 1}};
+      if (is_head_node) {
+        bond_broken_error(0, partner_ids);
+      }
+      auto const messages =
+          ErrorHandling::mpi_gather_runtime_errors_all(is_head_node);
+      flush_runtime_errors_local();
+      if (is_head_node) {
+        BOOST_REQUIRE_EQUAL(messages.size(), 1ul);
+        BOOST_CHECK_EQUAL(messages.front().what(),
+                          "bond broken between particles 0, 3, 2, 1");
+      } else {
+        BOOST_REQUIRE(messages.empty());
+      }
+    }
+    {
+      auto const is_head_node = comm.rank() == 0;
+      std::array<int, 3> partner_ids{{3, -1, 1}};
+      if (is_head_node) {
+        bond_resolution_error(partner_ids);
+      }
+      auto const messages =
+          ErrorHandling::mpi_gather_runtime_errors_all(is_head_node);
+      flush_runtime_errors_local();
+      if (is_head_node) {
+        BOOST_REQUIRE_EQUAL(messages.size(), 1ul);
+        BOOST_CHECK_EQUAL(
+            messages.front().what(),
+            "bond partner not found on local node, could only find: 3, 1");
+      } else {
+        BOOST_REQUIRE(messages.empty());
+      }
+    }
   }
 
   // check exceptions
@@ -611,11 +692,15 @@ BOOST_FIXTURE_TEST_CASE(espresso_system_stand_alone, ParticleFactory) {
       auto const &pl = plist; // alias to improve code coverage
       auto const none = NoneBond{};
       if (n == 1u) {
-        calc_bond_pair_force(none, pl[0], pl[1], {}, nullptr);
+        calc_bond_pair_force(none, {}, pl[0].q() * pl[1].q(), nullptr);
       } else if (n == 2u) {
-        calc_bonded_three_body_force(none, box_geo, pl[0], pl[1], pl[2]);
+        auto const vec1 = box_geo.get_mi_vector(pl[1].pos(), pl[0].pos());
+        auto const vec2 = box_geo.get_mi_vector(pl[2].pos(), pl[0].pos());
+        calc_bonded_three_body_force(none, vec1, vec2);
       } else if (n == 3u) {
-        calc_bonded_four_body_force(none, box_geo, pl[0], pl[1], pl[2], pl[3]);
+        calc_bonded_four_body_force(none, box_geo, pl[0].pos(), pl[1].pos(),
+                                    pl[2].pos(), pl[3].pos(), pl[0].v(),
+                                    pl[2].v(), pl[0].image_box());
       }
     };
     static_cast<void>(energy_kernel(0u));

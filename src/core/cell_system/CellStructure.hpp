@@ -80,6 +80,7 @@ class AoSoA;
 struct KokkosHandle;
 template <class MemorySpace, class ListAlgorithm, class Layout, class BuildTag>
 class CustomVerletList;
+struct LocalBondState;
 #endif // ESPRESSO_SHARED_MEMORY_PARALLELISM
 
 template <typename Callable>
@@ -211,6 +212,7 @@ private:
 #ifdef ESPRESSO_NPT
   std::unique_ptr<VirialType> m_local_virial;
 #endif
+  std::unique_ptr<LocalBondState> m_bond_state;
   std::unique_ptr<ListType> m_verlet_list_cabana;
   /** particle properties using individual Kokkos Views */
   std::unique_ptr<AoSoA_pack> m_aosoa;
@@ -463,6 +465,15 @@ public:
   std::size_t get_num_local_particles_cached() const {
     return m_num_local_particles_cached;
   }
+  int get_local_pair_bond_numbers() const;
+  int get_local_angle_bond_numbers() const;
+  int get_local_dihedral_bond_numbers() const;
+  void set_local_bond_numbers(int p, int a, int d);
+#ifdef ESPRESSO_COLLISION_DETECTION
+  void clear_new_bonds();
+  void add_new_bond(int bond_id, std::vector<int> const &particle_ids);
+  void rebuild_bond_list();
+#endif // ESPRESSO_COLLISION_DETECTION
 #endif
 
   /**
@@ -641,7 +652,7 @@ private:
           bond_broken_error(p.id(), partner_ids);
         }
       } catch (const BondResolutionError &) {
-        bond_broken_error(p.id(), partner_ids);
+        bond_resolution_error(partner_ids);
       }
     }
   }
@@ -748,11 +759,24 @@ public:
   auto &get_aosoa() { return *m_aosoa; }
   auto const &get_unique_particles() const { return m_unique_particles; }
   auto const &get_verlet_list_cabana() const { return *m_verlet_list_cabana; }
+  auto &bond_state() { return *m_bond_state; }
+  auto const &bond_state() const { return *m_bond_state; }
   void clear_local_properties();
+  void clear_bond_properties();
 
   [[nodiscard]] auto is_verlet_list_cabana_rebuild_needed() const {
     return m_rebuild_verlet_list_cabana;
   }
+
+  /**
+   * @brief Update bond storage(m_*_bond_list_kokkos and m_*_bond_id_kokkos).
+   * @param pair_count      Index for pair bond storage.
+   * @param angle_count     Index for angle bond storage.
+   * @param dihedral_count  Index for dihedral bond storage.
+   * @param p               Particle pointer.
+   */
+  void update_bond_storage(int &pair_count, int &angle_count,
+                           int &dihedral_count, Particle const &p);
 
   /**
    * @brief Reset local properties of the Verlet list.

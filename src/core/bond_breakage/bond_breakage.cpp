@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <cassert>
 #include <memory>
+#include <mutex>
 #include <span>
 #include <unordered_set>
 #include <utility>
@@ -52,7 +53,12 @@ using ActionSet = std::unordered_set<Action>;
 void BondBreakage::queue_breakage(int particle_id,
                                   BondPartners const &bond_partners,
                                   int bond_type) {
-  m_queue.emplace_back(QueueEntry{particle_id, bond_partners, bond_type});
+  {
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
+    std::lock_guard<std::mutex> lock(queue_mtx);
+#endif
+    m_queue.emplace_back(QueueEntry{particle_id, bond_partners, bond_type});
+  }
 }
 
 /** @brief Gathers combined queue from all mpi ranks */

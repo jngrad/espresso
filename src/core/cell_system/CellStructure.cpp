@@ -27,6 +27,7 @@
 #include "cell_system/RegularDecomposition.hpp"
 
 #include "BoxGeometry.hpp"
+#include "LocalBondState.hpp"
 #include "LocalBox.hpp"
 #include "Particle.hpp"
 #include "aosoa_pack.hpp"
@@ -96,11 +97,14 @@ void CellStructure::clear_local_properties() {
   m_id_to_index.reset();
   m_aosoa.reset();
   m_verlet_list_cabana.reset();
+  m_bond_state->clear();
   m_rebuild_verlet_list_cabana = true;
 }
+void CellStructure::clear_bond_properties() { m_bond_state->reset(); }
 
 void CellStructure::set_kokkos_handle(std::shared_ptr<KokkosHandle> handle) {
   m_kokkos_handle = std::move(handle);
+  m_bond_state = std::make_unique<LocalBondState>();
 }
 
 static auto estimate_max_counts(double pair_cutoff,
@@ -204,6 +208,44 @@ void CellStructure::reset_local_properties() {
   Kokkos::deep_copy(get_aosoa().flags, uint8_t{0});
 }
 
+void CellStructure::update_bond_storage(int &pair_count, int &angle_count,
+                                        int &dihedral_count,
+                                        Particle const &p) {
+  auto &pair_list = m_bond_state->pair_list;
+  auto &pair_ids = m_bond_state->pair_ids;
+  auto &angle_list = m_bond_state->angle_list;
+  auto &angle_ids = m_bond_state->angle_ids;
+  auto &dihedral_list = m_bond_state->dihedral_list;
+  auto &dihedral_ids = m_bond_state->dihedral_ids;
+  for (auto const bond : p.bonds()) {
+    auto const partner_ids = bond.partner_ids();
+    try {
+      auto const partners = resolve_bond_partners(partner_ids);
+      if (partners.size() == 1u) { // pair bonds
+        auto p_index = Kokkos::atomic_fetch_add(&pair_count, 1);
+        pair_list(p_index, 0) = p.id();
+        pair_list(p_index, 1) = partners[0]->id();
+        pair_ids(p_index) = bond.bond_id();
+      } else if (partners.size() == 2u) { // angle bond
+        auto a_index = Kokkos::atomic_fetch_add(&angle_count, 1);
+        angle_list(a_index, 0) = p.id();
+        angle_list(a_index, 1) = partners[0]->id();
+        angle_list(a_index, 2) = partners[1]->id();
+        angle_ids(a_index) = bond.bond_id();
+      } else if (partners.size() == 3u) { // dihedral bond
+        auto d_index = Kokkos::atomic_fetch_add(&dihedral_count, 1);
+        dihedral_list(d_index, 0) = p.id();
+        dihedral_list(d_index, 1) = partners[0]->id();
+        dihedral_list(d_index, 2) = partners[1]->id();
+        dihedral_list(d_index, 3) = partners[2]->id();
+        dihedral_ids(d_index) = bond.bond_id();
+      }
+    } catch (BondResolutionError const &) {
+      bond_resolution_error(partner_ids);
+    }
+  }
+}
+
 void CellStructure::set_index_map() {
 #ifdef ESPRESSO_CALIPER
   CALI_CXX_MARK_FUNCTION;
@@ -215,12 +257,40 @@ void CellStructure::set_index_map() {
   using execution_space = Kokkos::DefaultExecutionSpace;
   int n_threads = execution_space().concurrency();
   std::vector<int> max_ids(n_threads);
+
+  m_bond_state->reset_counts();
+  std::vector<int> pair_counts(n_threads, 0);
+  std::vector<int> angle_counts(n_threads, 0);
+  std::vector<int> dihedral_counts(n_threads, 0);
+
   enumerate_local_particles(
-      *this, [&unique_particles, &max_ids](std::size_t index, Particle &p) {
+      *this, [&unique_particles, &max_ids, &pair_counts, &angle_counts,
+              &dihedral_counts](std::size_t index, Particle &p) {
         unique_particles[index] = &p;
-        const int thread_num = omp_get_thread_num();
+        auto const thread_num = omp_get_thread_num();
         max_ids[thread_num] = std::max(p.id(), max_ids[thread_num]);
+        for (auto const bond : p.bonds()) {
+          if (not bond.partner_ids().empty()) {
+            auto const partner_ids = bond.partner_ids();
+            if (partner_ids.size() == 1u) {
+              pair_counts[thread_num] += 1;
+            } else if (partner_ids.size() == 2u) {
+              angle_counts[thread_num] += 1;
+            } else if (partner_ids.size() == 3u) {
+              dihedral_counts[thread_num] += 1;
+            }
+          }
+        }
       });
+  Kokkos::fence();
+  int pair_count = std::reduce(std::begin(pair_counts), std::end(pair_counts));
+  int angle_count =
+      std::reduce(std::begin(angle_counts), std::end(angle_counts));
+  int dihedral_count =
+      std::reduce(std::begin(dihedral_counts), std::end(dihedral_counts));
+  set_local_bond_numbers(pair_count, angle_count, dihedral_count);
+  m_bond_state->allocate();
+
   int max_id = *(std::max_element(max_ids.begin(), max_ids.end()));
   for (auto &p : ghost_particles()) {
     auto const *local_particle = get_local_particle(p.id());
@@ -348,12 +418,39 @@ int CellStructure::get_max_local_particle_id() const {
   return (it != m_particle_index.rend()) ? (*it)->id() : -1;
 }
 
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
+int CellStructure::get_local_pair_bond_numbers() const {
+  return m_bond_state->pair_count;
+}
+int CellStructure::get_local_angle_bond_numbers() const {
+  return m_bond_state->angle_count;
+}
+int CellStructure::get_local_dihedral_bond_numbers() const {
+  return m_bond_state->dihedral_count;
+}
+void CellStructure::set_local_bond_numbers(int pair_value, int angle_value,
+                                           int dihedral_value) {
+  m_bond_state->set_counts(pair_value, angle_value, dihedral_value);
+}
+#ifdef ESPRESSO_COLLISION_DETECTION
+void CellStructure::clear_new_bonds() { m_bond_state->clear_new_bonds(); }
+void CellStructure::add_new_bond(int bond_id,
+                                 std::vector<int> const &particle_ids) {
+  m_bond_state->add_new_bond(bond_id, particle_ids, get_id_to_index());
+}
+void CellStructure::rebuild_bond_list() { m_bond_state->rebuild(); }
+#endif // ESPRESSO_COLLISION_DETECTION
+#endif // ESPRESSO_SHARED_MEMORY_PARALLELISM
+
 void CellStructure::remove_all_particles() {
   for (auto cell : decomposition().local_cells()) {
     cell->particles().clear();
   }
 
   m_particle_index.clear();
+#ifdef ESPRESSO_SHARED_MEMORY_PARALLELISM
+  clear_bond_properties();
+#endif
 }
 
 /* Map the data parts flags from cells to those used internally

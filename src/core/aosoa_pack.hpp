@@ -27,7 +27,10 @@
 
 #include <Kokkos_Core.hpp>
 
+#include <omp.h>
+
 #include <cstdint>
+#include <span>
 
 struct CellStructure::AoSoA_pack {
   using PositionViewType =
@@ -36,21 +39,24 @@ struct CellStructure::AoSoA_pack {
       Kokkos::View<double *[3], Kokkos::LayoutRight, Kokkos::HostSpace>;
   using DirectorViewType =
       Kokkos::View<double *[3], Kokkos::LayoutRight, Kokkos::HostSpace>;
+  using ImageViewType =
+      Kokkos::View<int *[3], Kokkos::LayoutRight, Kokkos::HostSpace>;
   using ChargeViewType = Kokkos::View<double *, Kokkos::HostSpace>;
   using DipmViewType = Kokkos::View<double *, Kokkos::HostSpace>;
   using IdViewType = Kokkos::View<int *, Kokkos::HostSpace>;
   using TypeViewType = Kokkos::View<int *, Kokkos::HostSpace>;
-  using IdToIndexViewType = Kokkos::View<int *, Kokkos::HostSpace>;
+  using MassViewType = Kokkos::View<double *, Kokkos::HostSpace>;
   using FlagsViewType = Kokkos::View<uint8_t *, Kokkos::HostSpace>;
 
   PositionViewType position;
   VelocityViewType velocity;
   DirectorViewType director;
+  ImageViewType image;
   ChargeViewType charge;
   DipmViewType dipm;
   IdViewType id;
   TypeViewType type;
-  IdToIndexViewType id_to_index;
+  MassViewType mass;
   FlagsViewType flags;
 
   AoSoA_pack() = default;
@@ -61,15 +67,17 @@ struct CellStructure::AoSoA_pack {
     if (position.extent(0) == 0) {
       // First allocation
       position = PositionViewType("position", num_particles);
+      image = ImageViewType("image", num_particles);
 #ifdef ESPRESSO_ELECTROSTATICS
       charge = ChargeViewType("charge", num_particles);
 #endif
       id = IdViewType("id", num_particles);
       type = TypeViewType("type", num_particles);
-      flags = FlagsViewType("flags", num_particles);
-#ifdef ESPRESSO_DPD
-      velocity = PositionViewType("velocity", num_particles);
+#ifdef ESPRESSO_MASS
+      mass = MassViewType("mass", num_particles);
 #endif
+      flags = FlagsViewType("flags", num_particles);
+      velocity = PositionViewType("velocity", num_particles);
 #if defined(ESPRESSO_GAY_BERNE) or defined(ESPRESSO_DIPOLES)
       director = DirectorViewType("director", num_particles);
 #endif
@@ -79,15 +87,17 @@ struct CellStructure::AoSoA_pack {
     } else {
       // Reallocation
       Kokkos::realloc(position, num_particles);
+      Kokkos::realloc(image, num_particles);
 #ifdef ESPRESSO_ELECTROSTATICS
       Kokkos::realloc(charge, num_particles);
 #endif
       Kokkos::realloc(id, num_particles);
       Kokkos::realloc(type, num_particles);
-      Kokkos::realloc(flags, num_particles);
-#ifdef ESPRESSO_DPD
-      Kokkos::realloc(velocity, num_particles);
+#ifdef ESPRESSO_MASS
+      Kokkos::realloc(mass, num_particles);
 #endif
+      Kokkos::realloc(flags, num_particles);
+      Kokkos::realloc(velocity, num_particles);
 #if defined(ESPRESSO_GAY_BERNE) or defined(ESPRESSO_DIPOLES)
       Kokkos::realloc(director, num_particles);
 #endif
@@ -97,20 +107,42 @@ struct CellStructure::AoSoA_pack {
     }
   }
 
-  template <typename array_layout>
-  Utils::Vector3d get_vector_at(
-      Kokkos::View<double *[3], array_layout, Kokkos::HostSpace> const &view,
-      std::size_t i) const {
-    return {view(i, 0), view(i, 1), view(i, 2)};
+  template <typename array_layout, typename T, std::size_t N>
+  std::span<T, N>
+  get_span_at(Kokkos::View<T *[N], array_layout, Kokkos::HostSpace> const &view,
+              std::size_t i) const {
+    return std::span<T, N>(const_cast<T *>(&view(i, 0)), N);
   }
 
-  template <typename array_layout>
-  void set_vector_at(
-      Kokkos::View<double *[3], array_layout, Kokkos::HostSpace> &view,
-      std::size_t i, Utils::Vector3d const &value) {
-    view(i, 0) = value[0];
-    view(i, 1) = value[1];
-    view(i, 2) = value[2];
+  template <typename array_layout, typename T, std::size_t N>
+  Utils::Vector<T, N> get_vector_at(
+      Kokkos::View<T *[N], array_layout, Kokkos::HostSpace> const &view,
+      std::size_t i) const {
+    Utils::Vector<T, N> result;
+    auto const data = result.data();
+#if (defined(__GNUC__) or defined(__GNUG__)) && !defined(__clang__)
+#pragma GCC unroll 8
+#else
+#pragma omp unroll
+#endif
+    for (std::size_t j = 0ul; j < N; j += 1ul) {
+      data[j] = view(i, j);
+    }
+    return result;
+  }
+
+  template <typename array_layout, typename T, std::size_t N>
+  void
+  set_vector_at(Kokkos::View<T *[N], array_layout, Kokkos::HostSpace> &view,
+                std::size_t i, Utils::Vector<T, N> const &value) {
+#if (defined(__GNUC__) or defined(__GNUG__)) && !defined(__clang__)
+#pragma GCC unroll 8
+#else
+#pragma omp unroll
+#endif
+    for (std::size_t j = 0ul; j < N; j += 1ul) {
+      view(i, j) = value[j];
+    }
   }
 
   void set_has_exclusion(std::size_t i, bool value) {
