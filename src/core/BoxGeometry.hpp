@@ -293,7 +293,7 @@ public:
       auto const shear_direction = le.shear_direction;
       auto const dy = x[shear_plane_normal] - y[shear_plane_normal];
       if (std::fabs(dy) > length_half()[shear_plane_normal]) {
-        ret[shear_direction] -= std::copysign(le.shear_velocity, dy);
+        ret[shear_direction] -= std::copysign(1.0, dy) * le.shear_velocity;
       }
     }
     return ret;
