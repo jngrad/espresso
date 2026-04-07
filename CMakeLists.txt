@@ -673,7 +673,6 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     set(Kokkos_ENABLE_AGGRESSIVE_VECTORIZATION ON CACHE BOOL "")
     set(Kokkos_ENABLE_HWLOC ON CACHE BOOL "")
     set(Kokkos_ENABLE_DEPRECATED_CODE_5 OFF CACHE BOOL "")
-    set(Kokkos_ARCH_NATIVE ON CACHE BOOL "")
     FetchContent_MakeAvailable(kokkos)
     set(BUILD_SHARED_LIBS ${ESPRESSO_BUILD_SHARED_LIBS_DEFAULT})
     set(CMAKE_SHARED_LIBRARY_PREFIX "${ESPRESSO_SHARED_LIBRARY_PREFIX}")
@@ -688,6 +687,11 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
                 LIBRARY DESTINATION "${ESPRESSO_INSTALL_LIBDIR}")
       endif()
     endforeach()
+    # mark kokkos headers as system headers to disable compiler diagnostics
+    set_property(
+      TARGET kokkos APPEND
+      PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+               $<TARGET_PROPERTY:kokkos,INTERFACE_INCLUDE_DIRECTORIES>)
   endif()
 
   if(NOT EXISTS ${FETCHCONTENT_BASE_DIR}/cabana-src)
@@ -704,6 +708,11 @@ if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     # cmake-format: on
     set(Cabana_REQUIRE_HEFFTE ${ESPRESSO_BUILD_WITH_FFTW} CACHE BOOL "")
     FetchContent_MakeAvailable(cabana)
+    # mark Cabana headers as system headers to disable compiler diagnostics
+    set_property(
+      TARGET Core APPEND
+      PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+               $<TARGET_PROPERTY:Core,INTERFACE_INCLUDE_DIRECTORIES>)
   endif()
 endif()
 
