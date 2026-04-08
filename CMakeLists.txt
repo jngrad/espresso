@@ -459,6 +459,23 @@ target_compile_options(
     $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<COMPILE_LANGUAGE:CXX>>:-Werror>
     $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>>:--Werror=all-warnings>
     $<$<AND:$<BOOL:${ESPRESSO_WARNINGS_ARE_ERRORS}>,$<COMPILE_LANG_AND_ID:CUDA,Clang,IntelLLVM>>:-Werror>
+)
+# cmake-format: on
+
+#
+# Compiler optimizations
+#
+
+# cmake-format: off
+target_compile_options(
+  espresso_compiler_flags
+  INTERFACE
+    # prevent loop auto-vectorization when doing so can introduce invalid math;
+    # for example, when a loop body contains a conditional to skip divisions by
+    # zero, the conditional can be ignored (speculative execution) to get better
+    # performance with SIMD types, and the invalid values are masked afterwards
+    # (but the SIGFPE signal is still sent as a side effect)
+    $<$<AND:$<BOOL:${ESPRESSO_BUILD_WITH_FPE}>,$<COMPILE_LANG_AND_ID:CXX,GNU,Clang>>:-ftrapping-math>
     # configurations for NVCC
     $<$<AND:$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>,$<CONFIG:Debug>>:-g -G>
     $<$<AND:$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>,$<CONFIG:Release>>:-Xptxas=-O3 -Xcompiler=-O3 -DNDEBUG>
