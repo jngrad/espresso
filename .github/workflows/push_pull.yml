@@ -12,17 +12,15 @@ jobs:
         uses: ./.github/actions/eessi
         with:
           eessi_stack_version: 2025.06
-      - name: Save environment
-        run: |
-          export -p > /tmp/runner_env
-          declare -f >> /tmp/runner_env
-      - name: Remote login (for live debugging)
-        uses: owenthereal/action-upterm@v1
-        with:
-          detached: true
-          limit-access-to-actor: true
       - name: Install dependencies
         run: |
           test "${RUNNER_ARCH}" = "X64" && module use /cvmfs/dev.eessi.io/espresso/versions/${EESSI_VERSION}/software/linux/x86_64/amd/zen2/modules/all
           module load ESPResSo/95f275aa2060714e5d5b6c36e39fd4a9b422eacf-foss-2025a
           module save espresso
+      - name: Stash environment (for upterm)
+        run: echo 'source "$BASH_ENV"' >> ~/.bashrc
+      - name: Remote login (for live debugging)
+        uses: owenthereal/action-upterm@v1
+        with:
+          detached: true
+          limit-access-to-actor: true
