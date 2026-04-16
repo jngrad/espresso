@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Setup EESSI
-        uses: ./.github/actions/eessi/action.yml
+        uses: ./.github/actions/eessi
         with:
           eessi_stack_version: 2025.06
       - name: Remote login (for live debugging)
