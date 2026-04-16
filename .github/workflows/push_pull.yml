@@ -13,7 +13,7 @@ jobs:
         with:
           eessi_stack_version: 2025.06
       - name: Save environment
-        run: env > /tmp/runner_env
+        run: export -p > /tmp/runner_env
       - name: Remote login (for live debugging)
         uses: owenthereal/action-upterm@v1
         with:
