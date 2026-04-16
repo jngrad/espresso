@@ -7,13 +7,13 @@ jobs:
   testsuite:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup EESSI
         uses: eessi/github-action-eessi@v3
         with:
           eessi_stack_version: 2025.06
       - name: Install dependencies
         run: |
-          test "${RUNNER_ARCH}" = "X64" && module use /cvmfs/software.eessi.io/host_injections/${EESSI_VERSION}/software/linux/${EESSI_SOFTWARE_SUBDIR}/modules/all
+          test "${RUNNER_ARCH}" = "X64" && module use /cvmfs/software.eessi.io/host_injections/${EESSI_VERSION}/software/linux/x86_64/amd/zen2/modules/all
           module load ESPResSo/95f275aa2060714e5d5b6c36e39fd4a9b422eacf-foss-2025a
           module save espresso
