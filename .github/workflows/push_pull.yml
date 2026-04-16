@@ -18,7 +18,7 @@ jobs:
           module load ESPResSo/95f275aa2060714e5d5b6c36e39fd4a9b422eacf-foss-2025a
           module save espresso
       - name: Stash environment (for upterm)
-        run: echo 'source "$BASH_ENV"' >> ~/.bashrc
+        run: echo 'source "$BASH_ENV"' >> ~/.bash_profile
       - name: Remote login (for live debugging)
         uses: owenthereal/action-upterm@v1
         with:
