@@ -1,173 +1,36 @@
-name: run tests
-
+name: ESPResSo tests
 on:
-  push:
   pull_request:
-
-permissions:
-  contents: read # to fetch code (actions/checkout)
-
+  push:
+    branches:
 jobs:
-  macos:
-    runs-on: macos-26
-    if: ${{ github.repository == 'espressomd/espresso' }}
+  testsuite:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+      - uses: actions/checkout@v4
+      - name: Setup EESSI
+        uses: eessi/github-action-eessi@v3
         with:
-          key: macos
-          save: ${{ github.ref == 'refs/heads/python' }}
-      - name: Get runner specifications
-        run: system_profiler SPHardwareDataType
+          eessi_stack_version: 2023.06
       - name: Install dependencies
         run: |
-         echo '' > Brewfile
-         for dep in boost boost-mpi libomp fftw gsl ccache ninja; do echo "brew \"${dep}\"" >> Brewfile; done
-         brew bundle check >/dev/null 2>&1 || brew bundle --verbose --no-upgrade
-         # set up Xcode compiler
-         echo "::group::List available Xcode compilers"
-         ls /Applications | grep Xcode
-         echo "::endgroup::"
-         sudo xcode-select -switch /Applications/Xcode_26.2.0.app
-         # Python dependencies
-         python -m venv venv
-         . venv/bin/activate
-         python -m pip install -c requirements.txt cython numpy scipy packaging
-         deactivate
-        shell: bash
-      - name: Build and check
-        uses: ./.github/actions/build_and_check
-        env:
-          build_procs: 3
-          check_procs: 3
-          cmake_params: '-D ESPRESSO_TEST_NP=3'
-          with_ccache: 'true'
-          with_fftw: 'true'
-          with_gsl: 'true'
-          with_walberla: 'true'
-          with_walberla_avx: 'false'
-
-  debian:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/espressomd/docker/debian:ab5bc64f5c3cc7330952f8b3bf321270ca53960c-base-layer
-      credentials:
-         username: ${{ github.actor }}
-         password: ${{ secrets.github_token }}
-      options: --cpus 4
-    steps:
-      - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+          test "${RUNNER_ARCH}" = "X64" && module use /cvmfs/dev.eessi.io/espresso/versions/2023.06/software/linux/x86_64/amd/zen2/modules/all
+          module load ESPResSo/dc87ede3f6c218bb71624460752bc8c26a271c33-foss-2023b
+          module save espresso
+          python -m venv --system-site-packages venv
+          source venv/bin/activate
+          python -m pip install .
+      - name: Run test suite
+        run: |
+          module restore espresso
+          source venv/bin/activate
+          export OMP_PROC_BIND=false OMP_NUM_THREADS=1
+          sh CI/run_espresso_test_suite.sh -j4
+          python -m coverage combine . CI/espresso_tests
+          python -m coverage report
+          python -m coverage xml
+      - name: Remote login (for live debugging)
+        uses: mxschmitt/action-tmate@v3
         with:
-          key: debian
-          save: ${{ github.ref == 'refs/heads/python' || ( github.repository != 'espressomd/espresso' && ! startsWith(github.ref, 'refs/pull') ) }}
-      - name: Setup Git environment
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-      - name: Get runner specifications
-        run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
-      - name: Build and check
-        uses: ./.github/actions/build_and_check
-        env:
-          build_procs: 4
-          check_procs: 4
-          CC: 'gcc-14'
-          CXX: 'g++-14'
-          myconfig: 'maxset'
-          with_ccache: 'true'
-          with_cuda: 'false'
-          with_hdf5: 'true'
-          with_fftw: 'true'
-          with_gsl: 'false'
-          with_scafacos: 'false'
-          with_stokesian_dynamics: 'false'
-          make_check_unit_tests: 'true'
-          make_check_python: 'false'
-          OMPI_ALLOW_RUN_AS_ROOT: 1
-          OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
-
-  ubuntu:
-    runs-on: ubuntu-latest
-    if: ${{ github.repository == 'espressomd/espresso' }}
-    container:
-      image: ghcr.io/espressomd/docker/ubuntu-wo-dependencies:ab5bc64f5c3cc7330952f8b3bf321270ca53960c-base-layer
-      credentials:
-         username: ${{ github.actor }}
-         password: ${{ secrets.github_token }}
-      options: --cpus 4
-    steps:
-      - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ubuntu
-          save: ${{ github.ref == 'refs/heads/python' }}
-      - name: Setup Git environment
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-      - name: Get runner specifications
-        run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
-      - name: Build and check
-        uses: ./.github/actions/build_and_check
-        env:
-          build_procs: 4
-          check_procs: 4
-          CC: 'gcc-13'
-          CXX: 'g++-13'
-          myconfig: 'maxset'
-          with_ccache: 'true'
-          with_cuda: 'false'
-          with_hdf5: 'false'
-          with_fftw: 'false'
-          with_gsl: 'false'
-          with_scafacos: 'false'
-          with_stokesian_dynamics: 'false'
-          make_check_unit_tests: 'false'
-          make_check_python: 'false'
-          cmake_params: '-D ESPRESSO_TEST_NT=1'
-          OMPI_ALLOW_RUN_AS_ROOT: 1
-          OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
-
-  fedora:
-    runs-on: ubuntu-latest
-    if: ${{ github.repository == 'espressomd/espresso' }}
-    container:
-      image: ghcr.io/espressomd/docker/fedora:ab5bc64f5c3cc7330952f8b3bf321270ca53960c-base-layer
-      credentials:
-         username: ${{ github.actor }}
-         password: ${{ secrets.github_token }}
-      options: --cpus 4
-    steps:
-      - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: fedora
-          save: ${{ github.ref == 'refs/heads/python' || ( github.repository != 'espressomd/espresso' && ! startsWith(github.ref, 'refs/pull') ) }}
-      - name: Setup Git environment
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-      - name: Get runner specifications
-        run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
-      - name: Build and check
-        uses: ./.github/actions/build_and_check
-        env:
-          build_procs: 4
-          check_procs: 4
-          CC: 'gcc'
-          CXX: 'g++'
-          myconfig: 'maxset'
-          with_ccache: 'true'
-          with_cuda: 'false'
-          with_hdf5: 'true'
-          with_fftw: 'true'
-          with_fpe: 'true'
-          with_gsl: 'true'
-          with_scafacos: 'false'
-          with_walberla: 'true'
-          with_walberla_avx: 'false'
-          with_stokesian_dynamics: 'true'
-          cmake_params: '-D CMAKE_CXX_STANDARD=23 -D CMAKE_INCLUDE_PATH=/usr/include/mpich-x86_64 -D CMAKE_PREFIX_PATH=/usr/lib64/mpich/lib/ -D ESPRESSO_TEST_NT=1'
+          detached: true
+          limit-access-to-actor: true
