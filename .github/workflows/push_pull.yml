@@ -5,7 +5,7 @@ on:
     branches:
 jobs:
   testsuite:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v6
       - name: Setup EESSI
@@ -20,7 +20,7 @@ jobs:
       - name: Stash environment (for upterm)
         run: echo 'source "$BASH_ENV"' >> ~/.bash_profile
       - name: Remote login (for live debugging)
-        uses: owenthereal/action-upterm@v1
+        uses: owenthereal/action-upterm@1fb3e12e145279e2d0f3b117197d9ba171a0d5d6 # v1 + node24 support
         with:
           detached: true
           limit-access-to-actor: true
