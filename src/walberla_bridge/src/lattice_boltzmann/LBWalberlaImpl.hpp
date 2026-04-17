@@ -38,7 +38,6 @@
 #include <waLBerlaDefinitions.h>
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
 #include <gpu/AddGPUFieldToStorage.h>
-#include <gpu/HostFieldAllocator.h>
 #endif
 
 #include "../BoundaryHandling.hpp"
@@ -117,10 +116,6 @@ public:
   using FlagField = BoundaryModel::FlagField;
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
   using GPUField = gpu::GPUField<FloatType>;
-  using PdfFieldCpu =
-      FieldTrait<FloatType, Stencil, lbmpy::Arch::CPU>::PdfField;
-  using VectorFieldCpu =
-      FieldTrait<FloatType, Stencil, lbmpy::Arch::CPU>::VectorField;
 #endif
 
   struct GhostComm {
@@ -183,6 +178,7 @@ protected:
   BlockDataID m_velocity_field_id;
   BlockDataID m_vel_tmp_field_id;
 
+  std::optional<BlockDataID> m_pressure_tensor_field_id;
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
   std::optional<BlockDataID> m_pdf_cpu_field_id;
   std::optional<BlockDataID> m_vel_cpu_field_id;
@@ -224,10 +220,6 @@ protected:
   std::shared_ptr<InterpolateAndShiftAtBoundary<_VectorField, FloatType>>
       m_lees_edwards_last_applied_force_interpol_sweep;
 
-#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
-  std::shared_ptr<gpu::HostFieldAllocator<FloatType>> m_host_field_allocator;
-#endif
-
 public:
   template <typename T> FloatType FloatType_c(T t) const {
     return numeric_cast<FloatType>(t);
@@ -265,10 +257,6 @@ public:
     m_force_to_be_applied_id = add_to_storage<_VectorField>("force next");
     m_velocity_field_id = add_to_storage<_VectorField>("velocity");
     m_vel_tmp_field_id = add_to_storage<_VectorField>("velocity_tmp");
-#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
-    m_host_field_allocator =
-        std::make_shared<gpu::HostFieldAllocator<FloatType>>();
-#endif
 
     // Initialize and register pdf field with zero centered density
     auto pdf_setter = typename Kernels::InitialPDFsSetter(
