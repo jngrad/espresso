@@ -504,6 +504,7 @@ void remove_particle(int p_id) {
     }
   }
   mpi_synchronize_max_seen_pid_local();
+  get_cell_structure().resort_particles(false); // TODO: only needed by Monte Carlo
 }
 
 void make_new_particle(int p_id, Utils::Vector3d const &pos) {

@@ -196,7 +196,8 @@ As before in the reaction ensemble, one can define multiple reactions (e.g. for 
 
 .. code-block:: python
 
-    cpH = reaction_methods.ConstantpHEnsemble(kT=1, exclusion_range=1., seed=77)
+    cpH = reaction_methods.ConstantpHEnsemble(
+        kT=1., seed=77, exclusion_range=1., system=system)
     cpH.add_reaction(gamma=K_diss,
                      reactant_types=[0],
                      reactant_coefficients=[1],
@@ -252,7 +253,7 @@ For this one has to provide the following reaction to the Widom method:
 .. code-block:: python
 
     type_B = 1
-    widom = reaction_methods.WidomInsertion(kT=1, seed=77)
+    widom = reaction_methods.WidomInsertion(kT=1., seed=77, system=system)
     widom.add_reaction(reactant_types=[],
                        reactant_coefficients=[],
                        product_types=[type_B],
@@ -353,13 +354,13 @@ The Monte Carlo (MC) sampling of the reaction can  be coupled with a configurati
 For non-interacting systems this coupling is not an issue, but for interacting systems the insertion of new particles
 can lead to instabilities in the MD integration ultimately leading to a crash of the simulation.
 
-This integration instabilities can be avoided by defining a distance around
-the particles which already exist in the system where new particles will not
-be inserted, which is defined by the required keyword ``exclusion_range``.
+These integration instabilities can be avoided by defining a distance
+``exclusion_range`` around particles in the system, within which new particles
+will not be inserted (and old particles will not be removed, to maintain detailed balance).
 This prevents big overlaps with the newly inserted particles, which would
 otherwise cause large forces between particles and crash the MD integrator.
 The value of the exclusion range does not affect the limiting result
-and it only affects the convergence and the stability of the integration.
+and only affects the convergence and the stability of the integration.
 For interacting systems, it is usually a good practice to choose the exclusion
 range such that it is comparable to the diameter of the particles.
 

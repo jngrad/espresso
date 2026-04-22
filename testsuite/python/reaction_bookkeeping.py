@@ -46,11 +46,13 @@ class ReactionMethodsBookkeepingTest(ut.TestCase):
     system = espressomd.System(box_l=[BOX_LENGTH, ] * 3)
 
     cph = espressomd.reaction_methods.ConstantpHEnsemble(
+        system=system,
         constant_pH=pH,
         kT=kT,
         exclusion_range=exclusion_range,
         seed=seed)
     widom = espressomd.reaction_methods.WidomInsertion(
+        system=system,
         kT=kT,
         seed=seed)
 

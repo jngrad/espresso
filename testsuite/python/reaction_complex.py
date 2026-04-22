@@ -70,7 +70,7 @@ class Test(ut.TestCase):
 
         # use an exclusion radius of 0 to simulate an ideal gas
         RE = espressomd.reaction_methods.ReactionEnsemble(
-            kT=1., exclusion_range=0., seed=42)
+            kT=1., exclusion_range=0., seed=42, system=self.system)
 
         RE.add_reaction(
             gamma=Gamma, reactant_types=[type_A, type_B],

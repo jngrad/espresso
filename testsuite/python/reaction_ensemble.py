@@ -68,7 +68,7 @@ class ReactionEnsembleTest(ut.TestCase):
     # degree of dissociation alpha = N_A / N_HA = N_H / N_0
     gamma = target_alpha**2 / (1. - target_alpha) * N0 / (volume**nubar)
     RE = espressomd.reaction_methods.ReactionEnsemble(
-        seed=12, kT=temperature,
+        seed=12, kT=temperature, system=system,
         exclusion_range=exclusion_range, search_algorithm="parallel")
     RE.set_non_interacting_type(type=max(types.values()) + 1)
 

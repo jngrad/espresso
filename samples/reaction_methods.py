@@ -79,9 +79,7 @@ for i in range(N0, 2 * N0):
 RE = None
 if args.mode == "reaction_ensemble":
     RE = espressomd.reaction_methods.ReactionEnsemble(
-        kT=1,
-        exclusion_range=1,
-        seed=77)
+        system=system, kT=1., exclusion_range=1., seed=77)
     RE.add_reaction(gamma=K_diss,
                     reactant_types=[types["HA"]],
                     reactant_coefficients=[1],
@@ -90,7 +88,7 @@ if args.mode == "reaction_ensemble":
                     default_charges=charge_dict)
 elif args.mode == "constant_pH_ensemble":
     RE = espressomd.reaction_methods.ConstantpHEnsemble(
-        kT=1, exclusion_range=1, seed=77, constant_pH=2)
+        system=system, kT=1., exclusion_range=1., seed=77, constant_pH=2.)
     RE.add_reaction(gamma=K_diss, reactant_types=[types["HA"]],
                     product_types=[types["A-"], types["H+"]],
                     default_charges=charge_dict)

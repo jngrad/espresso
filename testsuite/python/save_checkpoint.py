@@ -643,9 +643,10 @@ class TestCheckpoint(ut.TestCase):
                                 f"Path '{path}' should be a folder")
 
     def test_reaction_methods_sanity_check(self):
-        with self.assertRaisesRegex(RuntimeError, "Reaction methods do not support checkpointing"):
-            widom = espressomd.reaction_methods.WidomInsertion(kT=1, seed=1)
-            widom._serialize()
+        with self.assertRaisesRegex(NotImplementedError, "Reaction methods do not support checkpointing"):
+            widom = espressomd.reaction_methods.WidomInsertion(
+                kT=1, seed=1, system=system)
+            widom.__reduce__()
 
 
 if __name__ == '__main__':

@@ -99,8 +99,6 @@ class ReactionMethods(ut.TestCase):
             method.exclusion_range = 0.8
         self.assertAlmostEqual(
             method.get_volume(), self.system.volume(), delta=1e-10)
-        method.set_volume(volume=1.)
-        self.assertAlmostEqual(method.get_volume(), 1., delta=1e-10)
         self.assertEqual(method.get_non_interacting_type(), 100)
         method.set_non_interacting_type(type=9)
         self.assertEqual(method.get_non_interacting_type(), 9)
@@ -146,13 +144,11 @@ class ReactionMethods(ut.TestCase):
         reactions = method.reactions
         self.assertEqual(len(reactions), 2)
         check_reaction_parameters(method.reactions, reaction_parameters)
-        self.assertIsNone(reactions[0].call_method("unknown"))
 
         # check reactions after unsuccessful parameter change
         with self.assertRaises(ValueError):
             method.change_reaction_constant(reaction_id=0, gamma=0.)
         check_reaction_parameters(method.reactions, reaction_parameters)
-        check_reaction_parameters(method._reactions_cache, reaction_parameters)
 
         # check reactions after successful parameter change
         new_gamma = 634.
@@ -160,7 +156,6 @@ class ReactionMethods(ut.TestCase):
         reaction_backward['gamma'] = 1. / new_gamma
         method.change_reaction_constant(reaction_id=0, gamma=new_gamma)
         check_reaction_parameters(method.reactions, reaction_parameters)
-        check_reaction_parameters(method._reactions_cache, reaction_parameters)
         status = method.get_status()
         self.assertAlmostEqual(
             status['reactions'][0]['gamma'],
@@ -200,20 +195,20 @@ class ReactionMethods(ut.TestCase):
 
         with self.subTest(msg="reaction ensemble"):
             method = espressomd.reaction_methods.ReactionEnsemble(
-                kT=1.4, seed=12, search_algorithm="order_n", **params)
+                kT=1.4, seed=12, search_algorithm="order_n", system=self.system, **params)
             self.check_interface(method, kT=1.4, gamma=1.2,
                                  search_algorithm="order_n", **params)
 
         with self.subTest(msg="constant pH ensemble"):
             method = espressomd.reaction_methods.ConstantpHEnsemble(
-                kT=1.5, seed=14, search_algorithm="parallel", constant_pH=10.,
+                kT=1.5, seed=14, search_algorithm="parallel", constant_pH=10., system=self.system,
                 **params)
             self.check_interface(method, kT=1.5, gamma=1.2,
                                  search_algorithm="parallel", **params)
 
         with self.subTest(msg="Widom insertion"):
             method = espressomd.reaction_methods.WidomInsertion(
-                kT=1.6, seed=16)
+                kT=1.6, seed=16, system=self.system)
             self.check_interface(method, kT=1.6, gamma=1., exclusion_range=0.,
                                  exclusion_radius_per_type={},
                                  search_algorithm=None)
@@ -230,9 +225,11 @@ class ReactionMethods(ut.TestCase):
             'default_charges': {2: 0, 3: 0, 4: 0},
             **single_reaction_params
         }
-        widom = espressomd.reaction_methods.WidomInsertion(kT=1., seed=12)
+        widom = espressomd.reaction_methods.WidomInsertion(
+            kT=1., seed=12, system=self.system)
         method = espressomd.reaction_methods.ReactionEnsemble(
-            kT=1.5, exclusion_range=0.1, seed=12, exclusion_radius_per_type={1: 0.1})
+            kT=1.5, exclusion_range=0.1, seed=12, system=self.system,
+            exclusion_radius_per_type={1: 0.1})
         method.add_reaction(**reaction_params)
         widom.add_reaction(**reaction_params)
 
@@ -319,34 +316,28 @@ class ReactionMethods(ut.TestCase):
             widom.exclusion_radius_per_type = {1: 2.}
 
         # check other exceptions
-        with self.assertRaisesRegex(ValueError, "Invalid value for 'volume'"):
-            method.set_volume(volume=-10.)
-        with self.assertRaisesRegex(RuntimeError, r"unknown method 'unknown\(\)'"):
-            method.call_method('unknown', x=1)
         err_msg = r"Only the following keys can be given as keyword arguments: \[.+\], got \[.+\] \(unknown \['x'\]\)"
         with self.assertRaisesRegex(ValueError, err_msg):
             espressomd.reaction_methods.SingleReaction(
                 x=1, **single_reaction_params)
         with self.assertRaisesRegex(ValueError, err_msg):
             espressomd.reaction_methods.ReactionEnsemble(
-                kT=1., exclusion_range=1., seed=12, x=1)
+                kT=1., exclusion_range=1., seed=12, x=1, system=self.system)
         with self.assertRaisesRegex(ValueError, err_msg):
             espressomd.reaction_methods.ConstantpHEnsemble(
-                kT=1., exclusion_range=1., seed=12, x=1, constant_pH=2)
+                kT=1., exclusion_range=1., seed=12, x=1, constant_pH=2, system=self.system)
         with self.assertRaisesRegex(ValueError, err_msg):
             espressomd.reaction_methods.WidomInsertion(
-                kT=1., seed=12, x=1)
+                kT=1., seed=12, x=1, system=self.system)
         with self.assertRaisesRegex(ValueError, "Invalid value for 'kT'"):
             espressomd.reaction_methods.ReactionEnsemble(
-                kT=-1., exclusion_range=1., seed=12)
+                kT=-1., exclusion_range=1., seed=12, system=self.system)
         with self.assertRaisesRegex(ValueError, "Parameter 'particle_number_to_be_changed' must be >= 0"):
             method.displacement_mc_move_for_particles_of_type(
                 type_mc=0, particle_number_to_be_changed=-1)
         with self.assertRaisesRegex(ValueError, "Parameter 'type_mc' must be >= 0"):
             method.displacement_mc_move_for_particles_of_type(
                 type_mc=-1, particle_number_to_be_changed=1)
-        with self.assertRaisesRegex(RuntimeError, "No chemical reaction is currently under way"):
-            method.call_method("calculate_factorial_expression")
         with self.assertRaisesRegex(RuntimeError, "cannot be instantiated"):
             espressomd.reaction_methods.ReactionAlgorithm()
         with self.assertRaisesRegex(ValueError, "Invalid type: -1"):
@@ -355,15 +346,15 @@ class ReactionMethods(ut.TestCase):
         # check invalid exclusion ranges and radii
         with self.assertRaisesRegex(ValueError, "Invalid value for exclusion range"):
             espressomd.reaction_methods.ReactionEnsemble(
-                kT=1., seed=12, exclusion_range=-1.)
+                kT=1., seed=12, exclusion_range=-1., system=self.system)
         with self.assertRaisesRegex(ValueError, "Invalid exclusion radius for type 1: radius -0.10"):
             espressomd.reaction_methods.ReactionEnsemble(
-                kT=1., seed=12, exclusion_range=1., exclusion_radius_per_type={1: -0.1})
+                kT=1., seed=12, exclusion_range=1., exclusion_radius_per_type={1: -0.1}, system=self.system)
         with self.assertRaisesRegex(ValueError, "Unknown search algorithm 'unknown'"):
             espressomd.reaction_methods.ReactionEnsemble(
-                kT=1., seed=12, exclusion_range=1., search_algorithm="unknown")
+                kT=1., seed=12, exclusion_range=1., search_algorithm="unknown", system=self.system)
         method = espressomd.reaction_methods.ReactionEnsemble(
-            kT=1., exclusion_range=1., seed=12, exclusion_radius_per_type={1: 0.1})
+            kT=1., exclusion_range=1., seed=12, exclusion_radius_per_type={1: 0.1}, system=self.system)
         with self.assertRaisesRegex(ValueError, "Invalid exclusion radius for type 2: radius -0.10"):
             method.exclusion_radius_per_type = {2: -0.1}
         self.assertEqual(list(method.exclusion_radius_per_type.keys()), [1])
