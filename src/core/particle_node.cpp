@@ -58,7 +58,7 @@ constexpr auto some_tag = 42;
 static bool type_list_enable;
 
 /** @brief Mapping particle types to lists of particle ids. */
-static std::unordered_map<int, std::unordered_set<int>> particle_type_map;
+static std::unordered_map<int, std::set<int>> particle_type_map;
 
 /** @brief Mapping particle ids to MPI ranks. */
 static std::unordered_map<int, int> particle_node;

@@ -80,6 +80,12 @@
 #include <type_traits>
 #include <vector>
 
+#include "random.hpp"
+#include <boost/mpi/collectives/all_gather.hpp>
+#include <unordered_map>
+#include <unordered_set>
+#include <random>
+
 namespace ScriptInterface {
 namespace System {
 
@@ -444,6 +450,94 @@ static void rescale_particles(CellStructure &cell_structure, int dir,
   }
 }
 
+struct ReactionAlgo {
+  ReactionAlgo(int seed)
+      : m_generator(Random::mt19937(std::seed_seq({seed, seed, seed}))),
+        m_normal_distribution(0., 1.), m_uniform_real_distribution(0., 1.), m_exponential_distribution(1.) {}
+
+  std::unordered_map<int, std::set<int>> particle_type_map;
+  std::mt19937 m_generator;
+  std::normal_distribution<double> m_normal_distribution;
+  std::uniform_real_distribution<double> m_uniform_real_distribution;
+  std::exponential_distribution<double> m_exponential_distribution;
+
+  auto get_random_uniform_number() {
+    return m_uniform_real_distribution(m_generator);
+  }
+  auto get_random_velocity_vector() {
+    return Utils::Vector3d{m_normal_distribution(m_generator),
+                           m_normal_distribution(m_generator),
+                           m_normal_distribution(m_generator)};
+  }
+  int i_random(int maxint) {
+    std::uniform_int_distribution<int> uniform_int_dist(0, maxint - 1);
+    return uniform_int_dist(m_generator);
+  }
+  Utils::Vector3d get_random_position_in_box(auto const &box_geo) {
+    Utils::Vector3d out_pos{};
+    out_pos[0] = box_geo.length()[0] * m_uniform_real_distribution(m_generator);
+    out_pos[1] = box_geo.length()[1] * m_uniform_real_distribution(m_generator);
+    out_pos[2] = box_geo.length()[2] * m_uniform_real_distribution(m_generator);
+    return out_pos;
+  }
+};
+
+static std::shared_ptr<ReactionAlgo> algo{};
+
+static void rebuild_type_map(int type, CellStructure &cell_structure, std::set<int> &type_map) {
+  type_map.clear();
+  std::vector<int> local_pids;
+  for (auto const &p : cell_structure.local_particles()) {
+    if (p.type() == type) {
+      local_pids.emplace_back(p.id());
+    }
+  }
+  std::vector<std::vector<int>> global_pids;
+  boost::mpi::all_gather(::comm_cart, local_pids, global_pids);
+  for (auto const &vec : global_pids) {
+    for (auto const &p_id : vec) {
+      type_map.insert(p_id);
+    }
+  }
+}
+
+static void rebuild_type_map(CellStructure &cell_structure, std::unordered_map<int, std::set<int>> &type_map) {
+  for (auto &kv : type_map) {
+    rebuild_type_map(kv.first, cell_structure, kv.second);
+  }
+}
+
+static void remove_id_from_map(int p_id, int type) {
+  auto it = algo->particle_type_map.find(type);
+  if (it != algo->particle_type_map.end()) {
+    it->second.erase(p_id);
+  }
+}
+
+static void add_id_to_type_map(int p_id, int type) {
+  auto it = algo->particle_type_map.find(type);
+  if (it != algo->particle_type_map.end()) {
+    it->second.insert(p_id);
+  }
+}
+
+static void on_particle_type_change(int p_id, int old_type, int new_type) {
+    if (old_type == type_tracking::any_type) {
+      for (auto &kv : algo->particle_type_map) {
+        auto it = kv.second.find(p_id);
+        if (it != kv.second.end()) {
+          kv.second.erase(it);
+          break;
+        }
+      }
+    } else if (old_type != type_tracking::new_part) {
+      if (old_type != new_type) {
+        remove_id_from_map(p_id, old_type);
+      }
+    }
+    add_id_to_type_map(p_id, new_type);
+}
+
 Variant System::do_call_method(std::string const &name,
                                VariantMap const &parameters) {
   if (name == "lock_system_creation") {
@@ -488,14 +582,53 @@ Variant System::do_call_method(std::string const &name,
   if (name == "reaction_get_maximal_particle_id") {
     return ::get_maximal_particle_id();
   }
+  if (name == "setup_reaction_algo") {
+    algo = std::make_shared<ReactionAlgo>(get_value<int>(parameters, "seed"));
+    return {};
+  }
   if (name == "setup_type_map") {
     auto const types = get_value<std::vector<int>>(parameters, "type_list");
     for (auto const type : types) {
       ::init_type_map(type);
     }
+    auto &cell_structure = *get_system().cell_structure;
+    if (not algo) {
+      algo = std::make_shared<ReactionAlgo>(42);
+    }
+    for (auto const type : types) {
+      context()->parallel_try_catch([type]() {
+        if (type < 0) {
+          throw std::runtime_error("Types may not be negative");
+        }
+      });
+      if (not algo->particle_type_map.contains(type)) {
+        algo->particle_type_map[type] = {};
+      }
+      rebuild_type_map(type, cell_structure, algo->particle_type_map[type]);
+    }
     return {};
   }
-  /*
+  if (name == "rebuild_type_map") {
+    rebuild_type_map(*get_system().cell_structure, algo->particle_type_map);
+  }
+  if (name == "get_random_p_id_of_type") {
+    auto const type = get_value<int>(parameters, "ptype");
+    std::vector<int> pids;
+    for (auto const &p : get_system().cell_structure->local_particles()) {
+      if (p.type() == type) {
+        pids.emplace_back(p.id());
+      }
+    }
+    Utils::Mpi::gather_buffer(pids, context()->get_comm());
+    int const n_part = pids.size();
+    auto const global_index = algo->i_random(n_part);
+      std::cout << "random_index="<<global_index<<" size="<<n_part<<std::endl;
+    if (::comm_cart.rank() == 0) {
+      std::ranges::sort(pids);
+      return pids[global_index];
+    }
+    return -1;
+  }
   if (name == "get_random_p_id_of_type") {
     auto target_type = get_value<int>(parameters, "type");
     auto local_size = 0;
@@ -517,6 +650,7 @@ Variant System::do_call_method(std::string const &name,
       std::inclusive_scan(num_per_rank.begin(), num_per_rank.end(), cumulative_sum.begin());
       auto const n_part = cumulative_sum.back();
       auto const global_index = algo->i_random(n_part);
+      std::cout << "random_index="<<global_index<<" size="<<n_part<<std::endl;
       for (int rank = 0; rank < ::comm_cart.size(); ++rank) {
         if (cumulative_sum[rank] > global_index) {
           auto const global_offset = (rank == 0) ? 0 : cumulative_sum[rank - 1];
@@ -551,7 +685,6 @@ Variant System::do_call_method(std::string const &name,
     }
     return target_pid;
   }
-  */
   if (name == "get_pids_of_type") {
     auto const type = get_value<int>(parameters, "ptype");
     std::vector<int> pids;
@@ -562,6 +695,49 @@ Variant System::do_call_method(std::string const &name,
     }
     Utils::Mpi::gather_buffer(pids, context()->get_comm());
     return pids;
+  }
+  if (name == "reaction_add_particle") {
+    on_particle_type_change(get_value<int>(parameters, "pid"), ::type_tracking::new_part, get_value<int>(parameters, "new_type"));
+    auto pos = algo->get_random_position_in_box(*get_system().box_geo);
+    auto vel = algo->get_random_velocity_vector();
+    return std::vector<Variant>({pos, vel});
+  }
+  if (name == "reaction_change_particle") {
+    on_particle_type_change(get_value<int>(parameters, "pid"), get_value<int>(parameters, "old_type"), get_value<int>(parameters, "new_type"));
+  }
+  if (name == "reaction_remove_particle") {
+    auto const pid = get_value<int>(parameters, "pid");
+    auto p = get_system().cell_structure->get_local_particle(pid);
+    auto p_type = -1;
+    if (p != nullptr and not p->is_ghost()) {
+      if (this_node == 0) {
+        p_type = p->type();
+      } else {
+        ::comm_cart.send(0, 42, p->type());
+      }
+    } else if (this_node == 0) {
+      ::comm_cart.recv(boost::mpi::any_source, 42, p_type);
+    }
+    assert(this_node != 0 or p_type != -1);
+    boost::mpi::broadcast(::comm_cart, p_type, 0);
+    remove_id_from_map(pid, p_type);
+  }
+  if (name == "get_random_reaction_index") {
+    auto i = algo->i_random(get_value<int>(parameters, "size"));
+    std::cout<<"reaction_id="<<i<<std::endl;
+    return i;
+  }
+  if (name == "reaction_make_displacement_mc_move_attempt") {
+    return -algo->m_exponential_distribution(algo->m_generator);
+  }
+  if (name == "reaction_make_displacement_mc_move_attempt_uniform") {
+    return algo->m_uniform_real_distribution(algo->m_generator);
+  }
+  if (name == "get_random_velocity_vector") {
+    return algo->get_random_velocity_vector();
+  }
+  if (name == "get_random_position_in_box") {
+    return algo->get_random_position_in_box(*get_system().box_geo);
   }
   if (name == "number_of_particles") {
     auto const type = get_value<int>(parameters, "type");

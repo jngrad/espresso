@@ -93,6 +93,7 @@ function(python_test)
   else()
     set(TEST_NUM_PROC ${TEST_MAX_NUM_PROC})
   endif()
+  set(TEST_NUM_PROC 1) # TODO: MPI bottleneck in Monte Carlo RNG
 
   if(EXISTS ${MPIEXEC} AND NOT ${TEST_NO_MPI})
     espresso_set_mpiexec_tmpdir(${TEST_NAME})

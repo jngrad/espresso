@@ -50,6 +50,8 @@
 #include <utility>
 #include <vector>
 
+#include <iomanip>
+
 namespace boost::serialization {
 template <typename Archive, typename... Types>
 void serialize(Archive &ar, std::tuple<Types...> &tuple, const unsigned int) {
@@ -91,6 +93,7 @@ void ReactionAlgorithm::restore_old_system_state() {
     for (auto const &[p_id, p_type] : state) {
       on_particle_type_change(p_id, type_tracking::any_type, p_type);
       if (auto p = get_local_particle(p_id)) {
+        std::cout << "change pid="<<p_id<<" "<<p->type()<<"->" <<p_type<<std::endl;
         p->type() = p_type;
 #ifdef ESPRESSO_ELECTROSTATICS
         p->q() = charges_of_types.at(p_type);
@@ -100,6 +103,7 @@ void ReactionAlgorithm::restore_old_system_state() {
   }
   // delete created particles
   for (auto const p_id : old_state.created) {
+        std::cout << "remove pid="<<p_id<<std::endl;
     delete_particle(p_id);
   }
   // restore original positions and velocities
@@ -111,6 +115,7 @@ void ReactionAlgorithm::restore_old_system_state() {
       box_geo.fold_position(folded_pos, image_box);
       p->pos() = folded_pos;
       p->image_box() = image_box;
+        std::cout << "change pid="<<p_id<<" p=["<< std::setprecision(16) << folded_pos<<"] v=["<< std::setprecision(16) << vel<<"]\n";
     }
   }
   if (not old_state.moved.empty()) {
@@ -155,6 +160,7 @@ void ReactionAlgorithm::make_reaction_attempt(SingleReaction const &reaction,
   auto const n_reactant_types = reaction.reactant_types.size();
   auto const get_random_p_id_of_type = [this](int type) {
     auto const random_index = i_random(number_of_particles_with_type(type));
+      std::cout << "random_index="<<random_index<<" size="<<number_of_particles_with_type(type)<<std::endl;
     return get_random_p_id(type, random_index);
   };
   auto only_local_changes = true;
@@ -174,6 +180,7 @@ void ReactionAlgorithm::make_reaction_attempt(SingleReaction const &reaction,
       auto const p_id = get_random_p_id_of_type(old_type);
       on_particle_type_change(p_id, old_type, new_type);
       if (auto p = get_local_particle(p_id)) {
+        std::cout << "change pid="<<p_id<<" "<< p->type()<<"->" <<new_type<<std::endl;
         p->type() = new_type;
 #ifdef ESPRESSO_ELECTROSTATICS
         p->q() = charges_of_types.at(new_type);
@@ -254,6 +261,7 @@ ReactionAlgorithm::create_new_trial_state(int reaction_id) {
   auto &reaction = *reactions[reaction_id];
   reaction.tried_moves++;
   particle_inside_exclusion_range_touched = false;
+  std::cout << "all_reactant_particles_exist="<<all_reactant_particles_exist(reaction)<<std::endl;
   if (!all_reactant_particles_exist(reaction)) {
     // make sure that no incomplete reaction is performed -> only need to
     // consider rollback of complete reactions
@@ -278,15 +286,19 @@ double ReactionAlgorithm::make_reaction_mc_move_attempt_logarithmic(
   auto &reaction = *reactions[reaction_id];
   reaction.accumulator_potential_energy_difference_exponential(
       std::vector<double>{exponential});
+  auto pp = -get_random_logarithmic_number();
+  std::cout << "metropolis: "<<std::setprecision(14)<<pp<<" >= "<<std::setprecision(14)<<ln_bf<<std::endl;
   // probability space transformation: the uniform range [0, 1] from U(0, 1)
   // is equivalent to the exponential range (-inf, 0] from -Exp(1) in log space
-  if (-get_random_logarithmic_number() >= ln_bf) {
+  //if (-get_random_logarithmic_number() >= ln_bf) {
+  if (pp >= ln_bf) {
     // reject trial move: restore previous state, energy is unchanged
     restore_old_system_state();
     return E_pot_old;
   }
   // accept trial move: delete hidden particles and return new system energy
   for (auto const &[p_id, p_type] : get_old_system_state().hidden) {
+        std::cout << "remove pid="<<p_id<<std::endl;
     delete_particle(p_id);
   }
   reaction.accepted_moves++;
@@ -313,6 +325,7 @@ double ReactionAlgorithm::make_reaction_mc_move_attempt_logarithmic(
 void ReactionAlgorithm::hide_particle(int p_id, int p_type) const {
   on_particle_type_change(p_id, p_type, non_interacting_type);
   if (auto p = get_local_particle(p_id)) {
+        std::cout << "change pid="<<p_id<<" "<< p->type()<<"->" <<non_interacting_type<<std::endl;
     p->type() = non_interacting_type;
 #ifdef ESPRESSO_ELECTROSTATICS
     p->q() = 0.;
@@ -441,6 +454,7 @@ int ReactionAlgorithm::create_particle(int p_type) {
 
   ::make_new_particle(p_id, pos);
   if (auto p = get_local_particle(p_id)) {
+        std::cout << "create pid="<<p_id<<" NA->" <<p_type<<" p=["<< std::setprecision(16) << pos<<"] v=["<< std::setprecision(16)<<std::sqrt(kT / p->mass()) * vel<<"]"<<std::endl;
     p->v() = std::sqrt(kT / p->mass()) * vel;
     p->type() = p_type;
 #ifdef ESPRESSO_ELECTROSTATICS
@@ -460,6 +474,7 @@ void ReactionAlgorithm::displacement_mc_move(int type, int n_particles) {
     // draw a new particle id
     while (Utils::contains(drawn_pids, p_id)) {
       auto const random_index = i_random(number_of_particles_with_type(type));
+      std::cout << "random_index="<<random_index<<" size="<<number_of_particles_with_type(type)<<std::endl;
       p_id = get_random_p_id(type, random_index);
     }
     drawn_pids.emplace_back(p_id);
@@ -469,6 +484,7 @@ void ReactionAlgorithm::displacement_mc_move(int type, int n_particles) {
     auto vel = get_random_velocity_vector();
     if (auto p = get_real_particle(p_id)) {
       old_state = {p_id, p->pos(), p->v()};
+        std::cout << "change pid="<<p_id<<" v=["<<p->v() <<"]->[" <<std::sqrt(kT / p->mass()) * vel<<"]"<<std::endl;
       p->v() = std::sqrt(kT / p->mass()) * vel;
       if (m_comm.rank() != 0) {
         m_comm.send(0, 42, old_state);
@@ -499,6 +515,7 @@ bool ReactionAlgorithm::make_displacement_mc_move_attempt(int type,
   }
 
   if (n_particles == 0) {
+  std::cout << "reject due to lack of particles: "<<n_particles<<"=0\n";
     // reject
     return false;
   }
@@ -508,6 +525,7 @@ bool ReactionAlgorithm::make_displacement_mc_move_attempt(int type,
 
   auto const n_particles_of_type = ::number_of_particles_with_type(type);
   if (n_particles > n_particles_of_type) {
+  std::cout << "reject due to lack of particles: "<<n_particles<<" > "<< n_particles_of_type<<std::endl;
     // reject
     return false;
   }
@@ -535,7 +553,10 @@ bool ReactionAlgorithm::make_displacement_mc_move_attempt(int type,
   //     exp(-beta*(E_pot_new-E_pot_old))*new_radius/old_radius);
 
   // Metropolis-Hastings algorithm for asymmetric proposal density
-  if (m_uniform_real_distribution(m_generator) < bf) {
+  auto const pp = m_uniform_real_distribution(m_generator);
+  std::cout << "metropolis: uniform="<<std::setprecision(14) << pp<<" < "<<std::setprecision(14) << bf<<std::endl;
+  if (pp < bf) {
+//  if (m_uniform_real_distribution(m_generator) < bf) {
     // accept
     m_accepted_configurational_MC_moves += 1;
     clear_old_system_state();

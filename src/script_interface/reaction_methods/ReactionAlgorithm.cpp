@@ -98,7 +98,9 @@ Variant ReactionAlgorithm::do_call_method(std::string const &name,
     return {};
   }
   if (name == "get_random_reaction_index") {
-    return RE()->i_random(static_cast<int>(RE()->reactions.size()));
+  auto i = RE()->i_random(static_cast<int>(RE()->reactions.size()));
+    std::cout<<"reaction_id="<<i<<std::endl;
+    return i;
   }
   if (name == "potential_energy") {
     return RE()->calculate_potential_energy();
