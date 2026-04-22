@@ -277,6 +277,10 @@ Variant CellSystem::do_call_method(std::string const &name,
   if (name == "get_max_range") {
     return get_cell_structure().max_range();
   }
+  if (name == "invalidate_ghosts") {
+    get_cell_structure().resort_particles(false); // TODO: only used by Monte Carlo
+    return {};
+  }
   return {};
 }
 

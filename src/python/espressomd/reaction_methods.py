@@ -529,6 +529,7 @@ class MonteCarloMethod:
             raise ValueError(f"Invalid particle id: {p_id}")
         self.free_particle_id(p_id, precheck=True)
         self.system.part.by_id(p_id).remove()
+        self.system.cell_system.call_method("invalidate_ghosts")
 
     def change_reaction_constant(self, reaction_id, gamma):
         """
@@ -639,14 +640,13 @@ class ReactionAlgorithm(MonteCarloMethod):
         neutrality_check = kwargs.pop("check_for_electroneutrality", True)
         if not isinstance(default_charges, dict):
             raise TypeError("Argument 'default_charges' needs to be a dict")
-        self.default_charges.update()
         forward_reaction = SingleReaction(**kwargs)
         backward_reaction = forward_reaction.make_backward_reaction()
         if neutrality_check:
             self._check_charge_neutrality(
                 type2charge=default_charges,
                 reaction=forward_reaction)
-        self.default_charges = default_charges
+        self.default_charges.update(default_charges)
         self.reactions.append(forward_reaction)
         self.reactions.append(backward_reaction)
         self.check_reaction_method()
@@ -780,11 +780,13 @@ class ReactionAlgorithm(MonteCarloMethod):
         for particle_info in self.particle_changes["created"]:
             self.system.part.by_id(particle_info["pid"]).remove()
             self.free_particle_id(particle_info["pid"])
+        self.system.cell_system.call_method("invalidate_ghosts")
 
     def delete_hidden_particles(self):
         for particle_info in self.particle_changes["hidden"]:
             self.system.part.by_id(particle_info["pid"]).remove()
             self.free_particle_id(particle_info["pid"])
+        self.system.cell_system.call_method("invalidate_ghosts")
 
     def restore_system(self):
         # restore properties of changed and hidden particles
