@@ -164,7 +164,7 @@ class MonteCarloMethod:
     """
 
     def __init__(self, **kwargs):
-        self.system = kwargs.pop("system")
+        self.system = kwargs.pop("system", _main_system)
         if "exclusion_radius" in kwargs:
             raise KeyError(
                 "the keyword `exclusion_radius` is obsolete. Currently, the equivalent keyword is `exclusion_range`")

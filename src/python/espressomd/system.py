@@ -38,6 +38,7 @@ from . import lb
 from . import lees_edwards
 from . import particle_data
 from . import thermostat
+from . import reaction_methods # TODO: remove  
 # pylint: enable=unused-import
 
 from .code_features import has_features, assert_features
@@ -146,6 +147,7 @@ class System(ScriptInterfaceHelper):
             # lock class
             self.call_method("lock_system_creation")
             self._setup_atexit()
+        reaction_methods._main_system = self # TODO: remove  
 
     def _setup_atexit(self):
         import atexit
