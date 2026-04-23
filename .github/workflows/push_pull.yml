@@ -1,0 +1,62 @@
+name: run tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+jobs:
+  pyMBE:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/espressomd/docker/debian:ab5bc64f5c3cc7330952f8b3bf321270ca53960c-base-layer
+      credentials:
+         username: ${{ github.actor }}
+         password: ${{ secrets.github_token }}
+      options: --cpus 4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: debian
+          save: ${{ github.ref == 'refs/heads/python' || ( github.repository != 'espressomd/espresso' && ! startsWith(github.ref, 'refs/pull') ) }}
+      - name: Setup Git environment
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Get runner specifications
+        run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
+      - name: Build and check
+        uses: ./.github/actions/build_and_check
+        env:
+          build_procs: 4
+          check_procs: 4
+          CC: 'gcc-14'
+          CXX: 'g++-14'
+          myconfig: 'maxset'
+          with_ccache: 'true'
+          with_cuda: 'false'
+          with_hdf5: 'true'
+          with_fftw: 'true'
+          with_gsl: 'false'
+          with_scafacos: 'false'
+          with_stokesian_dynamics: 'false'
+          make_check_unit_tests: 'true'
+          make_check_python: 'false'
+          OMPI_ALLOW_RUN_AS_ROOT: 1
+          OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+      - name: Run pyMBE testsuite
+        run: |
+          export PYTHONPATH="$(realpath build/src/python)"
+          export OMP_PROC_BIND=false OMP_NUM_THREADS=1
+          git clone -b main https://github.com/pyMBE-dev/pyMBE.git
+          cd pyMBE
+          git checkout efce8e4bc50
+          sed -i "/cmake/d; /tqdm/d" requirements.txt
+          python3 -m venv --system-site-packages venv
+          . venv/bin/activate
+          python3 -m pip install -r requirements.txt
+          python3 maintainer/configure_venv.py
+          make unit_tests -j4
