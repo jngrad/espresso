@@ -54,7 +54,7 @@ jobs:
           git clone -b main https://github.com/pyMBE-dev/pyMBE.git
           cd pyMBE
           python3 -m venv --system-site-packages venv
-          source venv/bin/activate
+          . venv/bin/activate
           python3 -m pip install -r requirements.txt
           python3 maintainer/configure_venv.py
           make unit_tests -j4
