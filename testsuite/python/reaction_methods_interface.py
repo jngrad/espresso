@@ -23,6 +23,48 @@ import espressomd.reaction_methods
 import unittest as ut
 
 
+class TestSingleReaction(ut.TestCase):
+
+    def test_single_reaction(self):
+        """
+        Check a simple chemical reaction, the Monte Carlo acceptance rate
+        and the configurational move probability for a given system state.
+        """
+        # create a reaction A -> 3 B + 4 C
+        type_A = 0
+        type_B = 1
+        type_C = 2
+        reaction = espressomd.reaction_methods.SingleReaction(
+            gamma=2., reactant_types=[type_A], reactant_coefficients=[1],
+            product_types=[type_B, type_C], product_coefficients=[3, 4])
+
+        self.assertEqual(reaction.nu_bar, 6)
+        self.assertEqual(reaction.trial_moves, 0)
+        self.assertEqual(reaction.accepted_moves, 0)
+
+        # check acceptance rate
+        for trial_moves in range(1, 5):
+            for accepted_moves in range(0, 5):
+                reaction.trial_moves = trial_moves
+                reaction.accepted_moves = accepted_moves
+                ref_rate = float(accepted_moves) / float(trial_moves)
+                self.assertAlmostEqual(
+                    reaction.get_acceptance_rate(), ref_rate, delta=1e-12)
+
+        # check factorial expression
+        Method = espressomd.reaction_methods.ReactionAlgorithm
+        ln_fact = Method._ln_factorial_Ni0_divided_by_factorial_Ni0_plus_nu_i
+        calc_factorial_expression = Method.calculate_factorial_expression
+        for i in range(3):
+            for j in range(3):
+                for k in range(3):
+                    # system contains i x A, j x B, and k x C
+                    p_numbers = {type_A: i, type_B: j, type_C: k}
+                    val = calc_factorial_expression(reaction, p_numbers)
+                    ref = ln_fact(i, -1) + ln_fact(j, 3) + ln_fact(k, 4)
+                    self.assertAlmostEqual(val, ref, delta=1e-12)
+
+
 class ReactionMethods(ut.TestCase):
 
     """Test the reaction methods interface."""

@@ -190,7 +190,8 @@ class MonteCarloMethod:
             self, reaction, E_pot_diff, old_particle_numbers):
         raise NotImplementedError("Derived classes must implement this method")
 
-    def calculate_factorial_expression(self, reaction, particle_numbers):
+    @classmethod
+    def calculate_factorial_expression(cls, reaction, particle_numbers):
         raise NotImplementedError("Derived classes must implement this method")
 
     def check_exclusion_range(self, pid):
@@ -985,7 +986,10 @@ class ReactionAlgorithm(MonteCarloMethod):
                 "exclusion_radius_per_type": self.exclusion_radius_per_type}
 
     @classmethod
-    def _ln_factorial_Ni0_divided_by_factorial_Ni0_plus_nu_i(cls, nu_i, N_i0):
+    def _ln_factorial_Ni0_div_factorial_Ni0_nu_i(cls, N_i0, nu_i):
+        """
+        Calculate :math:`\\frac{N_i^0!}{(N_i^0+\\nu_{i}\\xi)!}`
+        """
         value = 0.
         if nu_i != 0:
             if nu_i > 0:
@@ -1013,20 +1017,25 @@ class ReactionEnsemble(ReactionAlgorithm):
             math.log(self.get_volume()) + math.log(reaction.gamma)
         return ln_factorial + ln_bf
 
-    def calculate_factorial_expression(self, reaction, particle_numbers):
+    @classmethod
+    def calculate_factorial_expression(cls, reaction, particle_numbers):
+        """
+        Calculate the logarithm of the product of factorial expressions which
+        occur in the reaction ensemble acceptance probability :cite:`smith94c`.
+
+        :math:`\\log\\left(\\prod_{i=1}\\frac{N_i^0!}{(N_i^0+\\nu_{i}\\xi)!}\\right)`
+        """
         value = 0.
         # factorial contribution of reactants
         for i in range(len(reaction.reactant_types)):
             nu_i = -reaction.reactant_coefficients[i]
             N_i0 = particle_numbers[reaction.reactant_types[i]]
-            value += self._ln_factorial_Ni0_divided_by_factorial_Ni0_plus_nu_i(
-                nu_i, N_i0)
+            value += cls._ln_factorial_Ni0_div_factorial_Ni0_nu_i(N_i0, nu_i)
         # factorial contribution of products
         for i in range(len(reaction.product_types)):
             nu_i = reaction.product_coefficients[i]
             N_i0 = particle_numbers[reaction.product_types[i]]
-            value += self._ln_factorial_Ni0_divided_by_factorial_Ni0_plus_nu_i(
-                nu_i, N_i0)
+            value += cls._ln_factorial_Ni0_div_factorial_Ni0_nu_i(N_i0, nu_i)
         return value
 
 
@@ -1086,18 +1095,25 @@ class ConstantpHEnsemble(ReactionAlgorithm):
         kwargs["product_coefficients"] = [1, 1]
         super().add_reaction(**kwargs)
 
-    def calculate_factorial_expression(self, reaction, particle_numbers):
+    @classmethod
+    def calculate_factorial_expression(cls, reaction, particle_numbers):
+        """
+        Calculate the logarithm of the product of factorial expressions which
+        occur in the constant pH method with symmetric proposal probability
+        :cite:`landsgesell17b`. Only the acid and conjugated base are involved
+        in the product.
+
+        :math:`\\log\\left(\\prod_{i=1}\\frac{N_i^0!}{(N_i^0+\\nu_{i}\\xi)!}\\right)`
+        """
         value = 0.
         # factorial contribution of reactants
         nu_i = -reaction.reactant_coefficients[0]
         N_i0 = particle_numbers[reaction.reactant_types[0]]
-        value += self._ln_factorial_Ni0_divided_by_factorial_Ni0_plus_nu_i(
-            nu_i, N_i0)
+        value += cls._ln_factorial_Ni0_div_factorial_Ni0_nu_i(N_i0, nu_i)
         # factorial contribution of products
         nu_i = reaction.product_coefficients[0]
         N_i0 = particle_numbers[reaction.product_types[0]]
-        value += self._ln_factorial_Ni0_divided_by_factorial_Ni0_plus_nu_i(
-            nu_i, N_i0)
+        value += cls._ln_factorial_Ni0_div_factorial_Ni0_nu_i(N_i0, nu_i)
         return value
 
 

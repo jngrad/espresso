@@ -19,7 +19,6 @@
 
 include(espresso_unit_test)
 
-espresso_unit_test(SRC SingleReaction_test.cpp DEPENDS espresso::core)
 espresso_unit_test(SRC ReactionAlgorithm_test.cpp DEPENDS espresso::core
                    Boost::mpi MPI::MPI_CXX NUM_PROC 2)
 espresso_unit_test(SRC particle_tracking_test.cpp DEPENDS espresso::core
