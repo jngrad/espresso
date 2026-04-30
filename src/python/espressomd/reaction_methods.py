@@ -88,7 +88,7 @@ class ExclusionRadius(ScriptInterfaceHelper):
       ``exclusion_radius_per_type``: return ``True`` if the inter-particle
       distance is smaller than ``exclusion_range``, ``False`` otherwise
 
-    Attributes
+    Parameters
     ----------
     exclusion_radius_per_type : :obj:`dict`, optional
          Mapping of particle types to exclusion radii.
@@ -150,7 +150,7 @@ class MonteCarloMethod:
         Minimal distance from any particle, within which new particles will not
         be inserted.
     seed : :obj:`int`
-        Initial counter value (or seed) of the Mersenne Twister RNG.
+        Initial counter value (or seed) of the philox RNG.
     exclusion_radius_per_type : :obj:`dict`, optional
          Mapping of particle types to exclusion radii.
     search_algorithm : :obj:`str`
@@ -229,15 +229,13 @@ class MonteCarloMethod:
                 self.params_boundaries["slab_end_z"] - self.params_boundaries["slab_start_z"])
             position.append(coord_z)
         elif self.constraint_type == "cylinder":
-            radius = self.params_boundaries["radius"] * \
+            random_radius = self.params_boundaries["radius"] * \
                 np.sqrt(self.rng.uniform())
             phi = 2 * np.pi * self.rng.uniform()
             position.append(
-                box_l[0] +
-                self.params_boundaries["center_x"] * np.cos(phi))
+                self.params_boundaries["center_x"] + random_radius * np.cos(phi))
             position.append(
-                box_l[1] +
-                self.params_boundaries["center_y"] * np.sin(phi))
+                self.params_boundaries["center_y"] + random_radius * np.sin(phi))
             position.append(box_l[2] * self.rng.uniform())
         else:
             raise NotImplementedError(

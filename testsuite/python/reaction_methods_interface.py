@@ -20,6 +20,7 @@
 import espressomd
 import espressomd.reaction_methods
 
+import numpy as np
 import unittest as ut
 
 
@@ -53,8 +54,8 @@ class TestSingleReaction(ut.TestCase):
 
         # check factorial expression
         Method = espressomd.reaction_methods.ReactionAlgorithm
-        ln_fact = Method._ln_factorial_Ni0_divided_by_factorial_Ni0_plus_nu_i
-        calc_factorial_expression = Method.calculate_factorial_expression
+        ln_fact = Method._ln_factorial_Ni0_div_factorial_Ni0_nu_i
+        calc_factorial_expression = espressomd.reaction_methods.ReactionEnsemble.calculate_factorial_expression
         for i in range(3):
             for j in range(3):
                 for k in range(3):
@@ -71,7 +72,10 @@ class ReactionMethods(ut.TestCase):
 
     system = espressomd.System(box_l=[10., 10., 10.])
     system.cell_system.skin = 0.4
-    system.setup_type_map(type_list=[0])
+    system.setup_type_map(type_list=[0, 1, 2])
+
+    def setUp(self):
+        self.system.box_l = [10., 10., 10.]
 
     def tearDown(self):
         self.system.part.clear()
@@ -90,6 +94,20 @@ class ReactionMethods(ut.TestCase):
         def count_by_type(types):
             return [self.system.number_of_particles(type=x) for x in types]
 
+        # check acceptance rate
+        for tried_moves in range(1, 5):
+            for accepted_moves in range(0, 5):
+                method.m_tried_configurational_MC_moves = tried_moves
+                method.m_accepted_configurational_MC_moves = accepted_moves
+                ref_rate = float(accepted_moves) / float(tried_moves)
+                self.assertAlmostEqual(
+                    method.get_acceptance_rate_configurational_moves(),
+                    ref_rate, delta=1e-10
+                )
+        method.m_tried_configurational_MC_moves = 0
+        method.m_accepted_configurational_MC_moves = 0
+
+        # add reactions
         reaction_forward = {
             'gamma': gamma,
             'reactant_types': [5],
@@ -231,7 +249,7 @@ class ReactionMethods(ut.TestCase):
         method.delete_reaction(reaction_id=0)
         self.assertEqual(len(method.reactions), 0)
 
-    def test_interface(self):
+    def test_reaction_interface(self):
         params = {'exclusion_range': 0.8,
                   'exclusion_radius_per_type': {1: 0.1}}
 
@@ -255,7 +273,150 @@ class ReactionMethods(ut.TestCase):
                                  exclusion_radius_per_type={},
                                  search_algorithm=None)
 
+    def test_displacement_mc_move(self):
+        ref_pos = [(0.1, 0.2, 0.3), (0.4, 0.5, 0.6)]
+        ref_vel = [(10.0, 20.0, 30.0), (-10.0, -20.0, -30.0)]
+        self.system.box_l = [1., 1., 1.]
+        self.system.part.add(id=[0, 1], pos=ref_pos, v=ref_vel)
+
+        r_algo = espressomd.reaction_methods.ReactionEnsemble(seed=42, kT=1.)
+        r_algo.exclusion.exclusion_range = 1.
+        self.assertFalse(r_algo.particle_inside_exclusion_range_touched)
+        r_algo.displacement_mc_move(0, 2)
+        self.assertTrue(r_algo.particle_inside_exclusion_range_touched)
+
+        self.assertEqual(len(r_algo.particle_changes["created"]), 0)
+        self.assertEqual(len(r_algo.particle_changes["hidden"]), 0)
+        for change in r_algo.particle_changes["changed"]:
+            pid = change["pid"]
+            self.assertIn(pid, (0, 1))
+            ref_old_pos = ref_pos[pid]
+            ref_old_vel = ref_vel[pid]
+            p = self.system.part.by_id(pid)
+            new_pos = np.copy(p.pos)
+            new_vel = np.copy(p.v)
+            np.testing.assert_allclose(np.copy(change["pos"]), ref_old_pos)
+            np.testing.assert_allclose(np.copy(change["v"]), ref_old_vel)
+            self.assertTrue(np.all(new_pos >= 0.))
+            self.assertTrue(np.all(new_pos <= 1.))
+            self.assertGreaterEqual(np.linalg.norm(new_pos - ref_old_pos), 0.1)
+            self.assertGreaterEqual(np.linalg.norm(new_vel - ref_old_vel), 10.)
+
+    def test_displacement_mc_move_for_particles_of_type(self):
+        ref_pos = [(0.1, 0.2, 0.3), (0.6, 0.7, 0.8)]
+        self.system.box_l = [1., 1., 1.]
+        self.system.part.add(id=[0, 1], pos=ref_pos)
+
+        type_A = 0
+        type_B = 1
+        type_C = 2
+        r_algo = espressomd.reaction_methods.ReactionEnsemble(seed=42, kT=1.)
+
+        def displacement_move(t, n):
+            return r_algo.displacement_mc_move_for_particles_of_type(t, n)
+
+        # check impossible MC moves
+        self.assertFalse(displacement_move(type_C, 1))
+        self.assertFalse(displacement_move(type_B, 2))
+        self.assertFalse(displacement_move(type_A, 0))
+        with self.assertRaises(ValueError):
+            displacement_move(type_A, -2)
+        with self.assertRaises(ValueError):
+            displacement_move(-2, 1)
+
+        # force all MC moves to be rejected by picking particles inside their
+        # exclusion radius
+        r_algo.exclusion.exclusion_range = 1.
+        self.assertFalse(displacement_move(type_A, 2))
+        # check none of the particles moved
+        for pid in (0, 1):
+            ref_old_pos = ref_pos[pid]
+            p = self.system.part.by_id(pid)
+            np.testing.assert_allclose(np.copy(p.pos), ref_old_pos)
+
+        # force a MC move to be accepted by using a constant Hamiltonian
+        r_algo.exclusion.exclusion_range = 0.
+        self.assertTrue(displacement_move(type_A, 1))
+        distances = [0.0, 0.0]
+        # check that only one particle moved
+        for pid in (0, 1):
+            p = self.system.part.by_id(pid)
+            distances[pid] = np.linalg.norm(ref_pos[pid] - p.pos)
+        self.assertLessEqual(min(distances[0], distances[1]), 1e-10)
+        self.assertGreaterEqual(max(distances[0], distances[1]), 0.1)
+
+    def test_constraints(self):
+        box_l = np.array([0.5, 0.4, 0.7])
+        origin = np.zeros(3)
+        self.system.box_l = box_l
+        r_algo = espressomd.reaction_methods.ReactionEnsemble(seed=40, kT=1.)
+
+        # cubic case
+        for _ in range(100):
+            pos = r_algo.get_random_position_in_box()
+            self.assertTrue(np.all(pos <= box_l))
+            self.assertTrue(np.all(pos >= origin))
+
+        # slab case
+        start_z, end_z = 0.2, 0.6
+        slab_lower = np.array([0.0, 0.0, start_z])
+        slab_upper = np.array([box_l[0], box_l[1], end_z])
+        r_algo.set_wall_constraints_in_z_direction(start_z, end_z)
+        slab_params = r_algo.get_wall_constraints_in_z_direction()
+        self.assertAlmostEqual(slab_params[0], start_z, delta=1e-10)
+        self.assertAlmostEqual(slab_params[1], end_z, delta=1e-10)
+        for _ in range(100):
+            pos = r_algo.get_random_position_in_box()
+            self.assertTrue(np.all(pos <= slab_upper))
+            self.assertTrue(np.all(pos >= slab_lower))
+
+        # cylindrical case
+        cyl_x, cyl_y, radius = 0.2, 0.1, 0.2
+        r_algo.set_cylindrical_constraint_in_z_direction(cyl_x, cyl_y, radius)
+        for _ in range(400):
+            pos = r_algo.get_random_position_in_box()
+            z = pos[2]
+            r = np.linalg.norm([pos[0] - cyl_x, pos[1] - cyl_y])
+            self.assertLessEqual(r, radius)
+            self.assertLessEqual(z, box_l[2])
+            self.assertGreaterEqual(z, 0.0)
+
+    def test_exclusion_agorithm(self):
+        type_A = 0
+        type_B = 1
+        self.system.box_l = [1., 1., 1.]
+        self.system.part.add(pos=[(0.5, 0.5, 0.5), (0.7, 0.7, 0.7)],
+                             type=[type_A, type_B])
+        r_algo = espressomd.reaction_methods.ReactionEnsemble(
+            seed=40, kT=1.)
+
+        # new positions will always be in the excluded range if the sum of the
+        # radii of both particle types is larger than box length (radii take
+        # precedence over the default exclusion range)
+        r_algo.exclusion.exclusion_range = 0.
+        r_algo.exclusion.exclusion_radius_per_type = {type_A: 0.1, type_B: 1.}
+        r_algo.particle_inside_exclusion_range_touched = False
+        r_algo.displacement_mc_move(type_B, 1)
+        self.assertTrue(r_algo.particle_inside_exclusion_range_touched)
+
+        # new positions will never be in the excluded range if the exclusion
+        # radius of the particle is 0
+        r_algo.exclusion.exclusion_range = 0.
+        r_algo.exclusion.exclusion_radius_per_type = {type_A: 0.1, type_B: 0.}
+        r_algo.particle_inside_exclusion_range_touched = False
+        r_algo.displacement_mc_move(type_B, 1)
+        self.assertFalse(r_algo.particle_inside_exclusion_range_touched)
+
+        # new positions will never be accepted if the exclusion range is larger
+        # than box length and particles don't define radii to override it
+        r_algo.exclusion.exclusion_range = 1.
+        r_algo.exclusion.exclusion_radius_per_type = {type_A: 0.}
+        r_algo.particle_inside_exclusion_range_touched = False
+        r_algo.displacement_mc_move(type_B, 1)
+        self.assertTrue(r_algo.particle_inside_exclusion_range_touched)
+
     def test_exceptions(self):
+        self.system.part.add(pos=3 * [(0., 0., 0.)], id=[0, 2, 4])
         single_reaction_params = {
             'gamma': 1.,
             'reactant_types': [4],
@@ -345,7 +506,9 @@ class ReactionMethods(ut.TestCase):
 
         # check exceptions for missing particles
         with self.assertRaisesRegex(RuntimeError, "Particle id is greater than the max seen particle id"):
-            method.delete_particle(p_id=0)
+            method.delete_particle(p_id=6)
+        with self.assertRaisesRegex(RuntimeError, "Particle with id 3 not found"):
+            method.delete_particle(p_id=3)
         with self.assertRaisesRegex(ValueError, "Invalid particle id: -2"):
             method.delete_particle(p_id=-2)
         with self.assertRaisesRegex(RuntimeError, "Trying to remove some non-existing particles from the system via the inverse Widom scheme"):
