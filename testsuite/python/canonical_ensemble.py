@@ -33,7 +33,6 @@ class Test(ut.TestCase):
 
     system = espressomd.System(box_l=[1., 1., 1.])
     system.cell_system.skin = 0.4
-    system.setup_type_map(type_list=[0])
 
     def tearDown(self):
         self.system.part.clear()

@@ -488,70 +488,6 @@ Variant System::do_call_method(std::string const &name,
   if (name == "reaction_get_maximal_particle_id") {
     return ::get_maximal_particle_id();
   }
-  if (name == "setup_type_map") {
-    auto const types = get_value<std::vector<int>>(parameters, "type_list");
-    for (auto const type : types) {
-      ::init_type_map(type);
-    }
-    return {};
-  }
-  /*
-  if (name == "get_random_p_id_of_type") {
-    auto target_type = get_value<int>(parameters, "type");
-    auto local_size = 0;
-    for (auto const &p : get_system().cell_structure->local_particles()) {
-      if (p.type() == target_type) {
-        local_size++;
-      }
-    }
-    std::vector<int> num_per_rank;
-    if (::comm_cart.rank() == 0) {
-      num_per_rank.resize(::comm_cart.size());
-    }
-    boost::mpi::gather(::comm_cart, local_size, num_per_rank, 0);
-    std::array<int, 2> buffer;
-    int &target_rank = buffer[0] = -1;
-    int &local_index = buffer[1] = -1;
-    if (::comm_cart.rank() == 0) {
-      std::vector<int> cumulative_sum(num_per_rank.size());
-      std::inclusive_scan(num_per_rank.begin(), num_per_rank.end(), cumulative_sum.begin());
-      auto const n_part = cumulative_sum.back();
-      auto const global_index = algo->i_random(n_part);
-      for (int rank = 0; rank < ::comm_cart.size(); ++rank) {
-        if (cumulative_sum[rank] > global_index) {
-          auto const global_offset = (rank == 0) ? 0 : cumulative_sum[rank - 1];
-          target_rank = rank;
-          local_index = global_index - global_offset;
-          break;
-        }
-      }
-    } else {
-      std::ignore = algo->i_random(10);
-    }
-    boost::mpi::broadcast(::comm_cart, buffer.data(), 2, 0);
-    int target_pid = -1;
-    if (::comm_cart.rank() == target_rank) {
-      auto counter = 0;
-      for (auto const &p : get_system().cell_structure->local_particles()) {
-        if (p.type() == target_type) {
-          if (counter == local_index) {
-            target_pid = p.id();
-            break;
-          }
-          counter++;
-        }
-      }
-      assert(target_pid != -1);
-      if (target_rank != 0) {
-        ::comm_cart.send(0, 42, target_pid);
-      }
-    }
-    if (::comm_cart.rank() == 0 and target_rank != 0) {
-      ::comm_cart.recv(boost::mpi::any_source, 42, target_pid);
-    }
-    return target_pid;
-  }
-  */
   if (name == "get_pids_of_type") {
     auto const type = get_value<int>(parameters, "ptype");
     std::vector<int> pids;
@@ -565,7 +501,15 @@ Variant System::do_call_method(std::string const &name,
   }
   if (name == "number_of_particles") {
     auto const type = get_value<int>(parameters, "type");
-    return ::number_of_particles_with_type(type);
+      int local_counter = 0;
+      int global_counter = 0;
+      for (auto const &p : get_system().cell_structure->local_particles()) {
+        if (p.type() == type) {
+          local_counter++;
+        }
+      }
+    boost::mpi::reduce(::comm_cart, local_counter, global_counter, std::plus<>(), 0);
+    return global_counter;
   }
   if (name == "velocity_difference") {
     auto const pos1 = get_value<Utils::Vector3d>(parameters, "pos1");

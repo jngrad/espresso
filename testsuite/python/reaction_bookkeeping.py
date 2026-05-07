@@ -86,7 +86,6 @@ class ReactionMethodsBookkeepingTest(ut.TestCase):
             default_charges={cls.types["Na"]: cls.charges["Na"],
                              cls.types["Cl"]: cls.charges["Cl"]}
         )
-        cls.system.setup_type_map(type_list=list(cls.types.values()))
 
     def test_reaction_bookeeping(self):
         self.widom.calculate_particle_insertion_potential_energy(reaction_id=0)

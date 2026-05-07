@@ -16,13 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 target_sources(
   espresso_core
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ReactionAlgorithm.cpp
-          ${CMAKE_CURRENT_SOURCE_DIR}/ExclusionRadius.cpp
-          ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp)
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ExclusionRadius.cpp)
 
-if(ESPRESSO_BUILD_TESTS)
-  add_subdirectory(tests)
-endif()

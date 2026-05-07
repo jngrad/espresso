@@ -189,14 +189,12 @@ ParticleHandle::ParticleHandle() {
       {"id", AutoParameter::read_only, [this]() { return m_pid; }},
       {"type",
        [this](Variant const &value) {
-         auto const old_type = get_particle_property(&Particle::type);
          auto const new_type = get_value<int>(value);
          if (new_type < 0) {
            throw std::domain_error(
                error_msg("type", "must be an integer >= 0"));
          }
          get_system()->nonbonded_ias->make_particle_type_exist(new_type);
-         on_particle_type_change(m_pid, old_type, new_type);
          set_particle_property(&Particle::type, value);
        },
        [this]() { return get_particle_data(m_pid).type(); }},
