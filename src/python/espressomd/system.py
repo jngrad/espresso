@@ -327,5 +327,5 @@ class System(ScriptInterfaceHelper):
         assert_features("EXCLUSIONS")
         self.part.auto_exclusions(distance=distance)
 
-    def setup_type_map(self):
+    def setup_type_map(self, *args, **kwargs):
         print("system.setup_type_map() is deprecated and no longer has any effect")
