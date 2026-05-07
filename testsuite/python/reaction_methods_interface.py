@@ -72,7 +72,6 @@ class ReactionMethods(ut.TestCase):
 
     system = espressomd.System(box_l=[10., 10., 10.])
     system.cell_system.skin = 0.4
-    system.setup_type_map(type_list=[0, 1, 2])
 
     def setUp(self):
         self.system.box_l = [10., 10., 10.]

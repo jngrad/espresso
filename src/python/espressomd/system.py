@@ -79,20 +79,6 @@ class System(ScriptInterfaceHelper):
 
     Methods
     -------
-    setup_type_map()
-        For using ESPResSo conveniently for simulations in the grand canonical
-        ensemble, or other purposes, when particles of certain types are created
-        and deleted frequently. Particle ids can be stored in lists for each
-        individual type and so random ids of particles of a certain type can be
-        drawn. If you want ESPResSo to keep track of particle ids of a certain type
-        you have to initialize the method by calling the setup function. After that
-        ESPResSo will keep track of particle ids of that type.
-
-        Parameters
-        ----------
-        type_list : array_like of :obj:`int`
-            Types to track.
-
     number_of_particles()
         Count the number of particles of a given type.
 
@@ -105,12 +91,6 @@ class System(ScriptInterfaceHelper):
         -------
         :obj:`int`
             The number of particles which have the given type.
-
-        Raises
-        ------
-        RuntimeError
-            If the particle ``type`` is not currently tracked by the system.
-            To select which particle types are tracked, call :meth:`setup_type_map`.
 
     rotate_system()
         Rotate the particles in the system about the center of mass.
@@ -131,7 +111,6 @@ class System(ScriptInterfaceHelper):
     _so_name = "System::System"
     _so_creation_policy = "GLOBAL"
     _so_bind_methods = (
-        "setup_type_map",
         "number_of_particles",
         "rotate_system")
 

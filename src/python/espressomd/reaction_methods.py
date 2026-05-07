@@ -129,7 +129,7 @@ class ExclusionRadius(ScriptInterfaceHelper):
     _so_bind_methods = ("check_exclusion_range",)
 
 
-class MonteCarloMethod:
+class ReactionAlgorithm:
     """
     This class provides the base class for Reaction Algorithms like
     the Reaction Ensemble algorithm and the constant pH method.
@@ -163,7 +163,19 @@ class MonteCarloMethod:
 
     """
 
+    @script_interface_register
+    class _ReactionAlgorithmHelper(ScriptInterfaceHelper):
+        """
+        Stateless class encapsulating helper functions.
+        """
+        _so_name = "ReactionMethods::ReactionAlgorithm"
+        _so_creation_policy = "GLOBAL"
+
     def __init__(self, **kwargs):
+        if type(self) is ReactionAlgorithm:
+            raise RuntimeError(
+                f"Base class '{self.__class__.__name__}' cannot be instantiated")
+        self._helper = self._ReactionAlgorithmHelper()
         self.system = kwargs.pop("system", _main_system)
         if "exclusion_radius" in kwargs:
             raise KeyError(
@@ -179,6 +191,12 @@ class MonteCarloMethod:
         self.params_boundaries = {}
         self.m_accepted_configurational_MC_moves = 0
         self.m_tried_configurational_MC_moves = 0
+        self.non_interacting_type = 100
+        self.reactions = []
+        self.default_charges = {}
+        self.m_empty_p_ids_smaller_than_max_seen_particle = []
+        self.initialize_particle_changes()
+        self.particle_numbers = {}
 
     def required_keys(self):
         return {"kT", "seed"}
@@ -186,32 +204,50 @@ class MonteCarloMethod:
     def valid_keys(self):
         return {"kT", "exclusion_range", "seed", "exclusion_radius_per_type"}
 
-    def calculate_log_acceptance_probability(
-            self, reaction, E_pot_diff, old_particle_numbers):
-        raise NotImplementedError("Derived classes must implement this method")
+    @property
+    def exclusion_range(self):
+        return self.exclusion.exclusion_range
+
+    @exclusion_range.setter
+    def exclusion_range(self, value):
+        self.exclusion.exclusion_range = value
+
+    @property
+    def exclusion_radius_per_type(self):
+        return self.exclusion.exclusion_radius_per_type
+
+    @exclusion_radius_per_type.setter
+    def exclusion_radius_per_type(self, value):
+        self.exclusion.exclusion_radius_per_type = value
+
+    @property
+    def search_algorithm(self):
+        return self.exclusion.search_algorithm
+
+    @search_algorithm.setter
+    def search_algorithm(self, value):
+        self.exclusion.search_algorithm = value
+
+    def valid_keys(self):
+        return {"kT", "exclusion_range", "seed",
+                "exclusion_radius_per_type", "search_algorithm"}
+
+    def required_keys(self):
+        return {"kT", "exclusion_range", "seed"}
 
     @classmethod
     def calculate_factorial_expression(cls, reaction, particle_numbers):
         raise NotImplementedError("Derived classes must implement this method")
 
-    def check_exclusion_range(self, pid):
+    def _check_exclusion_range(self, pid):
         self.particle_inside_exclusion_range_touched |= self.exclusion.check_exclusion_range(
             pid=pid)
 
-    def get_volume(self):
-        if self.constraint_type == "slab":
-            box_l = np.copy(self.system.box_l)
-            box_l[2] = self.params_boundaries["slab_end_z"] - \
-                self.params_boundaries["slab_start_z"]
-            return float(np.prod(box_l))
-        if self.constraint_type == "cylinder":
-            return 2. * np.pi * \
-                self.params_boundaries["radius"] * float(self.system.box_l[2])
-        return self.system.volume()
-
     def get_random_position_in_box(self):
         """
-        Returns a random position in the simulation box within the input boundaries
+        Return a random position in the simulation box.
+        If any constraint is active, the random position will be sampled inside
+        the constraint volume.
 
         Note:
             - method='slab' currently only supports a slab in the z-direction.
@@ -244,8 +280,7 @@ class MonteCarloMethod:
 
     def get_random_pids(self, ptype, size):
         pids = self.system.call_method("get_pids_of_type", ptype=ptype)
-        indices = self.rng.choice(len(pids), size=size, replace=False)
-        return [pids[i] for i in indices]
+        return self.rng.choice(pids, size=size, replace=False)
 
     def remove_constraint(self):
         """
@@ -258,7 +293,6 @@ class MonteCarloMethod:
             self, center_x, center_y, radius):
         """
         Constrain the reaction moves within a cylinder aligned with the z-axis.
-        Requires setting the volume using :meth:`set_volume`.
 
         Parameters
         ----------
@@ -284,8 +318,8 @@ class MonteCarloMethod:
 
     def set_wall_constraints_in_z_direction(self, slab_start_z, slab_end_z):
         """
-        Restrict the sampling area to a slab in z-direction. Requires setting
-        the volume using :meth:`set_volume`. This constraint is necessary when
+        Restrict the sampling area to a slab in z-direction.
+        This constraint is necessary when
         working with :ref:`Electrostatic Layer Correction (ELC)`.
 
         Parameters
@@ -328,7 +362,6 @@ class MonteCarloMethod:
         ...                 default_charges=charges)
         >>> # add walls for the ELC gap
         >>> RE.set_wall_constraints_in_z_direction(0, box_l)
-        >>> RE.set_volume(box_l**3)
         >>> system.constraints.add(shape=espressomd.shapes.Wall(dist=0, normal=[0, 0, 1]),
         ...                        particle_type=types["wall"])
         >>> system.constraints.add(shape=espressomd.shapes.Wall(dist=-box_l, normal=[0, 0, -1]),
@@ -348,23 +381,38 @@ class MonteCarloMethod:
 
     def get_wall_constraints_in_z_direction(self):
         """
-        Returns the restrictions of the sampling area in z-direction.
+        Get the restrictions of the sampling area in z-direction.
         """
         if self.constraint_type != "slab":
             raise RuntimeError("no slab constraint is currently active")
         return [self.params_boundaries["slab_start_z"],
                 self.params_boundaries["slab_end_z"]]
 
+    def get_volume(self):
+        """
+        Get the volume to be used in the acceptance probability of the reaction
+        ensemble.
+        """
+        if self.constraint_type == "slab":
+            box_l = np.copy(self.system.box_l)
+            box_l[2] = self.params_boundaries["slab_end_z"] - \
+                self.params_boundaries["slab_start_z"]
+            return float(np.prod(box_l))
+        if self.constraint_type == "cylinder":
+            return 2. * np.pi * \
+                self.params_boundaries["radius"] * float(self.system.box_l[2])
+        return self.system.volume()
+
     def get_acceptance_rate_configurational_moves(self):
         """
-        Returns the acceptance rate for the configuration moves.
+        Return the acceptance rate for the configuration moves.
         """
         return self.m_accepted_configurational_MC_moves / \
             self.m_tried_configurational_MC_moves
 
     def get_acceptance_rate_reaction(self, reaction_id):
         """
-        Returns the acceptance rate for the given reaction.
+        Return the acceptance rate for the given reaction.
 
         Parameters
         ----------
@@ -378,7 +426,7 @@ class MonteCarloMethod:
 
     def set_non_interacting_type(self, type):
         """
-        Sets the particle type for non-interacting particles.
+        Set the particle type for non-interacting particles.
         Default value: 100.
         This is used to temporarily hide particles during a reaction trial
         move, if they are to be deleted after the move is accepted. Please
@@ -402,7 +450,7 @@ class MonteCarloMethod:
 
     def get_non_interacting_type(self):
         """
-        Returns the type which is used for hiding particle.
+        Return the type which is used for hiding particles.
         """
         return self.non_interacting_type
 
@@ -422,7 +470,7 @@ class MonteCarloMethod:
             new_pos = self.get_random_position_in_box()
             new_vel = self.rng.normal(size=3) * math.sqrt(self.kT / p.mass)
             p.update({"pos": new_pos, "v": new_vel})
-            self.check_exclusion_range(p_id)
+            self._check_exclusion_range(p_id)
             if self.particle_inside_exclusion_range_touched:
                 break
 
@@ -560,53 +608,8 @@ class MonteCarloMethod:
         raise NotImplementedError(
             "Reaction methods do not support checkpointing")
 
-
-class ReactionAlgorithm(MonteCarloMethod):
-
-    def __init__(self, **kwargs):
-        if type(self) is ReactionAlgorithm:
-            raise RuntimeError(
-                f"Base class '{self.__class__.__name__}' cannot be instantiated")
-        super().__init__(**kwargs)
-        self.non_interacting_type = 100
-        self.reactions = []
-        self.default_charges = {}
-        self.m_empty_p_ids_smaller_than_max_seen_particle = []
-        self.initialize_particle_changes()
-
-    @property
-    def exclusion_range(self):
-        return self.exclusion.exclusion_range
-
-    @exclusion_range.setter
-    def exclusion_range(self, value):
-        self.exclusion.exclusion_range = value
-
-    @property
-    def exclusion_radius_per_type(self):
-        return self.exclusion.exclusion_radius_per_type
-
-    @exclusion_radius_per_type.setter
-    def exclusion_radius_per_type(self, value):
-        self.exclusion.exclusion_radius_per_type = value
-
-    @property
-    def search_algorithm(self):
-        return self.exclusion.search_algorithm
-
-    @search_algorithm.setter
-    def search_algorithm(self, value):
-        self.exclusion.search_algorithm = value
-
     def initialize_particle_changes(self):
         self.particle_changes = {"created": [], "changed": [], "hidden": []}
-
-    def valid_keys(self):
-        return {"kT", "exclusion_range", "seed",
-                "exclusion_radius_per_type", "search_algorithm"}
-
-    def required_keys(self):
-        return {"kT", "exclusion_range", "seed"}
 
     def add_reaction(self, **kwargs):
         """
@@ -649,9 +652,6 @@ class ReactionAlgorithm(MonteCarloMethod):
         self.reactions.append(forward_reaction)
         self.reactions.append(backward_reaction)
         self.check_reaction_method()
-        self.system.setup_type_map(type_list=forward_reaction.reactant_types)
-        self.system.setup_type_map(type_list=forward_reaction.product_types)
-        self.system.setup_type_map(type_list=[self.non_interacting_type])
 
     def delete_reaction(self, reaction_id):
         """
@@ -701,6 +701,9 @@ class ReactionAlgorithm(MonteCarloMethod):
             # change reactant particles to product particles
             size = min(reaction.reactant_coefficients[index],
                        reaction.product_coefficients[index])
+            if self.particle_numbers:
+                self.particle_numbers[r_type] -= size
+                self.particle_numbers[p_type] += size
             for random_pid in self.get_random_pids(r_type, size):
                 p = self.system.part.by_id(random_pid)
                 p.update({"type": p_type, "q": p_charge})
@@ -715,7 +718,7 @@ class ReactionAlgorithm(MonteCarloMethod):
                 # create product particles
                 for _ in range(delta_n):
                     pid = self.create_particle(p_type)
-                    self.check_exclusion_range(pid)
+                    self._check_exclusion_range(pid)
                     self.particle_changes["created"].append(
                         {"pid": pid, "type": p_type, "q": p_charge})
             elif delta_n < 0:
@@ -723,7 +726,7 @@ class ReactionAlgorithm(MonteCarloMethod):
                 for random_pid in self.get_random_pids(r_type, -delta_n):
                     self.particle_changes["hidden"].append(
                         {"pid": random_pid, "type": r_type, "q": r_charge})
-                    self.check_exclusion_range(random_pid)
+                    self._check_exclusion_range(random_pid)
                     self.hide_particle(random_pid)
 
         # create/hide particles with non-corresponding replacement types
@@ -736,7 +739,7 @@ class ReactionAlgorithm(MonteCarloMethod):
                 for random_pid in self.get_random_pids(r_type, size):
                     self.particle_changes["hidden"].append(
                         {"pid": random_pid, "type": r_type, "q": r_charge})
-                    self.check_exclusion_range(random_pid)
+                    self._check_exclusion_range(random_pid)
                     self.hide_particle(random_pid)
             else:
                 p_type = reaction.product_types[index]
@@ -744,7 +747,7 @@ class ReactionAlgorithm(MonteCarloMethod):
                 # create additional product particles
                 for _ in range(reaction.product_coefficients[index]):
                     pid = self.create_particle(p_type)
-                    self.check_exclusion_range(pid)
+                    self._check_exclusion_range(pid)
                     self.particle_changes["created"].append(
                         {"pid": pid, "type": p_type, "q": p_charge})
 
@@ -752,16 +755,17 @@ class ReactionAlgorithm(MonteCarloMethod):
         for r_type in reaction.reactant_types:
             r_index = reaction.reactant_types.index(r_type)
             r_coef = reaction.reactant_coefficients[r_index]
-            if self.system.number_of_particles(type=r_type) < r_coef:
+            if self.particle_numbers[r_type] < r_coef:
                 return False
         return True
 
-    def save_old_particle_numbers(self, reaction):
-        old_particle_numbers = {}
-        for r_type in reaction.reactant_types + reaction.product_types:
-            old_particle_numbers[r_type] = self.system.number_of_particles(
-                type=r_type)
-        return old_particle_numbers
+    def count_number_of_particles_per_type(self):
+        types = [self.non_interacting_type]
+        for reaction in self.reactions:
+            types += reaction.reactant_types + reaction.product_types
+        types = list(set(types))
+        numbers = self._helper.call_method("count_number_of_particles_per_type", types=types, cell_system=self.system.cell_system)
+        return dict(zip(types, numbers))
 
     def free_particle_id(self, p_id, precheck=False):
         old_max_seen_id = self.system.call_method(
@@ -777,13 +781,19 @@ class ReactionAlgorithm(MonteCarloMethod):
 
     def delete_created_particles(self):
         for particle_info in self.particle_changes["created"]:
-            self.system.part.by_id(particle_info["pid"]).remove()
+            p = self.system.part.by_id(particle_info["pid"])
+            if self.particle_numbers:
+                self.particle_numbers[p.type] -= 1
+            p.remove()
             self.free_particle_id(particle_info["pid"])
         self.system.cell_system.call_method("invalidate_ghosts")
 
     def delete_hidden_particles(self):
         for particle_info in self.particle_changes["hidden"]:
+            #self.system.part.call_method("delete_particle", particle_info["pid"])
             self.system.part.by_id(particle_info["pid"]).remove()
+            if self.particle_numbers:
+                self.particle_numbers[self.non_interacting_type] -= 1
             self.free_particle_id(particle_info["pid"])
         self.system.cell_system.call_method("invalidate_ghosts")
 
@@ -792,6 +802,9 @@ class ReactionAlgorithm(MonteCarloMethod):
         for particle_info in self.particle_changes["changed"] + \
                 self.particle_changes["hidden"]:
             p = self.system.part.by_id(particle_info.pop("pid"))
+            if self.particle_numbers:
+                self.particle_numbers[p.type] -= 1
+                self.particle_numbers[particle_info["type"]] += 1
             p.update(particle_info)
         # destroy created particles
         self.delete_created_particles()
@@ -799,6 +812,9 @@ class ReactionAlgorithm(MonteCarloMethod):
 
     def hide_particle(self, pid):
         p = self.system.part.by_id(pid)
+        if self.particle_numbers:
+            self.particle_numbers[p.type] -= 1
+            self.particle_numbers[self.non_interacting_type] += 1
         p.update({"type": self.non_interacting_type, "q": 0.})
 
     def create_particle(self, ptype):
@@ -810,9 +826,11 @@ class ReactionAlgorithm(MonteCarloMethod):
         self.system.part.add(id=pid, type=ptype, q=self.default_charges[ptype],
                              pos=self.rng.random((3,)) * self.system.box_l,
                              v=self.rng.normal(size=3) * math.sqrt(self.kT))
+        if self.particle_numbers:
+            self.particle_numbers[ptype] += 1
         return pid
 
-    def setup_bookkeeping_of_empty_pids(self):
+    def _setup_bookkeeping_of_empty_pids(self):
         particle_ids = self.system.part.all().id
         available_pids = self.find_missing_pids(pids_list=particle_ids)
         self.m_empty_p_ids_smaller_than_max_seen_particle = available_pids
@@ -856,6 +874,10 @@ class ReactionAlgorithm(MonteCarloMethod):
         if abs(net_charge_change) / min_abs_nonzero_charge > 1e-10:
             raise ValueError("Reaction system is not charge neutral")
 
+    def _setup_cache(self):
+        self._setup_bookkeeping_of_empty_pids()
+        self.particle_numbers = self.count_number_of_particles_per_type()
+
     @profile
     def reaction(self, steps=1):
         """
@@ -867,7 +889,7 @@ class ReactionAlgorithm(MonteCarloMethod):
             The number of reactions to be performed at once, defaults to 1.
 
         """
-        self.setup_bookkeeping_of_empty_pids()
+        self._setup_cache()
         E_pot = self.system.analysis.potential_energy()
         n_reactions = len(self.reactions)
         for i in self.rng.choice(n_reactions, size=steps, replace=True):
@@ -891,8 +913,10 @@ class ReactionAlgorithm(MonteCarloMethod):
 
         """
         reaction = self.reactions[reaction_id]
+        types = reaction.reactant_types + reaction.product_types
+        old_particle_numbers = {k: v for k, v in self.particle_numbers.items() if k in types}
         ln_factorial_expr = self.calculate_factorial_expression(
-            reaction, self.save_old_particle_numbers(reaction))
+            reaction, old_particle_numbers)
         ln_bf = E_pot_diff - reaction.nu_bar * self.kT * math.log(10.) * (
             self.constant_pH + reaction.nu_bar * math.log10(reaction.gamma))
         return ln_factorial_expr - ln_bf / self.kT
@@ -933,7 +957,6 @@ class ReactionAlgorithm(MonteCarloMethod):
             if not self.all_reactant_particles_exist(reaction):
                 return E_pot_old
 
-            old_particle_numbers = self.save_old_particle_numbers(reaction)
             self.make_reaction_attempt(reaction)
 
             if self.particle_inside_exclusion_range_touched:
@@ -945,7 +968,7 @@ class ReactionAlgorithm(MonteCarloMethod):
             E_pot_new = self.system.analysis.potential_energy()
             E_pot_diff = E_pot_new - E_pot_old
             ln_bf = self.calculate_log_acceptance_probability(
-                reaction, E_pot_diff, old_particle_numbers)
+                reaction, E_pot_diff, self.particle_numbers)
             reaction.accumulator_potential_energy_difference_exponential.append(
                 math.exp(-E_pot_diff / self.kT))
 
@@ -1004,6 +1027,10 @@ class ReactionEnsemble(ReactionAlgorithm):
     This class implements the Reaction Ensemble.
     """
 
+    def _setup_cache(self):
+        super()._setup_cache()
+        self.volume = self.get_volume()
+
     def calculate_log_acceptance_probability(
             self, reaction, E_pot_diff, old_particle_numbers):
         """
@@ -1012,7 +1039,7 @@ class ReactionEnsemble(ReactionAlgorithm):
         ln_factorial = self.calculate_factorial_expression(
             reaction, old_particle_numbers)
         ln_bf = -E_pot_diff / self.kT + reaction.nu_bar * \
-            math.log(self.get_volume()) + math.log(reaction.gamma)
+            math.log(self.volume) + math.log(reaction.gamma)
         return ln_factorial + ln_bf
 
     @classmethod
@@ -1119,7 +1146,7 @@ class WidomInsertion(ReactionAlgorithm):
     """
     This class implements the Widom insertion method in the canonical ensemble
     for homogeneous systems, where the excess chemical potential is not
-    depending on the location.
+    dependent on the particle position.
 
     """
 
@@ -1182,12 +1209,13 @@ class WidomInsertion(ReactionAlgorithm):
             The particle insertion potential energy.
 
         """
+        self._setup_cache()
         index = self.get_reaction_index(kwargs.pop("reaction_id"))
         reaction = self.reactions[index]
         if not self.all_reactant_particles_exist(reaction):
             raise RuntimeError("Trying to remove some non-existing particles "
                                "from the system via the inverse Widom scheme.")
-        self.setup_bookkeeping_of_empty_pids()
+        self._setup_bookkeeping_of_empty_pids()
         E_pot_old = self.system.analysis.potential_energy()
         self.make_reaction_attempt(reaction)
         E_pot_new = self.system.analysis.potential_energy()
@@ -1248,29 +1276,3 @@ class WidomInsertion(ReactionAlgorithm):
                                      (-np.log(gamma_mean - gamma_std)))
 
         return mu_ex_mean, mu_ex_Delta
-
-
-class CanonicalEnsemble():
-    def move_particle_in_simulation_box(self, ptype, steps):
-        """
-        NOTE: Logic for the boundaries not implemented yet
-        """
-        accepted_moves = 0
-        for _ in range(steps):
-            p_id = self.get_random_pids(ptype=ptype, size=1)
-            old_position = self.system.part.by_id().pos
-            E_pot_old = self.system.analysis.potential_energy()
-            new_position = self.get_random_position_in_box()
-            self.system.part.by_id.pos = new_position
-            if check_exclusion_range:
-                self.system.part.by_id().pos = old_position
-            E_pot_new = self.system.analysis.potential_energy()
-            bf = self.calculate_acceptance_probability(E_pot_new - E_pot_old)
-            if self.rng.uniform() < bf:  # accept trial move
-                accepted_moves += 1
-            else:
-                self.system.part.by_id().pos = old_position
-        return
-
-    def calculate_acceptance_probability(self, potential_energy_diff):
-        return np.exp(-potential_energy_diff / self.kT)
