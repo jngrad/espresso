@@ -957,6 +957,8 @@ class ReactionAlgorithm:
             if not self.all_reactant_particles_exist(reaction):
                 return E_pot_old
 
+            types = reaction.reactant_types + reaction.product_types
+            old_particle_numbers = {k:v for k,v in self.particle_numbers.items() if k in types}
             self.make_reaction_attempt(reaction)
 
             if self.particle_inside_exclusion_range_touched:
@@ -968,7 +970,7 @@ class ReactionAlgorithm:
             E_pot_new = self.system.analysis.potential_energy()
             E_pot_diff = E_pot_new - E_pot_old
             ln_bf = self.calculate_log_acceptance_probability(
-                reaction, E_pot_diff, self.particle_numbers)
+                reaction, E_pot_diff, old_particle_numbers)
             reaction.accumulator_potential_energy_difference_exponential.append(
                 math.exp(-E_pot_diff / self.kT))
 
