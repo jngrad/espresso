@@ -895,32 +895,6 @@ class ReactionAlgorithm:
         for i in self.rng.choice(n_reactions, size=steps, replace=True):
             E_pot = self.generic_oneway_reaction(self.reactions[i], E_pot)
 
-    def calculate_log_acceptance_probability(self, reaction_id, E_pot_diff):
-        """
-        Calculate the logarithmic acceptance probability of a Monte Carlo move.
-
-        Parameters
-        ----------
-        reaction_id : :obj:`int`
-            Identifier of the reaction that was carried out in the move.
-        E_pot_diff : :obj:`float`
-            The potential energy difference for the move.
-
-        Returns
-        -------
-        :obj:`float`
-            The acceptance probability.
-
-        """
-        reaction = self.reactions[reaction_id]
-        types = reaction.reactant_types + reaction.product_types
-        old_particle_numbers = {k: v for k, v in self.particle_numbers.items() if k in types}
-        ln_factorial_expr = self.calculate_factorial_expression(
-            reaction, old_particle_numbers)
-        ln_bf = E_pot_diff - reaction.nu_bar * self.kT * math.log(10.) * (
-            self.constant_pH + reaction.nu_bar * math.log10(reaction.gamma))
-        return ln_factorial_expr - ln_bf / self.kT
-
     @profile
     def generic_oneway_reaction(self, reaction, E_pot_old):
         """
