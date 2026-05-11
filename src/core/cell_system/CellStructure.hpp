@@ -33,6 +33,7 @@
 #include "cell_system/Cell.hpp"
 #include "cell_system/CellStructureType.hpp"
 #include "config/config.hpp"
+#include "custom_verlet_list.hpp"
 #include "ghosts.hpp"
 #include "system/Leaf.hpp"
 
@@ -41,6 +42,11 @@
 #include <boost/container/static_vector.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
 #include <boost/range/algorithm/transform.hpp>
+
+#include <Cabana_Core.hpp>
+#include <Cabana_NeighborList.hpp>
+#include <Kokkos_Core.hpp>
+#include <Kokkos_ScatterView.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -61,20 +67,7 @@
 #endif
 
 // forward declarations
-namespace Kokkos {
-template <class DataType, class... Properties> class View;
-class HostSpace;
-struct LayoutRight;
-template <unsigned T> struct MemoryTraits;
-} // namespace Kokkos
-namespace Cabana {
-class HalfNeighborTag;
-struct VerletLayout2D;
-class TeamVectorOpTag;
-} // namespace Cabana
 struct KokkosHandle;
-template <class MemorySpace, class ListAlgorithm, class Layout, class BuildTag>
-class CustomVerletList;
 struct LocalBondState;
 
 template <typename Callable>
@@ -164,8 +157,12 @@ class CellStructure : public System::Leaf<CellStructure> {
 public:
   static constexpr auto vector_length = 1;
   struct AoSoA_pack;
-  using ForceType = Kokkos::View<double **[3], Kokkos::LayoutRight>;
-  using VirialType = Kokkos::View<double *[3], Kokkos::LayoutRight>;
+  using ForceType = Kokkos::View<double *[3], Kokkos::LayoutRight>;
+  using VirialType = Kokkos::View<double[3], Kokkos::LayoutRight>;
+  using ScatterForce =
+      Kokkos::Experimental::ScatterView<double *[3], Kokkos::LayoutRight>;
+  using ScatterVirial =
+      Kokkos::Experimental::ScatterView<double[3], Kokkos::LayoutRight>;
   using memory_space = Kokkos::HostSpace;
   using ListAlgorithm = Cabana::HalfNeighborTag;
   using ListType =
@@ -195,11 +192,14 @@ private:
   int m_max_id = 0;
   std::unique_ptr<Kokkos::View<int *>> m_id_to_index;
   std::unique_ptr<ForceType> m_local_force;
+  std::optional<ScatterForce> m_scatter_force;
 #ifdef ESPRESSO_ROTATION
   std::unique_ptr<ForceType> m_local_torque;
+  std::optional<ScatterForce> m_scatter_torque;
 #endif
 #ifdef ESPRESSO_NPT
   std::unique_ptr<VirialType> m_local_virial;
+  std::optional<ScatterVirial> m_scatter_virial;
 #endif
   std::unique_ptr<LocalBondState> m_bond_state;
   std::unique_ptr<ListType> m_verlet_list_cabana;
@@ -723,16 +723,20 @@ public:
   void set_kokkos_handle(std::shared_ptr<KokkosHandle> handle);
   void rebuild_local_properties(double pair_cutoff);
   void reset_local_properties();
-  void reset_local_force();
+  void reset_local_force_and_torque();
 
   auto &get_id_to_index() { return *m_id_to_index; }
   auto &get_local_force() { return *m_local_force; }
+  auto get_scatter_force() { return *m_scatter_force; }
 #ifdef ESPRESSO_ROTATION
   auto &get_local_torque() { return *m_local_torque; }
+  auto get_scatter_torque() { return *m_scatter_torque; }
 #endif
 #ifdef ESPRESSO_NPT
   auto &get_local_virial() { return *m_local_virial; }
+  auto get_scatter_virial() { return *m_scatter_virial; }
 #endif
+
   auto &get_aosoa() { return *m_aosoa; }
   auto const &get_unique_particles() const { return m_unique_particles; }
   auto const &get_verlet_list_cabana() const { return *m_verlet_list_cabana; }

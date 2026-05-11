@@ -28,8 +28,7 @@
 #include <utils/Vector.hpp>
 
 #include <Cabana_Core.hpp>
-
-#include <omp.h>
+#include <Kokkos_ScatterView.hpp>
 
 #include <cstddef>
 #include <memory>
@@ -47,13 +46,13 @@ struct ForcesKernel {
   Thermostat::Thermostat const &thermostat;
   BoxGeometry const &box_geo;
   std::vector<Particle *> const &unique_particles;
-  CellStructure::ForceType const &local_force;
+  CellStructure::ScatterForce local_force;
 #ifdef ESPRESSO_ROTATION
-  CellStructure::ForceType const &local_torque;
+  CellStructure::ScatterForce local_torque;
 #endif
 #ifdef ESPRESSO_NPT
   Utils::Vector3d *const global_virial;
-  CellStructure::VirialType const &local_virial;
+  CellStructure::ScatterVirial local_virial;
 #endif
   CellStructure::AoSoA_pack const &aosoa;
 #ifdef ESPRESSO_P3M
@@ -71,25 +70,26 @@ struct ForcesKernel {
       Coulomb::Solver const &coulomb_,
       Thermostat::Thermostat const &thermostat_, BoxGeometry const &box_geo_,
       std::vector<Particle *> const &unique_particles_,
-      CellStructure::ForceType const &local_force_,
+      CellStructure::ScatterForce local_force_,
 #ifdef ESPRESSO_ROTATION
-      CellStructure::ForceType const &local_torque_,
+      CellStructure::ScatterForce local_torque_,
 #endif
 #ifdef ESPRESSO_NPT
       Utils::Vector3d *const global_virial_,
-      CellStructure::VirialType const &local_virial_,
+      CellStructure::ScatterVirial local_virial_,
 #endif
       CellStructure::AoSoA_pack const &aosoa_, double system_max_cutoff_)
       : bonded_ias(bonded_ias_), nonbonded_ias(nonbonded_ias_),
         coulomb_kernel(coulomb_kernel_), dipoles_kernel(dipoles_kernel_),
         elc_kernel(elc_kernel_), coulomb_u_kernel(coulomb_u_kernel_),
         thermostat(thermostat_), box_geo(box_geo_),
-        unique_particles(unique_particles_), local_force(local_force_),
+        unique_particles(unique_particles_),
+        local_force(std::move(local_force_)),
 #ifdef ESPRESSO_ROTATION
-        local_torque(local_torque_),
+        local_torque(std::move(local_torque_)),
 #endif
 #ifdef ESPRESSO_NPT
-        global_virial(global_virial_), local_virial(local_virial_),
+        global_virial(global_virial_), local_virial(std::move(local_virial_)),
 #endif
         aosoa(aosoa_), system_max_cutoff_sq(Utils::sqr(system_max_cutoff_)) {
 #ifdef ESPRESSO_P3M
@@ -261,30 +261,32 @@ struct ForcesKernel {
     opf.f += f2_asym;
 #endif // ESPRESSO_ELECTROSTATICS
 
-    auto const thread_id = omp_get_thread_num();
+    auto access_force = local_force.access();
 
-    local_force(i, thread_id, 0) += pf.f[0];
-    local_force(i, thread_id, 1) += pf.f[1];
-    local_force(i, thread_id, 2) += pf.f[2];
+    access_force(i, 0) += pf.f[0];
+    access_force(i, 1) += pf.f[1];
+    access_force(i, 2) += pf.f[2];
 #ifdef ESPRESSO_ROTATION
-    local_torque(i, thread_id, 0) += pf.torque[0];
-    local_torque(i, thread_id, 1) += pf.torque[1];
-    local_torque(i, thread_id, 2) += pf.torque[2];
+    auto access_torque = local_torque.access();
+    access_torque(i, 0) += pf.torque[0];
+    access_torque(i, 1) += pf.torque[1];
+    access_torque(i, 2) += pf.torque[2];
 #endif
 
-    local_force(j, thread_id, 0) += opf.f[0];
-    local_force(j, thread_id, 1) += opf.f[1];
-    local_force(j, thread_id, 2) += opf.f[2];
+    access_force(j, 0) += opf.f[0];
+    access_force(j, 1) += opf.f[1];
+    access_force(j, 2) += opf.f[2];
 #ifdef ESPRESSO_ROTATION
-    local_torque(j, thread_id, 0) += opf.torque[0];
-    local_torque(j, thread_id, 1) += opf.torque[1];
-    local_torque(j, thread_id, 2) += opf.torque[2];
+    access_torque(j, 0) += opf.torque[0];
+    access_torque(j, 1) += opf.torque[1];
+    access_torque(j, 2) += opf.torque[2];
 #endif
 #ifdef ESPRESSO_NPT
     if (npt_active()) {
-      local_virial(thread_id, 0) += virial[0];
-      local_virial(thread_id, 1) += virial[1];
-      local_virial(thread_id, 2) += virial[2];
+      auto access_virial = local_virial.access();
+      access_virial(0) += virial[0];
+      access_virial(1) += virial[1];
+      access_virial(2) += virial[2];
     }
 #endif
   }
