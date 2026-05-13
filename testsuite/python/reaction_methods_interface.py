@@ -546,6 +546,8 @@ class ReactionMethods(ut.TestCase):
             espressomd.reaction_methods.ReactionAlgorithm()
         with self.assertRaisesRegex(ValueError, "Invalid type: -1"):
             method.set_non_interacting_type(type=-1)
+        with self.assertRaisesRegex(NotImplementedError, "Derived classes must implement this method"):
+            super(type(method), method).calculate_log_acceptance_probability(method.reactions[0], 0., {})
 
         # check invalid exclusion ranges and radii
         with self.assertRaisesRegex(ValueError, "Invalid value for exclusion range"):

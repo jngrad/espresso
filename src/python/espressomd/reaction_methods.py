@@ -895,6 +895,28 @@ class ReactionAlgorithm:
         for i in self.rng.choice(n_reactions, size=steps, replace=True):
             E_pot = self.generic_oneway_reaction(self.reactions[i], E_pot)
 
+    def calculate_log_acceptance_probability(
+            self, reaction, E_pot_diff, old_particle_numbers):
+        """
+        Calculate the logarithmic acceptance probability of a Monte Carlo move.
+
+        Parameters
+        ----------
+        reaction : :class:`SingleReaction`
+            The reaction that was carried out in the move.
+        E_pot_diff : :obj:`float`
+            The potential energy difference for the move.
+        old_particle_numbers : :obj:`dict`
+            The particle numbers before the move.
+
+        Returns
+        -------
+        :obj:`float`
+            The acceptance probability.
+
+        """
+        raise NotImplementedError("Derived classes must implement this method")
+
     @profile
     def generic_oneway_reaction(self, reaction, E_pot_old):
         """
@@ -1009,9 +1031,7 @@ class ReactionEnsemble(ReactionAlgorithm):
 
     def calculate_log_acceptance_probability(
             self, reaction, E_pot_diff, old_particle_numbers):
-        """
-        Calculate the logarithmic acceptance probability of a Monte Carlo move.
-        """
+        __doc__ = ReactionAlgorithm.__doc__
         ln_factorial = self.calculate_factorial_expression(
             reaction, old_particle_numbers)
         ln_bf = -E_pot_diff / self.kT + reaction.nu_bar * \
@@ -1068,22 +1088,7 @@ class ConstantpHEnsemble(ReactionAlgorithm):
 
     def calculate_log_acceptance_probability(
             self, reaction, E_pot_diff, old_particle_numbers):
-        """
-        Calculate the logarithmic acceptance probability of a Monte Carlo move.
-
-        Parameters
-        ----------
-        reaction_id : :obj:`int`
-            Identifier of the reaction that was carried out in the move.
-        E_pot_diff : :obj:`float`
-            The potential energy difference for the move.
-
-        Returns
-        -------
-        :obj:`float`
-            The acceptance probability.
-
-        """
+        __doc__ = ReactionAlgorithm.__doc__
         ln_factorial_expr = self.calculate_factorial_expression(
             reaction, old_particle_numbers)
         ln_bf = E_pot_diff - reaction.nu_bar * self.kT * math.log(10.) * (
