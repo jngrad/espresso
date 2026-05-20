@@ -652,6 +652,20 @@ endif()
 # Libraries
 #
 
+if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
+  set(ESPRESSO_OPENMP_COMPONENTS CXX)
+  if(ESPRESSO_BUILD_WITH_CUDA AND NOT CMAKE_CUDA_COMPILER_ID STREQUAL NVHPC)
+    # FindOpenMP doesn't fully support NVHPC+CUDA as of CMake 4.3, see ticket:
+    # https://gitlab.kitware.com/cmake/cmake/-/work_items/23003
+    list(APPEND ESPRESSO_OPENMP_COMPONENTS CUDA)
+  endif()
+  # ESPResSo and Kokkos require some of the new features from OpenMP 5.0, but a
+  # version check cannot be enforced here, since GCC versions 12 to 15 report
+  # 4.5 support for the CXX component, and NVHPC versions <= 26.3 report 4.5
+  # support for the CUDA component
+  find_package(OpenMP REQUIRED COMPONENTS ${ESPRESSO_OPENMP_COMPONENTS})
+endif()
+
 if(ESPRESSO_BUILD_WITH_FFTW)
   if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
     list(APPEND FFTW3_COMPONENTS omp)
@@ -690,16 +704,6 @@ if(ESPRESSO_BUILD_WITH_FFTW)
 endif()
 
 if(ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM)
-  set(ESPRESSO_OPENMP_COMPONENTS CXX)
-  if(ESPRESSO_BUILD_WITH_CUDA)
-    list(APPEND ESPRESSO_OPENMP_COMPONENTS CUDA)
-  endif()
-  # ESPResSo and Kokkos require some of the new features from OpenMP 5.0, but a
-  # version check cannot be enforced here, since GCC versions 12 to 15 report
-  # 4.5 support for the CXX component, and NVHPC versions <= 26.3 report 4.5
-  # support for the CUDA component
-  find_package(OpenMP REQUIRED COMPONENTS ${ESPRESSO_OPENMP_COMPONENTS})
-
   if(NOT EXISTS ${FETCHCONTENT_BASE_DIR}/kokkos-src)
     find_package(Kokkos 4.6 QUIET)
   endif()
