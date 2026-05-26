@@ -1263,6 +1263,27 @@ To interactively read the data:
           10  2.619    0.262    2.619    0.262   /opt/espressomd/integrate.py:101(run)
     p3m.py.prof% quit
 
+.. _py-spy:
+
+py-spy
+~~~~~~
+
+.. note::
+
+    Requires an external dependency:
+
+    .. code-block:: bash
+
+        python3 -m pip install py-spy
+
+py-spy [11]_ is a low-overhead Python profiler.
+
+To generate a nested graph that can be interacted with in a web browser:
+
+.. code-block:: bash
+
+    py-spy record -o profile.svg -- ./pypresso ../samples/p3m.py --cpu
+
 ____
 
 .. [1]
@@ -1294,3 +1315,6 @@ ____
 
 .. [10]
    https://github.com/google/sanitizers/issues/1614
+
+.. [11]
+   https://github.com/benfred/py-spy
