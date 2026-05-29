@@ -41,7 +41,7 @@ class TestVTK:
     system.cell_system.skin = 0.4
 
     def setUp(self):
-        self.lattice = self.lattice_class(n_ghost_layers=1, agrid=0.5)
+        self.lattice = self.lattice_class(n_ghost_layers=2, agrid=0.5)
         self.actor = self.add_actor()
 
     def tearDown(self):
@@ -146,11 +146,9 @@ class TestLBVTK(TestVTK):
             espressomd.shapes.Wall(normal=[1, 0, 0], dist=dist))
         actor.add_boundary_from_shape(
             espressomd.shapes.Wall(normal=[-1, 0, 0], dist=-(self.system.box_l[0] - dist)))
-
-        actor.add_boundary_from_shape(
-            espressomd.shapes.Sphere(center=[self.system.box_l[0] // 2,
-                                             self.system.box_l[1] // 2,
-                                             self.system.box_l[2] // 2], radius=2))
+        sphere = espressomd.shapes.Sphere(
+            center=self.system.box_l // 2, radius=2.)
+        actor.add_boundary_from_shape(sphere)
 
         n_steps = 4 if self.lb_params["gpu"] else 10
         shape = tuple(actor.shape)
@@ -306,14 +304,18 @@ class TestEKVTK(TestVTK):
             shape=espressomd.shapes.Wall(
                 normal=[-1, 0, 0], dist=-(self.system.box_l[0] - dist)),
             value=0.0, boundary_type=espressomd.electrokinetics.DensityBoundary)
-
+        sphere = espressomd.shapes.Sphere(
+            center=self.system.box_l // 2, radius=2.)
         actor.add_boundary_from_shape(
-            shape=espressomd.shapes.Sphere(
-                center=[self.system.box_l[0] // 2,
-                        self.system.box_l[1] // 2,
-                        self.system.box_l[2] // 2],
-                radius=2),
-            value=0.0, boundary_type=espressomd.electrokinetics.DensityBoundary)
+            shape=sphere, value=0.0, boundary_type=espressomd.electrokinetics.DensityBoundary)
+        actor[2, 0, 0].flux_boundary = espressomd.electrokinetics.FluxBoundary(
+            [0.01, -0.01, 0.02])
+        if isinstance(self.solver, espressomd.electrokinetics.EKNone):
+            kx, ky, kz = np.pi / self.lattice.shape
+            self.solver[:, :, :].potential = np.fromfunction(
+                lambda i, j, k: np.cos(i * kx) *
+                np.cos(j * ky) * np.cos(k * kz),
+                self.lattice.shape, dtype=float)
 
         n_steps = 100
         shape = tuple(self.lattice.shape)
@@ -545,6 +547,29 @@ class EKWalberlaVTKSinglePrecisionGPU(TestEKVTK, ut.TestCase):
     ek_solver = espressomd.electrokinetics.EKFFT
     ek_params = {"single_precision": True, "gpu": True}
     vtk_id = "ek_single_precision_gpu"
+
+
+@utx.skipIfMissingFeatures(["WALBERLA"])
+class EKWalberlaVTKSinglePrecisionEKNoneCPU(TestEKVTK, ut.TestCase):
+    vtk_class = espressomd.electrokinetics.VTKOutput
+    vtk_poisson_class = espressomd.electrokinetics.VTKPoissonOutput
+    lattice_class = espressomd.electrokinetics.Lattice
+    ek_class = espressomd.electrokinetics.EKSpecies
+    ek_solver = espressomd.electrokinetics.EKNone
+    ek_params = {"single_precision": True, "gpu": False}
+    vtk_id = "ek_single_precision_eknone_cpu"
+
+
+@utx.skipIfMissingGPU()
+@utx.skipIfMissingFeatures(["WALBERLA", "CUDA"])
+class EKWalberlaVTKSinglePrecisionEKNoneGPU(TestEKVTK, ut.TestCase):
+    vtk_class = espressomd.electrokinetics.VTKOutput
+    vtk_poisson_class = espressomd.electrokinetics.VTKPoissonOutput
+    lattice_class = espressomd.electrokinetics.Lattice
+    ek_class = espressomd.electrokinetics.EKSpecies
+    ek_solver = espressomd.electrokinetics.EKNone
+    ek_params = {"single_precision": True, "gpu": True}
+    vtk_id = "ek_single_precision_eknone_gpu"
 
 
 if __name__ == "__main__":
