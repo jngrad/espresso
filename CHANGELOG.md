@@ -12,6 +12,8 @@ or [Savannah](https://savannah.nongnu.org/projects/espressomd) until release 3.3
 
 ## [Unreleased]
 
+## [5.0.1] - 2026-05-29
+
 ### Bug fixes
 
 * The Lees-Edwards shear velocity is now properly handled in the simulation
@@ -2317,7 +2319,8 @@ The following functionality is removed permanently:
 
 For older ESPResSo releases, see [`old/RELEASE_NOTES@bb2cd93`](https://github.com/espressomd/espresso/blob/bb2cd93/old/RELEASE_NOTES).
 
-[Unreleased]: https://github.com/espressomd/espresso/compare/5.0.0...HEAD
+[Unreleased]: https://github.com/espressomd/espresso/compare/5.0.1...HEAD
+[5.0.1]: https://github.com/espressomd/espresso/compare/5.0.0...5.0.1
 [5.0.0]: https://github.com/espressomd/espresso/compare/4.2.2...5.0.0
 [4.2.2]: https://github.com/espressomd/espresso/compare/4.2.1...4.2.2
 [4.2.1]: https://github.com/espressomd/espresso/compare/4.2.0...4.2.1
