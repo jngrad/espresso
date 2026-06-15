@@ -47,7 +47,7 @@ espresso_unit_test(SRC ObjectMap_test.cpp DEPENDS espresso::script_interface
 espresso_unit_test(SRC Accumulators_test.cpp DEPENDS espresso::script_interface
                    espresso::core Boost::mpi MPI::MPI_CXX NUM_PROC 2)
 espresso_unit_test(SRC Constraints_test.cpp DEPENDS espresso::script_interface
-                   espresso::core)
+                   espresso::core Boost::mpi MPI::MPI_CXX NUM_PROC 1)
 espresso_unit_test(SRC Actors_test.cpp DEPENDS espresso::script_interface
                    espresso::core)
 espresso_unit_test(
