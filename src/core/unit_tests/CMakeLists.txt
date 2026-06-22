@@ -24,6 +24,8 @@ include(espresso_unit_test)
 espresso_unit_test(SRC RuntimeError_test.cpp DEPENDS Boost::serialization)
 espresso_unit_test(SRC RuntimeErrorCollector_test.cpp DEPENDS espresso::core
                    Boost::mpi MPI::MPI_CXX NUM_PROC 2)
+espresso_unit_test(SRC RuntimeErrorStream_test.cpp DEPENDS espresso::core
+                   Boost::mpi MPI::MPI_CXX NUM_PROC 2)
 # create a test matrix for the stand-alone unit test
 espresso_unit_test_executable(
   NAME EspressoSystemStandAlone_test_matrix SRC
