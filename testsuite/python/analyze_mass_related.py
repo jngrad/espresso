@@ -148,6 +148,24 @@ class AnalyzeMassRelated(ut.TestCase):
                 self.system.analysis.calc_rg(chain_start=0, number_of_chains=1,
                                              chain_length=len(self.system.part))
 
+    def test_empty_but_seen_type(self):
+        """
+        A particle type that was seen (so it passes the type-range check)
+        but currently has no particles must not divide by zero in mass-related
+        analysis routines.
+        """
+        # create a new type, make it "seen", then make it empty
+        empty_type = max(self.system.part.all().type) + 17
+        p = self.system.part.add(pos=[1., 1., 1.], type=empty_type)
+        p.remove()
+
+        with self.assertRaisesRegex(Exception, "no particle with non-zero mass of the given type"):
+            self.system.analysis.center_of_mass(p_type=empty_type)
+        with self.assertRaisesRegex(Exception, "no particle of the given type"):
+            self.system.analysis.gyration_tensor(p_type=empty_type)
+        with self.assertRaisesRegex(Exception, "no particle with non-zero mass of the given type"):
+            self.system.analysis.moment_of_inertia_matrix(p_type=empty_type)
+
 
 if __name__ == "__main__":
     ut.main()
