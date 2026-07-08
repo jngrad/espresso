@@ -30,7 +30,7 @@ jobs:
          echo "::group::List available Xcode compilers"
          ls /Applications | grep Xcode
          echo "::endgroup::"
-         sudo xcode-select -switch /Applications/Xcode_26.2.0.app
+         sudo xcode-select -switch /Applications/Xcode_26.6.0.app
          # Python dependencies
          python -m venv venv
          . venv/bin/activate
@@ -50,9 +50,9 @@ jobs:
           with_walberla_avx: 'false'
 
   debian:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     container:
-      image: ghcr.io/espressomd/docker/debian:ab5bc64f5c3cc7330952f8b3bf321270ca53960c-base-layer
+      image: ghcr.io/espressomd/docker/debian:c6ad9809eed1d0e9f26f4968559b234ea3b8bf82-base-layer
       credentials:
          username: ${{ github.actor }}
          password: ${{ secrets.github_token }}
@@ -90,10 +90,10 @@ jobs:
           OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
 
   ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: ${{ github.repository == 'espressomd/espresso' }}
     container:
-      image: ghcr.io/espressomd/docker/ubuntu-wo-dependencies:ab5bc64f5c3cc7330952f8b3bf321270ca53960c-base-layer
+      image: ghcr.io/espressomd/docker/ubuntu-wo-dependencies:c6ad9809eed1d0e9f26f4968559b234ea3b8bf82-base-layer
       credentials:
          username: ${{ github.actor }}
          password: ${{ secrets.github_token }}
@@ -115,8 +115,8 @@ jobs:
         env:
           build_procs: 4
           check_procs: 4
-          CC: 'gcc-13'
-          CXX: 'g++-13'
+          CC: 'gcc-16'
+          CXX: 'g++-16'
           myconfig: 'maxset'
           with_ccache: 'true'
           with_cuda: 'false'
@@ -132,10 +132,10 @@ jobs:
           OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
 
   fedora:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: ${{ github.repository == 'espressomd/espresso' }}
     container:
-      image: ghcr.io/espressomd/docker/fedora:ab5bc64f5c3cc7330952f8b3bf321270ca53960c-base-layer
+      image: ghcr.io/espressomd/docker/fedora:c6ad9809eed1d0e9f26f4968559b234ea3b8bf82-base-layer
       credentials:
          username: ${{ github.actor }}
          password: ${{ secrets.github_token }}
