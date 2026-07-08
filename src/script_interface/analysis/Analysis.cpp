@@ -169,7 +169,10 @@ Variant Analysis::do_call_method(std::string const &name,
     auto const p_type = get_value<int>(parameters, "p_type");
     Variant result;
     context()->parallel_try_catch([&]() {
-      check_particle_type(p_type);
+      // p_type == -1 is the sentinel for all (non-virtual) particles
+      if (p_type != -1) {
+        check_particle_type(p_type);
+      }
       auto const local = center_of_mass(get_system(), p_type);
       result = mpi_reduce_sum(context()->get_comm(), local).as_vector();
     });
@@ -177,7 +180,10 @@ Variant Analysis::do_call_method(std::string const &name,
   }
   if (name == "angular_momentum") {
     auto const p_type = get_value<int>(parameters, "p_type");
-    context()->parallel_try_catch([&]() { check_particle_type(p_type); });
+    // p_type == -1 is the sentinel for all (non-virtual) particles
+    if (p_type != -1) {
+      context()->parallel_try_catch([&]() { check_particle_type(p_type); });
+    }
     auto const local = angular_momentum(get_system(), p_type);
     return mpi_reduce_sum(context()->get_comm(), local).as_vector();
   }
