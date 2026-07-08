@@ -10,7 +10,6 @@ permissions:
 jobs:
   macos:
     runs-on: macos-26
-    if: ${{ github.repository == 'espressomd/espresso' }}
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -91,7 +90,6 @@ jobs:
 
   ubuntu:
     runs-on: ubuntu-26.04
-    if: ${{ github.repository == 'espressomd/espresso' }}
     container:
       image: ghcr.io/espressomd/docker/ubuntu-wo-dependencies:c6ad9809eed1d0e9f26f4968559b234ea3b8bf82-base-layer
       credentials:
@@ -133,7 +131,6 @@ jobs:
 
   fedora:
     runs-on: ubuntu-26.04
-    if: ${{ github.repository == 'espressomd/espresso' }}
     container:
       image: ghcr.io/espressomd/docker/fedora:c6ad9809eed1d0e9f26f4968559b234ea3b8bf82-base-layer
       credentials:
@@ -170,4 +167,4 @@ jobs:
           with_walberla: 'true'
           with_walberla_avx: 'false'
           with_stokesian_dynamics: 'true'
-          cmake_params: '-D CMAKE_CXX_STANDARD=23 -D CMAKE_INCLUDE_PATH=/usr/include/mpich-x86_64 -D CMAKE_PREFIX_PATH=/usr/lib64/mpich/lib/ -D ESPRESSO_TEST_NT=1'
+          cmake_params: '-D CMAKE_CXX_STANDARD=26 -D CMAKE_INCLUDE_PATH=/usr/include/mpich-x86_64 -D CMAKE_PREFIX_PATH=/usr/lib64/mpich/lib/ -D ESPRESSO_TEST_NT=1'
