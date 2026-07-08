@@ -37,16 +37,23 @@ jobs:
          deactivate
         shell: bash
       - name: Build and check
-        uses: ./.github/actions/build_and_check
+        run: |
+         if test -d venv; then . venv/bin/activate; fi
+         bash maintainer/CI/build_cmake.sh
         env:
           build_procs: 3
           check_procs: 3
           cmake_params: '-D ESPRESSO_TEST_NP=3'
+          myconfig: 'maxset'
           with_ccache: 'true'
+          with_cuda: 'false'
+          with_hdf5: 'true'
           with_fftw: 'true'
           with_gsl: 'true'
           with_walberla: 'true'
           with_walberla_avx: 'false'
+          check_skip_long: 'true'
+          test_timeout: 800
 
   debian:
     runs-on: ubuntu-26.04
@@ -69,7 +76,9 @@ jobs:
       - name: Get runner specifications
         run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
       - name: Build and check
-        uses: ./.github/actions/build_and_check
+        run: |
+         if test -d venv; then . venv/bin/activate; fi
+         bash maintainer/CI/build_cmake.sh
         env:
           build_procs: 4
           check_procs: 4
@@ -109,7 +118,9 @@ jobs:
       - name: Get runner specifications
         run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
       - name: Build and check
-        uses: ./.github/actions/build_and_check
+        run: |
+         if test -d venv; then . venv/bin/activate; fi
+         bash maintainer/CI/build_cmake.sh
         env:
           build_procs: 4
           check_procs: 4
@@ -150,7 +161,9 @@ jobs:
       - name: Get runner specifications
         run: lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'
       - name: Build and check
-        uses: ./.github/actions/build_and_check
+        run: |
+         if test -d venv; then . venv/bin/activate; fi
+         bash maintainer/CI/build_cmake.sh
         env:
           build_procs: 4
           check_procs: 4
@@ -167,4 +180,6 @@ jobs:
           with_walberla: 'true'
           with_walberla_avx: 'false'
           with_stokesian_dynamics: 'true'
+          check_skip_long: 'true'
+          test_timeout: 800
           cmake_params: '-D CMAKE_CXX_STANDARD=26 -D CMAKE_INCLUDE_PATH=/usr/include/mpich-x86_64 -D CMAKE_PREFIX_PATH=/usr/lib64/mpich/lib/ -D ESPRESSO_TEST_NT=1'
