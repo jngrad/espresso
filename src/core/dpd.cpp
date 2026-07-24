@@ -29,6 +29,7 @@
 
 #include "BoxGeometry.hpp"
 #include "cell_system/CellStructure.hpp"
+#include "exclusions.hpp"
 #include "nonbonded_interactions/nonbonded_interaction_data.hpp"
 #include "random.hpp"
 #include "system/System.hpp"
@@ -114,6 +115,14 @@ Utils::Vector9d dpd_pressure_local(System::System &system) {
   cell_structure.non_bonded_loop([&pressure, &box_geo, &nonbonded_ias,
                                   &dpd](Particle const &p1, Particle const &p2,
                                         Distance const &d) {
+#ifdef ESPRESSO_EXCLUSIONS
+    auto const do_nonbonded_flag = do_nonbonded(p1, p2);
+#else
+    auto constexpr do_nonbonded_flag = true;
+#endif
+    if (not do_nonbonded_flag) {
+      return;
+    }
     auto const v21 =
         box_geo.velocity_difference(p1.pos(), p2.pos(), p1.v(), p2.v());
 
