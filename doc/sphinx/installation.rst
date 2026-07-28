@@ -87,7 +87,7 @@ are required to be able to compile and use |es|:
     FFTW
         For some algorithms like |p3m|, |es| needs the FFTW library
         version 3 or later [5]_ for Fourier transforms, including header files.
-        |es| leverages heFFTe :cite:`ayala20a`.
+        |es| leverages heFFTe :cite:`ayala20a` and kokkos-fft :cite:`asahi25a`.
 
     CUDA
         For some algorithms like |p3m| and lattice-Boltzmann,

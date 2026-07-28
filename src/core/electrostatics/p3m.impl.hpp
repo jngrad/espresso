@@ -28,6 +28,7 @@
 #include "electrostatics/p3m.hpp"
 
 #include "communication.hpp"
+#include "p3m/P3MFFTBackend.hpp"
 #include "p3m/common.hpp"
 #include "p3m/data_struct.hpp"
 #include "p3m/interpolation.hpp"
@@ -87,8 +88,9 @@ struct CoulombP3MState : public P3MStateCommon<FloatType, Architecture> {
   /** electric fields in real-space without halo */
   std::array<std::vector<FloatType>, 3> rs_E_fields_no_halo;
   p3m_send_mesh<FloatType> halo_comm;
-  std::array<std::shared_ptr<P3MFFT<FloatType, Arch::CPU, FFTConfig>>, 3> ffts;
-  std::shared_ptr<P3MFFT<FloatType, Arch::CPU, FFTConfig>> fft;
+  // FFT reciprocal-space transform, hidden behind the backend interface so the
+  // solver is agnostic to heFFTe vs kokkos-fft (see init_cpu_kernels).
+  std::shared_ptr<P3MFFTBackend<FloatType, FFTConfig>> fft;
   Kokkos::View<FloatType **, r_space_layout, Kokkos::HostSpace>
       rs_charge_density_kokkos;
 
@@ -104,8 +106,8 @@ struct P3MGpuParams;
 #endif
 
 template <typename FloatType, Arch Architecture, class FFTConfig>
-struct CoulombP3MHeffte : public CoulombP3M {
-  ~CoulombP3MHeffte() override = default;
+struct CoulombP3MImpl : public CoulombP3M {
+  ~CoulombP3MImpl() override = default;
 
   using CoulombP3MStateClass =
       CoulombP3MState<FloatType, Architecture, FFTConfig>;
@@ -128,8 +130,8 @@ private:
   }
 
 public:
-  CoulombP3MHeffte(std::unique_ptr<CoulombP3MStateClass> &&p3m_state,
-                   TuningParameters tuning_params, double prefactor)
+  CoulombP3MImpl(std::unique_ptr<CoulombP3MStateClass> &&p3m_state,
+                 TuningParameters tuning_params, double prefactor)
       : CoulombP3M(p3m_state->params), p3m{*p3m_state},
         m_kokkos_handle{::kokkos_handle}, p3m_state_ptr{std::move(p3m_state)},
         tuning{std::move(tuning_params)} {

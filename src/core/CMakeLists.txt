@@ -29,6 +29,7 @@ add_library(
   energy.cpp
   errorhandling.cpp
   forces.cpp
+  forces_init.cpp
   ghosts.cpp
   integrate.cpp
   npt.cpp
@@ -38,6 +39,7 @@ add_library(
   propagation.cpp
   rattle.cpp
   rotation.cpp
+  short_range_verlet.cpp
   Observable_stat.cpp
   thermostat.cpp
   tuning.cpp

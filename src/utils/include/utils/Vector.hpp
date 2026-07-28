@@ -30,6 +30,7 @@
 #include <boost/qvm/vec_traits.hpp>
 
 #include "utils/Array.hpp"
+#include "utils/attributes.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -263,7 +264,8 @@ auto operator+(Vector<T, N> const &a, Vector<U, N> const &b) {
 }
 
 template <std::size_t N, typename T>
-auto &operator+=(Vector<T, N> &a, Vector<T, N> const &b) {
+ESPRESSO_ATTR_ALWAYS_INLINE inline auto &operator+=(Vector<T, N> &a,
+                                                    Vector<T, N> const &b) {
   std::ranges::transform(a, b, std::begin(a), std::plus<T>());
   return a;
 }
@@ -281,7 +283,8 @@ Vector<T, N> operator-(Vector<T, N> const &a) {
 }
 
 template <std::size_t N, typename T>
-Vector<T, N> &operator-=(Vector<T, N> &a, Vector<T, N> const &b) {
+ESPRESSO_ATTR_ALWAYS_INLINE inline Vector<T, N> &
+operator-=(Vector<T, N> &a, Vector<T, N> const &b) {
   std::ranges::transform(a, b, std::begin(a), std::minus<T>());
   return a;
 }

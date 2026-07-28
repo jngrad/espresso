@@ -34,6 +34,7 @@
 #include "nonbonded_interactions/nonbonded_interaction_data.hpp"
 #include "short_range_cabana.hpp"
 #include "short_range_loop.hpp"
+#include "short_range_verlet.hpp"
 #include "system/GpuParticleData.hpp"
 #include "system/System.hpp"
 
@@ -80,14 +81,17 @@ std::shared_ptr<Observable_stat> System::calculate_energy() {
 #ifdef ESPRESSO_CALIPER
   CALI_MARK_BEGIN("cabana_short_range");
 #endif
-  VerletCriterion<> const verlet_criterion{*this,
-                                           cell_structure->get_verlet_skin(),
-                                           get_interaction_range(),
-                                           coulomb.cutoff(),
-                                           dipoles.cutoff(),
-                                           inactive_cutoff};
-  update_cabana_state(*cell_structure, verlet_criterion,
-                      get_interaction_range(), propagation->integ_switch);
+  // Factory instead of an eager criterion: construction fills an O(n_types^2)
+  // cutoff table, so it only runs on the link-cell fallback path.
+  auto const make_verlet_criterion = [&] {
+    return VerletCriterion<>{*this,
+                             cell_structure->get_verlet_skin(),
+                             get_interaction_range(),
+                             coulomb.cutoff(),
+                             dipoles.cutoff(),
+                             inactive_cutoff};
+  };
+  update_verlet_state(*this, inactive_cutoff);
 
   EnergyBinLayout layout{
       static_cast<std::size_t>(bonded_ias->get_next_key()),
@@ -131,7 +135,7 @@ std::shared_ptr<Observable_stat> System::calculate_energy() {
 
   cabana_short_range(pair_be_kernel, angle_be_kernel, dih_be_kernel,
                      pair_e_kernel, *cell_structure, get_interaction_range(),
-                     bonded_ias->maximal_cutoff(), verlet_criterion,
+                     bonded_ias->maximal_cutoff(), make_verlet_criterion,
                      propagation->integ_switch);
 
   reduce_cabana_energy(local_energy, layout, obs_energy, *bonded_ias,

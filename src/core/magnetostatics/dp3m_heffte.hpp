@@ -137,6 +137,12 @@ struct DipolarP3MState : public P3MStateCommon<FloatType> {
 
   Kokkos::View<FloatType ***, Kokkos::LayoutRight, Kokkos::HostSpace>
       rs_fields_kokkos;
+#ifdef ESPRESSO_DP3M_HEFFTE_CROSS_CHECKS
+  Kokkos::View<FloatType *, Kokkos::LayoutRight, Kokkos::HostSpace>
+      rs_field_no_halo_kokkos;
+  Kokkos::View<FloatType *, Kokkos::LayoutRight, Kokkos::HostSpace>
+      rs_field_no_halo_reorder_kokkos;
+#endif // ESPRESSO_DP3M_HEFFTE_CROSS_CHECKS
 
   void init_labels() {
     assert(ks_scalar.empty());
@@ -144,6 +150,10 @@ struct DipolarP3MState : public P3MStateCommon<FloatType> {
     assert(heffte.rs_dipole_density[0u].empty());
     assert(heffte.rs_dipole_density[1u].empty());
     assert(heffte.rs_dipole_density[2u].empty());
+    rs_field_no_halo_kokkos = decltype(rs_field_no_halo_kokkos)(
+        "DipolarP3MState::rs_field_no_halo_kokkos", 0);
+    rs_field_no_halo_reorder_kokkos = decltype(rs_field_no_halo_reorder_kokkos)(
+        "DipolarP3MState::rs_field_no_halo_reorder_kokkos", 0);
 #endif // ESPRESSO_DP3M_HEFFTE_CROSS_CHECKS
     rs_fields_kokkos = decltype(rs_fields_kokkos)(
         "DipolarP3MState::rs_fields_kokkos", 0, 0, 0);
@@ -236,6 +246,12 @@ private:
       dp3m.heffte.rs_dipole_density[dir].resize(dp3m.local_mesh.size);
       std::ranges::fill(dp3m.heffte.rs_dipole_density[dir], FloatType{0});
     }
+    auto const buf_size =
+        static_cast<std::size_t>(Utils::product(dp3m.local_mesh.dim_no_halo));
+    Kokkos::realloc(Kokkos::WithoutInitializing, dp3m.rs_field_no_halo_kokkos,
+                    buf_size);
+    Kokkos::realloc(Kokkos::WithoutInitializing,
+                    dp3m.rs_field_no_halo_reorder_kokkos, buf_size);
 #endif // ESPRESSO_DP3M_HEFFTE_CROSS_CHECKS
   }
 

@@ -100,6 +100,8 @@ endif()
 option(ESPRESSO_BUILD_WITH_PYTHON "Build with Python bindings" ON)
 option(ESPRESSO_BUILD_WITH_GSL "Build with GSL support" OFF)
 option(ESPRESSO_BUILD_WITH_FFTW "Build with FFTW support" ON)
+option(ESPRESSO_BUILD_WITH_KOKKOS_FFT
+       "Use kokkos-fft for the single-rank P3M reciprocal-space FFT" ON)
 option(ESPRESSO_BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(ESPRESSO_BUILD_WITH_HDF5 "Build with HDF5 support" OFF)
 option(ESPRESSO_BUILD_TESTS "Enable tests" ON)
@@ -673,6 +675,7 @@ if(ESPRESSO_BUILD_WITH_FFTW)
       heffte
       GIT_REPOSITORY https://github.com/icl-utk-edu/heffte.git
       GIT_TAG        v2.4.1
+      PATCH_COMMAND  patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/cmake/heffte.patch
       OVERRIDE_FIND_PACKAGE
     )
     # cmake-format: on
@@ -752,6 +755,28 @@ if(NOT DEFINED Kokkos_FOUND OR NOT ${Kokkos_FOUND})
     PRIVATE
       $<$<COMPILE_LANG_AND_ID:CXX,NVHPC>:--diag_suppress=initialization_not_reachable>
   )
+endif()
+
+# kokkos-fft: a local (single-process) FFT on top of the Kokkos target already
+# fetched above. Used as the single-rank P3M reciprocal-space backend. It is
+# only consumed by the P3M target, which is itself gated behind FFTW (and its
+# CPU backend is FFTW), so there is nothing to fetch when FFTW is disabled.
+if(ESPRESSO_BUILD_WITH_KOKKOS_FFT AND ESPRESSO_BUILD_WITH_FFTW)
+  if(NOT EXISTS ${FETCHCONTENT_BASE_DIR}/kokkos_fft-src)
+    find_package(KokkosFFT 1.1 QUIET)
+  endif()
+  if(NOT DEFINED KokkosFFT_FOUND OR NOT ${KokkosFFT_FOUND})
+    # cmake-format: off
+    FetchContent_Declare(
+      kokkos_fft
+      GIT_REPOSITORY https://github.com/kokkos/kokkos-fft.git
+      GIT_TAG        v1.1.0
+      OVERRIDE_FIND_PACKAGE
+    )
+    # cmake-format: on
+    set(KokkosFFT_ENABLE_FFTW ON CACHE BOOL "")
+    FetchContent_MakeAvailable(kokkos_fft)
+  endif()
 endif()
 
 if(NOT EXISTS ${FETCHCONTENT_BASE_DIR}/cabana-src)

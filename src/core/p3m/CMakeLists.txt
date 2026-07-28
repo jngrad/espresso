@@ -49,10 +49,15 @@ if(ESPRESSO_BUILD_WITH_FFTW)
   set_target_properties(espresso_p3m PROPERTIES POSITION_INDEPENDENT_CODE ON)
   target_link_libraries(espresso_core PRIVATE espresso_p3m)
   target_sources(
-    espresso_p3m PRIVATE common.cpp send_mesh.cpp TuningAlgorithm.cpp
-                         FFTBackendLegacy.cpp FFTBuffersLegacy.cpp)
+    espresso_p3m
+    PRIVATE common.cpp send_mesh.cpp TuningAlgorithm.cpp FFTBackendLegacy.cpp
+            FFTBuffersLegacy.cpp P3MFFTBackendFactory.cpp)
+  if(ESPRESSO_BUILD_WITH_KOKKOS_FFT)
+    target_link_libraries(espresso_p3m PRIVATE KokkosFFT::fft)
+    target_compile_definitions(espresso_p3m PRIVATE ESPRESSO_KOKKOS_FFT)
+  endif()
   set_property(
-    SOURCE ../electrostatics/p3m_heffte.cpp ../magnetostatics/dp3m_heffte.cpp
+    SOURCE ../electrostatics/p3m.cpp ../magnetostatics/dp3m_heffte.cpp
     APPEND
     PROPERTY
       COMPILE_OPTIONS

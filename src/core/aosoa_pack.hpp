@@ -29,14 +29,9 @@
 
 #include <omp.h>
 
+#include <atomic>
 #include <cstdint>
 #include <span>
-
-#if defined(__GNUG__) or defined(__clang__)
-#define ESPRESSO_ATTR_ALWAYS_INLINE [[gnu::always_inline]]
-#else
-#define ESPRESSO_ATTR_ALWAYS_INLINE
-#endif
 
 struct CellStructure::AoSoA_pack {
   using PositionViewType =
@@ -153,6 +148,37 @@ struct CellStructure::AoSoA_pack {
 #endif
     for (std::size_t j = 0ul; j < N; j += 1ul) {
       view(i, j) = value[j];
+    }
+  }
+
+  // Aggregate of the per-particle exclusion flag over the whole pack (local +
+  // ghost). It lets the specialized-kernel dispatch decide in O(1) whether any
+  // packed particle carries an exclusion, instead of sweeping every flag on
+  // every force call. It is only ever transitioned false->true during a commit
+  // sweep (which runs under Kokkos::parallel_for on the host execution space),
+  // so a relaxed atomic store suffices; reads happen after the sweep's
+  // Kokkos::fence() and are therefore race-free. The atomic member makes
+  // AoSoA_pack non-copyable and non-movable, which is fine: it is only ever
+  // default-constructed via std::make_unique and accessed by reference (see
+  // CellStructure::m_aosoa).
+  std::atomic<bool> any_exclusion{false};
+
+  void reset_any_exclusion() {
+    any_exclusion.store(false, std::memory_order_relaxed);
+  }
+
+  bool has_any_exclusion() const {
+    return any_exclusion.load(std::memory_order_relaxed);
+  }
+
+  // Host-only: record that some particle carries an exclusion. Kept out of the
+  // device-qualified set_has_exclusion so the atomic never appears in device
+  // code; commit_particle calls this from the host commit sweep. Test before
+  // setting: after the first write the flag's cache line stays shared, so
+  // exclusion-heavy sweeps don't ping-pong it across threads.
+  void mark_any_exclusion() {
+    if (not any_exclusion.load(std::memory_order_relaxed)) {
+      any_exclusion.store(true, std::memory_order_relaxed);
     }
   }
 

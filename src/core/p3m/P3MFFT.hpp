@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "p3m/P3MFFTBackend.hpp"
+
 #include "communication.hpp"
 
 #include <instrumentation/fe_trap.hpp>
@@ -185,4 +187,54 @@ public:
   void backward(auto &&in, auto &&out) {
     fft3d->backward(in, out, m_workspace.data());
   }
+};
+
+/**
+ * @brief heFFTe-backed implementation of the P3M FFT interface.
+ *
+ * Thin adapter that exposes @ref P3MFFT through the @ref P3MFFTBackend
+ * virtual interface, so the solver can hold it interchangeably with other
+ * backends. This is the general backend, used for any rank count.
+ */
+template <typename FloatType, class FFTConfig>
+struct P3MFFTHeffte final : public P3MFFTBackend<FloatType, FFTConfig> {
+  using Base = P3MFFTBackend<FloatType, FFTConfig>;
+  using ComplexType = typename Base::ComplexType;
+  using RSpaceScalar = typename Base::RSpaceScalar;
+
+  P3MFFTHeffte(boost::mpi::communicator comm,
+               Utils::Vector3i const &global_mesh,
+               Utils::Vector3i const &rs_local_ld_index,
+               Utils::Vector3i const &rs_local_ur_index,
+               Utils::Vector3i const &node_grid)
+      : m_impl(nullptr, comm, global_mesh, rs_local_ld_index, rs_local_ur_index,
+               node_grid),
+        m_input(
+            static_cast<std::size_t>(Utils::product(m_impl.rs_local_size()))) {}
+
+  Utils::Vector3i ks_local_ld_index() const override {
+    return m_impl.ks_local_ld_index();
+  }
+  Utils::Vector3i ks_local_ur_index() const override {
+    return m_impl.ks_local_ur_index();
+  }
+  Utils::Vector3i ks_local_size() const override {
+    return m_impl.ks_local_size();
+  }
+  Utils::Vector3i rs_local_size() const override {
+    return m_impl.rs_local_size();
+  }
+  RSpaceScalar *forward_input_buffer() override { return m_input.data(); }
+  void forward(RSpaceScalar const *in, ComplexType *out) override {
+    m_impl.forward(in, out);
+  }
+  void backward(ComplexType *in, RSpaceScalar *out) override {
+    // heFFTe preserves the input; the non-const parameter is the interface's
+    // contract for backends that cannot (see P3MFFTBackend::backward).
+    m_impl.backward(in, out);
+  }
+
+private:
+  P3MFFT<FloatType, Arch::CPU, FFTConfig> m_impl;
+  std::vector<RSpaceScalar> m_input;
 };
