@@ -1,3 +1,4 @@
+#
 # Copyright (C) 2010-2026 The ESPResSo project
 #
 # This file is part of ESPResSo.
@@ -14,6 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 import numpy as np
 import warnings
@@ -22,13 +24,6 @@ import sys
 from .script_interface import ScriptInterfaceHelper, script_interface_register
 from .code_features import has_features
 from . import utils
-
-
-if "line_profiler" not in dir():
-    def profile(func):
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-        return wrapper
 
 
 class SingleReaction:
