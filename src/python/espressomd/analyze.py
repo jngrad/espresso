@@ -111,7 +111,8 @@ class Analysis(ScriptInterfaceHelper):
         ----------
         p_type : :obj:`int`
             Particle :attr:`~espressomd.particle_data.ParticleHandle.type`
-            for which to calculate the center of mass.
+            for which to calculate the center of mass, or ``-1`` for all
+            particles.
 
         Returns
         -------
@@ -458,11 +459,17 @@ class Analysis(ScriptInterfaceHelper):
         return self._generate_summary(observable, 9, False)
 
     def get_instantaneous_pressure(self):
+        """
+        Get the instantaneous pressure.
+        """
         assert_features("NPT")
         observable = self.call_method("get_instantaneous_pressure")
         return observable
 
     def get_instantaneous_pressure_virial(self):
+        """
+        Get the instantaneous virial pressure.
+        """
         assert_features("NPT")
         observable = self.call_method("get_instantaneous_pressure_virial")
         return observable
@@ -555,9 +562,19 @@ class Analysis(ScriptInterfaceHelper):
         return self.call_method("particle_bond_energy", pid=particle.id,
                                 bond_id=interaction._bond_id, partners=partners)
 
-    def dpd_stress(self):
+    def dpd_pressure(self):
+        """
+        Calculate the DPD interaction contribution to the pressure tensor.
+        It contains the dissipative and random (noise) contributions:
+        :math:`P^{\\nu\\mu} = V^{-1}\\sum_i \\sum_{j < i}
+        r_{i,j}^{\\nu} F_{i,j}^{\\mu}`
+        where :math:`F_{i,j}` is the DPD force (dissipative plus noise)
+        exerted by particle j on particle i, :math:`r_{i,j}` is their
+        distance vector, and :math:`V` is the box volume. This equals the
+        ``"dpd"`` contribution of :meth:`pressure_tensor`.
+        """
         assert_features("DPD")
-        return np.reshape(self.call_method("dpd_stress"), (3, 3))
+        return np.reshape(self.call_method("dpd_pressure"), (3, 3))
 
     def gyration_tensor(self, p_type=None):
         """

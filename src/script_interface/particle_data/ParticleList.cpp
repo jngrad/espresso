@@ -153,18 +153,18 @@ Variant ParticleList::do_call_method(std::string const &name,
     return {};
   }
   if (name == "by_id") {
-    return std::dynamic_pointer_cast<ParticleHandle>(
-        context()->make_shared("Particles::ParticleHandle",
-                               {{"id", get_value<int>(params, "p_id")},
+    VariantMap const obj_params{{"id", get_value<int>(params, "p_id")},
                                 {"__cell_structure", m_cell_structure.lock()},
-                                {"__bonded_ias", m_bonded_ias.lock()}}));
+                                {"__bonded_ias", m_bonded_ias.lock()}};
+    return std::dynamic_pointer_cast<ParticleHandle>(
+        context()->make_shared("Particles::ParticleHandle", obj_params));
   }
   if (name == "by_ids") {
-    return context()->make_shared(
-        "Particles::ParticleSlice",
-        {{"id_selection", get_value<std::vector<int>>(params, "id_selection")},
-         {"__cell_structure", m_cell_structure.lock()},
-         {"__bonded_ias", m_bonded_ias.lock()}});
+    VariantMap const obj_params{
+        {"id_selection", get_value<std::vector<int>>(params, "id_selection")},
+        {"__cell_structure", m_cell_structure.lock()},
+        {"__bonded_ias", m_bonded_ias.lock()}};
+    return context()->make_shared("Particles::ParticleSlice", obj_params);
   }
   if (name == "get_n_part") {
     return get_n_part();
@@ -180,14 +180,8 @@ Variant ParticleList::do_call_method(std::string const &name,
     VariantMap local_params = params;
     local_params["__cell_structure"] = m_cell_structure.lock();
     local_params["__bonded_ias"] = m_bonded_ias.lock();
-    auto so = std::dynamic_pointer_cast<ParticleHandle>(
+    return std::dynamic_pointer_cast<ParticleHandle>(
         context()->make_shared("Particles::ParticleHandle", local_params));
-#ifdef ESPRESSO_EXCLUSIONS
-    if (params.contains("exclusions")) {
-      so->call_method("set_exclusions", {{"p_ids", params.at("exclusions")}});
-    }
-#endif // ESPRESSO_EXCLUSIONS
-    return so;
   }
   return {};
 }

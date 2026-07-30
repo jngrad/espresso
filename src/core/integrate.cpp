@@ -41,6 +41,7 @@
 #include "bond_breakage/bond_breakage.hpp"
 #include "bonded_interactions/bonded_interaction_data.hpp"
 #include "cell_system/CellStructure.hpp"
+#include "cell_system/for_each_particle.hpp"
 #include "cells.hpp"
 #include "collision_detection/CollisionDetection.hpp"
 #include "communication.hpp"
@@ -256,6 +257,15 @@ void System::System::integrator_sanity_checks() const {
     runtimeErrorMsg()
         << "Thermalized bonds require the thermalized_bond thermostat";
   }
+#ifdef ESPRESSO_BOND_CONSTRAINT
+  if (bonded_ias->get_n_rigid_bonds() >= 1) {
+    if (not propagation->is_inertial()) {
+      runtimeErrorMsg()
+          << "Rigid bonds (RATTLE) require an inertial integrator "
+             "(VV or symplectic Euler); BD and SD are not supported";
+    }
+  }
+#endif
 
 #ifdef ESPRESSO_ROTATION
   for (auto const &p : cell_structure->local_particles()) {
@@ -316,7 +326,7 @@ void System::System::integrator_sanity_checks() const {
 }
 
 #ifdef ESPRESSO_WALBERLA
-void walberla_tau_sanity_checks(std::string method, double tau,
+void walberla_tau_sanity_checks(std::string const &method, double tau,
                                 double time_step) {
   if (time_step <= 0.) {
     return;
@@ -336,7 +346,7 @@ void walberla_tau_sanity_checks(std::string method, double tau,
                                 std::to_string(factor));
 }
 
-void walberla_agrid_sanity_checks(std::string method,
+void walberla_agrid_sanity_checks(std::string const &method,
                                   Utils::Vector3d const &geo_left,
                                   Utils::Vector3d const &geo_right,
                                   Utils::Vector3d const &lattice_left,

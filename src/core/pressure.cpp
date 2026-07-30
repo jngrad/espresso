@@ -24,23 +24,29 @@
 #include "BoxGeometry.hpp"
 #include "Observable_stat.hpp"
 #include "Particle.hpp"
+#include "bond_pressure_kokkos.hpp"
 #include "bonded_interactions/bonded_interaction_data.hpp"
-#include "dpd.hpp"
+#include "cell_system/CellStructure.hpp"
 #include "electrostatics/coulomb.hpp"
+#include "integrators/Propagation.hpp"
 #include "magnetostatics/dipoles.hpp"
+#include "nonbonded_interactions/VerletCriterion.hpp"
 #include "nonbonded_interactions/nonbonded_interaction_data.hpp"
+#include "particle_reduction.hpp"
+#include "pressure_cabana.hpp"
 #include "pressure_inline.hpp"
-#include "short_range_loop.hpp"
+#include "short_range_cabana.hpp"
+#include "short_range_verlet.hpp"
 #include "system/System.hpp"
 #include "virtual_sites/relative.hpp"
 
 #include <utils/Vector.hpp>
-#include <utils/flatten.hpp>
+#include <utils/math/sqr.hpp>
+#include <utils/matrix.hpp>
 
 #include <algorithm>
 #include <cstddef>
 #include <memory>
-#include <span>
 
 namespace System {
 std::shared_ptr<Observable_stat> System::calculate_pressure() {
@@ -58,46 +64,81 @@ std::shared_ptr<Observable_stat> System::calculate_pressure() {
   on_observable_calc();
 
   auto const volume = box_geo->volume();
-  auto const local_parts = cell_structure->local_particles();
 
-  for (auto const &p : local_parts) {
-    add_kinetic_virials(p, obs_pressure);
-  }
+  // Kinetic virial — reduction over local particles
+  auto const kinetic = reduce_over_local_particles<Utils::Matrix<double, 3, 3>>(
+      *cell_structure,
+      [](Utils::Matrix<double, 3, 3> &acc, Particle const &p) {
+        if (!p.is_virtual())
+          acc += Utils::tensor_product(p.v(), p.mass() * p.v());
+      },
+      [](auto &a, auto const &b) { a += b; });
+  std::ranges::copy(Utils::flatten(kinetic), obs_pressure.kinetic_lin.begin());
 
   auto const coulomb_force_kernel = coulomb.pair_force_kernel();
   auto const coulomb_pressure_kernel = coulomb.pair_pressure_kernel();
 
-  short_range_loop(
-      [this, coulomb_force_kernel_ptr = get_ptr(coulomb_force_kernel),
-       &obs_pressure](Particle const &p1, int bond_id,
-                      std::span<Particle *> partners) {
-        auto const &iaparams = *bonded_ias->at(bond_id);
-        auto const result = calc_bonded_pressure_tensor(
-            iaparams, p1, partners, *box_geo, coulomb_force_kernel_ptr);
-        if (result) {
-          auto const &tensor = result.value();
-          auto const output = obs_pressure.bonded_contribution(bond_id);
-          /* pressure tensor part */
-          for (std::size_t k = 0u; k < 3u; k++)
-            for (std::size_t l = 0u; l < 3u; l++)
-              output[k * 3u + l] += tensor(k, l);
+  // Factory instead of an eager criterion: construction fills an O(n_types^2)
+  // cutoff table, so it only runs on the link-cell fallback path.
+  auto const make_verlet_criterion = [&] {
+    return VerletCriterion<>{*this,
+                             cell_structure->get_verlet_skin(),
+                             get_interaction_range(),
+                             coulomb.cutoff(),
+                             dipoles.cutoff(),
+                             inactive_cutoff};
+  };
+  update_verlet_state(*this, inactive_cutoff);
 
-          return false;
-        }
-        return true;
-      },
-      [coulomb_force_kernel_ptr = get_ptr(coulomb_force_kernel),
-       coulomb_pressure_kernel_ptr = get_ptr(coulomb_pressure_kernel), this,
-       &obs_pressure](Particle const &p1, Particle const &p2,
-                      Distance const &d) {
-        auto const &ia_params =
-            nonbonded_ias->get_ia_param(p1.type(), p2.type());
-        add_non_bonded_pair_virials(p1, p2, d.vec21, sqrt(d.dist2), ia_params,
-                                    *bonded_ias, dipoles,
-                                    coulomb_force_kernel_ptr,
-                                    coulomb_pressure_kernel_ptr, obs_pressure);
-      },
-      *cell_structure, maximal_cutoff(), bonded_ias->maximal_cutoff());
+  PressureBinLayout layout{
+      static_cast<std::size_t>(bonded_ias->get_next_key()),
+      std::size_t(nonbonded_ias->get_max_seen_particle_type() + 1)};
+
+  using exec = Kokkos::DefaultHostExecutionSpace;
+  Kokkos::View<double **, Kokkos::LayoutRight, exec> local_pressure(
+      "local_pressure", exec().concurrency(), layout.total * 9);
+
+  auto const &unique_particles = cell_structure->get_unique_particles();
+  auto const n_particles = unique_particles.size();
+  Kokkos::View<int *, Kokkos::LayoutRight, exec> mol_id("mol_id", n_particles);
+  for (std::size_t i = 0; i < n_particles; ++i) {
+    mol_id(i) = unique_particles[i]->mol_id();
+  }
+
+  PressureKernel pair_p_kernel{*bonded_ias,
+                               *nonbonded_ias,
+                               coulomb,
+                               get_ptr(coulomb_force_kernel),
+                               get_ptr(coulomb_pressure_kernel),
+                               *box_geo,
+#ifdef ESPRESSO_DPD
+                               thermostat->dpd.get(),
+#endif
+                               cell_structure->get_unique_particles(),
+                               local_pressure,
+                               layout,
+                               cell_structure->get_aosoa(),
+                               mol_id,
+                               maximal_cutoff(),
+                               thermostat->thermo_switch};
+
+  auto &bs = cell_structure->bond_state();
+  BondsPressureKernelData bonds_p_data{*bonded_ias, *box_geo, local_pressure,
+                                       layout, cell_structure->get_aosoa()};
+  PairBondsPressureKernel pair_bp_kernel{
+      bonds_p_data, bs.pair_list, bs.pair_ids, get_ptr(coulomb_force_kernel)};
+  AngleBondsPressureKernel angle_bp_kernel{bonds_p_data, bs.angle_list,
+                                           bs.angle_ids};
+  DihedralBondsPressureKernel dih_bp_kernel{bonds_p_data, bs.dihedral_list,
+                                            bs.dihedral_ids};
+
+  cabana_short_range(pair_bp_kernel, angle_bp_kernel, dih_bp_kernel,
+                     pair_p_kernel, *cell_structure, get_interaction_range(),
+                     bonded_ias->maximal_cutoff(), make_verlet_criterion,
+                     propagation->integ_switch);
+
+  reduce_cabana_pressure(local_pressure, layout, obs_pressure, *bonded_ias,
+                         nonbonded_ias->get_max_seen_particle_type() + 1);
 
 #ifdef ESPRESSO_ELECTROSTATICS
   /* calculate k-space part of electrostatic interaction. */
@@ -117,9 +158,23 @@ std::shared_ptr<Observable_stat> System::calculate_pressure() {
   }
 #endif
 
-#ifdef ESPRESSO_DPD
-  std::ranges::copy(dpd_pressure_local(*this), obs_pressure.dpd.begin());
-#endif
+#ifdef ESPRESSO_BOND_CONSTRAINT
+  if (propagation->is_inertial() and bonded_ias->get_n_rigid_bonds() >= 1) {
+    // rigid_bond_virial was accumulated bond-by-bond inside
+    // correct_position_shake() during the last integration step, so it is
+    // already correct regardless of how many rigid bonds a particle
+    // participates in; only the deferred 1/dt^2 factor is applied here.
+    auto const sq_dt = Utils::sqr(get_time_step());
+    auto const &rigid_bond_virial = bonded_ias->rigid_bond_virial;
+    for (std::size_t bond_id = 0; bond_id < rigid_bond_virial.size();
+         ++bond_id) {
+      auto const stress = rigid_bond_virial[bond_id] / sq_dt;
+      auto dest = obs_pressure.bonded_contribution(static_cast<int>(bond_id));
+      for (std::size_t k = 0; k < 9u; ++k)
+        dest[k] += stress[k];
+    }
+  }
+#endif // ESPRESSO_BOND_CONSTRAINT
 
   obs_pressure.rescale(volume);
 

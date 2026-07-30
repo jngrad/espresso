@@ -72,9 +72,11 @@ class ReactionMethods(ut.TestCase):
 
     system = espressomd.System(box_l=[10., 10., 10.])
     system.cell_system.skin = 0.4
+    node_grid = np.copy(system.cell_system.node_grid)
 
     def setUp(self):
         self.system.box_l = [10., 10., 10.]
+        self.system.cell_system.node_grid = self.node_grid
 
     def tearDown(self):
         self.system.part.clear()
@@ -459,14 +461,14 @@ class ReactionMethods(ut.TestCase):
                                 **single_reaction_params)
 
         # check invalid reaction id exceptions
-        # (note: reactions id = 2 * reactions index)
+        # (note: reaction index = 2 * reaction id)
         self.assertEqual(len(method.reactions), 2)
         for i in [-2, -1, 1, 2, 3]:
             with self.assertRaisesRegex(IndexError, f"No reaction with id {i}"):
                 method.delete_reaction(reaction_id=i)
             with self.assertRaisesRegex(IndexError, f"No reaction with id {2 * i}"):
                 method.get_acceptance_rate_reaction(reaction_id=2 * i)
-        with self.assertRaisesRegex(ValueError, "Only forward reactions can be selected"):
+        with self.assertRaisesRegex(IndexError, "No reaction with id 1"):
             method.change_reaction_constant(reaction_id=1, gamma=1.)
 
         # check constraint exceptions
@@ -547,13 +549,14 @@ class ReactionMethods(ut.TestCase):
         with self.assertRaisesRegex(ValueError, "Invalid type: -1"):
             method.set_non_interacting_type(type=-1)
         with self.assertRaisesRegex(NotImplementedError, "Derived classes must implement this method"):
-            super(type(method), method).calculate_log_acceptance_probability(method.reactions[0], 0., {})
+            super(type(method), method).calculate_log_acceptance_probability(
+                method.reactions[0], 0., {})
 
         # check invalid exclusion ranges and radii
         with self.assertRaisesRegex(ValueError, "Invalid value for exclusion range"):
             espressomd.reaction_methods.ReactionEnsemble(
                 kT=1., seed=12, exclusion_range=-1., system=self.system)
-        with self.assertRaisesRegex(ValueError, "Invalid exclusion radius for type 1: radius -0.10"):
+        with self.assertRaisesRegex(ValueError, r"Invalid exclusion radius for type 1: radius -0\.1[0]*"):
             espressomd.reaction_methods.ReactionEnsemble(
                 kT=1., seed=12, exclusion_range=1., exclusion_radius_per_type={1: -0.1}, system=self.system)
         with self.assertRaisesRegex(ValueError, "Unknown search algorithm 'unknown'"):
@@ -561,9 +564,101 @@ class ReactionMethods(ut.TestCase):
                 kT=1., seed=12, exclusion_range=1., search_algorithm="unknown", system=self.system)
         method = espressomd.reaction_methods.ReactionEnsemble(
             kT=1., exclusion_range=1., seed=12, exclusion_radius_per_type={1: 0.1}, system=self.system)
-        with self.assertRaisesRegex(ValueError, "Invalid exclusion radius for type 2: radius -0.10"):
+        with self.assertRaisesRegex(ValueError, r"Invalid exclusion radius for type 2: radius -0\.1[0]*"):
             method.exclusion_radius_per_type = {2: -0.1}
         self.assertEqual(list(method.exclusion_radius_per_type.keys()), [1])
+
+    def test_change_constant_of_second_reaction(self):
+        """
+        Check reaction indexing. Some methods use the reaction index, while
+        others use reaction id (internally, reaction index = 2 * reaction id).
+        """
+        method = espressomd.reaction_methods.ReactionEnsemble(
+            kT=1., exclusion_range=1., seed=12)
+
+        gamma0 = 2.   # initial forward gamma of the 1st reaction
+        gamma1 = 5.   # initial forward gamma of the 2nd reaction
+
+        # 1st logical reaction -> m_reactions indices 0 (forward), 1 (backward)
+        method.add_reaction(
+            gamma=gamma0,
+            reactant_types=[0], reactant_coefficients=[1],
+            product_types=[1, 2], product_coefficients=[1, 1],
+            default_charges={0: 0, 1: 0, 2: 0})
+
+        # 2nd logical reaction -> m_reactions indices 2 (forward), 3 (backward)
+        method.add_reaction(
+            gamma=gamma1,
+            reactant_types=[3], reactant_coefficients=[1],
+            product_types=[4, 5], product_coefficients=[1, 1],
+            default_charges={3: 0, 4: 0, 5: 0})
+
+        reactions = method.get_status()["reactions"]
+        self.assertEqual(len(reactions), 4)
+        # sanity: the flat container is [F0, B0, F1, B1] as expected
+        self.assertAlmostEqual(reactions[0]["gamma"], gamma0, delta=1e-10)
+        self.assertAlmostEqual(reactions[2]["gamma"], gamma1, delta=1e-10)
+
+        # Per the documented convention, the SECOND added reaction is addressed
+        # with reaction_id=1.  This must succeed and update indices 2 and 3.
+        new_gamma = 17.
+        method.change_reaction_constant(reaction_id=1, gamma=new_gamma)
+
+        reactions = method.get_status()["reactions"]
+        # second reaction forward/backward updated ...
+        self.assertAlmostEqual(reactions[2]["gamma"], new_gamma, delta=1e-10)
+        self.assertAlmostEqual(
+            reactions[3]["gamma"], 1. / new_gamma, delta=1e-10)
+        # ... and the first reaction left untouched
+        self.assertAlmostEqual(reactions[0]["gamma"], gamma0, delta=1e-10)
+        self.assertAlmostEqual(reactions[1]["gamma"], 1. / gamma0, delta=1e-10)
+
+    @ut.skipIf(np.prod(node_grid) != 2, "needs 2 MPI ranks")
+    def test_search_algorithm_order_n(self):
+        """
+        Test exclusion range larger than ghost layer. The order N range check
+        must detect a candidate particle that is owned by a different MPI rank
+        and is not a ghost on the inserted particle's rank. On the buggy code
+        the distance loop runs only on the inserted particle's owning rank and
+        resolves the candidate via get_local_particle (local + ghost only),
+        so a remote, non-ghost particle within exclusion_range is silently
+        missed and the flag stays false. The correct behavior is that the
+        overlap is detected on any number of ranks.
+        """
+        # box 1x1x1; with 2 ranks the node grid is {2, 1, 1}, splitting the box
+        # along x. The ghost layer (max_range) is then about one cell wide in x,
+        # so a particle sitting 0.05 from an x-boundary is real on exactly one
+        # rank and NOT a ghost on the other rank.
+        self.system.box_l = [1., 1., 1.]
+
+        # particle 0 -> owned by the rank holding small x, particle 1 -> owned
+        # by the rank holding large x; neither is a ghost on the other rank.
+        self.system.part.add(id=0, pos=[0.05, 0.5, 0.5])
+        self.system.part.add(id=1, pos=[0.95, 0.5, 0.5])
+
+        # precondition: the ghost layer is much narrower than the distance of
+        # either particle to the far domain, so the particles are genuinely not
+        # mutual ghosts (the condition that makes the bug observable)
+        assert self.system.cell_system.call_method("get_max_range")[0] < 0.45
+
+        # exclusion_range (0.5) larger than the minimum-image distance between
+        # the two particles (mi-distance is 0.1) so an exclusion-range violation
+        # exists, but the candidate is on a remote rank beyond the ghost layer.
+        algo = espressomd.reaction_methods.ExclusionRadius(
+            exclusion_range=0.5, search_algorithm="order_n")
+
+        # inserted particle == particle 0; particle 1 lies within the exclusion
+        # range and must be detected.
+        self.assertTrue(algo.check_exclusion_range(pid=0, type=0))
+
+        # symmetric case: inserted particle == particle 1
+        self.assertTrue(algo.check_exclusion_range(pid=1, type=0))
+
+        # negative control: a small exclusion range below the mi-distance must
+        # NOT flag an overlap (the order_n branch must not over-detect either)
+        algo = espressomd.reaction_methods.ExclusionRadius(
+            exclusion_range=0.05, search_algorithm="order_n")
+        self.assertFalse(algo.check_exclusion_range(pid=0, type=0))
 
 
 if __name__ == "__main__":

@@ -78,62 +78,65 @@ inline Utils::Vector3d calc_central_radial_force(IA_parameters const &ia_params,
                                                  Utils::Vector3d const &d,
                                                  double const dist) {
 
+  auto const mask = ia_params.active_pair_mask;
+  static_cast<void>(mask);
+
   auto force_factor = 0.;
-/* Lennard-Jones */
 #ifdef ESPRESSO_LENNARD_JONES
-  force_factor += lj_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::LennardJones))
+    force_factor += lj_pair_force_factor(ia_params, dist);
 #endif
-/* WCA */
 #ifdef ESPRESSO_WCA
-  force_factor += wca_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::WCA))
+    force_factor += wca_pair_force_factor(ia_params, dist);
 #endif
-/* Lennard-Jones generic */
 #ifdef ESPRESSO_LENNARD_JONES_GENERIC
-  force_factor += ljgen_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::LennardJonesGeneric))
+    force_factor += ljgen_pair_force_factor(ia_params, dist);
 #endif
-/* smooth step */
 #ifdef ESPRESSO_SMOOTH_STEP
-  force_factor += SmSt_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::SmoothStep))
+    force_factor += SmSt_pair_force_factor(ia_params, dist);
 #endif
-/* Hertzian force */
 #ifdef ESPRESSO_HERTZIAN
-  force_factor += hertzian_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::Hertzian))
+    force_factor += hertzian_pair_force_factor(ia_params, dist);
 #endif
-/* Gaussian force */
 #ifdef ESPRESSO_GAUSSIAN
-  force_factor += gaussian_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::Gaussian))
+    force_factor += gaussian_pair_force_factor(ia_params, dist);
 #endif
-/* BMHTF NaCl */
 #ifdef ESPRESSO_BMHTF_NACL
-  force_factor += BMHTF_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::BMHTF))
+    force_factor += BMHTF_pair_force_factor(ia_params, dist);
 #endif
-/* Buckingham*/
 #ifdef ESPRESSO_BUCKINGHAM
-  force_factor += buck_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::Buckingham))
+    force_factor += buck_pair_force_factor(ia_params, dist);
 #endif
-/* Morse*/
 #ifdef ESPRESSO_MORSE
-  force_factor += morse_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::Morse))
+    force_factor += morse_pair_force_factor(ia_params, dist);
 #endif
-/*soft-sphere potential*/
 #ifdef ESPRESSO_SOFT_SPHERE
-  force_factor += soft_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::SoftSphere))
+    force_factor += soft_pair_force_factor(ia_params, dist);
 #endif
-/*hat potential*/
 #ifdef ESPRESSO_HAT
-  force_factor += hat_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::Hat))
+    force_factor += hat_pair_force_factor(ia_params, dist);
 #endif
-/* Lennard-Jones cosine */
 #ifdef ESPRESSO_LJCOS
-  force_factor += ljcos_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::LJCos))
+    force_factor += ljcos_pair_force_factor(ia_params, dist);
 #endif
-/* Lennard-Jones cosine */
 #ifdef ESPRESSO_LJCOS2
-  force_factor += ljcos2_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::LJCos2))
+    force_factor += ljcos2_pair_force_factor(ia_params, dist);
 #endif
-/* tabulated */
 #ifdef ESPRESSO_TABULATED
-  force_factor += tabulated_pair_force_factor(ia_params, dist);
+  if (mask & pair_potential_bit(PairPotential::Tabulated))
+    force_factor += tabulated_pair_force_factor(ia_params, dist);
 #endif
   return force_factor * d;
 }
@@ -150,6 +153,20 @@ inline ParticleForce calc_non_central_force(Particle const &p1,
   pf += gb_pair_force(p1.quat(), p2.quat(), ia_params, d, dist);
 #endif
   return pf;
+}
+
+// Director-based overload for use in Cabana pressure kernel.
+// Returns only the force vector (not torque) — sufficient for the virial.
+inline Utils::Vector3d calc_non_central_force(Utils::Vector3d const &dir1,
+                                              Utils::Vector3d const &dir2,
+                                              IA_parameters const &ia_params,
+                                              Utils::Vector3d const &d,
+                                              double const dist) {
+  Utils::Vector3d f{};
+#ifdef ESPRESSO_GAY_BERNE
+  f += gb_pair_force(dir1, dir2, ia_params, d, dist).f;
+#endif
+  return f;
 }
 
 inline ParticleForce calc_opposing_force(ParticleForce const &pf,
@@ -240,6 +257,24 @@ calc_bonded_three_body_force(Bonded_IA_Parameters const &iaparams,
 ESPRESSO_ATTR_ALWAYS_INLINE
 inline std::optional<std::tuple<Utils::Vector3d, Utils::Vector3d,
                                 Utils::Vector3d, Utils::Vector3d>>
+calc_bonded_dihedral_force(Bonded_IA_Parameters const &iaparams,
+                           Utils::Vector3d const &v12,
+                           Utils::Vector3d const &v23,
+                           Utils::Vector3d const &v34) {
+  if (auto const *iap = std::get_if<DihedralBond>(&iaparams)) {
+    return iap->forces(v12, v23, v34);
+  }
+#ifdef ESPRESSO_TABULATED
+  if (auto const *iap = std::get_if<TabulatedDihedralBond>(&iaparams)) {
+    return iap->forces(v12, v23, v34);
+  }
+#endif
+  throw BondUnknownTypeError();
+}
+
+ESPRESSO_ATTR_ALWAYS_INLINE
+inline std::optional<std::tuple<Utils::Vector3d, Utils::Vector3d,
+                                Utils::Vector3d, Utils::Vector3d>>
 calc_bonded_four_body_force(
     Bonded_IA_Parameters const &iaparams, BoxGeometry const &box_geo,
     Utils::Vector3d const &pos1, Utils::Vector3d const &pos2,
@@ -261,13 +296,5 @@ calc_bonded_four_body_force(
   auto const v12 = box_geo.get_mi_vector(pos1, pos2);
   auto const v23 = box_geo.get_mi_vector(pos3, pos1);
   auto const v34 = box_geo.get_mi_vector(pos4, pos3);
-  if (auto const *iap = std::get_if<DihedralBond>(&iaparams)) {
-    return iap->forces(v12, v23, v34);
-  }
-#ifdef ESPRESSO_TABULATED
-  if (auto const *iap = std::get_if<TabulatedDihedralBond>(&iaparams)) {
-    return iap->forces(v12, v23, v34);
-  }
-#endif
-  throw BondUnknownTypeError();
+  return calc_bonded_dihedral_force(iaparams, v12, v23, v34);
 }

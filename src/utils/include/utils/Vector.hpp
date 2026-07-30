@@ -30,6 +30,7 @@
 #include <boost/qvm/vec_traits.hpp>
 
 #include "utils/Array.hpp"
+#include "utils/attributes.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -167,14 +168,22 @@ public:
   Vector &normalize() {
     auto const l = norm();
     if (l != T(0)) {
-      for (std::size_t i = 0u; i < N; ++i)
-        (*this)[i] /= l;
+      *this /= l;
     }
 
     return *this;
   }
 
-  Vector normalized() const { return (*this) / (*this).norm(); }
+  /*
+   * @brief Return a normalized copy of the vector.
+   *
+   * Normalize the vector by its length,
+   * if not zero, otherwise the vector is unchanged.
+   */
+  Vector normalized() const {
+    auto const l = norm();
+    return (l != T(0)) ? (*this) / l : *this;
+  }
 };
 
 template <class T> using Vector3 = Vector<T, 3>;
@@ -255,7 +264,8 @@ auto operator+(Vector<T, N> const &a, Vector<U, N> const &b) {
 }
 
 template <std::size_t N, typename T>
-auto &operator+=(Vector<T, N> &a, Vector<T, N> const &b) {
+ESPRESSO_ATTR_ALWAYS_INLINE inline auto &operator+=(Vector<T, N> &a,
+                                                    Vector<T, N> const &b) {
   std::ranges::transform(a, b, std::begin(a), std::plus<T>());
   return a;
 }
@@ -273,7 +283,8 @@ Vector<T, N> operator-(Vector<T, N> const &a) {
 }
 
 template <std::size_t N, typename T>
-Vector<T, N> &operator-=(Vector<T, N> &a, Vector<T, N> const &b) {
+ESPRESSO_ATTR_ALWAYS_INLINE inline Vector<T, N> &
+operator-=(Vector<T, N> &a, Vector<T, N> const &b) {
   std::ranges::transform(a, b, std::begin(a), std::minus<T>());
   return a;
 }
@@ -281,7 +292,7 @@ Vector<T, N> &operator-=(Vector<T, N> &a, Vector<T, N> const &b) {
 /* Scalar multiplication */
 template <std::size_t N, typename T, class U>
   requires(std::is_arithmetic_v<U>)
-auto operator*(U const &a, Vector<T, N> const &b) {
+constexpr auto operator*(U const &a, Vector<T, N> const &b) {
   using R = decltype(a * std::declval<T>());
   Vector<R, N> ret;
   std::ranges::transform(b, std::begin(ret), [a](T const &v) { return a * v; });
@@ -290,7 +301,7 @@ auto operator*(U const &a, Vector<T, N> const &b) {
 
 template <std::size_t N, typename T, class U>
   requires(std::is_arithmetic_v<U>)
-auto operator*(Vector<T, N> const &a, U const &b) {
+constexpr auto operator*(Vector<T, N> const &a, U const &b) {
   using R = decltype(std::declval<T>() * b);
   Vector<R, N> ret;
   std::ranges::transform(a, std::begin(ret), [b](T const &v) { return b * v; });

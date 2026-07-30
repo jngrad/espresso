@@ -1,4 +1,4 @@
-image: ghcr.io/espressomd/docker/ubuntu:ab5bc64f5c3cc7330952f8b3bf321270ca53960c
+image: ghcr.io/espressomd/docker/ubuntu:c6ad9809eed1d0e9f26f4968559b234ea3b8bf82
 
 stages:
   - prepare
@@ -15,7 +15,7 @@ stages:
 
 .notification_job_template: &notification_job_definition
   <<: *global_job_definition
-  image: ghcr.io/espressomd/docker/alpine:ab5bc64f5c3cc7330952f8b3bf321270ca53960c
+  image: ghcr.io/espressomd/docker/alpine:c6ad9809eed1d0e9f26f4968559b234ea3b8bf82
   variables:
     GET_SOURCES_ATTEMPTS: 3
   dependencies: []
@@ -36,6 +36,30 @@ status_pending:
   stage: prepare
   script: sh maintainer/gh_post_status.sh pending
 
+### Builds without CUDA
+
+default:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'gcc-14'
+     CXX: 'g++-14'
+     GCOV: 'gcov-14'
+     with_cuda: 'false'
+     myconfig: 'default'
+     with_coverage: 'true'
+     with_scafacos: 'true'
+     with_walberla: 'true'
+     with_stokesian_dynamics: 'true'
+     with_nlopt: 'true'
+     check_skip_long: 'true'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+  tags:
+    - espresso
+    - no-cuda
+    - numa
+
 maxset:
   <<: *global_job_definition
   stage: build
@@ -45,8 +69,7 @@ maxset:
      GCOV: 'gcov-14'
      with_cuda: 'false'
      myconfig: 'maxset'
-     with_coverage: 'false'
-     with_coverage_python: 'false'
+     with_coverage: 'true'
      with_scafacos: 'true'
      with_walberla: 'true'
      with_stokesian_dynamics: 'true'
@@ -62,6 +85,129 @@ maxset:
     - numa
     - avx2
 
+no_rotation:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'gcc-14'
+     CXX: 'g++-14'
+     GCOV: 'gcov-14'
+     with_cuda: 'false'
+     myconfig: 'no_rotation'
+     with_coverage: 'true'
+     with_scafacos: 'false'
+     with_fpe: 'true'
+     check_skip_long: 'true'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+  tags:
+    - espresso
+    - no-cuda
+    - numa
+
+### Builds with CUDA
+
+clang-sanitizer:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'clang-19'
+     CXX: 'clang++-19'
+     CUDACXX: 'clang++-19'
+     myconfig: 'maxset'
+     with_cuda: 'true'
+     with_cuda_compiler: 'clang'
+     with_static_analysis: 'true'
+     check_skip_long: 'true'
+     with_asan: 'false'
+     with_ubsan: 'true'
+     with_scafacos: 'true'
+     with_walberla: 'true'
+     with_stokesian_dynamics: 'true'
+     with_nlopt: 'true'
+     with_coverage: 'false'
+     with_coverage_python: 'false'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+  timeout: 2h
+  tags:
+    - espresso
+    - cuda
+    - numa
+
+fast_math:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
+     myconfig: 'maxset'
+     with_cuda: 'true'
+     with_coverage: 'false'
+     with_scafacos: 'false'
+     with_stokesian_dynamics: 'true'
+     with_fast_math: 'true'
+     with_nlopt: 'true'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+  tags:
+    - espresso
+    - cuda
+  when: manual
+
+cuda12-coverage:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
+     myconfig: 'maxset'
+     with_cuda: 'true'
+     with_coverage: 'true'
+     check_skip_long: 'true'
+     with_scafacos: 'true'
+     with_walberla: 'true'
+     with_stokesian_dynamics: 'true'
+     with_nlopt: 'true'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+  timeout: 90m
+  tags:
+    - espresso
+    - cuda
+    - numa
+
+cuda12-maxset:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
+     myconfig: 'maxset'
+     with_cuda: 'true'
+     with_coverage: 'false'
+     with_coverage_python: 'true'
+     test_timeout: '900'
+     srcdir: '${CI_PROJECT_DIR}'
+     with_caliper: 'true'
+     with_scafacos: 'true'
+     with_walberla: 'true'
+     with_walberla_avx: 'true'
+     with_stokesian_dynamics: 'true'
+     with_nlopt: 'true'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+  timeout: 90m
+  tags:
+    - espresso
+    - cuda
+    - numa
+    - avx2
+    - reuse-artifacts-same-arch
+
 tutorials-samples-maxset:
   <<: *global_job_definition
   stage: build
@@ -72,7 +218,7 @@ tutorials-samples-maxset:
      myconfig: 'maxset'
      with_cuda: 'true'
      with_coverage: 'false'
-     with_coverage_python: 'false'
+     with_coverage_python: 'true'
      with_scafacos: 'true'
      with_walberla: 'true'
      with_walberla_avx: 'true'
@@ -90,6 +236,149 @@ tutorials-samples-maxset:
     - cuda
     - numa
     - avx2
+
+tutorials-samples-default:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
+     myconfig: 'default'
+     with_cuda: 'true'
+     with_coverage: 'false'
+     with_scafacos: 'true'
+     with_walberla: 'true'
+     with_walberla_avx: 'true'
+     make_check_unit_tests: 'false'
+     make_check_python: 'false'
+     make_check_tutorials: 'true'
+     make_check_samples: 'true'
+     make_check_benchmarks: 'true'
+     test_timeout: '1200'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+  tags:
+    - espresso
+    - cuda
+    - numa
+    - avx2
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+
+tutorials-samples-empty:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
+     myconfig: 'empty'
+     with_cuda: 'true'
+     with_coverage: 'false'
+     with_scafacos: 'false'
+     with_walberla: 'false'
+     make_check_unit_tests: 'false'
+     make_check_python: 'false'
+     make_check_tutorials: 'true'
+     make_check_samples: 'true'
+     make_check_benchmarks: 'true'
+     test_timeout: '1200'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+  tags:
+    - espresso
+    - cuda
+    - numa
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+
+tutorials-samples-no-gpu:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
+     myconfig: 'maxset'
+     with_cuda: 'true'
+     with_coverage: 'false'
+     with_scafacos: 'true'
+     with_walberla: 'true'
+     with_walberla_avx: 'true'
+     make_check_unit_tests: 'false'
+     make_check_python: 'false'
+     make_check_tutorials: 'true'
+     make_check_samples: 'true'
+     make_check_benchmarks: 'true'
+     test_timeout: '1200'
+     hide_gpu: 'true'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+  tags:
+    - espresso
+    - no-cuda
+    - avx2
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+
+installation:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'gcc-12'
+     CXX: 'g++-12'
+     GCOV: 'gcov-12'
+     myconfig: 'maxset'
+     with_cuda: 'true'
+     with_coverage: 'false'
+     make_check_unit_tests: 'false'
+     make_check_python: 'false'
+     with_scafacos: 'true'
+     with_walberla: 'true'
+     with_walberla_avx: 'true'
+     with_stokesian_dynamics: 'true'
+     with_nlopt: 'true'
+     srcdir: '${CI_PROJECT_DIR}'
+     build_type: 'Release'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+    - cd build
+    - ninja install
+    - cmake . -D ESPRESSO_BUILD_TESTS=ON
+    - sed -i "s|$(pwd)/pypresso|/tmp/espresso-unit-tests/bin/pypresso|" testsuite/{python,samples,tutorials}/CTestTestfile.cmake
+    - ninja check_python_skip_long
+    - ninja check_samples
+    - ninja check_tutorials
+  tags:
+    - espresso
+    - cuda
+    - avx2
+  when: manual
+
+empty:
+  <<: *global_job_definition
+  stage: build
+  variables:
+     CC: 'clang-19'
+     CXX: 'clang++-19'
+     CUDACXX: 'clang++-19'
+     myconfig: 'empty'
+     with_cuda: 'true'
+     with_cuda_compiler: 'clang'
+     with_static_analysis: 'true'
+     with_scafacos: 'false'
+     with_walberla: 'false'
+     with_stokesian_dynamics: 'false'
+     with_fpe: 'true'
+     with_coverage: 'false'
+     with_coverage_python: 'true'
+  script:
+    - bash maintainer/CI/build_cmake.sh
+  tags:
+    - espresso
+    - cuda
+    - numa
 
 status_success:
   <<: *notification_job_definition

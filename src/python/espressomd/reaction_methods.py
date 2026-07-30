@@ -26,6 +26,13 @@ from .code_features import has_features
 from . import utils
 
 
+if "line_profiler" not in dir():
+    def profile(func):
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+
+
 class SingleReaction:
     def __init__(self, **kwargs):
         utils.check_valid_keys(self.valid_keys(), kwargs.keys())
@@ -412,8 +419,8 @@ class ReactionAlgorithm:
         Parameters
         ----------
         reaction_id : :obj:`int`
-            Reaction index, i.e. 0 for the first reaction in forward direction,
-            and 1 for the first reaction in backward direction.
+            Identifier of the reaction to modify.
+            Will *not* be multiplied by 2 internally!
         """
         if reaction_id < 0 or reaction_id >= len(self.reactions):
             raise IndexError(f"No reaction with id {reaction_id}")
@@ -591,8 +598,6 @@ class ReactionAlgorithm:
             New reaction constant for the forward reaction.
 
         """
-        if reaction_id % 2 == 1:
-            raise ValueError("Only forward reactions can be selected")
         if gamma <= 0.:
             raise ValueError("gamma needs to be a strictly positive value")
         index = self.get_reaction_index(reaction_id)

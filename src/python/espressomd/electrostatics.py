@@ -23,6 +23,20 @@ from .script_interface import ScriptInterfaceHelper, script_interface_register
 
 @script_interface_register
 class Container(ScriptInterfaceHelper):
+    """
+    Container object holding the electrostatics solver.
+
+    Parameters
+    ----------
+    solver : :obj:`ElectrostaticInteraction`
+        Electrostatics solver.
+
+    Methods
+    -------
+    clear()
+        Remove the electrostatics solver.
+
+    """
     _so_name = "Coulomb::Container"
     _so_features = ("ELECTROSTATICS",)
     _so_bind_methods = ("clear",)
@@ -252,7 +266,7 @@ class ELC(ElectrostaticInteraction):
     delta_mid_top : :obj:`float`, optional
         Dielectric contrast :math:`\\Delta_t` between the upper boundary
         and the simulation box. Value between -1 and +1 (inclusive).
-    delta_mid_bottom : :obj:`float`, optional
+    delta_mid_bot : :obj:`float`, optional
         Dielectric contrast :math:`\\Delta_b` between the lower boundary
         and the simulation box. Value between -1 and +1 (inclusive).
     const_pot : :obj:`bool`, optional

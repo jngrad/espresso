@@ -106,7 +106,7 @@ set_particles_positions(std::vector<int> const &pids,
                         std::vector<Utils::Vector3d> const &positions) {
   for (std::size_t i = 0; i < pids.size(); ++i) {
     auto const pid = pids[i];
-    auto const pos = positions[i];
+    auto const &pos = positions[i];
     particle_checks(pid, pos);
     set_particle_pos(pid, pos);
   }
@@ -284,11 +284,11 @@ Variant ParticleSlice::do_call_method(std::string const &name,
     }
     std::vector<Variant> result;
     result.reserve(m_id_selection.size());
-    auto so = std::dynamic_pointer_cast<ParticleModifier>(
-        context()->make_shared("Particles::ParticleModifier",
-                               {{"id", -1},
+    VariantMap const obj_params{{"id", -1},
                                 {"__cell_structure", m_cell_structure.lock()},
-                                {"__bonded_ias", m_bonded_ias.lock()}}));
+                                {"__bonded_ias", m_bonded_ias.lock()}};
+    auto so = std::dynamic_pointer_cast<ParticleModifier>(
+        context()->make_shared("Particles::ParticleModifier", obj_params));
     for (int pid : m_id_selection) {
       so->set_pid(pid);
       result.emplace_back(so->get_parameter(param_name));
@@ -305,11 +305,10 @@ Variant ParticleSlice::do_call_method(std::string const &name,
     return {};
   }
   if (name == "get_particle") {
-    return context()->make_shared(
-        "Particles::ParticleHandle",
-        {{"id", get_value<int>(params, "p_id")},
-         {"__cell_structure", m_cell_structure.lock()},
-         {"__bonded_ias", m_bonded_ias.lock()}});
+    VariantMap const obj_params{{"id", get_value<int>(params, "p_id")},
+                                {"__cell_structure", m_cell_structure.lock()},
+                                {"__bonded_ias", m_bonded_ias.lock()}};
+    return context()->make_shared("Particles::ParticleHandle", obj_params);
   }
   return {};
 }

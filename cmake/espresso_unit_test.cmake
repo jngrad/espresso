@@ -52,6 +52,7 @@ function(espresso_unit_test_executable)
   if(ESPRESSO_BUILD_WITH_CUDA)
     espresso_add_cuda_rpaths(${TEST_NAME}) # for GPU-aware MPI vendors
   endif()
+  espresso_set_kokkos_properties_on_source_files(${TEST_NAME})
 endfunction()
 
 # register the executable of a unit test in the CTest suite
@@ -67,7 +68,7 @@ function(espresso_unit_test_register)
   if(NOT DEFINED TEST_NUM_PROC)
     set(TEST_NUM_PROC 1)
   endif()
-  if(TEST_NUM_PROC GREATER 1)
+  if(TEST_NUM_PROC GREATER 1 OR CMAKE_CXX_COMPILER_ID STREQUAL "NVHPC")
     if(${TEST_NUM_PROC} GREATER ${ESPRESSO_TEST_NP})
       set(TEST_NUM_PROC ${ESPRESSO_TEST_NP})
     endif()

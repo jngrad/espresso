@@ -159,12 +159,6 @@ public:
   std::shared_ptr<Observable_stat> calculate_pressure();
 
 #ifdef ESPRESSO_NPT
-  /** @brief get the instantaneous pressure with (q(t+dt), p(t+dt/2))*/
-  double get_instantaneous_pressure();
-
-  /** @brief get the instantaneous virial pressure with q(t+dt)*/
-  double get_instantaneous_pressure_virial();
-
   /** @brief Synchronize NpT state such as instantaneous and average pressure */
   void synchronize_npt_state();
   /** @brief Reinitialize the NpT state. */
@@ -383,5 +377,6 @@ private:
 System &get_system();
 void set_system(std::shared_ptr<System> new_instance);
 void reset_system();
+bool is_same_system(System const *system);
 
 } // namespace System

@@ -16,7 +16,5 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-target_sources(
-  espresso_core
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ExclusionRadius.cpp)
-
+target_sources(espresso_core
+               PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ExclusionRadius.cpp)
