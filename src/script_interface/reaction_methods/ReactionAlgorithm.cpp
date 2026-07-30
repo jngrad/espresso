@@ -41,7 +41,9 @@ namespace ReactionMethods {
 Variant ReactionAlgorithm::do_call_method(std::string const &name,
                                           VariantMap const &params) {
   if (name == "count_number_of_particles_per_type") {
-    auto const &cs = get_value<std::shared_ptr<CellSystem::CellSystem>>(params, "cell_system")->get_cell_structure();
+    auto const &cs = get_value<std::shared_ptr<CellSystem::CellSystem>>(
+                         params, "cell_system")
+                         ->get_cell_structure();
     auto const types = get_value<std::vector<int>>(params, "types");
     std::vector<int> local_numbers;
     std::vector<int> global_numbers(types.size());
@@ -57,7 +59,8 @@ Variant ReactionAlgorithm::do_call_method(std::string const &name,
       }
       local_numbers.emplace_back(counter);
     }
-    boost::mpi::reduce(::comm_cart, local_numbers, global_numbers, std::plus(), 0);
+    boost::mpi::reduce(::comm_cart, local_numbers, global_numbers,
+                       std::plus<>(), 0);
     return global_numbers;
   }
   if (context()->is_head_node()) {
