@@ -95,8 +95,9 @@ public:
   Variant do_call_method(std::string const &name,
                          VariantMap const &params) override {
     if (name == "check_exclusion_range") {
+      assert(not params.contains("type"));
       auto const pid = get_value<int>(params, "pid");
-      if (params.count("ptype")) {
+      if (params.contains("ptype")) {
         auto const ptype = get_value<int>(params, "ptype");
         return m_obj->check_exclusion_range(pid, ptype);
       }

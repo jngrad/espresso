@@ -551,6 +551,14 @@ class ReactionMethods(ut.TestCase):
         with self.assertRaisesRegex(NotImplementedError, "Derived classes must implement this method"):
             super(type(method), method).calculate_log_acceptance_probability(
                 method.reactions[0], 0., {})
+        with self.assertRaisesRegex(RuntimeError, "Types may not be negative"):
+            method.non_interacting_type = -2
+            method.count_number_of_particles_per_type()
+        method.non_interacting_type = 100
+        with self.assertRaisesRegex(RuntimeError, "unknown method 'unknown'"):
+            method._helper.call_method("unknown")
+        with self.assertRaisesRegex(RuntimeError, "Reaction methods do not support checkpointing"):
+            method._helper._serialize()
 
         # check invalid exclusion ranges and radii
         with self.assertRaisesRegex(ValueError, "Invalid value for exclusion range"):
@@ -649,16 +657,22 @@ class ReactionMethods(ut.TestCase):
 
         # inserted particle == particle 0; particle 1 lies within the exclusion
         # range and must be detected.
-        self.assertTrue(algo.check_exclusion_range(pid=0, type=0))
+        self.assertTrue(algo.check_exclusion_range(pid=0, ptype=0))
+        self.assertTrue(algo.check_exclusion_range(pid=0, ptype=-2))
+        self.assertTrue(algo.check_exclusion_range(pid=0))
 
         # symmetric case: inserted particle == particle 1
-        self.assertTrue(algo.check_exclusion_range(pid=1, type=0))
+        self.assertTrue(algo.check_exclusion_range(pid=1, ptype=0))
+        self.assertTrue(algo.check_exclusion_range(pid=1, ptype=-2))
+        self.assertTrue(algo.check_exclusion_range(pid=1))
 
         # negative control: a small exclusion range below the mi-distance must
         # NOT flag an overlap (the order_n branch must not over-detect either)
         algo = espressomd.reaction_methods.ExclusionRadius(
             exclusion_range=0.05, search_algorithm="order_n")
-        self.assertFalse(algo.check_exclusion_range(pid=0, type=0))
+        self.assertFalse(algo.check_exclusion_range(pid=0, ptype=0))
+        self.assertFalse(algo.check_exclusion_range(pid=0, ptype=-2))
+        self.assertFalse(algo.check_exclusion_range(pid=0))
 
 
 if __name__ == "__main__":

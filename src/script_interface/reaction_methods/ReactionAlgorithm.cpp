@@ -47,24 +47,26 @@ Variant ReactionAlgorithm::do_call_method(std::string const &name,
     auto const types = get_value<std::vector<int>>(params, "types");
     std::vector<int> local_numbers;
     std::vector<int> global_numbers(types.size());
-    for (auto const &type : types) {
-      if (type < 0) {
-        throw std::runtime_error("Types may not be negative");
-      }
-      int counter = 0;
-      for (auto const &p : cs.local_particles()) {
-        if (p.type() == type) {
-          counter++;
+    context()->parallel_try_catch([&]() {
+      for (auto const &type : types) {
+        if (type < 0) {
+          throw std::runtime_error("Types may not be negative");
         }
+        int counter = 0;
+        for (auto const &p : cs.local_particles()) {
+          if (p.type() == type) {
+            counter++;
+          }
+        }
+        local_numbers.emplace_back(counter);
       }
-      local_numbers.emplace_back(counter);
-    }
+    });
     boost::mpi::reduce(::comm_cart, local_numbers, global_numbers,
                        std::plus<>(), 0);
     return global_numbers;
   }
   if (context()->is_head_node()) {
-    throw std::runtime_error("unknown method '" + name + "()'");
+    throw std::runtime_error("unknown method '" + name + "'");
   }
   return {};
 }

@@ -24,7 +24,7 @@ import espressomd
 import espressomd.reaction_methods
 
 
-@utx.skipIfMissingFeatures(["P3M"])
+@utx.skipIfMissingFeatures(["ELECTROSTATICS"])
 class Test(ut.TestCase):
     """Test the constant pH reaction ensemble."""
 

@@ -18,7 +18,6 @@
 #
 
 import numpy as np
-import warnings
 import math
 import sys
 from .script_interface import ScriptInterfaceHelper, script_interface_register
@@ -460,7 +459,7 @@ class ReactionAlgorithm:
         # draw particle ids at random without replacement
         p_id = -1
         drawn_pids = [p_id]
-        for i in range(n_particles):
+        for _ in range(n_particles):
             # draw a new particle id
             while p_id in drawn_pids:
                 p_id = self.get_random_pids(ptype, 1)[0]
@@ -1030,7 +1029,7 @@ class ReactionEnsemble(ReactionAlgorithm):
 
     def calculate_log_acceptance_probability(
             self, reaction, E_pot_diff, old_particle_numbers):
-        __doc__ = ReactionAlgorithm.__doc__
+        __doc__ = ReactionAlgorithm.__doc__  # pylint: disable=unused-variable
         ln_factorial = self.calculate_factorial_expression(
             reaction, old_particle_numbers)
         ln_bf = -E_pot_diff / self.kT + reaction.nu_bar * \
@@ -1087,7 +1086,7 @@ class ConstantpHEnsemble(ReactionAlgorithm):
 
     def calculate_log_acceptance_probability(
             self, reaction, E_pot_diff, old_particle_numbers):
-        __doc__ = ReactionAlgorithm.__doc__
+        __doc__ = ReactionAlgorithm.__doc__  # pylint: disable=unused-variable
         ln_factorial_expr = self.calculate_factorial_expression(
             reaction, old_particle_numbers)
         ln_bf = E_pot_diff - reaction.nu_bar * self.kT * math.log(10.) * (

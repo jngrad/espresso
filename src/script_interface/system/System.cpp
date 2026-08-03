@@ -501,14 +501,15 @@ Variant System::do_call_method(std::string const &name,
   }
   if (name == "number_of_particles") {
     auto const type = get_value<int>(parameters, "type");
-      int local_counter = 0;
-      int global_counter = 0;
-      for (auto const &p : get_system().cell_structure->local_particles()) {
-        if (p.type() == type) {
-          local_counter++;
-        }
+    int local_counter = 0;
+    int global_counter = 0;
+    for (auto const &p : get_system().cell_structure->local_particles()) {
+      if (p.type() == type) {
+        local_counter++;
       }
-    boost::mpi::reduce(::comm_cart, local_counter, global_counter, std::plus<>(), 0);
+    }
+    boost::mpi::reduce(::comm_cart, local_counter, global_counter,
+                       std::plus<>(), 0);
     return global_counter;
   }
   if (name == "velocity_difference") {

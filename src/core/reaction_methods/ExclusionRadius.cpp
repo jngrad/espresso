@@ -79,7 +79,6 @@ void ExclusionRadius::recalc_derived_parameters() {
  * Check if an inserted particle is too close to neighboring particles.
  */
 bool ExclusionRadius::check_exclusion_range(int p_id, int p_type) {
-
   /* Check the exclusion radius of the inserted particle */
   if (exclusion_radius_per_type.contains(p_type)) {
     if (exclusion_radius_per_type[p_type] == 0.) {
@@ -189,7 +188,6 @@ bool ExclusionRadius::check_exclusion_range(int pid) {
   if (auto p = get_real_particle(m_comm, pid)) {
     type_local = p->type();
   }
-  auto const type =
-      boost::mpi::all_reduce(m_comm, type_local, std::plus<int>());
+  auto const type = boost::mpi::all_reduce(m_comm, type_local, std::plus<>());
   return check_exclusion_range(pid, type);
 }
