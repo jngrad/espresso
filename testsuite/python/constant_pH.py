@@ -18,14 +18,15 @@
 #
 
 import unittest as ut
+import unittest_decorators as utx
 import numpy as np
 import espressomd
 import espressomd.reaction_methods
 
 
-class ConstantpHTest(ut.TestCase):
-
-    """Test the core implementation of the constant pH reaction ensemble."""
+@utx.skipIfMissingFeatures(["P3M"])
+class Test(ut.TestCase):
+    """Test the constant pH reaction ensemble."""
 
     np.random.seed(42)
 

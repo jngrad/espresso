@@ -578,7 +578,6 @@ class ReactionAlgorithm:
             raise ValueError(f"Invalid particle id: {p_id}")
         self.free_particle_id(p_id, precheck=True)
         self.system.part.by_id(p_id).remove()
-        self.system.cell_system.call_method("invalidate_ghosts")
 
     def change_reaction_constant(self, reaction_id, gamma):
         """
@@ -764,7 +763,9 @@ class ReactionAlgorithm:
         for reaction in self.reactions:
             types += reaction.reactant_types + reaction.product_types
         types = list(set(types))
-        numbers = self._helper.call_method("count_number_of_particles_per_type", types=types, cell_system=self.system.cell_system)
+        numbers = self._helper.call_method(
+            "count_number_of_particles_per_type",
+            types=types, cell_system=self.system.cell_system)
         return dict(zip(types, numbers))
 
     def free_particle_id(self, p_id, precheck=False):
@@ -786,16 +787,13 @@ class ReactionAlgorithm:
                 self.particle_numbers[p.type] -= 1
             p.remove()
             self.free_particle_id(particle_info["pid"])
-        self.system.cell_system.call_method("invalidate_ghosts")
 
     def delete_hidden_particles(self):
         for particle_info in self.particle_changes["hidden"]:
-            #self.system.part.call_method("delete_particle", particle_info["pid"])
             self.system.part.by_id(particle_info["pid"]).remove()
             if self.particle_numbers:
                 self.particle_numbers[self.non_interacting_type] -= 1
             self.free_particle_id(particle_info["pid"])
-        self.system.cell_system.call_method("invalidate_ghosts")
 
     def restore_system(self):
         # restore properties of changed and hidden particles
@@ -954,7 +952,8 @@ class ReactionAlgorithm:
                 return E_pot_old
 
             types = reaction.reactant_types + reaction.product_types
-            old_particle_numbers = {k:v for k,v in self.particle_numbers.items() if k in types}
+            old_particle_numbers = {
+                k: v for k, v in self.particle_numbers.items() if k in types}
             self.make_reaction_attempt(reaction)
 
             if self.particle_inside_exclusion_range_touched:
