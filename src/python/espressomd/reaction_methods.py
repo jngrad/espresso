@@ -34,7 +34,8 @@ if "line_profiler" not in dir():
 
 class SingleReaction:
     def __init__(self, **kwargs):
-        utils.check_valid_keys(self.valid_keys(), kwargs.keys())
+        utils.check_required_keys(self.required_keys(), kwargs.keys())
+        utils.check_valid_keys(self.valid_keys(), kwargs.keys(), strict=True)
         self.reactant_types = kwargs["reactant_types"]
         self.reactant_coefficients = kwargs["reactant_coefficients"]
         self.product_types = kwargs["product_types"]
@@ -96,7 +97,7 @@ class ExclusionRadius(ScriptInterfaceHelper):
     exclusion_range : :obj:`float`
         Minimal distance from any particle whose type
         is not in ``exclusion_radius_per_type``.
-    search_algorithm : :obj:`str`
+    search_algorithm : :obj:`str`, optional
         Pair search algorithm. Default is ``"order_n"``, which evaluates the
         distance between the queried particle and all other particles in the
         system, and scales with O(N). For MPI-parallel simulations, the
@@ -128,6 +129,20 @@ class ExclusionRadius(ScriptInterfaceHelper):
     _so_name = "ReactionMethods::ExclusionRadius"
     _so_creation_policy = "GLOBAL"
     _so_bind_methods = ("check_exclusion_range",)
+
+    def __init__(self, **kwargs):
+        utils.check_required_keys(self.required_keys(), kwargs.keys())
+        utils.check_valid_keys(self.valid_keys(), kwargs.keys(), strict=True)
+        super().__init__(**kwargs)
+
+    @staticmethod
+    def required_keys():
+        return {"exclusion_range"}
+
+    @staticmethod
+    def valid_keys():
+        return {"exclusion_range",
+                "exclusion_radius_per_type", "search_algorithm"}
 
 
 class ReactionAlgorithm:
@@ -176,18 +191,19 @@ class ReactionAlgorithm:
         if type(self) is ReactionAlgorithm:
             raise RuntimeError(
                 f"Base class '{self.__class__.__name__}' cannot be instantiated")
+        utils.check_required_keys(self.required_keys(), kwargs.keys())
+        utils.check_valid_keys(self.valid_keys(), kwargs.keys(), strict=True)
         self._helper = self._ReactionAlgorithmHelper()
-        self.system = kwargs.pop("system", _main_system)
-        if "exclusion_radius" in kwargs:
-            raise KeyError(
-                "the keyword `exclusion_radius` is obsolete. Currently, the equivalent keyword is `exclusion_range`")
-        utils.check_valid_keys(self.valid_keys(), kwargs.keys())
+        self.system = kwargs.pop("system")
         self.kT = kwargs["kT"]
         if self.kT < 0.:
             raise ValueError("Invalid value for 'kT'")
         self.rng = np.random.Generator(np.random.Philox(kwargs["seed"]))
         self.particle_inside_exclusion_range_touched = False
-        self.exclusion = ExclusionRadius(**kwargs)
+        if "exclusion_range" not in kwargs:
+            kwargs["exclusion_range"] = 0.
+        self.exclusion = ExclusionRadius(
+            **{k: kwargs[k] for k in ExclusionRadius.valid_keys() if k in kwargs})
         self.constraint_type = "none"
         self.params_boundaries = {}
         self.m_accepted_configurational_MC_moves = 0
@@ -199,11 +215,11 @@ class ReactionAlgorithm:
         self.initialize_particle_changes()
         self.particle_numbers = {}
 
-    def required_keys(self):
-        return {"kT", "seed"}
-
     def valid_keys(self):
-        return {"kT", "exclusion_range", "seed", "exclusion_radius_per_type"}
+        raise NotImplementedError("Derived classes must implement this method")
+
+    def required_keys(self):
+        raise NotImplementedError("Derived classes must implement this method")
 
     @property
     def exclusion_range(self):
@@ -228,13 +244,6 @@ class ReactionAlgorithm:
     @search_algorithm.setter
     def search_algorithm(self, value):
         self.exclusion.search_algorithm = value
-
-    def valid_keys(self):
-        return {"kT", "exclusion_range", "seed",
-                "exclusion_radius_per_type", "search_algorithm"}
-
-    def required_keys(self):
-        return {"kT", "exclusion_range", "seed"}
 
     @classmethod
     def calculate_factorial_expression(cls, reaction, particle_numbers):
@@ -1023,6 +1032,13 @@ class ReactionEnsemble(ReactionAlgorithm):
     This class implements the Reaction Ensemble.
     """
 
+    def valid_keys(self):
+        return {"system", "kT", "exclusion_range", "seed",
+                "exclusion_radius_per_type", "search_algorithm"}
+
+    def required_keys(self):
+        return {"system", "kT", "exclusion_range", "seed"}
+
     def _setup_cache(self):
         super()._setup_cache()
         self.volume = self.get_volume()
@@ -1078,11 +1094,11 @@ class ConstantpHEnsemble(ReactionAlgorithm):
         self.constant_pH = kwargs["constant_pH"]
 
     def valid_keys(self):
-        return {"kT", "exclusion_range", "seed",
+        return {"system", "kT", "exclusion_range", "seed",
                 "constant_pH", "exclusion_radius_per_type", "search_algorithm"}
 
     def required_keys(self):
-        return {"kT", "exclusion_range", "seed", "constant_pH"}
+        return {"system", "kT", "exclusion_range", "seed", "constant_pH"}
 
     def calculate_log_acceptance_probability(
             self, reaction, E_pot_diff, old_particle_numbers):
@@ -1154,10 +1170,10 @@ class WidomInsertion(ReactionAlgorithm):
         raise RuntimeError("No search algorithm for WidomInsertion")
 
     def required_keys(self):
-        return {"kT", "seed"}
+        return {"system", "kT", "seed"}
 
     def valid_keys(self):
-        return {"kT", "seed"}
+        return {"system", "kT", "seed"}
 
     def add_reaction(self, **kwargs):
         kwargs['gamma'] = 1.

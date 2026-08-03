@@ -280,7 +280,8 @@ class ReactionMethods(ut.TestCase):
         self.system.box_l = [1., 1., 1.]
         self.system.part.add(id=[0, 1], pos=ref_pos, v=ref_vel)
 
-        r_algo = espressomd.reaction_methods.ReactionEnsemble(seed=42, kT=1.)
+        r_algo = espressomd.reaction_methods.ReactionEnsemble(
+            seed=42, kT=1., exclusion_range=0., system=self.system)
         r_algo.exclusion.exclusion_range = 1.
         self.assertFalse(r_algo.particle_inside_exclusion_range_touched)
         r_algo.displacement_mc_move(0, 2)
@@ -311,7 +312,8 @@ class ReactionMethods(ut.TestCase):
         type_A = 0
         type_B = 1
         type_C = 2
-        r_algo = espressomd.reaction_methods.ReactionEnsemble(seed=42, kT=1.)
+        r_algo = espressomd.reaction_methods.ReactionEnsemble(
+            seed=42, kT=1., exclusion_range=0., system=self.system)
 
         def displacement_move(t, n):
             return r_algo.displacement_mc_move_for_particles_of_type(t, n)
@@ -350,7 +352,8 @@ class ReactionMethods(ut.TestCase):
         box_l = np.array([0.5, 0.4, 0.7])
         origin = np.zeros(3)
         self.system.box_l = box_l
-        r_algo = espressomd.reaction_methods.ReactionEnsemble(seed=40, kT=1.)
+        r_algo = espressomd.reaction_methods.ReactionEnsemble(
+            seed=40, kT=1., exclusion_range=0., system=self.system)
 
         # cubic case
         for _ in range(100):
@@ -389,7 +392,7 @@ class ReactionMethods(ut.TestCase):
         self.system.part.add(pos=[(0.5, 0.5, 0.5), (0.7, 0.7, 0.7)],
                              type=[type_A, type_B])
         r_algo = espressomd.reaction_methods.ReactionEnsemble(
-            seed=40, kT=1.)
+            seed=40, kT=1., exclusion_range=0., system=self.system)
 
         # new positions will always be in the excluded range if the sum of the
         # radii of both particle types is larger than box length (radii take
@@ -529,6 +532,12 @@ class ReactionMethods(ut.TestCase):
         with self.assertRaisesRegex(ValueError, err_msg):
             espressomd.reaction_methods.ReactionEnsemble(
                 kT=1., exclusion_range=1., seed=12, x=1, system=self.system)
+        with self.assertRaisesRegex(ValueError, r"\(missing ..reactant_coefficients..\)"):
+            espressomd.reaction_methods.SingleReaction(
+                **{k: v for k, v in single_reaction_params.items() if k != "reactant_coefficients"})
+        with self.assertRaisesRegex(ValueError, r"\(unknown ..unknown..\)"):
+            espressomd.reaction_methods.SingleReaction(
+                **single_reaction_params, unknown=5)
         with self.assertRaisesRegex(ValueError, err_msg):
             espressomd.reaction_methods.ConstantpHEnsemble(
                 kT=1., exclusion_range=1., seed=12, x=1, constant_pH=2, system=self.system)
@@ -559,6 +568,8 @@ class ReactionMethods(ut.TestCase):
             method._helper.call_method("unknown")
         with self.assertRaisesRegex(RuntimeError, "Reaction methods do not support checkpointing"):
             method._helper._serialize()
+        with self.assertRaisesRegex(NotImplementedError, "was removed in release 5.1"):
+            self.system.setup_type_map()
 
         # check invalid exclusion ranges and radii
         with self.assertRaisesRegex(ValueError, "Invalid value for exclusion range"):
@@ -582,7 +593,7 @@ class ReactionMethods(ut.TestCase):
         others use reaction id (internally, reaction index = 2 * reaction id).
         """
         method = espressomd.reaction_methods.ReactionEnsemble(
-            kT=1., exclusion_range=1., seed=12)
+            kT=1., exclusion_range=1., seed=12, system=self.system)
 
         gamma0 = 2.   # initial forward gamma of the 1st reaction
         gamma1 = 5.   # initial forward gamma of the 2nd reaction

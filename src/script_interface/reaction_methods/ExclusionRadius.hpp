@@ -80,11 +80,9 @@ public:
     context()->parallel_try_catch([&]() {
       m_obj = std::make_shared<::ExclusionRadius>(context()->get_comm());
     });
+    do_set_parameter("exclusion_range", params.at("exclusion_range"));
     if (params.contains("search_algorithm")) {
       do_set_parameter("search_algorithm", params.at("search_algorithm"));
-    }
-    if (params.contains("exclusion_range")) {
-      do_set_parameter("exclusion_range", params.at("exclusion_range"));
     }
     if (params.contains("exclusion_radius_per_type")) {
       do_set_parameter("exclusion_radius_per_type",
