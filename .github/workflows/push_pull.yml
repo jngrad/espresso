@@ -101,9 +101,8 @@ jobs:
         run: |
           export PYTHONPATH="$(realpath build/src/python)"
           export OMP_PROC_BIND=false OMP_NUM_THREADS=1
-          git clone -b main https://github.com/pyMBE-dev/pyMBE.git
+          git clone -b es510 https://github.com/jngrad/pyMBE.git
           cd pyMBE
-          git checkout efce8e4bc50
           sed -i "/cmake/d; /tqdm/d" requirements.txt
           python3 -m venv --system-site-packages venv
           . venv/bin/activate
