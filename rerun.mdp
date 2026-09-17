@@ -1,0 +1,23 @@
+integrator   = md
+nsteps       = 0            ; ignored for -rerun, but keep it sane
+nstxout      = 1            ; write positions every frame
+nstvout      = 0            ; no velocities (input has none anyway)
+nstfout      = 1            ; <-- THIS is what was missing
+nstenergy    = 1
+nstcalcenergy = 1
+; Neighbor search
+cutoff-scheme   = Verlet
+nstlist         = 1
+pbc             = xyz
+; Pressure coupling active but inert (compressibility=0 -> no volume change)
+pcoupl          = no
+pcoupltype      = anisotropic
+tau-p           = 1000.0
+ref-p           = 1.0 1.0 1.0 0.0 0.0 0.0
+compressibility = 0.0 0.0 0.0 0.0 0.0 0.0
+; Electrostatics & vdW
+coulombtype     = Cut-off
+rcoulomb        = 2.2
+vdwtype         = Cut-off
+rvdw            = 2.2
+DispCorr        = EnerPres   ; long-range dispersion correction to pressure

@@ -1,0 +1,35 @@
+# This file was created Tue Jun  9 11:12:37 2026
+# Created by:
+#                      :-) GROMACS - gmx energy, 2026.2 (-:
+# 
+# Executable:   /tikhome/jgrad/bin/gromacs-2026.2/usr/local/gromacs/bin/gmx
+# Data prefix:  /tikhome/jgrad/bin/gromacs-2026.2/usr/local/gromacs
+# Working dir:  /tikhome/jgrad/Documents/gromacs-forces/dihedral
+# Command line:
+#   gmx energy -f frame00414.edr -s frame00414.tpr -o frame00414.xvg
+# gmx energy is part of G R O M A C S:
+#
+# God Rules Over Mankind, Animals, Cosmos and Such
+#
+@    title "GROMACS Energies"
+@    xaxis  label "Time (ps)"
+@    yaxis  label "(kJ/mol), (bar)"
+@TYPE xy
+@ view 0.15, 0.15, 0.75, 0.85
+@ legend on
+@ legend box on
+@ legend loctype view
+@ legend 0.78, 0.8
+@ legend length 2
+@ s0 legend "Potential"
+@ s1 legend "Pressure"
+@ s2 legend "Pres-XX"
+@ s3 legend "Pres-XY"
+@ s4 legend "Pres-XZ"
+@ s5 legend "Pres-YX"
+@ s6 legend "Pres-YY"
+@ s7 legend "Pres-YZ"
+@ s8 legend "Pres-ZX"
+@ s9 legend "Pres-ZY"
+@ s10 legend "Pres-ZZ"
+    0.000000    0.155478    0.000000    0.000000   -0.000000   -0.000000    0.000000   -0.010500   -0.011073    0.000000   -0.011073    0.010500
