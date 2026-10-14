@@ -31,7 +31,7 @@ Tests:
   - init_two_component produces PDFs consistent with set densities
   - Viscosity setter works on live CG fluid
   - Bulk slice init matches per-node init
-  - kT > 0 is rejected for two-component mode
+  - kT > 0 is accepted for two-component mode and thermalizes it
   - Single viscosity does not create two-component mode
   - Running integration steps without crash
   - Mass conservation (total rho_a and rho_b are conserved)
@@ -41,16 +41,32 @@ Tests:
     integration with an error naming the node
   - A negative component density at kT = 0 gives one warning per
     integrator.run() call and the integration continues
+  - A freshly constructed fluid holds zeros in every field
+  - A matrix of one component with a trace of the other stays at rest
+  - VTK output of phasefield, density_a and density_b matches the slice
+    accessors
+  - Two-layer Couette flow between a resting and a moving wall matches the
+    analytical profile
+  - On the GPU, the two-component model runs in double precision
+
+The tests run on the CPU and on the GPU, in double precision.
 """
 
 import contextlib
 import io
+import pathlib
+import tempfile
 import unittest as ut
 import unittest_decorators as utx
 import numpy as np
 
 import espressomd
 import espressomd.lb
+import espressomd.shapes
+try:
+    import espressomd.io.vtk
+except ImportError:
+    pass
 
 
 DOMAIN_SIZE = 12
@@ -61,6 +77,9 @@ EPSILON = 1e-6
 VISCOSITY = 1.0 / 6.0
 RADIUS = 4.0
 SMOOTHING_WIDTH = 2.0
+# largest deviation from the analytical two-layer Couette profile, relative
+# to the wall velocity; the diffuse interface gives 6.8e-3 on the CPU
+COUETTE_TOLERANCE = 1e-2
 
 
 def tanh_interpolation(distances, radius, smoothing_width,
@@ -98,14 +117,28 @@ def droplet_densities(domain_size, radius, smoothing_width, rho_0, epsilon,
     return rho_a, rho_b
 
 
-@utx.skipIfMissingFeatures(["WALBERLA"])
-class ColorGradientLBTest(ut.TestCase):
+def couette_profile(x, wall_velocity, mu_a, mu_b, h, H):
+    """
+    Steady planar Couette flow with a viscosity step at ``x = h`` between a
+    resting wall at ``x = 0`` and a wall moving at ``wall_velocity`` at
+    ``x = H``. Without a pressure gradient, the shear stress
+    ``mu * du/dx`` is the same everywhere in the gap.
+    """
+    stress = wall_velocity / (h / mu_a + (H - h) / mu_b)
+    u_interface = stress / mu_a * h
+    return np.where(x <= h, stress / mu_a * x,
+                    u_interface + stress / mu_b * (x - h))
+
+
+class ColorGradientLBTest:
     """Test the two-component color gradient LB method."""
 
     system = espressomd.System(box_l=[DOMAIN_SIZE] * 3)
     system.time_step = TAU
     system.cell_system.skin = 0.4
     system.periodicity = [True, True, True]
+
+    lb_params = {}
 
     def tearDown(self):
         self.system.lb = None
@@ -114,7 +147,7 @@ class ColorGradientLBTest(ut.TestCase):
         """Create a two-component LB fluid and attach it."""
         lbf = espressomd.lb.LBFluid(
             agrid=AGRID, density=RHO_0, tau=self.system.time_step,
-            kinematic_viscosity=[VISCOSITY, VISCOSITY])
+            kinematic_viscosity=[VISCOSITY, VISCOSITY], **self.lb_params)
         self.system.lb = lbf
         return lbf
 
@@ -340,7 +373,7 @@ class ColorGradientLBTest(ut.TestCase):
         lbf = espressomd.lb.LBFluid(
             agrid=AGRID, density=RHO_0, tau=self.system.time_step,
             kinematic_viscosity=[VISCOSITY, VISCOSITY],
-            kT=1e-4, seed=42)
+            kT=1e-4, seed=42, **self.lb_params)
         self.system.lb = lbf
         lbf[:, :, :].density = np.broadcast_to(
             [0.5 * RHO_0, 0.5 * RHO_0], (DOMAIN_SIZE,) * 3 + (2,))
@@ -357,7 +390,7 @@ class ColorGradientLBTest(ut.TestCase):
         """kT == 0 keeps the two-component model unthermalized."""
         lbf = espressomd.lb.LBFluid(
             agrid=AGRID, density=RHO_0, tau=self.system.time_step,
-            kinematic_viscosity=[VISCOSITY, VISCOSITY])
+            kinematic_viscosity=[VISCOSITY, VISCOSITY], **self.lb_params)
         self.system.lb = lbf
         self.assertEqual(lbf.kT, 0.0)
         self.assertIsNone(lbf.rng_state)
@@ -368,7 +401,7 @@ class ColorGradientLBTest(ut.TestCase):
         """Single viscosity should not create a two-component LB."""
         lbf = espressomd.lb.LBFluid(
             agrid=AGRID, density=RHO_0, tau=self.system.time_step,
-            kinematic_viscosity=VISCOSITY)
+            kinematic_viscosity=VISCOSITY, **self.lb_params)
         self.system.lb = lbf
         # Single-component: density should be a scalar
         dens = lbf[0, 0, 0].density
@@ -387,7 +420,7 @@ class ColorGradientLBTest(ut.TestCase):
         lbf = espressomd.lb.LBFluid(
             agrid=AGRID, density=RHO_0, tau=self.system.time_step,
             kinematic_viscosity=[VISCOSITY, VISCOSITY],
-            ext_force_density=ext_force_density)
+            ext_force_density=ext_force_density, **self.lb_params)
         self.system.lb = lbf
         self._init_droplet(lbf)
 
@@ -452,7 +485,7 @@ class ColorGradientLBTest(ut.TestCase):
             lbf = espressomd.lb.LBFluid(
                 agrid=agrid, density=RHO_0 / agrid**3, tau=tau,
                 kinematic_viscosity=[visc_lb * agrid**2 / tau] * 2,
-                sigma=sigma_lb / tau**2, beta=0.8)
+                sigma=sigma_lb / tau**2, beta=0.8, **self.lb_params)
             self.system.lb = lbf
             lbf[:, :, :].density = rho_lb / agrid**3
             lbf.init_two_component()
@@ -524,7 +557,8 @@ class ColorGradientLBTest(ut.TestCase):
         """
         lbf = espressomd.lb.LBFluid(
             agrid=AGRID, density=RHO_0, tau=self.system.time_step,
-            kinematic_viscosity=[VISCOSITY, VISCOSITY], kT=1e-4, seed=42)
+            kinematic_viscosity=[VISCOSITY, VISCOSITY], kT=1e-4, seed=42,
+            **self.lb_params)
         self.system.lb = lbf
         node = (5, 6, 7)
         self._init_negative_density_node(lbf, node)
@@ -560,6 +594,171 @@ class ColorGradientLBTest(ut.TestCase):
                           stderr.getvalue())
             self.assertTrue(np.all(np.isfinite(
                 np.copy(lbf[:, :, :]._population))))
+    def test_fresh_fluid_is_zero(self):
+        """
+        Before any density is set, every field of a new fluid holds zeros.
+        Device memory is not zeroed when it is allocated, so on the GPU this
+        checks that every field is initialized.
+        """
+        lbf = self._create_lbf()
+        N = DOMAIN_SIZE
+        for name, shape in (("density", (N, N, N, 2)),
+                            ("phasefield", (N, N, N)),
+                            ("_population", (N, N, N, 38)),
+                            ("velocity", (N, N, N, 3)),
+                            ("last_applied_force", (N, N, N, 2, 3))):
+            values = np.copy(getattr(lbf[:, :, :], name))
+            self.assertEqual(values.shape, shape, msg=name)
+            np.testing.assert_array_equal(values, 0., err_msg=name)
+
+    def test_matrix_with_trace_stays_at_rest(self):
+        """
+        A uniform matrix of component a with a trace of component b at rest
+        is an equilibrium: after a few steps every population, the velocity
+        and the phase field are unchanged. (A mixture with comparable
+        fractions is unstable in the color-gradient model: any perturbation
+        of the phase field starts the demixing.)
+        """
+        lbf = self._create_lbf()
+        N = DOMAIN_SIZE
+        lbf[:, :, :].density = np.broadcast_to(
+            [(1. - EPSILON) * RHO_0, EPSILON * RHO_0], (N, N, N, 2))
+        lbf.init_two_component()
+        pop_init = np.copy(lbf[:, :, :]._population)
+        phasefield_init = np.copy(lbf[:, :, :].phasefield)
+        self.system.integrator.run(5)
+        pop = np.copy(lbf[:, :, :]._population)
+        self.assertTrue(np.all(np.isfinite(pop)))
+        np.testing.assert_allclose(pop, pop_init, rtol=0., atol=1e-14)
+        np.testing.assert_allclose(np.copy(lbf[:, :, :].velocity), 0.,
+                                   rtol=0., atol=1e-14)
+        np.testing.assert_allclose(np.copy(lbf[:, :, :].phasefield),
+                                   phasefield_init, rtol=0., atol=1e-14)
+
+    @utx.skipIfMissingModules("espressomd.io.vtk")
+    def test_vtk_scalar_fields(self):
+        """
+        VTK output of the phase field and of both component densities must
+        match the slice accessors. Each field has its own output, so the
+        three outputs must differ from each other.
+        """
+        lbf = self._create_lbf()
+        self._init_droplet(lbf)
+        self.system.integrator.run(2)
+        observables = ["phasefield", "density_a", "density_b"]
+        with tempfile.TemporaryDirectory() as tmp_directory:
+            root = pathlib.Path(tmp_directory)
+            vtk_obj = espressomd.lb.VTKOutput(
+                identifier="cg_scalars", delta_N=0, observables=observables,
+                base_folder=root)
+            lbf.add_vtk_writer(vtk=vtk_obj)
+            vtk_obj.write()
+            filepath = root / "cg_scalars" / "simulation_step_0.vtu"
+            self.assertTrue(filepath.exists())
+            vtk_data = espressomd.io.vtk.VTKReader().parse(filepath)
+        densities = np.copy(lbf[:, :, :].density)
+        expected = {"phasefield": np.copy(lbf[:, :, :].phasefield),
+                    "density_a": densities[..., 0],
+                    "density_b": densities[..., 1]}
+        for name in observables:
+            # the VTK files are written in single precision
+            np.testing.assert_allclose(
+                np.reshape(vtk_data[name], expected[name].shape),
+                expected[name], rtol=1e-6, atol=1e-7, err_msg=name)
+        for name_1, name_2 in (("phasefield", "density_a"),
+                               ("phasefield", "density_b"),
+                               ("density_a", "density_b")):
+            self.assertGreater(
+                np.max(np.abs(vtk_data[name_1] - vtk_data[name_2])), 0.1,
+                msg=f"VTK outputs '{name_1}' and '{name_2}' are equal")
+
+    def test_two_layer_couette_flow(self):
+        """
+        Two fluid layers with different viscosities between a resting wall
+        and a moving wall. The steady velocity profile is piecewise linear,
+        with the same shear stress in both layers. The diffuse interface
+        smooths the kink, hence the tolerance.
+        """
+        wall_velocity = 0.01
+        viscosities = [1. / 6., 1. / 2.]
+
+        def restore_system():
+            self.system.lb = None
+            self.system.box_l = [DOMAIN_SIZE] * 3
+
+        self.addCleanup(restore_system)
+        self.system.box_l = [4., 16., 4.]
+        lbf = espressomd.lb.LBFluid(
+            agrid=AGRID, density=RHO_0, tau=self.system.time_step,
+            kinematic_viscosity=viscosities, **self.lb_params)
+        self.system.lb = lbf
+        # walls normal to y: the boundary nodes y = 0 and y = 15 put the
+        # halfway bounce-back walls at y = 1 and y = 15
+        lbf.add_boundary_from_shape(
+            espressomd.shapes.Wall(normal=[0., 1., 0.], dist=1.))
+        lbf.add_boundary_from_shape(
+            espressomd.shapes.Wall(normal=[0., -1., 0.], dist=-15.),
+            [wall_velocity, 0., 0.])
+        # component a below y = 8, component b above
+        shape = tuple(lbf.shape)
+        y = np.arange(shape[1]) + 0.5
+        rho_b = tanh_interpolation(y, 8., SMOOTHING_WIDTH, RHO_0,
+                                   EPSILON * RHO_0)
+        rho_b = np.broadcast_to(rho_b[np.newaxis, :, np.newaxis], shape)
+        rho_a = RHO_0 * (1. + EPSILON) - rho_b
+        lbf[:, :, :].density = np.stack([rho_a, rho_b], axis=-1)
+        lbf.init_two_component()
+        self.system.integrator.run(2000)
+
+        velocity = np.copy(lbf[:, 1:15, :].velocity)
+        np.testing.assert_allclose(velocity[..., 1:], 0., rtol=0.,
+                                   atol=1e-10)
+        profile = np.mean(velocity[..., 0], axis=(0, 2))
+        x = y[1:15] - 1.
+        expected = couette_profile(x, wall_velocity, RHO_0 * viscosities[0],
+                                   RHO_0 * viscosities[1], h=7., H=14.)
+        np.testing.assert_allclose(profile, expected, rtol=0.,
+                                   atol=COUETTE_TOLERANCE * wall_velocity)
+
+
+@utx.skipIfMissingFeatures(["WALBERLA"])
+class ColorGradientLBTestCPU(ColorGradientLBTest, ut.TestCase):
+    lb_params = {"single_precision": False, "gpu": False}
+
+
+@utx.skipIfMissingGPU()
+@utx.skipIfMissingFeatures(["WALBERLA", "CUDA"])
+class ColorGradientLBTestGPU(ColorGradientLBTest, ut.TestCase):
+    lb_params = {"single_precision": False, "gpu": True}
+
+    def test_double_precision_by_default(self):
+        """
+        Single precision does not conserve mass and momentum well enough for
+        the color-gradient model, so it runs in double precision on the GPU
+        unless asked otherwise. The single-component model keeps single
+        precision as its GPU default.
+        """
+        lbf = espressomd.lb.LBFluid(
+            agrid=AGRID, density=RHO_0, tau=TAU,
+            kinematic_viscosity=[VISCOSITY, VISCOSITY], gpu=True)
+        self.assertTrue(lbf.gpu)
+        self.assertFalse(lbf.single_precision)
+        lbf = espressomd.lb.LBFluid(
+            agrid=AGRID, density=RHO_0, tau=TAU,
+            kinematic_viscosity=VISCOSITY, gpu=True)
+        self.assertTrue(lbf.gpu)
+        self.assertTrue(lbf.single_precision)
+
+    def test_single_precision_rejected(self):
+        """Single precision is not available for the color-gradient model
+        on the GPU."""
+        with self.assertRaisesRegex(
+                ValueError, "single precision is not supported for the "
+                "two-component LB on the GPU"):
+            espressomd.lb.LBFluid(
+                agrid=AGRID, density=RHO_0, tau=TAU,
+                kinematic_viscosity=[VISCOSITY, VISCOSITY], gpu=True,
+                single_precision=True)
 
 
 if __name__ == "__main__":

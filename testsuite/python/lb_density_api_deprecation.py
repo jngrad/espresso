@@ -58,14 +58,15 @@ class TestLBDensityScalarDeprecation(ut.TestCase):
             self.assertIn("density", str(deprecation_warnings[0].message))
 
 
-@utx.skipIfMissingFeatures("WALBERLA")
-class TestLBColorGradientDensityAccessor(ut.TestCase):
+class TestLBColorGradientDensityAccessor:
+
+    lb_params = {}
 
     def setUp(self):
         self.lbf = espressomd.lb.LBFluid(
             agrid=1.0, density=1.0,
             kinematic_viscosity=[1.0, 1.0],
-            tau=0.01, sigma=0.0, beta=0.7)
+            tau=0.01, sigma=0.0, beta=0.7, **self.lb_params)
         system.lb = self.lbf
         # initialize component densities so rho_a + rho_b = 1.0
         shape = (8, 8, 8)
@@ -79,6 +80,19 @@ class TestLBColorGradientDensityAccessor(ut.TestCase):
         rho = self.lbf[0, 0, 0].density
         self.assertEqual(len(rho), 2)
         self.assertAlmostEqual(float(np.sum(rho)), 1.0, places=10)
+
+
+@utx.skipIfMissingFeatures("WALBERLA")
+class TestLBColorGradientDensityAccessorCPU(TestLBColorGradientDensityAccessor,
+                                            ut.TestCase):
+    lb_params = {"single_precision": False, "gpu": False}
+
+
+@utx.skipIfMissingGPU()
+@utx.skipIfMissingFeatures(["WALBERLA", "CUDA"])
+class TestLBColorGradientDensityAccessorGPU(TestLBColorGradientDensityAccessor,
+                                            ut.TestCase):
+    lb_params = {"single_precision": False, "gpu": True}
 
 
 if __name__ == "__main__":

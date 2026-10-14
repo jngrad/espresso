@@ -31,6 +31,8 @@ Tests:
     full ghost communication would otherwise overwrite.
   - Binary files give a bit-exact restart.
   - ASCII files (16 decimal digits) give a restart within round-off.
+
+The tests run on the CPU and on the GPU, in double precision.
 """
 
 import unittest as ut
@@ -63,12 +65,13 @@ WARMUP_STEPS = 20
 CONTINUATION_STEPS = 20
 
 
-@utx.skipIfMissingFeatures(["WALBERLA"])
-class ColorGradientCheckpointTest(ut.TestCase):
+class ColorGradientCheckpointTest:
 
     system = espressomd.System(box_l=[BOX_L] * 3)
     system.time_step = TIME_STEP
     system.cell_system.skin = 0.4
+
+    lb_params = {}
 
     @classmethod
     def setUpClass(cls):
@@ -88,7 +91,8 @@ class ColorGradientCheckpointTest(ut.TestCase):
     def make_fluid(self, walls):
         lbf = espressomd.lb.LBFluid(
             agrid=AGRID, density=DENSITY, kinematic_viscosity=VISCOSITY,
-            tau=TIME_STEP, sigma=SIGMA, beta=BETA, kT=KT, seed=LB_SEED)
+            tau=TIME_STEP, sigma=SIGMA, beta=BETA, kT=KT, seed=LB_SEED,
+            **self.lb_params)
         if not walls:
             return lbf
         # a resting wall and a moving wall normal to x
@@ -129,7 +133,8 @@ class ColorGradientCheckpointTest(ut.TestCase):
 
     def check_restart(self, binary, compare):
         system = self.system
-        cpt_path = self.temp_path / f"lb_cg_{int(binary)}.cpt"
+        cpt_path = self.temp_path / \
+            f"lb_cg_{type(self).__name__}_{int(binary)}.cpt"
 
         # initial simulation
         lbf = self.make_fluid(walls=True)
@@ -201,6 +206,17 @@ class ColorGradientCheckpointTest(ut.TestCase):
             np.testing.assert_allclose(actual, desired, rtol=0., atol=1e-12,
                                        err_msg=err_msg)
         self.check_restart(False, compare)
+
+
+@utx.skipIfMissingFeatures(["WALBERLA"])
+class ColorGradientCheckpointTestCPU(ColorGradientCheckpointTest, ut.TestCase):
+    lb_params = {"single_precision": False, "gpu": False}
+
+
+@utx.skipIfMissingGPU()
+@utx.skipIfMissingFeatures(["WALBERLA", "CUDA"])
+class ColorGradientCheckpointTestGPU(ColorGradientCheckpointTest, ut.TestCase):
+    lb_params = {"single_precision": False, "gpu": True}
 
 
 if __name__ == "__main__":

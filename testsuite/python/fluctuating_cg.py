@@ -27,6 +27,8 @@ Tests:
     pre-set kT
   - Mass-weighted node velocities follow a Maxwell-Boltzmann distribution
     with variance kT
+
+The tests run on the CPU and on the GPU, in double precision.
 """
 
 import unittest as ut
@@ -89,19 +91,20 @@ def plane_interface(grid_size, smoothing_width, rho_0, epsilon):
     return rho_a, rho_b
 
 
-@utx.skipIfMissingFeatures(["WALBERLA"])
-class FluctuatingColorGradientTest(thermostats_common.ThermostatsCommon,
-                                   ut.TestCase):
+class FluctuatingColorGradientTest(thermostats_common.ThermostatsCommon):
     """Test thermal fluctuations of the two-component color gradient LB."""
 
     system = espressomd.System(box_l=[BOX_L] * 3)
     system.time_step = TIME_STEP
     system.cell_system.skin = 0.4
 
+    lb_params = {}
+
     def setUp(self):
         self.lbf = espressomd.lb.LBFluid(
             agrid=AGRID, density=DENSITY, kinematic_viscosity=VISCOSITY,
-            tau=TIME_STEP, sigma=SIGMA, beta=BETA, kT=TEMPERATURE)
+            tau=TIME_STEP, sigma=SIGMA, beta=BETA, kT=TEMPERATURE,
+            **self.lb_params)
         self.system.lb = self.lbf
 
         rho_b, rho_a = plane_interface(
@@ -193,6 +196,19 @@ class FluctuatingColorGradientTest(thermostats_common.ThermostatsCommon,
         v_minmax = 5.0 * np.sqrt(TEMPERATURE)
         self.check_velocity_distribution(
             w_all, v_minmax, N_BINS, ERROR_TOL, TEMPERATURE)
+
+
+@utx.skipIfMissingFeatures(["WALBERLA"])
+class FluctuatingColorGradientTestCPU(FluctuatingColorGradientTest,
+                                      ut.TestCase):
+    lb_params = {"single_precision": False, "gpu": False}
+
+
+@utx.skipIfMissingGPU()
+@utx.skipIfMissingFeatures(["WALBERLA", "CUDA"])
+class FluctuatingColorGradientTestGPU(FluctuatingColorGradientTest,
+                                      ut.TestCase):
+    lb_params = {"single_precision": False, "gpu": True}
 
 
 if __name__ == "__main__":

@@ -18,12 +18,17 @@
 #
 
 """
-Tests for particle-fluid friction coupling in two-component color gradient LB.
+Tests for particle-fluid coupling in two-component color gradient LB.
 
 Tests:
   - Drag force on particle matches gamma * (u_fluid - v_particle)
   - Mass conservation is maintained with particle coupling active
+  - Solvation force: zero at the droplet center and for delta_mu = 0,
+    mainly radial at the interface, flips sign with delta_mu
+  - Total momentum is conserved with solvation coupling active
   - Simulation runs without crash for multiple steps with coupling
+
+The tests run on the CPU and on the GPU, in double precision.
 """
 
 import unittest as ut
@@ -74,14 +79,15 @@ def droplet_densities(domain_size, radius, smoothing_width, rho_0, epsilon,
                                epsilon * rho_0, rho_0)
     return rho_a, rho_b
 
-@utx.skipIfMissingFeatures(["WALBERLA"])
-class ColorGradientParticleCouplingTest(ut.TestCase):
-    """Test particle-fluid friction coupling for two-component LB."""
+class ColorGradientParticleCouplingTest:
+    """Test particle-fluid coupling for two-component LB."""
 
     system = espressomd.System(box_l=[DOMAIN_SIZE] * 3)
     system.time_step = TAU
     system.cell_system.skin = 0.4
     system.periodicity = [True, True, True]
+
+    lb_params = {}
 
     def tearDown(self):
         self.system.lb = None
@@ -92,7 +98,8 @@ class ColorGradientParticleCouplingTest(ut.TestCase):
         """Create a two-component LB fluid and attach it."""
         lbf = espressomd.lb.LBFluid(
             agrid=AGRID, density=RHO_0, tau=self.system.time_step,
-            kinematic_viscosity=[VISCOSITY, VISCOSITY], sigma=SIGMA, beta=BETA)
+            kinematic_viscosity=[VISCOSITY, VISCOSITY], sigma=SIGMA, beta=BETA,
+            **self.lb_params)
         self.system.lb = lbf
         return lbf
 
@@ -335,6 +342,19 @@ class ColorGradientParticleCouplingTest(ut.TestCase):
         # Fluid velocities should be finite
         vel = np.copy(lbf[:, :, :].velocity)
         self.assertTrue(np.all(np.isfinite(vel)))
+
+
+@utx.skipIfMissingFeatures(["WALBERLA"])
+class ColorGradientParticleCouplingTestCPU(ColorGradientParticleCouplingTest,
+                                           ut.TestCase):
+    lb_params = {"single_precision": False, "gpu": False}
+
+
+@utx.skipIfMissingGPU()
+@utx.skipIfMissingFeatures(["WALBERLA", "CUDA"])
+class ColorGradientParticleCouplingTestGPU(ColorGradientParticleCouplingTest,
+                                           ut.TestCase):
+    lb_params = {"single_precision": False, "gpu": True}
 
 
 if __name__ == "__main__":

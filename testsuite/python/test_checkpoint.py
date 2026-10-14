@@ -194,7 +194,8 @@ class CheckpointTest(ut.TestCase):
             self.assertFalse(lbf.single_precision)
         elif "LB.GPU" in modes:
             self.assertTrue(lbf.gpu)
-            self.assertTrue(lbf.single_precision)
+            # the two-component model only runs in double precision on GPU
+            self.assertEqual(lbf.single_precision, not has_lb_cg_mode)
 
         # check boundary objects
         slip_velocity1 = np.array([1e-4, 1e-4, 0.])
