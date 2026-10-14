@@ -162,6 +162,21 @@ As a rule of thumb, the VRAM in GiB per rank-local LB domain will be:
 
 with :math:`n_x`, :math:`n_y`, :math:`n_z` the LB domain size in agrid units, including ghost layers.
 
+The two-component color-gradient model also runs on the GPU, with the same
+kernels as on the CPU, but only in double precision: in single precision,
+the mass and momentum of the two components drift by orders of magnitude more
+than in double precision. A fluid with two viscosities and ``gpu=True``
+therefore defaults to ``single_precision=False``, and ``single_precision=True``
+raises an error. Consumer GPUs run double-precision arithmetic at a fraction
+of their single-precision rate, which limits the speed-up over the CPU.
+The two-component model needs about 960 bytes of VRAM per lattice node,
+2.3 times as much as the single-component model in double precision
+(410 bytes in the formula above); a GPU with 8 GiB holds about
+:math:`200^3` nodes.
+Node and slice access, VTK output and checkpoints copy data between the GPU
+and the host; they are meant for analysis and input/output, not for every
+time step.
+
 Multi-GPU support in |es| is an experimental feature whose API may change at any time.
 It can be activated by invoking the following expression before the creation
 of the first LB GPU instance::

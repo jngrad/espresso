@@ -30,7 +30,8 @@
 #endif
 #endif
 
-#include "LBWalberlaImpl.hpp"
+#include "LBWalberlaImplColorGradient.hpp"
+#include "LBWalberlaImplSingleComponent.hpp"
 
 #if defined(__NVCC__)
 #if defined(__NVCC_DIAG_PRAGMA_SUPPORT__)
@@ -58,13 +59,25 @@ new_lb_walberla_gpu(std::shared_ptr<LatticeWalberla> const &lattice,
 #if not defined(WALBERLA_BUILD_WITH_CUDA)
   throw std::runtime_error("waLBerla was compiled without CUDA support");
 #else
-  auto const two_component = (viscosity.size() == 2);
-  if (single_precision) {
-    return std::make_shared<walberla::LBWalberlaImpl<float, lbmpy::Arch::GPU>>(
-        lattice, viscosity, density, two_component);
+  if (viscosity.size() == 1u) {
+    if (single_precision) {
+      return std::make_shared<
+          walberla::LBWalberlaImplSingleComponent<float, lbmpy::Arch::GPU>>(
+          lattice, viscosity, density, false);
+    }
+    return std::make_shared<
+        walberla::LBWalberlaImplSingleComponent<double, lbmpy::Arch::GPU>>(
+        lattice, viscosity, density, false);
   }
-  return std::make_shared<walberla::LBWalberlaImpl<double, lbmpy::Arch::GPU>>(
-      lattice, viscosity, density, two_component);
+  // single precision doesn't conserve mass and momentum of the two-component
+  // model well enough; the script interface rejects it before this point
+  if (single_precision) {
+    throw std::runtime_error(
+        "The two-component LB only supports double precision on the GPU");
+  }
+  return std::make_shared<
+      walberla::LBWalberlaImplColorGradient<double, lbmpy::Arch::GPU>>(
+      lattice, viscosity, density, true);
 #endif
 }
 

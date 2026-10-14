@@ -168,7 +168,9 @@ void LBFluid::make_instance(VariantMap const &params) {
   auto lb_visc = get_kinematic_viscosity(params);
   auto const dens = get_value<double>(params, "density");
   auto const gpu = get_value_or(params, "gpu", false);
-  auto const precision = get_value_or(params, "single_precision", gpu);
+  // the two-component model only runs in double precision on the GPU
+  auto const precision =
+      get_value_or(params, "single_precision", gpu and lb_visc.size() == 1u);
   auto const lb_lattice = m_lattice->lattice();
   for (auto &vi : lb_visc) {
     vi *= m_conv_visc;
@@ -244,6 +246,13 @@ void LBFluid::do_construct(VariantMap const &params) {
       if (vi < 0.) {
         throw std::domain_error("Parameter 'kinematic_viscosity' must be >= 0");
       }
+    }
+    // single precision doesn't conserve mass and momentum of the
+    // two-component model well enough
+    if (visc.size() != 1u and get_value_or(params, "gpu", false) and
+        get_value_or(params, "single_precision", false)) {
+      throw std::domain_error("single precision is not supported for the "
+                              "two-component LB on the GPU");
     }
     make_instance(params);
     m_mpi_cart_comm_observer = ::walberla::get_mpi_cart_comm_observer();

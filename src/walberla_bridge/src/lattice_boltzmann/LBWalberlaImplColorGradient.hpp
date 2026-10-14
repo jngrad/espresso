@@ -52,6 +52,7 @@
 #include "lb_fields.hpp"
 #include "lb_kernels.hpp"
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
+#include "ColorGradientKernelsCUDA.cuh"
 #include "lb_fields.cuh"
 #include "lb_kernels.cuh"
 #endif
@@ -106,6 +107,7 @@ class LBWalberlaImplColorGradient
 protected:
   // ---- Types from the mixin (re-export for the .impl.hpp files) ----
   using typename Base::_PdfField;
+  using typename Base::_ScalarField;
   using typename Base::_VectorField;
   using typename Base::BlockStorage;
   using typename Base::BoundaryFullCommunicator;
@@ -138,6 +140,7 @@ public:
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
   using typename Base::GPUField;
   using typename Base::PdfFieldCpu;
+  using typename Base::ScalarFieldCpu;
   using typename Base::VectorFieldCpu;
 #endif
   using Base::get_lattice;
@@ -192,9 +195,8 @@ protected:
   /// see check_component_densities().
   std::optional<NegativeDensityReport> m_negative_density_report;
 
-  // Block data access handles (PDF / two-component / temporaries)
+  // Block data access handles (PDF / two-component)
   std::array<BlockDataID, 2> m_pdf_field_id;
-  std::array<BlockDataID, 2> m_pdf_tmp_field_id;
   std::array<BlockDataID, 2> m_last_applied_force_field_id;
   std::array<BlockDataID, 2> m_force_to_be_applied_id;
 
@@ -203,8 +205,9 @@ protected:
   BlockDataID m_phasefield_id;
 
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
-  std::optional<BlockDataID> m_pdf_cpu_field_id;
-  std::optional<BlockDataID> m_scalar_cpu_field_id;
+  // host copies of device fields for the VTK writers, created on demand
+  std::optional<BlockDataID> m_phasefield_cpu_field_id;
+  std::array<std::optional<BlockDataID>, 2> m_rho_cpu_field_id;
   std::optional<BlockDataID> m_vel_cpu_field_id;
 #endif
 
@@ -240,8 +243,6 @@ public:
 
     // Initialize and register fields (must use the "underlying" types)
     m_pdf_field_id[0] = this->template add_to_storage<_PdfField>("pdfs_a");
-    m_pdf_tmp_field_id[0] =
-        this->template add_to_storage<_PdfField>("pdfs_a_tmp");
     m_last_applied_force_field_id[0] =
         this->template add_to_storage<_VectorField>("force_a last");
     m_last_applied_force_field_id[1] =
@@ -254,11 +255,10 @@ public:
         this->template add_to_storage<_VectorField>("velocity");
     
     m_pdf_field_id[1] = this->template add_to_storage<_PdfField>("pdfs_b");
-    m_pdf_tmp_field_id[1] =
-        this->template add_to_storage<_PdfField>("pdfs_b_tmp");
-    m_rho_field_id[0] = this->template add_to_storage<ScalarField>("rho_a");
-    m_rho_field_id[1] = this->template add_to_storage<ScalarField>("rho_b");
-    m_phasefield_id = this->template add_to_storage<ScalarField>("phasefield");
+    m_rho_field_id[0] = this->template add_to_storage<_ScalarField>("rho_a");
+    m_rho_field_id[1] = this->template add_to_storage<_ScalarField>("rho_b");
+    m_phasefield_id =
+        this->template add_to_storage<_ScalarField>("phasefield");
     
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
     m_host_field_allocator =
@@ -378,33 +378,59 @@ private:
           block.template getData<ScalarField>(m_rho_field_id[1]);
       auto const offset = get_lattice().get_block_corner(block, true);
       auto const ci = rho_a_field->xyzSize();
-      for (auto x = ci.xMin(); x <= ci.xMax(); ++x) {
-        for (auto y = ci.yMin(); y <= ci.yMax(); ++y) {
-          for (auto z = ci.zMin(); z <= ci.zMax(); ++z) {
-            Cell const cell(x, y, z);
-            std::array<FloatType, 2> const rho{rho_a_field->get(cell),
-                                               rho_b_field->get(cell)};
-            if (not(rho[0] < FloatType{0} or rho[1] < FloatType{0})) {
-              continue;
-            }
-            auto const component = (rho[1] < rho[0]) ? 1 : 0;
-            auto const density = double_c(rho[component]);
-            if (not m_negative_density_report) {
-              m_negative_density_report =
-                  NegativeDensityReport{component, {}, density, 0, time_step};
-            }
-            auto &report = *m_negative_density_report;
-            ++report.n_nodes;
-            if (density <= report.density) {
-              report.component = component;
-              report.density = density;
-              report.node = offset + Utils::Vector3i{{static_cast<int>(x),
-                                                      static_cast<int>(y),
-                                                      static_cast<int>(z)}};
+      auto const record = [&](Cell const &cell,
+                              std::array<FloatType, 2> const &rho) {
+        if (not(rho[0] < FloatType{0} or rho[1] < FloatType{0})) {
+          return;
+        }
+        auto const component = (rho[1] < rho[0]) ? 1 : 0;
+        auto const density = double_c(rho[component]);
+        if (not m_negative_density_report) {
+          m_negative_density_report =
+              NegativeDensityReport{component, {}, density, 0, time_step};
+        }
+        auto &report = *m_negative_density_report;
+        ++report.n_nodes;
+        if (density <= report.density) {
+          report.component = component;
+          report.density = density;
+          report.node = offset + Utils::Vector3i{{static_cast<int>(cell.x()),
+                                                  static_cast<int>(cell.y()),
+                                                  static_cast<int>(cell.z())}};
+        }
+      };
+      if constexpr (Architecture == lbmpy::Arch::CPU) {
+        for (auto x = ci.xMin(); x <= ci.xMax(); ++x) {
+          for (auto y = ci.yMin(); y <= ci.yMax(); ++y) {
+            for (auto z = ci.zMin(); z <= ci.zMax(); ++z) {
+              Cell const cell(x, y, z);
+              record(cell, {rho_a_field->get(cell), rho_b_field->get(cell)});
             }
           }
         }
       }
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
+      else {
+        // copying both fields to the host is only worth it when there is
+        // something to report
+        if (lbm::color_gradient::count_negative_densities(
+                rho_a_field, rho_b_field) == 0u) {
+          continue;
+        }
+        // same x-major, z-minor order as the CPU loop above
+        auto const rho_a = ek::accessor::Scalar::get(rho_a_field, ci);
+        auto const rho_b = ek::accessor::Scalar::get(rho_b_field, ci);
+        std::size_t index = 0u;
+        for (auto x = ci.xMin(); x <= ci.xMax(); ++x) {
+          for (auto y = ci.yMin(); y <= ci.yMax(); ++y) {
+            for (auto z = ci.zMin(); z <= ci.zMax(); ++z) {
+              record(Cell(x, y, z), {rho_a[index], rho_b[index]});
+              ++index;
+            }
+          }
+        }
+      }
+#endif
     }
   }
 
@@ -439,6 +465,32 @@ private:
    * costs nothing on the (default) unused path.
    */
   void reset_force_and_apply_external_force(
+      IBlock *block, std::array<VectorField *, 2> const &last_applied_force,
+      std::array<VectorField *, 2> const &force_to_be_applied) {
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
+    if constexpr (Architecture == lbmpy::Arch::GPU) {
+      // one kernel per field: the per-cell accessors below would launch a
+      // kernel per cell on the GPU
+      for (auto const field : force_to_be_applied) {
+        lbm::accessor::Vector::initialize(field, Vector3<FloatType>{0});
+      }
+      if (m_ext_force != Vector3<FloatType>{0}) {
+        lbm::color_gradient::add_density_weighted_force(
+            last_applied_force[0], last_applied_force[1],
+            block->template getData<ScalarField>(m_rho_field_id[0]),
+            block->template getData<ScalarField>(m_rho_field_id[1]),
+            m_ext_force, m_lattice->get_ghost_layers());
+      }
+      return;
+    }
+#endif
+    if constexpr (Architecture == lbmpy::Arch::CPU) {
+      reset_force_and_apply_external_force_cpu(block, last_applied_force,
+                                               force_to_be_applied);
+    }
+  }
+
+  void reset_force_and_apply_external_force_cpu(
       IBlock *block, std::array<VectorField *, 2> const &last_applied_force,
       std::array<VectorField *, 2> const &force_to_be_applied) {
     auto const ci = force_to_be_applied[0]->xyzSizeWithGhostLayer();
@@ -805,18 +857,34 @@ public:
   [[nodiscard]] Utils::VectorXd<9> get_pressure_tensor() const override {
     Matrix3<FloatType> tensor(FloatType{0});
     for (auto const &block : *get_lattice().get_blocks()) {
-      auto const pdf_field_a =
-          block.template getData<PdfField>(m_pdf_field_id[0]);
-      auto const pdf_field_b =
-          block.template getData<PdfField>(m_pdf_field_id[1]);
-      for (auto z = 0; z < pdf_field_a->zSize(); ++z) {
-        for (auto y = 0; y < pdf_field_a->ySize(); ++y) {
-          for (auto x = 0; x < pdf_field_a->xSize(); ++x) {
-            auto const cell = Cell{x, y, z};
-            tensor += pressure_tensor_from_populations(pdf_field_a, pdf_field_b, cell);
+      if constexpr (Architecture == lbmpy::Arch::CPU) {
+        auto const pdf_field_a =
+            block.template getData<PdfField>(m_pdf_field_id[0]);
+        auto const pdf_field_b =
+            block.template getData<PdfField>(m_pdf_field_id[1]);
+        for (auto z = 0; z < pdf_field_a->zSize(); ++z) {
+          for (auto y = 0; y < pdf_field_a->ySize(); ++y) {
+            for (auto x = 0; x < pdf_field_a->xSize(); ++x) {
+              auto const cell = Cell{x, y, z};
+              tensor += pressure_tensor_from_populations(pdf_field_a,
+                                                         pdf_field_b, cell);
+            }
           }
         }
       }
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
+      else {
+        for (std::size_t const component : {0u, 1u}) {
+          auto const pdf_field =
+              block.template getData<PdfField>(m_pdf_field_id[component]);
+          auto const n_cells = FloatType_c(
+              pdf_field->xSize() * pdf_field->ySize() * pdf_field->zSize());
+          tensor += corrected_pressure_tensor(
+              lbm::accessor::PressureTensor::reduce(pdf_field, FloatType{1}),
+              n_cells, component);
+        }
+      }
+#endif
     }
     auto const &grid_size = get_lattice().get_grid_dimensions();
     auto const number_of_nodes = Utils::product(grid_size);
@@ -883,12 +951,6 @@ public:
   // raw values (see add_forces_at_pos/get_slice_last_applied_force).
 
   void set_external_force(Utils::Vector3d const &ext_force) override {
-    if constexpr (Architecture == lbmpy::Arch::GPU) {
-      if (ext_force != Utils::Vector3d{}) {
-        throw std::runtime_error(
-            "External force not implemented on GPU for color-gradient LB");
-      }
-    }
     m_ext_force = to_vector3<FloatType>(ext_force);
   }
 
@@ -1022,6 +1084,26 @@ public:
     for (auto const i : {1u, 2u, 3u, 5u, 6u, 7u}) {
       tensor[i] *= revert_factor;
     }
+  }
+
+  /**
+   * @brief Correct a pressure tensor of one component's populations obtained
+   * from the generated @c PressureTensor accessor with density 1, summed over
+   * @p n_cells cells. That accessor computes the same neighbour-pull second
+   * moment as @ref raw_pressure_tensor_moment, but for the zero-centered
+   * populations of the single-component model it adds the background
+   * @f$ \delta_{\alpha\beta}/3 @f$ per cell, which is removed here before the
+   * per-component viscous correction.
+   */
+  Matrix3<FloatType> corrected_pressure_tensor(Matrix3<FloatType> tensor,
+                                               FloatType n_cells,
+                                               std::size_t component) const {
+    auto const background = n_cells / FloatType{3};
+    for (auto const i : {0u, 4u, 8u}) {
+      tensor[i] -= background;
+    }
+    pressure_tensor_correction(tensor, component);
+    return tensor;
   }
 
   /**

@@ -54,6 +54,8 @@
 #include "generated_kernels/StreamCollideSweepThermalizedSinglePrecision.h"
 #include "generated_kernels/ColorGradientCollideSweepDoublePrecision.h"
 #include "generated_kernels/ColorGradientCollideSweepSinglePrecision.h"
+#include "generated_kernels/ColorGradientStreamSweepDoublePrecision.h"
+#include "generated_kernels/ColorGradientStreamSweepSinglePrecision.h"
 #endif
 
 namespace walberla {

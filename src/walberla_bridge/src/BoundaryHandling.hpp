@@ -261,12 +261,13 @@ private:
       flag_field->registerFlag(Domain_flag);
     if (!flag_field->flagExists(Boundary_flag))
       flag_field->registerFlag(Boundary_flag);
-    // mark all cells as domain cells and fluid cells
+    // mark all cells as domain cells and fluid cells; loop over cells, not
+    // with a field iterator (see @ref field::communication::BoundaryPackInfo)
     auto domain_flag = flag_field->getFlag(Domain_flag);
     auto boundary_flag = flag_field->getFlag(Boundary_flag);
-    for (auto it = flag_field->begin(); it != flag_field->end(); ++it) {
-      flag_field->addFlag(it.x(), it.y(), it.z(), domain_flag);
-      flag_field->removeFlag(it.x(), it.y(), it.z(), boundary_flag);
+    for (auto const &cell : flag_field->xyzSize()) {
+      flag_field->addFlag(cell, domain_flag);
+      flag_field->removeFlag(cell, boundary_flag);
     }
   }
 };

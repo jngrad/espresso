@@ -108,8 +108,9 @@ LBWalberlaImplColorGradient<FloatType, Architecture>::get_node_density(
       bc->block->template uncheckedFastGetData<ScalarField>(m_rho_field_id[0]);
   auto const rho_b_field =
       bc->block->template uncheckedFastGetData<ScalarField>(m_rho_field_id[1]);
-  return std::vector<double>{double_c(rho_a_field->get(bc->cell)),
-                               double_c(rho_b_field->get(bc->cell))};
+  return std::vector<double>{
+      double_c(ek::accessor::Scalar::get(rho_a_field, bc->cell)),
+      double_c(ek::accessor::Scalar::get(rho_b_field, bc->cell))};
 }
 
 template <typename FloatType, lbmpy::Arch Architecture>
@@ -124,8 +125,8 @@ bool LBWalberlaImplColorGradient<FloatType, Architecture>::set_node_density(
       bc->block->template getData<ScalarField>(m_rho_field_id[0]);
   auto rho_b_field =
       bc->block->template getData<ScalarField>(m_rho_field_id[1]);
-  rho_a_field->get(bc->cell) = FloatType_c(rho[0]);
-  rho_b_field->get(bc->cell) = FloatType_c(rho[1]);
+  ek::accessor::Scalar::set(rho_a_field, FloatType_c(rho[0]), bc->cell);
+  ek::accessor::Scalar::set(rho_b_field, FloatType_c(rho[1]), bc->cell);
 
   return true;
 }
@@ -141,7 +142,7 @@ LBWalberlaImplColorGradient<FloatType, Architecture>::get_node_phasefield(
 
   auto const phasefield_field =
       bc->block->template uncheckedFastGetData<ScalarField>(m_phasefield_id);
-  return double_c(phasefield_field->get(bc->cell));
+  return double_c(ek::accessor::Scalar::get(phasefield_field, bc->cell));
 }
 
 template <typename FloatType, lbmpy::Arch Architecture>
@@ -154,7 +155,8 @@ bool LBWalberlaImplColorGradient<FloatType, Architecture>::set_node_phasefield(
 
   auto phasefield_field =
       bc->block->template getData<ScalarField>(m_phasefield_id);
-  phasefield_field->get(bc->cell) = FloatType_c(phasefield);
+  ek::accessor::Scalar::set(phasefield_field, FloatType_c(phasefield),
+                            bc->cell);
 
   return true;
 }
@@ -271,12 +273,27 @@ LBWalberlaImplColorGradient<FloatType, Architecture>::get_node_pressure_tensor(
   if (!bc)
     return std::nullopt;
 
-  auto const pdf_field_a =
-      bc->block->template getData<PdfField>(m_pdf_field_id[0]);
-  auto const pdf_field_b =
-      bc->block->template getData<PdfField>(m_pdf_field_id[1]);
-  return to_vector9d(
-      pressure_tensor_from_populations(pdf_field_a, pdf_field_b, bc->cell));
+  if constexpr (Architecture == lbmpy::Arch::CPU) {
+    auto const pdf_field_a =
+        bc->block->template getData<PdfField>(m_pdf_field_id[0]);
+    auto const pdf_field_b =
+        bc->block->template getData<PdfField>(m_pdf_field_id[1]);
+    return to_vector9d(
+        pressure_tensor_from_populations(pdf_field_a, pdf_field_b, bc->cell));
+  }
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
+  else {
+    Matrix3<FloatType> tensor(FloatType{0});
+    for (std::size_t const component : {0u, 1u}) {
+      auto const pdf_field =
+          bc->block->template getData<PdfField>(m_pdf_field_id[component]);
+      tensor += corrected_pressure_tensor(
+          lbm::accessor::PressureTensor::get(pdf_field, FloatType{1}, bc->cell),
+          FloatType{1}, component);
+    }
+    return to_vector9d(tensor);
+  }
+#endif
 }
 
 } // namespace walberla

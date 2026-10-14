@@ -47,8 +47,18 @@
 #include "../BoundaryPackInfo.hpp"
 #include "../utils/boundary.hpp"
 #include "../utils/types_conversion.hpp"
+#include "../electrokinetics/generated_kernels/EK_FieldAccessors_double_precision.h"
+#include "../electrokinetics/generated_kernels/EK_FieldAccessors_single_precision.h"
 #include "lb_fields.hpp"
 #include "lb_kernels.hpp"
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
+// the GPU accessors are called with qualified names in the class templates
+// below, so they must be declared before the class definitions
+#include "../electrokinetics/generated_kernels/EK_FieldAccessors_double_precision_CUDA.cuh"
+#include "../electrokinetics/generated_kernels/EK_FieldAccessors_single_precision_CUDA.cuh"
+#include "lb_fields.cuh"
+#include "lb_kernels.cuh"
+#endif
 
 #include <walberla_bridge/Architecture.hpp>
 #include <walberla_bridge/BlockAndCell.hpp>
@@ -144,9 +154,10 @@ protected:
   // "underlying" field types (`GPUField` has no f-size info at compile time)
   using _PdfField = FieldTrait<FloatType, Stencil>::PdfField;
   using _VectorField = FieldTrait<FloatType, Stencil>::VectorField;
+  using _ScalarField = FieldTrait<FloatType, Stencil>::ScalarField;
 
 public:
-  using ScalarField = field::GhostLayerField<FloatType, 1>;
+  using ScalarField = FieldTrait<FloatType, Stencil, Architecture>::ScalarField;
   using PdfField = FieldTrait<FloatType, Stencil, Architecture>::PdfField;
   using VectorField = FieldTrait<FloatType, Stencil, Architecture>::VectorField;
   using FlagField = BoundaryModel::FlagField;
@@ -835,6 +846,11 @@ protected:
           auto field = block.template getData<GPUField>(field_id);
           lbm::accessor::Population::initialize(
               field, std::array<FloatType, Stencil::Size>{});
+        }
+      } else if constexpr (std::is_same_v<Field, _ScalarField>) {
+        for (auto &block : *blocks) {
+          auto field = block.template getData<GPUField>(field_id);
+          ek::accessor::Scalar::initialize(field, FloatType{0});
         }
       }
       return field_id;

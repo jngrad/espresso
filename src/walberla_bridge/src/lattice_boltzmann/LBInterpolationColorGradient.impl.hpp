@@ -42,12 +42,42 @@
 
 namespace walberla {
 
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
+namespace detail {
+/**
+ * @brief Positions relative to the corner of the rank's only block (as on
+ * the GPU there is one block per rank), and whether each position lies in
+ * the block extended by one cell. The CPU kernels skip the other positions.
+ */
+inline auto block_local_positions(::LatticeWalberla const &lattice,
+                                  std::vector<Utils::Vector3d> const &pos) {
+  assert(lattice.get_blocks()->getNumberOfBlocks() == 1u);
+  auto const &block = *(lattice.get_blocks()->begin());
+  auto const &aabb = block.getAABB();
+  auto const extended = aabb.getExtended(real_c(1u));
+  std::vector<double> local;
+  std::vector<bool> inside;
+  local.reserve(3u * pos.size());
+  inside.reserve(pos.size());
+  for (auto const &p : pos) {
+    inside.emplace_back(
+        extended.contains(real_c(p[0]), real_c(p[1]), real_c(p[2])));
+    for (std::size_t i : {0u, 1u, 2u}) {
+      local.emplace_back(p[i] - aabb.min()[i]);
+    }
+  }
+  return std::make_pair(std::move(local), std::move(inside));
+}
+} // namespace detail
+#endif
+
 /**
  * @brief Distribute forces density-weighted to the two component lattices
  * at given positions. Uses B-spline interpolation to spread each force
  * over the surrounding lattice nodes, split between components by local
- * rho_a/rho_b. Writes into force_to_be_applied (double-buffered). GPU
- * not implemented.
+ * rho_a/rho_b. Writes into force_to_be_applied (double-buffered). On the GPU,
+ * the densities are interpolated on the device, the split is computed on the
+ * host, and each component's share is spread on the device.
  */
 template <typename FloatType, lbmpy::Arch Architecture>
 void LBWalberlaImplColorGradient<FloatType, Architecture>::add_forces_at_pos(
@@ -65,16 +95,46 @@ void LBWalberlaImplColorGradient<FloatType, Architecture>::add_forces_at_pos(
   }
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
   if constexpr (Architecture == lbmpy::Arch::GPU) {
-    throw std::runtime_error(
-        "Density-weighted force interpolation not implemented on GPU");
+    auto const &lattice = get_lattice();
+    auto const gl = lattice.get_ghost_layers();
+    auto &block = *(lattice.get_blocks()->begin());
+    auto const [local, inside] = detail::block_local_positions(lattice, pos);
+    auto const densities = lbm::color_gradient::interpolate_densities(
+        block.template getData<ScalarField>(m_rho_field_id[0]),
+        block.template getData<ScalarField>(m_rho_field_id[1]), local, gl);
+    std::vector<double> positions, forces_a, forces_b;
+    for (std::size_t i = 0ul; i < pos.size(); ++i) {
+      auto const rho_a = densities[2u * i + 0u];
+      auto const rho_b = densities[2u * i + 1u];
+      auto const total_rho = rho_a + rho_b;
+      if (not inside[i] or total_rho == 0.) {
+        continue;
+      }
+      auto const inv_rho = 1. / total_rho;
+      for (std::size_t j : {0u, 1u, 2u}) {
+        positions.emplace_back(local[3u * i + j]);
+        forces_a.emplace_back((rho_a * inv_rho) * forces[i][j]);
+        forces_b.emplace_back((rho_b * inv_rho) * forces[i][j]);
+      }
+    }
+    if (positions.empty()) {
+      return;
+    }
+    lbm::accessor::Interpolation::add_force(
+        block.template getData<VectorField>(m_force_to_be_applied_id[0]),
+        positions, forces_a, gl);
+    lbm::accessor::Interpolation::add_force(
+        block.template getData<VectorField>(m_force_to_be_applied_id[1]),
+        positions, forces_b, gl);
   }
 #endif
 }
 
 /**
  * @brief Distribute solvation force on the two lattices
- * for the two components at given positions.
- * GPU not implemented.
+ * for the two components at given positions. On the GPU, densities and
+ * their gradients are interpolated on the device, the forces are computed
+ * on the host, and spread on the device.
  */
 template <typename FloatType, lbmpy::Arch Architecture>
 void LBWalberlaImplColorGradient<FloatType, Architecture>::
@@ -91,8 +151,44 @@ void LBWalberlaImplColorGradient<FloatType, Architecture>::
   }
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
   if constexpr (Architecture == lbmpy::Arch::GPU) {
-    throw std::runtime_error(
-        "Solvation force interpolation not implemented on GPU");
+    auto const &lattice = get_lattice();
+    auto const gl = lattice.get_ghost_layers();
+    auto &block = *(lattice.get_blocks()->begin());
+    auto const [local, inside] = detail::block_local_positions(lattice, pos);
+    auto const values = lbm::color_gradient::interpolate_densities_and_gradients(
+        block.template getData<ScalarField>(m_rho_field_id[0]),
+        block.template getData<ScalarField>(m_rho_field_id[1]), local, gl);
+    std::vector<double> positions, forces_a, forces_b;
+    for (std::size_t i = 0ul; i < pos.size(); ++i) {
+      auto const *const v = values.data() + 8u * i;
+      auto const rho_a = v[0];
+      auto const rho_b = v[1];
+      auto const total_rho = rho_a + rho_b;
+      if (not inside[i] or total_rho == 0.) {
+        continue;
+      }
+      auto const inv_rho_sq = 1. / (total_rho * total_rho);
+      // same expressions as the CPU kernel; the device multiplies by the
+      // spreading weight
+      auto const f_a =
+          +delta_mus[i] * rho_b * inv_rho_sq * Utils::Vector3d{v[2], v[3], v[4]};
+      auto const f_b =
+          -delta_mus[i] * rho_a * inv_rho_sq * Utils::Vector3d{v[5], v[6], v[7]};
+      for (std::size_t j : {0u, 1u, 2u}) {
+        positions.emplace_back(local[3u * i + j]);
+        forces_a.emplace_back(f_a[j]);
+        forces_b.emplace_back(f_b[j]);
+      }
+    }
+    if (positions.empty()) {
+      return;
+    }
+    lbm::accessor::Interpolation::add_force(
+        block.template getData<VectorField>(m_force_to_be_applied_id[0]),
+        positions, forces_a, gl);
+    lbm::accessor::Interpolation::add_force(
+        block.template getData<VectorField>(m_force_to_be_applied_id[1]),
+        positions, forces_b, gl);
   }
 #endif
 }
@@ -333,9 +429,30 @@ LBWalberlaImplColorGradient<FloatType, Architecture>::
       forces.emplace_back(kernel(pos[i], delta_mus[i]));
   }
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
-  if constexpr (Architecture == lbmpy::Arch::GPU)
-    throw std::runtime_error(
-        "Solvation particle force not implemented on GPU");
+  if constexpr (Architecture == lbmpy::Arch::GPU) {
+    auto const &lattice = get_lattice();
+    auto &block = *(lattice.get_blocks()->begin());
+    auto const [local, inside] = detail::block_local_positions(lattice, pos);
+    auto const values = lbm::color_gradient::interpolate_densities_and_gradients(
+        block.template getData<ScalarField>(m_rho_field_id[0]),
+        block.template getData<ScalarField>(m_rho_field_id[1]), local,
+        lattice.get_ghost_layers());
+    for (std::size_t i = 0ul; i < pos.size(); ++i) {
+      auto const *const v = values.data() + 8u * i;
+      auto const rho_a = v[0];
+      auto const rho_b = v[1];
+      auto const total_rho = rho_a + rho_b;
+      if (not inside[i] or total_rho == 0.) {
+        forces.emplace_back(Utils::Vector3d{});
+        continue;
+      }
+      auto const inv_rho_sq = 1. / (total_rho * total_rho);
+      auto const grad_rho_a = Utils::Vector3d{v[2], v[3], v[4]};
+      auto const grad_rho_b = Utils::Vector3d{v[5], v[6], v[7]};
+      forces.emplace_back(-delta_mus[i] * inv_rho_sq *
+                          (rho_b * grad_rho_a - rho_a * grad_rho_b));
+    }
+  }
 #endif
   return forces;
 }
@@ -345,8 +462,12 @@ bool LBWalberlaImplColorGradient<FloatType, Architecture>::add_force_at_pos(
     Utils::Vector3d const &pos, Utils::Vector3d const &force) {
   if (!m_lattice->pos_in_local_halo(pos))
     return false;
-  auto const kernel = make_density_weighted_force_interpolation_kernel();
-  kernel(pos, force);
+  if constexpr (Architecture == lbmpy::Arch::CPU) {
+    auto const kernel = make_density_weighted_force_interpolation_kernel();
+    kernel(pos, force);
+  } else {
+    add_forces_at_pos({pos}, {force});
+  }
   return true;
 }
 

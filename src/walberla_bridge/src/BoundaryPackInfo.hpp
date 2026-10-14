@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <core/cell/CellInterval.h>
 #include <core/debug/Debug.h>
 #include <core/mpi/RecvBuffer.h>
 #include <core/mpi/SendBuffer.h>
@@ -48,6 +49,15 @@ public:
   bool threadsafeReceiving() const override { return false; }
 };
 
+/**
+ * @brief Communicate the boundary values of boundary cells in ghost layers.
+ *
+ * The cells are visited via a @c CellInterval rather than a field iterator:
+ * a field iterator reads its coordinates through pointers into itself,
+ * which GCC 14 and 15 miscompile at -O2 in the CUDA translation units
+ * (all cells of a slice got the y and z coordinates of its first cell,
+ * so moving walls lost their velocity in the ghost layers on GPU).
+ */
 template <typename GhostLayerField_T, typename Boundary_T>
 class BoundaryPackInfo : public PackInfo<GhostLayerField_T> {
 protected:
@@ -95,16 +105,15 @@ public:
 
     auto const boundary_flag = flag_field->getFlag(Boundary_flag);
     auto const gl = numberOfGhostLayersToCommunicate(flag_field);
-    auto const begin = [gl, dir](auto const *field) {
-      return field->beginGhostLayerOnly(gl, dir);
-    };
+    CellInterval region;
+    flag_field->getGhostRegion(dir, region, cell_idx_c(gl));
 
 #ifndef NDEBUG
     uint_t xSize, ySize, zSize, bSize;
     buffer >> xSize >> ySize >> zSize >> bSize;
     uint_t buf_size{0u};
-    for (auto it = begin(flag_field); it != flag_field->end(); ++it) {
-      if (isFlagSet(it, boundary_flag)) {
+    for (auto const &cell : region) {
+      if (flag_field->isFlagSet(cell, boundary_flag)) {
         ++buf_size;
       }
     }
@@ -116,9 +125,10 @@ public:
 
     auto const offset = m_lattice->get_block_corner(*receiver, true);
     typename Boundary_T::value_type value;
-    for (auto it = begin(flag_field); it != flag_field->end(); ++it) {
-      if (isFlagSet(it, boundary_flag)) {
-        auto const node = offset + Utils::Vector3i{{it.x(), it.y(), it.z()}};
+    for (auto const &cell : region) {
+      if (flag_field->isFlagSet(cell, boundary_flag)) {
+        auto const node =
+            offset + Utils::Vector3i{{cell.x(), cell.y(), cell.z()}};
         buffer >> value;
         m_boundary->unpack_node(node, value);
       }
@@ -136,14 +146,13 @@ protected:
 
     auto const boundary_flag = flag_field->getFlag(Boundary_flag);
     auto const gl = numberOfGhostLayersToCommunicate(flag_field);
-    auto const begin = [gl, dir](auto const *field) {
-      return field->beginSliceBeforeGhostLayer(dir, cell_idx_c(gl));
-    };
+    CellInterval region;
+    flag_field->getSliceBeforeGhostLayer(dir, region, cell_idx_c(gl));
 
 #ifndef NDEBUG
     uint_t buf_size{0u};
-    for (auto it = begin(flag_field); it != flag_field->end(); ++it) {
-      if (isFlagSet(it, boundary_flag)) {
+    for (auto const &cell : region) {
+      if (flag_field->isFlagSet(cell, boundary_flag)) {
         ++buf_size;
       }
     }
@@ -152,9 +161,10 @@ protected:
 #endif
 
     auto const offset = m_lattice->get_block_corner(*sender, true);
-    for (auto it = begin(flag_field); it != flag_field->end(); ++it) {
-      if (isFlagSet(it, boundary_flag)) {
-        auto const node = offset + Utils::Vector3i{{it.x(), it.y(), it.z()}};
+    for (auto const &cell : region) {
+      if (flag_field->isFlagSet(cell, boundary_flag)) {
+        auto const node =
+            offset + Utils::Vector3i{{cell.x(), cell.y(), cell.z()}};
         buffer << m_boundary->get_node_value_at_boundary(node);
       }
     }

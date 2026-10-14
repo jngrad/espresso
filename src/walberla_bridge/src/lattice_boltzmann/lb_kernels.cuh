@@ -23,6 +23,8 @@
 
 #include "lb_kernels.hpp"
 
+#include "generated_kernels/DynamicUBBColorGradientDoublePrecisionCUDA.h"
+#include "generated_kernels/DynamicUBBColorGradientSinglePrecisionCUDA.h"
 #include "generated_kernels/DynamicUBBDoublePrecisionCUDA.h"
 #include "generated_kernels/DynamicUBBSinglePrecisionCUDA.h"
 #include "generated_kernels/FieldAccessorsDoublePrecisionCUDA.cuh"
@@ -64,6 +66,7 @@ template <> struct KernelTrait<double, lbmpy::Arch::GPU> {
   using StreamModelTwoComponent = pystencils::ColorGradientStreamSweepDoublePrecisionCUDA;
   using CollisionModelTwoComponent = pystencils::ColorGradientCollideSweepDoublePrecisionCUDA;
   using DynamicUBB = lbm::DynamicUBBDoublePrecisionCUDA;
+  using DynamicUBBTwoComponent = lbm::DynamicUBBColorGradientDoublePrecisionCUDA;
 };
 
 template <> struct KernelTrait<float, lbmpy::Arch::GPU> {
@@ -79,6 +82,7 @@ template <> struct KernelTrait<float, lbmpy::Arch::GPU> {
   using StreamModelTwoComponent = pystencils::ColorGradientStreamSweepSinglePrecisionCUDA;
   using CollisionModelTwoComponent = pystencils::ColorGradientCollideSweepSinglePrecisionCUDA;
   using DynamicUBB = lbm::DynamicUBBSinglePrecisionCUDA;
+  using DynamicUBBTwoComponent = lbm::DynamicUBBColorGradientSinglePrecisionCUDA;
 };
 
 } // namespace detail

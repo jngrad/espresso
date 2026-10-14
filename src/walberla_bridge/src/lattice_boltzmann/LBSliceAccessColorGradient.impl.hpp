@@ -237,25 +237,15 @@ LBWalberlaImplColorGradient<FloatType, Architecture>::get_slice_density(
             block.template getData<ScalarField>(m_rho_field_id[0]);
         auto const rho_b_field =
             block.template getData<ScalarField>(m_rho_field_id[1]);
-        // Pre-collect scalar field values into flat arrays
-        std::vector<double> values_a(bci.numCells());
-        std::vector<double> values_b(bci.numCells());
-        unsigned idx = 0u;
-        for (auto x = bci.xMin(); x <= bci.xMax(); ++x) {
-          for (auto y = bci.yMin(); y <= bci.yMax(); ++y) {
-            for (auto z = bci.zMin(); z <= bci.zMax(); ++z) {
-              values_a[idx] = double_c(rho_a_field->get(x, y, z));
-              values_b[idx] = double_c(rho_b_field->get(x, y, z));
-              ++idx;
-            }
-          }
-        }
+        // field values in x-major, z-minor order
+        auto const values_a = ek::accessor::Scalar::get(rho_a_field, bci);
+        auto const values_b = ek::accessor::Scalar::get(rho_b_field, bci);
 
         auto kernel = [&values_a, &values_b, &out](unsigned const block_index,
                                                    unsigned const local_index,
                                                    Utils::Vector3i const &) {
-          out[2u * local_index + 0u] = values_a[block_index];
-          out[2u * local_index + 1u] = values_b[block_index];
+          out[2u * local_index + 0u] = double_c(values_a[block_index]);
+          out[2u * local_index + 1u] = double_c(values_b[block_index]);
         };
 
         copy_block_buffer(bci, ci, block_offset, lower_corner, kernel);
@@ -278,21 +268,13 @@ LBWalberlaImplColorGradient<FloatType, Architecture>::get_slice_phasefield(
 
         auto const phasefield_field =
             block.template getData<ScalarField>(m_phasefield_id);
-        std::vector<double> values(bci.numCells());
-        unsigned idx = 0u;
-        for (auto x = bci.xMin(); x <= bci.xMax(); ++x) {
-          for (auto y = bci.yMin(); y <= bci.yMax(); ++y) {
-            for (auto z = bci.zMin(); z <= bci.zMax(); ++z) {
-              values[idx] = double_c(phasefield_field->get(x, y, z));
-              ++idx;
-            }
-          }
-        }
+        // field values in x-major, z-minor order
+        auto const values = ek::accessor::Scalar::get(phasefield_field, bci);
 
         auto kernel = [&values, &out](unsigned const block_index,
                                       unsigned const local_index,
                                       Utils::Vector3i const &) {
-          out[local_index] = values[block_index];
+          out[local_index] = double_c(values[block_index]);
         };
 
         copy_block_buffer(bci, ci, block_offset, lower_corner, kernel);
@@ -330,17 +312,9 @@ void LBWalberlaImplColorGradient<FloatType, Architecture>::set_slice_density(
 
         copy_block_buffer(bci, ci, block_offset, lower_corner, kernel);
 
-        // Write to scalar fields
-        unsigned idx = 0u;
-        for (auto x = bci.xMin(); x <= bci.xMax(); ++x) {
-          for (auto y = bci.yMin(); y <= bci.yMax(); ++y) {
-            for (auto z = bci.zMin(); z <= bci.zMax(); ++z) {
-              rho_a_field->get(x, y, z) = values_a[idx];
-              rho_b_field->get(x, y, z) = values_b[idx];
-              ++idx;
-            }
-          }
-        }
+        // field values in x-major, z-minor order
+        ek::accessor::Scalar::set(rho_a_field, values_a, bci);
+        ek::accessor::Scalar::set(rho_b_field, values_b, bci);
       });
 }
 
@@ -357,30 +331,62 @@ LBWalberlaImplColorGradient<FloatType, Architecture>::get_slice_pressure_tensor(
         if (out.empty())
           out.resize(9u * ci.numCells());
 
-        auto const pdf_field_a =
-            block.template getData<PdfField>(m_pdf_field_id[0]);
-        auto const pdf_field_b =
-            block.template getData<PdfField>(m_pdf_field_id[1]);
+        if constexpr (Architecture == lbmpy::Arch::CPU) {
+          auto const pdf_field_a =
+              block.template getData<PdfField>(m_pdf_field_id[0]);
+          auto const pdf_field_b =
+              block.template getData<PdfField>(m_pdf_field_id[1]);
 
-        // Reads pre-collision populations via a neighbor-offset pull (see
-        // raw_pressure_tensor_moment()), so the third copy_block_buffer
-        // argument -- the node in block-local-offset space -- is needed
-        // here (unlike other slice accessors, which only need the
-        // pre-fetched bulk buffer indices).
-        auto kernel = [&out, &block_offset, pdf_field_a, pdf_field_b, this](
-                          unsigned const /* block_index */,
-                          unsigned const local_index,
-                          Utils::Vector3i const &node) {
-          auto const local = node - block_offset;
-          auto const cell = Cell{local[0], local[1], local[2]};
-          auto const tensor =
-              pressure_tensor_from_populations(pdf_field_a, pdf_field_b, cell);
-          for (uint_t f = 0u; f < 9u; ++f) {
-            out[9u * local_index + f] = double_c(tensor[f]);
+          // Reads pre-collision populations via a neighbor-offset pull (see
+          // raw_pressure_tensor_moment()), so the third copy_block_buffer
+          // argument -- the node in block-local-offset space -- is needed
+          // here (unlike other slice accessors, which only need the
+          // pre-fetched bulk buffer indices).
+          auto kernel = [&out, &block_offset, pdf_field_a, pdf_field_b, this](
+                            unsigned const /* block_index */,
+                            unsigned const local_index,
+                            Utils::Vector3i const &node) {
+            auto const local = node - block_offset;
+            auto const cell = Cell{local[0], local[1], local[2]};
+            auto const tensor = pressure_tensor_from_populations(
+                pdf_field_a, pdf_field_b, cell);
+            for (uint_t f = 0u; f < 9u; ++f) {
+              out[9u * local_index + f] = double_c(tensor[f]);
+            }
+          };
+
+          copy_block_buffer(bci, ci, block_offset, lower_corner, kernel);
+        }
+#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
+        else {
+          // same neighbor-offset pull in the generated accessor, which adds
+          // the zero-centered background (see corrected_pressure_tensor())
+          std::array<std::vector<FloatType>, 2> values;
+          for (std::size_t const component : {0u, 1u}) {
+            values[component] = lbm::accessor::PressureTensor::get(
+                block.template getData<PdfField>(m_pdf_field_id[component]),
+                FloatType{1}, bci);
           }
-        };
+          auto kernel = [&out, &values, this](unsigned const block_index,
+                                              unsigned const local_index,
+                                              Utils::Vector3i const &) {
+            Matrix3<FloatType> tensor(FloatType{0});
+            for (std::size_t const component : {0u, 1u}) {
+              Matrix3<FloatType> moment;
+              for (uint_t f = 0u; f < 9u; ++f) {
+                moment[f] = values[component][9u * block_index + f];
+              }
+              tensor += corrected_pressure_tensor(moment, FloatType{1},
+                                                  component);
+            }
+            for (uint_t f = 0u; f < 9u; ++f) {
+              out[9u * local_index + f] = double_c(tensor[f]);
+            }
+          };
 
-        copy_block_buffer(bci, ci, block_offset, lower_corner, kernel);
+          copy_block_buffer(bci, ci, block_offset, lower_corner, kernel);
+        }
+#endif
       });
   return out;
 }
