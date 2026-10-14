@@ -319,7 +319,8 @@ The following tutorials are available:
 * :file:`active_matter`: Modelling of self-propelling particles.
 * :file:`electrokinetics`: Modelling electrokinetics together with hydrodynamic interactions.
 * :file:`constant_pH`: Modelling the titration of a weak acid using the constant pH method
-* :file:`widom_insertion`: Measuring the excess chemical potential of a salt solution using the Widom particle insertion method
+* :file:`widom_insertion`: Measuring the excess chemical potential of a salt solution using the Widom particle insertion method :cite:`widom63a`
+* :file:`grand_canonical_monte_carlo`: Simulating in the Grand-canonical ensemble with the Grand-canonical Monte Carlo method (GCMC) :cite:`landsgesell20b`
 * :file:`mlip`: Atomistic simulations using machine-learned interatomic potentials and the MACE-MP-0 model :cite:`batatia22a,batatia25a`
 * :file:`mlip-water`: Modelling water using the TIP4P model :cite:`abascal05a` and machine-learning interatomic potentials with Apax :cite:`schafer25a`
 
@@ -455,11 +456,11 @@ report so to the developers using the instructions in :ref:`Contributing`.
 +================================+========================+==================+============+
 |             **Integrators**, **Thermostats**, **Barostats**                             |
 +--------------------------------+------------------------+------------------+------------+
-| Velocity-Verlet Integrator     | Core                   | Core             | Yes        |
+| Velocity-Verlet Integrator     | Core                   | Good             | Yes        |
 +--------------------------------+------------------------+------------------+------------+
-| Langevin Thermostat            | Core                   | Core             | Yes        |
+| Langevin Thermostat            | Core                   | Good             | Yes        |
 +--------------------------------+------------------------+------------------+------------+
-| Isotropic NpT                  | Experimental           | None             | Yes        |
+| Isotropic NpT                  | Single                 | None             | Yes        |
 +--------------------------------+------------------------+------------------+------------+
 | Quaternion Integrator          | Core                   | Good             | Yes        |
 +--------------------------------+------------------------+------------------+------------+
@@ -467,9 +468,9 @@ report so to the developers using the instructions in :ref:`Contributing`.
 +--------------------------------+------------------------+------------------+------------+
 |                                **Interactions**                                         |
 +--------------------------------+------------------------+------------------+------------+
-| Short-range Interactions       | Core                   | Core             | Yes        |
+| Short-range Interactions       | Core                   | Good             | Yes        |
 +--------------------------------+------------------------+------------------+------------+
-| Constraints                    | Core                   | Core             | Yes        |
+| Constraints                    | Core                   | Good             | Yes        |
 +--------------------------------+------------------------+------------------+------------+
 | Relative Virtual Sites         | Good                   | Good             | Yes        |
 +--------------------------------+------------------------+------------------+------------+
@@ -479,13 +480,13 @@ report so to the developers using the instructions in :ref:`Contributing`.
 +--------------------------------+------------------------+------------------+------------+
 |                              **Coulomb Interaction**                                    |
 +--------------------------------+------------------------+------------------+------------+
-| P3M                            | Core                   | Core             | Yes        |
+| P3M                            | Core                   | Good             | Yes        |
 +--------------------------------+------------------------+------------------+------------+
 | P3M on GPU                     | Single                 | Single           | Yes        |
 +--------------------------------+------------------------+------------------+------------+
 | Dipolar P3M                    | Group                  | Good             | Yes        |
 +--------------------------------+------------------------+------------------+------------+
-| MMM1D                          | Single                 | Good             | No         |
+| MMM1D                          | Single                 | Good             | Yes        |
 +--------------------------------+------------------------+------------------+------------+
 | ELC                            | Good                   | Good             | Yes        |
 +--------------------------------+------------------------+------------------+------------+
@@ -493,15 +494,13 @@ report so to the developers using the instructions in :ref:`Contributing`.
 +--------------------------------+------------------------+------------------+------------+
 |                         **Hydrodynamic Interaction**                                    |
 +--------------------------------+------------------------+------------------+------------+
-| Lattice-Boltzmann              | Core                   | Core             | Yes        |
-+--------------------------------+------------------------+------------------+------------+
-| Lattice-Boltzmann on GPU       | Group                  | Core             | Yes        |
+| Lattice-Boltzmann              | Core                   | Group            | Yes        |
 +--------------------------------+------------------------+------------------+------------+
 |                              **Input/Output**                                           |
 +--------------------------------+------------------------+------------------+------------+
 | VTF output                     | Core                   | Core             | Yes        |
 +--------------------------------+------------------------+------------------+------------+
-| VTK output                     | Group                  | Group            | No         |
+| VTK output                     | Group                  | Group            | Yes        |
 +--------------------------------+------------------------+------------------+------------+
 | Checkpointing                  | Experimental           | Experimental     | Yes        |
 +--------------------------------+------------------------+------------------+------------+
@@ -606,6 +605,9 @@ guidelines:
 
 * No guarantees are made with respect to the C++ bindings in the simulation core.
 
+* No guarantees are made with regards to the API of maintainer scripts, samples,
+  and test cases, since they are intended for developers and are not installed with |es|
+
 These guidelines are meant to satisfy Semantic Versioning 2.0.0 [1]_ and :pep:`440`.
 Commits between releases are considered *development* and do not have a meaningful
 version number; even though package repositories outside of the Python ecosystem
@@ -649,13 +651,13 @@ publications, using the BibTeX entries indicated in this user guide.
 
 A complete citation would look like this:
 
-    Simulations were carried out with ESPResSo 5.0.0[22,23,24] using the ICC\*
+    Simulations were carried out with ESPResSo 5.0.1[22,23,24] using the ICC\*
     algorithm[25].
 
     | ____________
 
-    | [22] J.-N. Grad, F. Weik, A. Reinauer, *et al.* ESPResSo, version 5.0.0.
-      Zenodo, Feb 2026. doi:\ `10.5281/zenodo.18791183 <https://doi.org/10.5281/zenodo.18791183>`_.
+    | [22] J.-N. Grad, F. Weik, A. Reinauer, *et al.* ESPResSo, version 5.0.1.
+      Zenodo, Feb 2026. doi:\ `10.5281/zenodo.20450775 <https://doi.org/10.5281/zenodo.20450775>`_.
     | [23] R. Weeber, J.-N. Grad, D. Beyer *et al.* ESPResSo, a versatile
       open-source software package for simulating soft matter systems.
       In M. Yáñez and R. J. Boyd, eds, *Comprehensive Computational Chemistry*,

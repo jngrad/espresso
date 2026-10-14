@@ -58,15 +58,17 @@ enum class OutputVTK : int {
   density = 1 << 0,
   velocity_vector = 1 << 1,
   pressure_tensor = 1 << 2,
-  phasefield = 1 << 3,
-  density_a = 1 << 4,
-  density_b = 1 << 5,
+  boundary = 1 << 3,
+  phasefield = 1 << 4,
+  density_a = 1 << 5,
+  density_b = 1 << 6,
 };
 
 /** @brief EK statistics to write to VTK files */
 enum class EKOutputVTK : int {
   density = 1 << 0,
   flux = 1 << 1,
+  boundary = 1 << 2,
 };
 
 /** @brief EK Poisson solver statistics to write to VTK files */

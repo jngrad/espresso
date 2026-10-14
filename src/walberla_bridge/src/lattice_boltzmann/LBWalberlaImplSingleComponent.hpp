@@ -40,7 +40,6 @@
 #include <waLBerlaDefinitions.h>
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
 #include <gpu/AddGPUFieldToStorage.h>
-#include <gpu/HostFieldAllocator.h>
 #endif
 
 #include "../BoundaryHandling.hpp"
@@ -69,11 +68,13 @@
 #include <array>
 #include <bitset>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <initializer_list>
 #include <limits>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -178,6 +179,7 @@ protected:
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
   std::optional<BlockDataID> m_pdf_cpu_field_id;
   std::optional<BlockDataID> m_vel_cpu_field_id;
+  std:: shared_ptr<gpu::HostFieldAllocator<FloatType>> m_host_field_allocator;
 #endif
 
   // collision sweep
@@ -198,10 +200,6 @@ protected:
       m_lees_edwards_vel_interpol_sweep;
   std::shared_ptr<InterpolateAndShiftAtBoundary<_VectorField, FloatType>>
       m_lees_edwards_last_applied_force_interpol_sweep;
-
-#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
-  std::shared_ptr<gpu::HostFieldAllocator<FloatType>> m_host_field_allocator;
-#endif
 
 public:
   LBWalberlaImplSingleComponent(std::shared_ptr<LatticeWalberla> lattice,

@@ -87,7 +87,7 @@ are required to be able to compile and use |es|:
     FFTW
         For some algorithms like |p3m|, |es| needs the FFTW library
         version 3 or later [5]_ for Fourier transforms, including header files.
-        |es| leverages heFFTe :cite:`ayala20a`.
+        |es| leverages heFFTe :cite:`ayala20a` and kokkos-fft :cite:`asahi25a`.
 
     CUDA
         For some algorithms like |p3m| and lattice-Boltzmann,
@@ -214,6 +214,8 @@ will generate device code for both sm_75 and sm_86 architectures.
 The CMake option ``ESPRESSO_CMAKE_CUDA_ARCHITECTURES`` achieves the same effect.
 Both take a semicolon-separated list of integers. There are online resources
 to help determine which architecture match specific hardware [12]_.
+Alternatively, run ``nvidia-smi --query-gpu=name,compute_cap`` to display the exact
+compute capability of your GPU, then multiply that value by 10 to get the architecture.
 The CMake option ``CMAKE_CUDA_ARCHITECTURES`` cannot be used to set CUDA
 architectures, because it has a default value that is too old for the
 minimally required CUDA version.
@@ -261,8 +263,9 @@ If the NVIDIA HPC SDK is installed, the NVHPC toolchain can be used with GCC 12.
 
       .. code-block:: bash
 
-         CC=nvc CXX=nvc++ CUDACXX=nvcc cmake .. \
+         CC=nvc CXX=nvc++ CUDACXX=nvcc CUDAHOSTCXX=nvc++ cmake .. \
             -D ESPRESSO_BUILD_WITH_CUDA=ON \
+            -D CMAKE_CUDA_FLAGS="$(mpicc --showme:compile)" \
             -D CMAKE_CXX_FLAGS="--gcc-toolchain=gcc-12"
 
       with compiler dependencies:
@@ -335,8 +338,9 @@ If the NVIDIA HPC SDK is installed, the NVHPC toolchain can be used with GCC 13.
 
       .. code-block:: bash
 
-         CC=nvc CXX=nvc++ CUDACXX=nvcc cmake .. \
+         CC=nvc CXX=nvc++ CUDACXX=nvcc CUDAHOSTCXX=nvc++ cmake .. \
             -D ESPRESSO_BUILD_WITH_CUDA=ON \
+            -D CMAKE_CUDA_FLAGS="$(mpicc --showme:compile)" \
             -D CMAKE_CXX_FLAGS="--gcc-toolchain=gcc-13"
 
       with compiler dependencies:
@@ -791,9 +795,6 @@ using a CMake flag (see :ref:`Options and Variables`).
 - ``STOKESIAN_DYNAMICS``: enable the Stokesian Dynamics propagator
   (see :ref:`Stokesian Dynamics`). Requires BLAS and LAPACK.
 
-- ``SHARED_MEMORY_PARALLELISM``: enable shared-memory parallelism
-  (OpenMP, Kokkos, Cabana)
-
 - ``CALIPER``, ``VALGRIND``, ``FPE``: enable various instrumentation tools
   (see :ref:`Instrumentation`)
 
@@ -957,7 +958,6 @@ The following options control features from external libraries:
 * ``ESPRESSO_BUILD_WITH_SCAFACOS``: Build with ScaFaCoS support.
 * ``ESPRESSO_BUILD_WITH_GSL``: Build with GSL support.
 * ``ESPRESSO_BUILD_WITH_STOKESIAN_DYNAMICS`` Build with Stokesian Dynamics support.
-* ``ESPRESSO_BUILD_WITH_SHARED_MEMORY_PARALLELISM``: Build with shared-memory parallelism support (OpenMP, Cabana, Kokkos, etc.)
 * ``ESPRESSO_BUILD_WITH_WALBERLA``: Build with waLBerla support.
 * ``ESPRESSO_BUILD_WITH_WALBERLA_AVX``: Build waLBerla with AVX kernels instead of regular kernels.
 * ``ESPRESSO_BUILD_WITH_PYTHON``: Build with the Python interface.
@@ -1029,19 +1029,27 @@ The build type is controlled by ``-D CMAKE_BUILD_TYPE=<type>`` where
 * ``Debug``: for debugging in GDB
 * ``Coverage``: for code coverage
 
+In addition, third-party libraries may provide additional options that control performance.
+For example, ``-D Kokkos_ARCH_NATIVE=ON`` enables microarchitecture-specific optimizations,
+such as ``-march=native -mtune=native`` on x86 or ``-mcpu=native`` on ARM,
+in both the Kokkos library and |es|.
+These optimization flags are suitable for homogeneous computing environments,
+e.g. HPC clusters, but not for environments with heterogeneous computing resources,
+since different hardware may not share the same instruction set.
+
 Cluster users and HPC developers may be interested in manually editing the
-``espresso_cpp_flags`` target in the top-level ``CMakeLists.txt`` file for
+``espresso_compiler_flags`` target in the top-level ``CMakeLists.txt`` file for
 finer control over compiler flags. The variable declaration is followed
 by a series of conditionals to enable or disable compiler-specific flags.
 Compiler flags passed to CMake via the ``-D CMAKE_CXX_FLAGS`` option
 (such as ``cmake . -D CMAKE_CXX_FLAGS="-ffast-math -fno-finite-math-only"``)
-will appear in the compiler command before the flags in ``espresso_cpp_flags``,
+will appear in the compiler command before the flags in ``espresso_compiler_flags``,
 and will therefore have lower precedence.
 
 Be aware that fast-math mode can break |es|. It is incompatible with the
 ``ADDITIONAL_CHECKS`` feature due to the loss of precision in the LB code
 on CPU. The Clang 10 compiler breaks field couplings with ``-ffast-math``.
-The Intel compiler enables the ``-fp-model fast=1`` flag by default;
+The IntelLLVM compiler enables the ``-fp-model fast=1`` flag by default;
 it can be disabled by adding the ``-fp-model=strict`` flag.
 
 |es| currently doesn't fully support link-time optimization (LTO).

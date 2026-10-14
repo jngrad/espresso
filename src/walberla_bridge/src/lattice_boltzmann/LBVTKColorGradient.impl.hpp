@@ -85,7 +85,7 @@ void LBWalberlaImplColorGradient<FloatType, Architecture>::
     auto const unit_conversion = FloatType_c(units.at("velocity"));
     if constexpr (Architecture == lbmpy::Arch::CPU) {
       vtk_obj.addCellDataWriter(
-          std::make_shared<VelocityVTKWriter<FloatType, VectorField, float>>(
+          std::make_shared<VelocityVTKWriter<FloatType, float>>(
               m_velocity_field_id, "velocity_vector", unit_conversion));
     }
 #if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
@@ -100,7 +100,7 @@ void LBWalberlaImplColorGradient<FloatType, Architecture>::
           gpu::fieldCpyFunctor<VectorFieldCpu, VectorField>(
               blocks, *m_vel_cpu_field_id, m_velocity_field_id));
       vtk_obj.addCellDataWriter(
-          std::make_shared<VelocityVTKWriter<FloatType, VectorFieldCpu, float>>(
+          std::make_shared<VelocityVTKWriter<FloatType, float>>(
               *m_vel_cpu_field_id, "velocity_vector", unit_conversion));
     }
 #endif

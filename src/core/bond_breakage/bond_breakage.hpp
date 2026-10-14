@@ -19,12 +19,15 @@
 
 #pragma once
 
+#include <config/config.hpp>
+
 #include "system/System.hpp"
 
 #include <boost/serialization/access.hpp>
 
 #include <array>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <unordered_map>
 #include <vector>
@@ -87,7 +90,8 @@ public:
     auto const &spec = *(breakage_specs.at(bond_type));
 
     // Is the bond length longer than the breakage length?
-    if (distance >= spec.breakage_length) {
+    if (distance >= spec.breakage_length and
+        spec.action_type != ActionType::NONE) {
       queue_breakage(particle_id, bond_partners, bond_type);
       return true;
     }
@@ -105,6 +109,8 @@ public:
   }
 
 private:
+  std::mutex queue_mtx;
+
   void process_queue_impl(System::System &system);
 
   /** Add a particle+bond combination to the breakage queue */

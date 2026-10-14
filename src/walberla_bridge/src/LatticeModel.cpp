@@ -27,12 +27,11 @@
 #include <memory>
 #include <string>
 
-std::shared_ptr<VTKHandle>
-LatticeModel::create_vtk(int delta_N, int initial_count, int flag_observables,
-                         units_map const &units_conversion,
-                         std::string const &identifier,
-                         std::string const &base_folder,
-                         std::string const &prefix, bool force_pvtu) {
+std::shared_ptr<VTKHandle> LatticeModel::create_vtk(
+    int delta_N, int initial_count, int flag_observables,
+    units_map const &units_conversion, std::string const &identifier,
+    std::string const &base_folder, std::string const &prefix, bool force_pvtu,
+    bool include_boundaries) {
 
   using walberla::uint_c;
 
@@ -43,14 +42,16 @@ LatticeModel::create_vtk(int delta_N, int initial_count, int flag_observables,
   }
 
   // instantiate VTKOutput object
-  auto const &blocks = get_lattice().get_blocks();
+  auto const blocks = get_lattice().get_blocks();
   auto const write_freq = (delta_N) ? static_cast<unsigned int>(delta_N) : 1u;
   auto vtk_obj = walberla::vtk::createVTKOutput_BlockData(
       blocks, identifier, uint_c(write_freq), uint_c(0), force_pvtu,
       base_folder, prefix, true, true, true, true, uint_c(initial_count));
 
   // add filters
-  register_vtk_field_filters(*vtk_obj);
+  if (not include_boundaries) {
+    register_vtk_field_filters(*vtk_obj);
+  }
 
   // add writers
   register_vtk_field_writers(*vtk_obj, units_conversion, flag_observables);

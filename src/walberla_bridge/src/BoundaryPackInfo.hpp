@@ -84,9 +84,7 @@ public:
 
   void communicateLocal(IBlock const *sender, IBlock *receiver,
                         stencil::Direction dir) override {
-#ifdef _OPENMP
 #pragma omp critical
-#endif
     {
       mpi::SendBuffer sBuffer;
       packDataImpl(sender, dir, sBuffer);
@@ -112,7 +110,7 @@ public:
     uint_t xSize, ySize, zSize, bSize;
     buffer >> xSize >> ySize >> zSize >> bSize;
     uint_t buf_size{0u};
-    for (auto const &cell : region) {
+    for (auto const cell : region) {
       if (flag_field->isFlagSet(cell, boundary_flag)) {
         ++buf_size;
       }
@@ -125,7 +123,7 @@ public:
 
     auto const offset = m_lattice->get_block_corner(*receiver, true);
     typename Boundary_T::value_type value;
-    for (auto const &cell : region) {
+    for (auto const cell : region) {
       if (flag_field->isFlagSet(cell, boundary_flag)) {
         auto const node =
             offset + Utils::Vector3i{{cell.x(), cell.y(), cell.z()}};
@@ -151,7 +149,7 @@ protected:
 
 #ifndef NDEBUG
     uint_t buf_size{0u};
-    for (auto const &cell : region) {
+    for (auto const cell : region) {
       if (flag_field->isFlagSet(cell, boundary_flag)) {
         ++buf_size;
       }
@@ -161,7 +159,7 @@ protected:
 #endif
 
     auto const offset = m_lattice->get_block_corner(*sender, true);
-    for (auto const &cell : region) {
+    for (auto const cell : region) {
       if (flag_field->isFlagSet(cell, boundary_flag)) {
         auto const node =
             offset + Utils::Vector3i{{cell.x(), cell.y(), cell.z()}};

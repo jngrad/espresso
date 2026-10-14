@@ -108,6 +108,13 @@ Variant LBFluidNode::do_call_method(std::string const &name,
   }
   if (name == "set_population") {
     auto const pop = get_value<std::vector<double>>(params, "value");
+    context()->parallel_try_catch([&]() {
+      if (pop.size() != m_lb_fluid->stencil_size()) {
+        throw std::runtime_error("Population must have exactly " +
+                                 std::to_string(m_lb_fluid->stencil_size()) +
+                                 " elements");
+      }
+    });
     m_lb_fluid->set_node_population(m_index, pop);
     m_lb_fluid->ghost_communication();
     return {};

@@ -265,7 +265,7 @@ private:
     // with a field iterator (see @ref field::communication::BoundaryPackInfo)
     auto domain_flag = flag_field->getFlag(Domain_flag);
     auto boundary_flag = flag_field->getFlag(Boundary_flag);
-    for (auto const &cell : flag_field->xyzSize()) {
+    for (auto const cell : flag_field->xyzSize()) {
       flag_field->addFlag(cell, domain_flag);
       flag_field->removeFlag(cell, boundary_flag);
     }

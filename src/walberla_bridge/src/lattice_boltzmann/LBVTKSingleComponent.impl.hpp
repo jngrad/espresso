@@ -38,65 +38,90 @@ void LBWalberlaImplSingleComponent<FloatType, Architecture>::
     register_vtk_field_writers(walberla::vtk::VTKOutput &vtk_obj,
                                LatticeModel::units_map const &units,
                                int flag_observables) {
-#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
-  auto const allocate_cpu_field_if_empty =
-      [&]<typename Field>(auto const &blocks, std::string name,
-                          std::optional<BlockDataID> &cpu_field) {
-        if (not cpu_field) {
-          cpu_field = field::addToStorage<Field>(
-              blocks, name, FloatType{0}, field::fzyx,
-              m_lattice->get_ghost_layers(), m_host_field_allocator);
-        }
-      };
-#endif
   if (flag_observables & static_cast<int>(OutputVTK::density)) {
-    auto const unit_conversion =
-        FloatType_c(zero_centered_to_md(units.at("density")));
-#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
-    if constexpr (Architecture == lbmpy::Arch::GPU) {
-      auto const &blocks = m_lattice->get_blocks();
-      allocate_cpu_field_if_empty.template operator()<PdfFieldCpu>(
-          blocks, "pdfs_cpu", m_pdf_cpu_field_id);
-      vtk_obj.addBeforeFunction(gpu::fieldCpyFunctor<PdfFieldCpu, PdfField>(
-          blocks, *m_pdf_cpu_field_id, m_pdf_field_id[0]));
-    }
-#endif
-    vtk_obj.addCellDataWriter(
-        std::make_shared<DensityVTKWriter<FloatType, PdfField, float>>(
-            m_pdf_field_id[0], "density", unit_conversion));
+    auto const unit_conversion = FloatType_c(units.at("density"));
+    auto const blocks = m_lattice->get_blocks();
+    WALBERLA_ASSERT_NOT_NULLPTR(blocks);
+    auto density_writer = std::make_shared<DensityVTKWriter<FloatType, float>>(
+        m_pdf_field_id[0], "density", unit_conversion);
+    auto before_function = [this, blocks, density_writer]() {
+      for (auto &block : *blocks) {
+        auto *pdf_field = block.template getData<PdfField>(m_pdf_field_id[0]);
+        auto const bci = pdf_field->xyzSize();
+        density_writer->set_content(
+            lbm::accessor::Density::get(pdf_field, m_density, bci));
+        density_writer->set_dims(
+            Vector3<uint_t>(bci.xSize(), bci.ySize(), bci.zSize()));
+      }
+    };
+    vtk_obj.addBeforeFunction(std::move(before_function));
+    vtk_obj.addCellDataWriter(density_writer);
   }
   if (flag_observables & static_cast<int>(OutputVTK::velocity_vector)) {
     auto const unit_conversion = FloatType_c(units.at("velocity"));
-#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
-    if constexpr (Architecture == lbmpy::Arch::GPU) {
-      auto const &blocks = m_lattice->get_blocks();
-      allocate_cpu_field_if_empty.template operator()<VectorFieldCpu>(
-          blocks, "vel_cpu", m_vel_cpu_field_id);
-      vtk_obj.addBeforeFunction(
-          gpu::fieldCpyFunctor<VectorFieldCpu, VectorField>(
-              blocks, *m_vel_cpu_field_id, m_velocity_field_id));
-    }
-#endif
-    vtk_obj.addCellDataWriter(
-        std::make_shared<VelocityVTKWriter<FloatType, VectorField, float>>(
-            m_velocity_field_id, "velocity_vector", unit_conversion));
+    auto const blocks = m_lattice->get_blocks();
+    WALBERLA_ASSERT_NOT_NULLPTR(blocks);
+    auto velocity_writer =
+        std::make_shared<VelocityVTKWriter<FloatType, float>>(
+            m_pdf_field_id[0], "velocity_vector", unit_conversion);
+    auto before_function = [this, blocks, velocity_writer]() {
+      for (auto &block : *blocks) {
+        auto *velocity_field =
+            block.template getData<VectorField>(m_velocity_field_id);
+
+        auto const offset = m_lattice->get_block_corner(block, true);
+        auto const *flag_field =
+            block.template getData<FlagField>(m_flag_field_id);
+        auto const boundary_flag = flag_field->getFlag(Boundary_flag);
+        WALBERLA_FOR_ALL_CELLS_XYZ(flag_field, {
+          if (flag_field->isFlagSet(x, y, z, boundary_flag)) {
+            Cell const global(offset[0] + x, offset[1] + y, offset[2] + z);
+            auto const &vel = m_boundary[0]->get_node_value_at_boundary(global);
+            Cell const local(x, y, z);
+            lbm::accessor::Vector::set(velocity_field, vel, local);
+          }
+        }) // WALBERLA_FOR_ALL_CELLS_XYZ
+
+        auto const bci = velocity_field->xyzSize();
+        velocity_writer->set_content(
+            lbm::accessor::Vector::get(velocity_field, bci));
+        velocity_writer->set_dims(
+            Vector3<uint_t>(bci.xSize(), bci.ySize(), bci.zSize()));
+      }
+    };
+
+    vtk_obj.addBeforeFunction(std::move(before_function));
+    vtk_obj.addCellDataWriter(velocity_writer);
   }
   if (flag_observables & static_cast<int>(OutputVTK::pressure_tensor)) {
-    auto const unit_conversion =
-        FloatType_c(zero_centered_to_md(units.at("pressure")));
-#if defined(__CUDACC__) and defined(WALBERLA_BUILD_WITH_CUDA)
-    if constexpr (Architecture == lbmpy::Arch::GPU) {
-      auto const &blocks = m_lattice->get_blocks();
-      allocate_cpu_field_if_empty.template operator()<PdfFieldCpu>(
-          blocks, "pdfs_cpu", m_pdf_cpu_field_id);
-      vtk_obj.addBeforeFunction(gpu::fieldCpyFunctor<PdfFieldCpu, PdfField>(
-          blocks, *m_pdf_cpu_field_id, m_pdf_field_id[0]));
-    }
-#endif
+    auto const unit_conversion = FloatType_c(units.at("pressure"));
+    auto const blocks = m_lattice->get_blocks();
+    WALBERLA_ASSERT_NOT_NULLPTR(blocks);
+    auto pressure_writer =
+        std::make_shared<PressureTensorVTKWriter<FloatType, float>>(
+            m_pdf_field_id[0], "pressure_tensor", unit_conversion);
+    auto before_function = [this, blocks, pressure_writer]() {
+      for (auto &block : *blocks) {
+        auto *pdf_field = block.template getData<PdfField>(m_pdf_field_id[0]);
+        auto const bci = pdf_field->xyzSize();
+        auto values =
+            lbm::accessor::PressureTensor::get(pdf_field, m_density, bci);
+        for (std::size_t n = 0u; n < values.size(); n += 9u) {
+          pressure_tensor_correction(
+              std::span<FloatType, 9ul>(&values[n], 9ul));
+        }
+        pressure_writer->set_content(std::move(values));
+        pressure_writer->set_dims(
+            Vector3<uint_t>(bci.xSize(), bci.ySize(), bci.zSize()));
+      }
+    };
+    vtk_obj.addBeforeFunction(std::move(before_function));
+    vtk_obj.addCellDataWriter(pressure_writer);
+  }
+  if (flag_observables & static_cast<int>(OutputVTK::boundary)) {
     vtk_obj.addCellDataWriter(
-        std::make_shared<PressureTensorVTKWriter<FloatType, PdfField, float>>(
-            m_pdf_field_id[0], "pressure_tensor", unit_conversion,
-            pressure_tensor_correction_factor()));
+        std::make_shared<BoundaryVTKWriter<FlagField, float>>(
+            m_flag_field_id, "boundary", Boundary_flag));
   }
 }
 

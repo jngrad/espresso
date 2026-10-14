@@ -36,7 +36,7 @@
 #include <boost/mpi.hpp>
 
 #ifdef ESPRESSO_CALIPER
-#include <caliper/cali.h>
+#include "caliper_utils.hpp"
 #endif
 
 #include <cassert>
@@ -73,7 +73,6 @@ static Utils::Vector3d lb_drag_force(Particle const &p, double lb_gamma,
   /* calculate viscous force (eq. (9) @cite ahlrichs99a) */
   return Utils::hadamard_product(gamma, v_drift - p.v());
 }
-
 
 Utils::Vector3d lb_drag_force(LB::Solver const &lb, double lb_gamma,
                               Particle const &p,
@@ -386,7 +385,7 @@ static void lb_coupling_sanity_checks(Particle const &p) {
 
 void System::System::lb_couple_particles() {
 #ifdef ESPRESSO_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  ESPRESSO_CALI_MARK_FUNCTION;
 #endif
   assert(thermostat->lb != nullptr);
   if (thermostat->lb->couple_to_md) {

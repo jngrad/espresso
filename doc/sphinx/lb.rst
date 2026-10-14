@@ -177,8 +177,7 @@ Node and slice access, VTK output and checkpoints copy data between the GPU
 and the host; they are meant for analysis and input/output, not for every
 time step.
 
-Multi-GPU support in |es| is an experimental feature whose API may change at any time.
-It can be activated by invoking the following expression before the creation
+Multi-GPU support is activated by invoking the following expression before the creation
 of the first LB GPU instance::
 
     system.cuda_init_handle.call_method("set_device_id_per_rank")
@@ -312,7 +311,7 @@ will be used instead of the default ones.
 Reading and setting properties of single lattice nodes
 ------------------------------------------------------
 
-Appending three indices to the ``lb`` object returns an object that represents
+Appending three indices to the ``lb`` object returns an :class:`~espressomd.lb.LBFluidNode` object that represents
 the selected LB grid node and allows one to access all of its properties::
 
     lb[x, y, z].density              # fluid density (scalar)
@@ -321,7 +320,7 @@ the selected LB grid node and allows one to access all of its properties::
     lb[x, y, z].pressure_tensor_neq  # fluid pressure tensor non-equilibrium part (symmetric 3x3 matrix)
     lb[x, y, z].is_boundary          # flag indicating whether the node is fluid or boundary (boolean)
 
-All of these properties are read-only.
+Many of these properties are read-only.
 The indices ``x, y, z`` are integers and enumerate the LB nodes in the three Cartesian directions,
 starting at 0. To modify ``is_boundary``, refer to :ref:`Setting up LB boundary conditions`.
 
@@ -334,7 +333,7 @@ The first line prints the fluid velocity at node (0 0 0) to the screen.
 The second line sets this fluid node's density to the value ``1.2``.
 Use negative indices to get nodes starting from the end of the lattice.
 
-The nodes can be read and modified using slices. Example::
+The nodes can be read and modified using slices (:class:`~espressomd.lb.LBFluidSlice`). Example::
 
     print(lb[0:4:2, 0:2, 0].velocity)
     lb[0:4:2, 0:2, 0].density = [[[1.1], [1.2]], [[1.3], [1.4]]]
