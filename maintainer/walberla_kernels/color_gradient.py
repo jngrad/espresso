@@ -481,8 +481,8 @@ def single_perturbation_operator(fields, method, config, opt, minimum_color_grad
 
     return ps.AssignmentCollection(result)
 
-def perturbation_operator(fields, methods, configs, opts):
-        minimum_color_gradient: float = 0.0
+def perturbation_operator(fields, methods, configs, opts,
+                          minimum_color_gradient: float = 0.0):
         perturbation_operator_a = single_perturbation_operator(
             fields, methods[0], configs[0], opts[0], minimum_color_gradient)
         perturbation_operator_b = single_perturbation_operator(
@@ -648,12 +648,16 @@ def merged_collide_perturb_and_recoloring_operator(opts, collide, perturbation, 
 
     return sympy_cse_with_rng_nodes(merged)
 
-def create_collide_perturb_recolor_operator(fields, methods, configs, opts, fluctuations):
+def create_collide_perturb_recolor_operator(fields, methods, configs, opts, fluctuations,
+                                           minimum_color_gradient: float):
 
     # create collide, perturbation and recoloring operator separately
     collide = create_collision_operator(configs, opts, fluctuations)
-    perturbation = perturbation_operator(fields, methods, configs, opts)
-    recoloring = recoloring_operator(fields, methods, configs, opts, beta=sp.Symbol("beta"), minimum_color_gradient=0.0)
+    perturbation = perturbation_operator(
+        fields, methods, configs, opts, minimum_color_gradient=minimum_color_gradient)
+    recoloring = recoloring_operator(
+        fields, methods, configs, opts, beta=sp.Symbol("beta"),
+        minimum_color_gradient=minimum_color_gradient)
 
     # merge collide, perturbation and recoloring operator and store it
     return merged_collide_perturb_and_recoloring_operator(opts, collide, perturbation, recoloring)

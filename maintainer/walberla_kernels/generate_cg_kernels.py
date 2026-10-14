@@ -94,7 +94,16 @@ def generate_cg_init_kernels(ctx, cg_fields, cg_methods):
 
 def generate_cg_collide_kernels(ctx, cg_fields, cg_methods, cg_configs, cg_opts, cg_fluctuations):
     precision_prefix = pystencils_espresso.precision_prefix[ctx.double_accuracy]
-    collide = color_gradient.create_collide_perturb_recolor_operator(cg_fields, cg_methods, cg_configs, cg_opts, cg_fluctuations)
+    # Recolouring depends only on the direction of the colour gradient, not on
+    # its magnitude. Where the phase field is flat to round-off, the gradient
+    # and its projections are round-off residues computed by different sums,
+    # so the cosines are not bounded by 1 and can be arbitrarily large.
+    # Recolouring and surface tension are therefore switched off below a
+    # threshold well above round-off and far below any interface gradient.
+    minimum_color_gradient = 1e-12 if ctx.double_accuracy else 1e-5
+    collide = color_gradient.create_collide_perturb_recolor_operator(
+        cg_fields, cg_methods, cg_configs, cg_opts, cg_fluctuations,
+        minimum_color_gradient=minimum_color_gradient)
     block_offsets = cg_fluctuations[0]["block_offsets"]
     for params, target_suffix in paramlist(parameters, ("GPU", "CPU", "AVX")):
         stem = f"ColorGradientCollideSweep{precision_prefix}{target_suffix}"
