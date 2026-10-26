@@ -13,6 +13,15 @@ else
   PYTHONPATH="@ESPRESSO_PYTHON_DIR@"
 fi
 export PYTHONPATH
+if test -z "$OMPI_MCA_hwloc_base_binding_policy"; then
+  export OMPI_MCA_hwloc_base_binding_policy=none
+fi
+if test -z "$PRTE_MCA_hwloc_default_binding_policy"; then
+  export PRTE_MCA_hwloc_default_binding_policy=none
+fi
+if test -z "$HYDRA_BINDING"; then
+  export HYDRA_BINDING=none
+fi
 if test -z "$OMP_PROC_BIND"; then
   export OMP_PROC_BIND=false
 fi
