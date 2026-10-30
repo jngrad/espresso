@@ -218,7 +218,6 @@ T const &get(Array<T, N> const &a) noexcept {
 
 } // namespace Utils
 
-
 // Tuple-like interface for structured bindings.
 // Specializing these for user-defined types is permitted by [namespace.std],
 // but Clang-Tidy 22 reports partial specializations as a false positive.
