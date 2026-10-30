@@ -86,6 +86,16 @@ function(espresso_unit_test_register)
   if(${TEST_NUM_THREADS} GREATER ${ESPRESSO_TEST_NT})
     set(TEST_NUM_THREADS ${ESPRESSO_TEST_NT})
   endif()
+  if(ESPRESSO_BUILD_WITH_ASAN)
+    # disable memory patcher (https://github.com/open-mpi/ompi/issues/12819)
+    list(APPEND TEST_ENV_VARIABLES "OMPI_MCA_memory=^patcher")
+    # use PMIx hash-table storage instead of a shared-memory segment to avoid
+    # conflicts with ASAN address-space layout randomization
+    list(APPEND TEST_ENV_VARIABLES "PMIX_MCA_gds=hash")
+    # suppress OpenMPI memory leaks diagnostics
+    list(APPEND TEST_ENV_VARIABLES "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/maintainer/CI/lsan.supp:print_suppressions=0")
+    list(APPEND TEST_ENV_VARIABLES "ASAN_OPTIONS=detect_leaks=0")
+  endif()
   list(APPEND TEST_ENV_VARIABLES "OMPI_MCA_hwloc_base_binding_policy=none")
   list(APPEND TEST_ENV_VARIABLES "PRTE_MCA_hwloc_default_binding_policy=none")
   list(APPEND TEST_ENV_VARIABLES "HYDRA_BINDING=none")
