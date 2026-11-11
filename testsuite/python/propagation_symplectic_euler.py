@@ -92,7 +92,6 @@ class SymplecticEuler(ut.TestCase):
                     max_local_error[i + 1] / max_local_error[i], 4.0, delta=0.4)
 
     @utx.skipIfMissingFeatures(["ROTATION", "EXTERNAL_FORCES"])
-    @ut.skip("not implemented")  # TODO
     def test_body_lab_conversion(self):
         system = self.system
         system.time = 0.
