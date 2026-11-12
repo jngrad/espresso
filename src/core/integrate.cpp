@@ -1016,6 +1016,10 @@ int System::System::integrate(int n_steps, int reuse_forces) {
                              std::logical_or<>())) {
     cell_structure->use_verlet_list = false;
   }
+  if (propagation.used_propagations & PropagationMode::ROT_EULER) {
+    // this breaks ROT_STOKESIAN with particles that have ROT_EULER
+    calculate_forces();
+  }
   return integrated_steps;
 }
 

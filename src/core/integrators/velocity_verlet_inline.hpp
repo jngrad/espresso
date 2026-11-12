@@ -57,6 +57,7 @@ inline void velocity_verlet_propagator_2(Particle &p, double time_step) {
 #ifdef ESPRESSO_ROTATION
 inline void velocity_verlet_rotator_1(Particle &p, double time_step) {
   if (p.can_rotate()) {
+    // propagate only the quaternion
     auto const omega0 = p.omega();
     propagate_omega_quat_particle(p, time_step);
     p.omega() = omega0;
@@ -65,10 +66,7 @@ inline void velocity_verlet_rotator_1(Particle &p, double time_step) {
 
 inline void velocity_verlet_rotator_2(Particle &p, double time_step) {
   if (p.can_rotate()) {
-    auto const omega_dt_2 = p.omega();
-    p.omega() = Utils::Vector3d::broadcast(0.);
     convert_torque_propagate_omega(p, 2. * time_step);
-    p.omega() += omega_dt_2;
   }
 }
 #endif // ESPRESSO_ROTATION
