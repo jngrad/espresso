@@ -638,6 +638,10 @@ int System::System::integrate(int n_steps, int reuse_forces) {
   if (check_runtime_errors(comm_cart))
     return INTEG_ERROR_RUNTIME;
 
+std::cout << "reuse_forces == INTEG_REUSE_FORCES_NEVER is " << (reuse_forces == INTEG_REUSE_FORCES_NEVER) << "\n";
+std::cout << "reuse_forces != INTEG_REUSE_FORCES_ALWAYS is " <<(reuse_forces != INTEG_REUSE_FORCES_ALWAYS)<<"\n";
+std::cout << "propagation.recalc_forces is " << propagation.recalc_forces << "\n";
+
   // Additional preparations for the first integration step
   if (reuse_forces == INTEG_REUSE_FORCES_NEVER or
       ((reuse_forces != INTEG_REUSE_FORCES_ALWAYS) and
@@ -672,6 +676,18 @@ int System::System::integrate(int n_steps, int reuse_forces) {
     }
 
 #ifdef ESPRESSO_ROTATION
+std::puts("additional preparations");
+if (propagation.used_propagations & PropagationMode::ROT_LANGEVIN) {
+  std::puts("propagation.used_propagations & PropagationMode::ROT_LANGEVIN");
+}
+if (propagation.used_propagations & PropagationMode::ROT_EULER) {
+  std::puts("propagation.used_propagations & PropagationMode::ROT_EULER");
+}
+for (auto &p : cell_structure->local_particles()) {
+  if (p.can_rotate() ){
+  std::cout << "torque^W: ["<<p.torque() <<"]\n";
+  }
+  }
     // convert torques to the body-fixed frame before the integration loop
     if (propagation.integ_switch != INTEG_METHOD_STEEPEST_DESCENT) {
       if (propagation.used_propagations & PropagationMode::ROT_LANGEVIN) {
@@ -679,6 +695,8 @@ int System::System::integrate(int n_steps, int reuse_forces) {
           if (p.can_rotate() and propagation.should_propagate_with(
                                      p, PropagationMode::ROT_LANGEVIN)) {
             convert_torque_to_body_frame_apply_fix(p);
+  std::puts("propagation.should_propagate_with(p, PropagationMode::ROT_LANGEVIN)");
+  std::cout << "torque^M: ["<<p.torque() <<"]\n";
           }
         }
       }
@@ -688,6 +706,8 @@ int System::System::integrate(int n_steps, int reuse_forces) {
           if (p.can_rotate() and propagation.should_propagate_with(
                                      p, PropagationMode::ROT_EULER)) {
             convert_torque_to_body_frame_apply_fix(p);
+  std::puts("propagation.should_propagate_with(p, PropagationMode::ROT_EULER)");
+  std::cout << "torque^M: ["<<p.torque() <<"]\n";
           }
         }
       }
@@ -1019,6 +1039,11 @@ int System::System::integrate(int n_steps, int reuse_forces) {
   if (propagation.used_propagations & PropagationMode::ROT_EULER) {
     // this breaks ROT_STOKESIAN with particles that have ROT_EULER
     calculate_forces();
+  }
+for (auto &p : cell_structure->local_particles()) {
+  if (p.can_rotate() ){
+  std::cout << "torque3: ["<<p.torque() <<"]\n";
+  }
   }
   return integrated_steps;
 }

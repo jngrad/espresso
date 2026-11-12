@@ -183,11 +183,14 @@ class StokesianThermostat(ut.TestCase):
                 ref_pos = x0
             if (p.propagation & (Propagation.SYSTEM_DEFAULT |
                                  Propagation.ROT_STOKESIAN)):
+                print("p.propagation & Propagation.ROT_STOKESIAN")
                 atol = 1e3
                 ref_rot = np.array([0., 0., 0.])
             elif p.propagation & Propagation.ROT_EULER:
+                print("p.propagation & Propagation.ROT_EULER", o0, p.ext_torque, p.ext_torque / p.rinertia * t)
                 ref_rot = o0 + p.ext_torque / p.rinertia * t
             else:
+                print("p.propagation ??")
                 ref_rot = o0
             return np.copy(ref_pos), np.copy(ref_vel), np.copy(ref_rot), atol
 
@@ -227,6 +230,10 @@ class StokesianThermostat(ut.TestCase):
                 continue
         assert len(system.part) > 3
         system.time = 0.
+        print("Propagation.ROT_EULER", Propagation.ROT_EULER)
+        print("Propagation.ROT_STOKESIAN", Propagation.ROT_STOKESIAN)
+        print("Propagation.SYSTEM_DEFAULT", Propagation.SYSTEM_DEFAULT)
+        print("Propagation.NONE", Propagation.NONE)
         for i in range(10):
             system.integrator.run(2**i)
             for p in system.part.all():
@@ -234,6 +241,7 @@ class StokesianThermostat(ut.TestCase):
                 vel = np.copy(p.v)
                 rot = np.copy(p.omega_lab)
                 ref_pos, ref_vel, ref_rot, atol = calc_trajectory(p)
+                print(p.propagation, mode_rot)
                 np.testing.assert_allclose(pos, ref_pos, rtol=0., atol=atol)
                 np.testing.assert_allclose(vel, ref_vel, rtol=0., atol=atol)
                 np.testing.assert_allclose(rot, ref_rot, rtol=0., atol=atol)

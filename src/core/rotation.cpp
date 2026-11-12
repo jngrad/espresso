@@ -44,6 +44,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <iostream>
 
 /** @brief Calculate the derivatives of the quaternion and angular
  *  acceleration for a given particle.
@@ -163,6 +164,9 @@ void propagate_omega_quat_particle(Particle &p, double time_step) {
 void convert_torque_propagate_omega(Particle &p, double time_step) {
   assert(p.can_rotate());
   convert_torque_to_body_frame_apply_fix(p);
+  std::puts("convert_torque_propagate_omega(p)");
+  std::cout << "torque^M: ["<<p.torque() <<"]\n";
+  std::cout << "omega(dt/2)^M: ["<<p.omega() <<"]\n";
 
   // Propagation of angular velocities
   p.omega() += hadamard_division(0.5 * time_step * p.torque(), p.rinertia());
@@ -187,6 +191,7 @@ void convert_torque_propagate_omega(Particle &p, double time_step) {
 
     p.omega() = omega_0 + (0.5 * time_step) * Wd;
   }
+  std::cout << "omega(dt)^M: ["<<p.omega() <<"]\n";
 }
 
 #endif // ESPRESSO_ROTATION
