@@ -20,6 +20,7 @@
 #pragma once
 
 #include "for_each_3d.hpp"
+#include "fft/vector.hpp"
 
 #include <utils/Vector.hpp>
 #include <utils/index.hpp>
@@ -43,7 +44,7 @@ auto extract_block(Container const &in_array, Utils::Vector3i const &dimensions,
   auto const size = static_cast<std::size_t>(Utils::product(block_dim));
 
   // Output vector to hold the block
-  std::vector<typename Container::value_type> out_array(size);
+  fft::vector<typename Container::value_type> out_array(size);
 
   // Extract the block
   if constexpr (memory_order == Utils::MemoryOrder::ROW_MAJOR and
